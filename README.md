@@ -12,7 +12,7 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 
 ## Try it (Windows, 2 minutes)
 
-1. Download **BED-win-x64.zip** from the [Releases page](../../releases) (the first release is coming soon; until then, build it from source below).
+1. Download **BED-win-x64.zip** from the [Releases page](../../releases). It is a 0.2 preview: the data editor is complete, and the 3D level tools are still being finished (see the [roadmap](ROADMAP.md)).
 2. Unzip it anywhere and double-click **BED.exe**. BED needs the Microsoft Visual C++ Redistributable (x64). If it is missing, install it from [Microsoft](https://aka.ms/vs/17/release/vc_redist.x64.exe), then open BED again.
 3. Click **Try the example**.
 4. Click a cell in the table, type a new value and press Enter.
@@ -83,10 +83,6 @@ To make the same zip as the Releases page: `python tools/package_release.py`. It
 ## Made with AI help
 
 BED was written with the help of Claude Code and Codex. There's no AI inside the app, and it sends nothing anywhere.
-
-## Support BED
-
-If you like BED and want to support its development, you can do so at https://github.com/sponsors/Tylermcca.
 
 ## Licence
 
