@@ -556,7 +556,7 @@ For a quick stdio check, start the built program with --mcp and send one JSON-RP
 
 Replies have ids 1, 2 and 3. The notification has no reply. Tools include describe, find, get, problems, refs, repair, set, insert, remove, undo and save. A call's JSON is in result.content's text entry. Inspect both protocol/tool errors and the returned JSON's error/refused fields; isError alone is not a sufficient success check for every operation.
 
-To register the server with an MCP client, add a **local stdio server** named harbor-relay in that client's MCP settings. Use dotnet as the executable and the already-built DLL, --mcp and an absolute fixture root as separate arguments. For example, these client-neutral connection fields describe a checkout at C:/work/brutal-authoring; replace both paths with yours. The enclosing settings format depends on the client.
+To register the server with an MCP client, add a **local stdio server** named harbor-relay in that client's MCP settings. Use dotnet as the executable and the already-built DLL, --mcp and an absolute fixture root as separate arguments. For example, these client-neutral connection fields describe a checkout at C:/work/BED; replace both paths with yours. The enclosing settings format depends on the client.
 
 ~~~json
 {
@@ -564,9 +564,9 @@ To register the server with an MCP client, add a **local stdio server** named ha
   "transport": "stdio",
   "command": "dotnet",
   "args": [
-    "C:/work/brutal-authoring/samples/HarborRelay/bin/Debug/net10.0/HarborRelay.dll",
+    "C:/work/BED/samples/HarborRelay/bin/Debug/net10.0/HarborRelay.dll",
     "--mcp",
-    "C:/work/brutal-authoring/samples/HarborRelay/fixture"
+    "C:/work/BED/samples/HarborRelay/fixture"
   ]
 }
 ~~~

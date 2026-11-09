@@ -4,7 +4,7 @@ Use JSON data and JSON Schemas to build an editor with an outline, inspector and
 
 **Just want to edit data? You don't need this tutorial.** Open `BED.exe` (from the release zip, or `dotnet run --project src/Brutal.Authoring.Launcher`), choose your data and schema folders, and edit. `docs/release/START_HERE.txt` is the one-page guide. This tutorial is for wiring the editor into your own program.
 
-This SDK tutorial uses a local brutal-authoring checkout, Windows PowerShell 5.1 and .NET SDK 10. Existing BRUTAL dependencies must be available from the repository's configured package sources; see [THIRD-PARTY-NOTICES](../../THIRD-PARTY-NOTICES.md). No additional package is needed. Use writable throwaway inputs.
+This SDK tutorial uses a local BED checkout, Windows PowerShell 5.1 and .NET SDK 10. Existing BRUTAL dependencies must be available from the repository's configured package sources; see [THIRD-PARTY-NOTICES](../../THIRD-PARTY-NOTICES.md). No additional package is needed. Use writable throwaway inputs.
 
 Set BRUTAL_AUTHORING to your checkout's absolute path. Run all PowerShell blocks in order in one shell, starting in an empty working directory. Paste each block into that open shell: don't save them as a `.ps1` file, because Windows' default script policy refuses to run one; the first block binds that checkout for the supplied command-line projects. C# inside a here-string is written by that block; no IDE setup is assumed. Expected nonzero exits are stated. Restore/build diagnostic lines may vary.
 

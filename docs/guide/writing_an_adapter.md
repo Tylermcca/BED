@@ -8,7 +8,7 @@ A project with `data/` and `schemas/` opens in the general app without an adapte
 
 Build **Lantern Yard**, a small example with two lamps, a brightness rule, a check and a panel. The example is self-authored and uses the tools' public APIs; no game records or art are used. For everyday editing, see [Editing data](editing_data.md). For tools embedded in your own application, see [Writing a plugin](writing_a_plugin.md); this page covers the general app's DLL loader.
 
-You need Windows, PowerShell 7, the .NET 10 SDK, and a working brutal-authoring checkout with its existing dependencies available. Run every PowerShell block below, in order, in **one shell initially located in an empty working directory, with BRUTAL_AUTHORING set to that checkout**. They create a fresh temporary folder, build a development host and adapter there, and take offscreen PNGs. They do not launch an OS window or write build outputs into the checkout. The save exercise writes only an additional disposable copy; the original example stays unchanged. This is a developer build, not a self-contained release package.
+You need Windows, PowerShell 7, the .NET 10 SDK, and a working BED checkout with its existing dependencies available. Run every PowerShell block below, in order, in **one shell initially located in an empty working directory, with BRUTAL_AUTHORING set to that checkout**. They create a fresh temporary folder, build a development host and adapter there, and take offscreen PNGs. They do not launch an OS window or write build outputs into the checkout. The save exercise writes only an additional disposable copy; the original example stays unchanged. This is a developer build, not a self-contained release package.
 
 ## Your first adapter
 

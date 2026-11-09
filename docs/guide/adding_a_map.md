@@ -10,7 +10,7 @@ From an empty working directory, run this PowerShell block. NeutralMap must not 
 
 ~~~powershell
 if (-not (Test-Path -LiteralPath "$env:BRUTAL_AUTHORING/src/Brutal.Authoring.Editor/MapModel.cs")) {
-    throw 'Set BRUTAL_AUTHORING to your local brutal-authoring checkout first.'
+    throw 'Set BRUTAL_AUTHORING to your local BED checkout first.'
 }
 New-Item -ItemType Directory -Path NeutralMap -ErrorAction Stop | Out-Null
 Set-Location -LiteralPath NeutralMap

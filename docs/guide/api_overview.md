@@ -2,7 +2,7 @@
 
 Use this page to choose the library pieces for your editor. Start with a document, commands and a session, then add the views or tools you need. To build your own document type step by step, see `your_first_document_type.md`. The exact promises are in `docs/spec/first_slice.md`.
 
-"Brutal.Authoring" is a working name.
+The libraries are BED's building blocks. Their namespaces still use the earlier working name, Brutal.Authoring.
 
 ## The idea in one paragraph
 

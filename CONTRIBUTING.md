@@ -88,8 +88,8 @@ A reviewer checks scope, public/game separation, dependency/content provenance, 
 
 A contribution should be reviewable without knowing any particular game that uses BED.
 
-## Not decided yet
+## Names
 
-Final naming, Ahwoo's approval and public release remain the user's decisions. Brutal.Authoring is a working name; do not grant a trademark permission or publish a package from this guide.
+The editor is called **BED**. The code's namespaces, project files and solution still use the earlier working name, Brutal.Authoring. They will be renamed together in one change, so please don't rename them as part of a contribution. Nothing in this guide grants trademark permission or publishes a package.
 
 The licence is **MIT**, chosen by the user on 2026-11-01 and recorded in LICENSE.txt and README.md. This is an existing decision, not one made by this guide. BRUTAL and other dependencies retain their own terms and notices. No contribution, green build or generated record grants approval to publish or settles every dependency obligation.
