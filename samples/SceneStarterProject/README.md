@@ -1,0 +1,11 @@
+# SceneStarter project
+
+Open this folder with BED's **Open project** command (or Ctrl+O). The packaged copy is `samples/scene-starter` beside BED. Keep its `data`, `schemas`, `reference_map.json` and `assets` together. **Try the example** on the start screen remains the separate recipes example.
+
+The starting level has two asset-free objects. The `assets` folder supplies a cube and a tall rectangular pillar for the scene asset picker. Both OBJ meshes are made entirely by `samples/SceneStarterProject/generate_assets.py`; there are no downloaded models, textures or private reference files. Their committed sidecars declare origin `ours`, stable GUIDs, exact source SHA-256 and the OBJ importer settings. Copy each OBJ together with its `.asset.json` sidecar when making a personal copy.
+
+To reproduce the four asset files, run `python samples/SceneStarterProject/generate_assets.py` from the repository root. Adding `--check` only compares the committed files. The script writes only the two named OBJs and their two sidecars; it does not import assets, build, run BED or change the level.
+
+Linked Play uses the admitted project catalog: it captures only the saved scene's referenced GUIDs and current source/content/policy hashes with copied derived bytes, then re-resolves every selection before publishing. Missing, stale, failed or changed catalog content refuses Play; there is no path fallback. The pure-core peer verifies unique pins and derived-byte hashes before Ready and reads no asset files. Saved input and drafts stay separate. It supports up to 256 pins and 64 MiB of derived bytes, though the current BED host's 16 MiB serialized-snapshot budget can refuse smaller inputs after JSON/base64 overhead.
+
+The starting level remains asset-free; add a sample asset through the provisioned scene picker. Startup catalog provisioning is a separate host integration requirement. Generated source files alone do not prove that route, a native renderer, or export acceptance. The standalone SceneStarter runtime remains a pure-core console program with no editor assembly or window dependency. Its older standalone export smoke fixture is still asset-free; asset-bearing export is a separate integration step.

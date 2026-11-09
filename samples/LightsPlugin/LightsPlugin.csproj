@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A sample plug-in (goal 3, rung 3; FUT-002): lights for the general scene, added from outside the library through
+       a manifest and PluginHost. The library is not changed to make it work. -->
+  <PropertyGroup>
+    <RootNamespace>LightsPlugin</RootNamespace>
+    <!-- BRUTAL's analyzer prefers UTF-8 literals for ImGui calls; ids and labels here are ordinary strings. -->
+    <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Brutal.Authoring.Editor.ImGui\Brutal.Authoring.Editor.ImGui.csproj" />
+    <EmbeddedResource Include="plugin.json" LogicalName="plugin.json" />
+  </ItemGroup>
+</Project>

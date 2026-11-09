@@ -1,0 +1,22 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "a11aa11aa11aa11aa11aa11aa11aa11a",
+  "source": "pillar.obj",
+  "sourceHash": "184a1b7b4e9c31af4330d55bb2fa0b68122bd38ce5e83b1ffe1e986ed38dac16",
+  "importer": {
+    "id": "obj",
+    "version": 1
+  },
+  "settings": {
+    "scale": 1,
+    "upAxis": "Y"
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/SceneStarterProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

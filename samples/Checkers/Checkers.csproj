@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Goal 13, the progress milestone (the user, 2026-10-31): a small game made with the tools, by their public seams only.
+       English draughts: the board is a document, moves are commands checked by the rules, and play happens in a plug-in
+       panel in the editor window. Nothing here is in the library. -->
+  <PropertyGroup>
+    <RootNamespace>Checkers</RootNamespace>
+    <!-- BRUTAL's analyzer prefers UTF-8 literals for ImGui calls; ids and labels here are ordinary strings. -->
+    <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Brutal.Authoring.Editor.ImGui\Brutal.Authoring.Editor.ImGui.csproj" />
+    <EmbeddedResource Include="plugin.json" LogicalName="plugin.json" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,36 @@
+<Project>
+  <!-- What a program built with BRUTAL ships beside it (BRUTAL License v1.0, 2.3 and 4.0): BRUTAL's NOTICE.txt, every
+       referenced Ahwoo.BRUTAL package's third-party notices (LICENSES/*.txt, which nothing copies by default) into
+       licenses/, and, for a self-contained publish, the .NET runtime's licence and notices. BORROWED: the two targets are
+       the brutal skill's verified recipes (references/shipping.md, items 4 and 6). Imported by each program's project. -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\NOTICE.txt" Link="NOTICE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Every Ahwoo.Brutal package the program ends up with, direct or pulled in by another, found where NuGet actually
+       resolved it (the main cache or a fallback folder): each copied asset carries its package id and version, and lies
+       inside that package's folder, so the folder is read off the asset's own path (found by A070: the first version read
+       only direct references from the main cache, so some notices were missed). -->
+  <Target Name="IncludeBrutalThirdPartyNotices" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolvePackageAssets">
+    <ItemGroup>
+      <_BrutalAsset Include="@(RuntimeCopyLocalItems);@(NativeCopyLocalItems)" Condition="$([System.String]::Copy('%(NuGetPackageId)').StartsWith('Ahwoo.Brutal.', System.StringComparison.OrdinalIgnoreCase))" />
+      <_BrutalPackageDir Condition="'%(_BrutalAsset.FullPath)' != ''" Include="$([System.String]::Copy('%(_BrutalAsset.FullPath)').Substring(0, $([MSBuild]::Add($([System.String]::Copy('%(_BrutalAsset.FullPath)').ToLowerInvariant().IndexOf($([System.String]::Copy('%(_BrutalAsset.NuGetPackageId)').ToLowerInvariant()))), $([System.String]::Copy('%(_BrutalAsset.NuGetPackageId)/%(_BrutalAsset.NuGetPackageVersion)').Length)))))" />
+      <_BrutalNotice Include="%(_BrutalPackageDir.Identity)/LICENSES/*.txt" />
+      <_BrutalNoticeName Include="@(_BrutalNotice->'%(Filename)%(Extension)')" Source="%(_BrutalNotice.FullPath)" />
+    </ItemGroup>
+    <RemoveDuplicates Inputs="@(_BrutalNoticeName)">
+      <Output TaskParameter="Filtered" ItemName="_BrutalNoticeOnce" />
+    </RemoveDuplicates>
+    <ItemGroup>
+      <None Include="@(_BrutalNoticeOnce->'%(Source)')" Link="licenses/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeDotnetRuntimeNotices" BeforeTargets="GetCopyToPublishDirectoryItems" Condition="'$(SelfContained)' == 'true'">
+    <ItemGroup>
+      <_DotnetRuntimePack Include="@(ResolvedRuntimePack->WithMetadataValue('FrameworkName', 'Microsoft.NETCore.App'))" />
+      <ResolvedFileToPublish Include="%(_DotnetRuntimePack.PackageDirectory)\LICENSE.TXT" RelativePath="licenses\DOTNET-RUNTIME-LICENSE.txt" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+      <ResolvedFileToPublish Include="%(_DotnetRuntimePack.PackageDirectory)\THIRD-PARTY-NOTICES.TXT" RelativePath="licenses\DOTNET-RUNTIME-THIRD-PARTY-NOTICES.txt" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    </ItemGroup>
+  </Target>
+</Project>

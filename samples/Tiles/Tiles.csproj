@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>tiles</AssemblyName>
+    <RootNamespace>Tiles</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Brutal.Authoring/Brutal.Authoring.csproj" />
+  </ItemGroup>
+</Project>

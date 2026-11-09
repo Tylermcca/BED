@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Recipes",
+  "description": "What a workshop makes, and from what. Each ware is named by its id in wares.json.",
+  "type": "object",
+  "required": ["recipes"],
+  "properties": {
+    "recipes": {
+      "type": "array",
+      "x-label": "name",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "makes", "minutes"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "makes": { "type": "string", "description": "The ware it makes (its id in wares.json)." },
+          "from": { "type": "string", "description": "The ware it uses up (its id in wares.json)." },
+          "minutes": { "type": "integer", "minimum": 1, "description": "How long one batch takes." }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+# Preparation only. Apply/enable only after runner, input and execution review.
+name: Package verification (manual, no publishing)
+on:
+  workflow_dispatch:
+    inputs:
+      manifest:
+        description: Reviewed manifest path relative to this checkout
+        required: true
+        type: string
+      local_feed:
+        description: Pre-staged, reviewed local dependency folder on the isolated runner
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: manual-package-verification
+  cancel-in-progress: false
+jobs:
+  verify:
+    # No PR code on persistent user machines. Provision an isolated ephemeral runner
+    # with these labels and installed Python/SDK/feed, then review environment protection.
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: [self-hosted, Windows, X64, package-verification-ephemeral]
+    environment: package-verification
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - name: Check scoped pure-Python script tests
+        shell: pwsh
+        run: |
+          python -B tools/test_package_consumer_smoke_a289.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B tools/check_doc.py docs/release/package_verification.md --sections "## What this verifies,## Local usage,## Checks for this preparation"
+          exit $LASTEXITCODE
+      - name: Verify reviewed inputs and run local build-only smoke
+        shell: pwsh
+        env:
+          MANIFEST_INPUT: ${{ inputs.manifest }}
+          LOCAL_FEED_INPUT: ${{ inputs.local_feed }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:PYTHONDONTWRITEBYTECODE = '1'
+          $work = Join-Path $env:RUNNER_TEMP "package-check-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          python -B -c "import json,os,sys; from pathlib import Path; sys.path.insert(0,'tools'); import package_consumer_smoke as s; name=s.relative(os.environ['MANIFEST_INPUT']); m=s.validate(json.loads(Path(name).read_text(encoding='utf-8'))); s.require(m['source_revision']==os.environ['GITHUB_SHA'], 'Manifest revision differs from checkout')"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B tools/package_consumer_smoke.py --manifest $env:MANIFEST_INPUT --repo $env:GITHUB_WORKSPACE --feed $env:LOCAL_FEED_INPUT --work $work --execute
+          exit $LASTEXITCODE
+# No setup/install step, external feed, upload, push, publish or release token.
+# Receipts remain on the owned ephemeral runner; preserve them through an independently
+# approved mechanism before runner disposal. No artifact upload is authorized here.

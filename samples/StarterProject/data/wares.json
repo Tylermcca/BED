@@ -1,0 +1,9 @@
+{
+  "wares": [
+    { "id": "bread", "name": "Bread", "price": 3, "kind": "food" },
+    { "id": "flour", "name": "Flour", "price": 1, "kind": "material" },
+    { "id": "wheat", "name": "Wheat", "price": 0.5, "kind": "material" },
+    { "id": "pot", "name": "Clay pot", "price": 6, "kind": "tool", "fragile": true },
+    { "id": "clay", "name": "Clay", "price": 1, "kind": "material" }
+  ]
+}

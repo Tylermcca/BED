@@ -1,0 +1,17 @@
+{
+  "kind": "first-task-settings",
+  "presets": [
+    {
+      "id": "default",
+      "name": "Default",
+      "rounds": 60,
+      "reserve": 10
+    },
+    {
+      "id": "practice",
+      "name": "Practice",
+      "rounds": 60,
+      "reserve": 10
+    }
+  ]
+}

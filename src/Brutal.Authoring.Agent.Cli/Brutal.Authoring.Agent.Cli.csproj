@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- `authoring`: the command line and the MCP server for AI agents (goal 20), over Brutal.Authoring.Agent. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>bed-cli</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Brutal.Authoring.Agent\Brutal.Authoring.Agent.csproj" />
+    <!-- for the game adapter loader only (Adapters, IProjectAdapter); it opens no window. Layering debt: the adapter contract
+         belongs below the editor, and moving it is a public-API change for later (A188). -->
+    <ProjectReference Include="..\Brutal.Authoring.Editor.ImGui\Brutal.Authoring.Editor.ImGui.csproj" />
+  </ItemGroup>
+  <Import Project="..\..\build\Notices.targets" />
+</Project>

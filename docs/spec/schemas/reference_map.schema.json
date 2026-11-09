@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:schema:reference_map.schema.json",
+  "title": "Reference map",
+  "description": "A game's data folder described for the editor without touching its schemas: which list items take their label from which field, and which fields hold ids of items in another list, so the table and inspector can show a readable name and follow the link. It's metadata about paths, never a copy of the game's records. General: any game can write one.",
+  "type": "object",
+  "required": [
+    "game",
+    "labels",
+    "references"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "game": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Whose data this describes, for people reading it."
+    },
+    "labels": {
+      "type": "array",
+      "description": "List items whose readable name is one of their fields, where the editor's own guess (name, id, title) finds none.",
+      "items": {
+        "$ref": "#/$defs/label"
+      }
+    },
+    "references": {
+      "type": "array",
+      "description": "Fields whose value is the id of an item somewhere else.",
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    }
+  },
+  "$defs": {
+    "place": {
+      "type": "string",
+      "pattern": "^(/([^/~*]|~[01])*|/\\*)+$",
+      "description": "A JSON Pointer in which * stands for any list index or any key at that step, such as /factories/*/methods/*/inputs/*/of."
+    },
+    "file": {
+      "type": "string",
+      "pattern": "^[^/\\\\]+\\.json$",
+      "description": "A data file's name within the folder."
+    },
+    "label": {
+      "type": "object",
+      "x-label": "list",
+      "required": [
+        "file",
+        "list"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/file"
+        },
+        "list": {
+          "$ref": "#/$defs/place",
+          "description": "The list whose items are labelled."
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The string field that names each item. Give this or template, not both."
+        },
+        "note": {
+          "type": "string"
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\{[^{}]+\\}",
+          "description": "A label made from several fields: each {field} is replaced by that field's value (\"{of} x{count}\"). A label whose fields are all missing falls back to the editor's own guess."
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "field"
+          ]
+        },
+        {
+          "required": [
+            "template"
+          ]
+        }
+      ]
+    },
+    "reference": {
+      "type": "object",
+      "x-label": "at",
+      "required": [
+        "file",
+        "at",
+        "target",
+        "evidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/file"
+        },
+        "at": {
+          "$ref": "#/$defs/place",
+          "description": "Where the id is held. If the place is a list of strings, each one is an id."
+        },
+        "keys": {
+          "type": "boolean",
+          "default": false,
+          "description": "True when the ids are the keys of the object at this place, not its values."
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "file",
+            "list",
+            "key"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "file": {
+              "$ref": "#/$defs/file"
+            },
+            "list": {
+              "$ref": "#/$defs/place",
+              "description": "The list (or keyed object) the ids name items of."
+            },
+            "key": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The field holding each item's id; \"$key\" when the items are an object's keys; \"$value\" when the list holds plain values (strings or numbers) that are the ids themselves."
+            },
+            "where": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "description": "Conditions every candidate target must meet, all of them : a field of the candidate equal to a value near the source, or a field the candidate lacks. A source value that isn't there makes the whole lookup NeedsScope; a candidate whose field isn't there doesn't count.",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "at",
+                      "equalsSource"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]*)(#|(/([^/~]|~[01])*)*)$",
+                        "description": "A Relative JSON Pointer from the candidate item, such as \"0/owner\"."
+                      },
+                      "equalsSource": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]*)(#|(/([^/~]|~[01])*)*)$",
+                        "description": "A Relative JSON Pointer from the source value, such as \"2#\" (the key two levels up)."
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "absent"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "absent": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "A field the candidate object must not have."
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "also": {
+          "type": "array",
+          "description": "Further places the same id may name, tried in order (a ware or a ware family, say). An id found in more than one is ambiguous and isn't followed.",
+          "items": {
+            "$ref": "#/$defs/reference/properties/target"
+          }
+        },
+        "scope": {
+          "type": "string",
+          "description": "When the target is local, the part of the source place that narrows it, in words (\"the same sector\"). The adapter handles scoped references; the map only says so."
+        },
+        "sentinels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Values that are deliberately not ids (\"none\", \"pirate\"), so they're never reported as missing."
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where the game says so: a schema line or validator rule, relative to the game's repository."
+        },
+        "checked": {
+          "type": "object",
+          "description": "What resolving every value against the real data found when the map was written.",
+          "additionalProperties": false,
+          "properties": {
+            "values": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "found": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sentinel": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "missing": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ambiguous": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "note": {
+          "type": "string"
+        },
+        "parts": {
+          "type": "object",
+          "required": [
+            "separator",
+            "targets"
+          ],
+          "additionalProperties": false,
+          "description": "An id made of parts (\"meridian/terran\", \"gene:choice\"): split at the separator, each part resolved against its own target, in order; null for a part that isn't an id. When given, it replaces target for resolving; target stays as the place's main target, for people reading the map.",
+          "properties": {
+            "separator": {
+              "type": "string",
+              "minLength": 1
+            },
+            "targets": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/reference/properties/target"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "narrow": {
+          "type": "object",
+          "required": [
+            "by",
+            "file",
+            "list",
+            "key"
+          ],
+          "additionalProperties": false,
+          "description": "Narrows the target to the items inside one container, named by a value near the source: by is a Relative JSON Pointer from the source value (\"1/sector\": the sibling field sector; \"2#\": the key two levels up), and that value is looked up in the container list by key. Only target places inside that container count. It makes a scope machine-readable; scope stays for people.",
+          "properties": {
+            "by": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)(#|(/([^/~]|~[01])*)*)$"
+            },
+            "file": {
+              "$ref": "#/$defs/file"
+            },
+            "list": {
+              "$ref": "#/$defs/place"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

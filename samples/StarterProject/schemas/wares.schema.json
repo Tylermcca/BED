@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Wares",
+  "description": "What can be bought and sold. Prices are in coins.",
+  "type": "object",
+  "required": ["wares"],
+  "properties": {
+    "wares": {
+      "type": "array",
+      "x-label": "name",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "price"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "description": "A short id other files use to name this ware." },
+          "name": { "type": "string", "description": "What players see." },
+          "price": { "type": "number", "minimum": 0, "description": "Its base price, in coins." },
+          "kind": { "enum": ["food", "material", "tool"], "description": "What sort of ware it is." },
+          "fragile": { "type": "boolean", "description": "Whether it breaks when dropped." }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The neutral sample: a toy "board" document, its commands, and the `toy` command-line tool. It shows the shared core
+       working without any game (goal 7) and is the first slice's headless proof (worksheet_r2, "The first slice"). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>toy</AssemblyName>
+    <RootNamespace>Toy</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Brutal.Authoring\Brutal.Authoring.csproj" />
+  </ItemGroup>
+</Project>

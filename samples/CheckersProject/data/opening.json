@@ -1,0 +1,16 @@
+{
+  "$schema": "board.schema.json",
+  "kind": "checkers.game",
+  "version": 1,
+  "to_move": "dark",
+  "board": [
+    "-l-l-l-l",
+    "l-l-l-l-",
+    "-l-l-l-l",
+    ".-.-.-.-",
+    "-.-.-.-.",
+    "d-d-d-d-",
+    "-d-d-d-d",
+    "d-d-d-d-"
+  ]
+}

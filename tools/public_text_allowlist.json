@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "file": "tools/test_check_public_text_a372.py",
+      "line": 23,
+      "code": "PT001",
+      "line_sha256": "c2165ba6dbc527cdd8808d55595d2a6fd6ac72e9c4b00492b485f9725ab219af",
+      "reason": "Invented negative path fixture; required to test this guard, not a personal path."
+    },
+    {
+      "file": "tools/test_check_public_text_a372.py",
+      "line": 23,
+      "code": "PT002",
+      "line_sha256": "c2165ba6dbc527cdd8808d55595d2a6fd6ac72e9c4b00492b485f9725ab219af",
+      "reason": "Invented negative path fixture; required to test this guard, not a personal path."
+    },
+    {
+      "file": "tools/test_check_public_text_a372.py",
+      "line": 29,
+      "code": "PT001",
+      "line_sha256": "c5ddc5d1bb27eccff6d18b4e91716f77f4f2c97eb867440ce01a92a3365de0ca",
+      "reason": "Invented negative path fixture; required to test this guard, not a personal path."
+    },
+    {
+      "file": "tools/test_check_public_text_a372.py",
+      "line": 65,
+      "code": "PT001",
+      "line_sha256": "9fa7110a3ecdd974955118594a549204ce29c0d6bba27627fe1dbf808706f37c",
+      "reason": "Invented negative path fixture; required to test this guard, not a personal path."
+    },
+    {
+      "file": "docs/guide/writing_a_plugin.md",
+      "line": 559,
+      "code": "PT001",
+      "line_sha256": "4032d096ae285814dc93822d28a2b149e1b5a301d43c92450a221baad5bd0327",
+      "reason": "Explicitly approved invented drive-rooted work-folder plugin example, not a personal checkout."
+    },
+    {
+      "file": "docs/guide/writing_a_plugin.md",
+      "line": 567,
+      "code": "PT001",
+      "line_sha256": "b6fc8c43fb5e082264bf4179a86b06c022f4f865606b1c13066367dcdfe79ccd",
+      "reason": "Explicitly approved invented drive-rooted work-folder plugin example, not a personal checkout."
+    },
+    {
+      "file": "docs/guide/writing_a_plugin.md",
+      "line": 569,
+      "code": "PT001",
+      "line_sha256": "4d2a0100935e6406611553b291f63741f16ce458683a74bef5311e187532b9a3",
+      "reason": "Explicitly approved invented drive-rooted work-folder plugin example, not a personal checkout."
+    },
+    {
+      "file": "tools/test_package_consumer_smoke_a289.py",
+      "line": 61,
+      "code": "PT001",
+      "line_sha256": "6ffc202cea765dbceb25b2d1c0dd44f8d5b5279c200dfb51036a46cf2bd5f262",
+      "reason": "Synthetic unsafe-path input for a path validator test; not a real location."
+    },
+    {
+      "file": "tools/test_prepare_package_first_use_a293.py",
+      "line": 195,
+      "code": "PT001",
+      "line_sha256": "07798e4d5108fb9e912fa134ec391336e3e58746d4507f923b67a4744a2c03e7",
+      "reason": "Marker list a test uses to detect leaked local paths; not a real location."
+    },
+    {
+      "file": "tools/test_report_source_headers.py",
+      "line": 36,
+      "code": "PT001",
+      "line_sha256": "78d36ba100b443e21d62bf8ac5f7e0eb48212f74b8b29797fb76e63302b88cb2",
+      "reason": "Synthetic unsafe-path input for a path validator test; not a real location."
+    }
+  ],
+  "omissions": [
+    {
+      "prefix": "fixtures/json-schema-suite/",
+      "reason": "Explicitly approved third-party upstream conformance fixtures; contents deliberately omitted, not certified."
+    }
+  ]
+}

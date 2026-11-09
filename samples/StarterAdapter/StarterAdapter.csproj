@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A sample game adapter for the general app (the user, 2026-11-01: adapters load as extras, not a requirement).
+       It recognises the sample project and adds one game rule a schema cannot state. The app loads StarterAdapter.dll
+       from its adapters folder or with the adapter option. -->
+  <PropertyGroup>
+    <RootNamespace>StarterAdapter</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Brutal.Authoring.Editor.ImGui\Brutal.Authoring.Editor.ImGui.csproj" Private="false" />
+  </ItemGroup>
+</Project>

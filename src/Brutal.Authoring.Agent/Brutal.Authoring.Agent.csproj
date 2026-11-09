@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Goal 20: AI agents use the editor directly. One engine (AgentSession) over a data project, with two thin doors on
+       top: the command line and an MCP server over stdio (Brutal.Authoring.Agent.Cli). No packages, no UI. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Brutal.Authoring\Brutal.Authoring.csproj" />
+    <ProjectReference Include="..\Brutal.Authoring.Data\Brutal.Authoring.Data.csproj" />
+    <ProjectReference Include="..\Brutal.Authoring.Editor\Brutal.Authoring.Editor.csproj" />
+  </ItemGroup>
+</Project>

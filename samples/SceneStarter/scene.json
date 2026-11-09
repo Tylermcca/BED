@@ -1,0 +1,1 @@
+{"kind":"scene","version":1,"objects":[{"id":"root","position":[2,3,4]},{"id":"child","parent":"root","position":[1,0,0],"scale":[2,2,2],"references":{"anchor":"root"}}]}

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The editor model: selection, workspaces, the command palette and focus, on top of the core session. No UI package
+       yet: the ImGui window is added on top once the BRUTAL inventory (A007) and the usability profile (A008) land.
+       Games never reference this project (goal 6). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Brutal.Authoring\Brutal.Authoring.csproj" />
+    <ProjectReference Include="..\Brutal.Authoring.Data\Brutal.Authoring.Data.csproj" />
+  </ItemGroup>
+</Project>
+

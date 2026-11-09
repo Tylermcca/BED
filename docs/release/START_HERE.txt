@@ -1,0 +1,115 @@
+BED - START HERE
+================
+
+An editor for game data: lists of things (wares, ships, spells, recipes) kept as
+JSON files, each described by a JSON Schema. It checks every edit against the
+schema, so a typo or an impossible value is caught before it's saved.
+
+
+1. OPEN IT
+----------
+Double-click  BED.exe
+
+BED needs Microsoft's Visual C++ Redistributable (x64), which most Windows PCs already have. If BED couldn't load VCRUNTIME140.dll or VCRUNTIME140_1.dll, install it from Microsoft: https://aka.ms/vs/17/release/vc_redist.x64.exe
+
+
+2. TRY THE SAMPLE (two minutes)
+-------------------------------
+Click  "Try the example".
+
+  - The middle is a TABLE of the recipes. Click a cell and type to change it;
+    press Enter to keep the change.
+  - Try something wrong, like  -5  in "minutes" (the last column: scroll the
+    table right to reach it): it's refused, and the status line says why.
+  - The  ->  beside "makes" jumps to the ware it names. "Back" returns.
+  - Select a ware: the "Referenced by" panel lists the recipes that use it.
+  - Ctrl+Z undoes, Ctrl+Y redoes, Ctrl+S saves.
+  - Ctrl+Shift+P finds any command by typing its name.
+
+The sample is a copy: edit it freely.
+
+For bulk fill, checks and undoing a whole batch before reapplying a subset,
+see docs/guide/bulk_edit_recipe.md in the source documentation.
+For your first settings change, follow samples/first-task/first_task.md in this folder.
+
+
+2b. PLAY CHECKERS (a small game made with these tools)
+------------------------------------------------------
+Under "Open a project", choose the  samples\checkers  folder as the
+Data folder, and click Open. Each position file gets a Board panel:
+
+  - Click a dark square to change what stands on it (an undoable edit).
+  - "Play Match" (top bar) plays it inside the editor; Stop returns to editing,
+    with the position untouched.
+  - "Play in its own window" starts the game itself, play-checkers.exe, on the
+    position you're editing. You can also double-click play-checkers.exe in samples\checkers.
+
+
+3. OPEN YOUR OWN DATA
+---------------------
+On the start screen, under "Open a project":
+
+  Data folder     the folder of your JSON data files
+  Schema folder   the folder of their schemas
+  Link map        optional: a reference_map.json that says which fields name
+                  items in other files (see the sample's for an example)
+
+Use "Browse..." to choose each, then "Open".
+
+Shortcut: if one folder holds  data\  and  schemas\  side by side, choose that
+folder as the Data folder alone and click Open.
+
+How a data file finds its schema: wares.json is checked by wares.schema.json,
+or by the schema its "$schema" field names.
+
+Projects you open are listed under "Recent projects" next time.
+
+Keyboard: hold Ctrl and press Tab to choose Files, then release Ctrl. Tab or
+Shift+Tab reaches its actions and rows; Enter activates the focused control.
+New/Rename focus the name field; Enter there submits. Cancel or Escape goes
+back to the opening action. Successful New/Rename focus the file row. Delete asks again:
+Tab to Delete it and press Enter to confirm; focus then moves to Restore.
+Restore focuses the restored row.
+
+To close a project, choose Close project in Files. If it has unsaved edits,
+Tab to Save all, then close; Close anyway; or Keep it open, and press Enter.
+Escape while that prompt has focus keeps the project and its draft open.
+
+If your adapter adds a map or 3D viewport, Tab to its outline. Enter selects
+the next item; Shift+Enter the previous one. Arrows move a selected movable
+item; Alt reverses snapping. Ctrl+arrows pan a zoomed-in map or orbit a 3D
+viewport. =/+ and - zoom; Tab leaves. On maps only, 0 resets the view to its
+current fitted bounds; Fit recomputes those bounds. These are visual keyboard
+controls, not a screen-reader bridge.
+
+
+4. WHEN SOMETHING'S WRONG
+-------------------------
+  - A file that can't open is marked in the Files panel; hover over it to see why.
+  - A file that doesn't fit its schema has a "Repair" button: it opens anyway,
+    and lets you fix it one edit at a time.
+  - Saving is refused if the file was changed by another program since you
+    opened it, so nobody's work is overwritten.
+
+
+USE IT WITH AN AI ASSISTANT
+---------------------------
+With a project data file open in BED, Help > Use with an AI assistant shows setup examples for that project; the start-screen Help button uses the bundled sample.
+Open guides/using_bed_with_ai.md in this folder for a step-by-step guide.
+It covers bed-cli.exe, the sample, and local MCP setup for your assistant.
+Start with a copy. Preview edits and approve writes before saving.
+Some file tools can write immediately: read the guide's saves and limits.
+Adapters are programs; load only ones you trust.
+
+
+5. MORE
+-------
+  - A game can add its own rules and panels with an ADAPTER: a DLL put in the
+    adapters folder. Two are included as examples: Starter (for the sample) and
+    Checkers. Adapters are programs: only add ones you trust.
+  - Without a window (for scripts or trials): BED.exe --help lists
+    its options. <folder> --shot picture.png draws the screen into a picture;
+    --settings <folder> keeps the recent list there instead of your own.
+    A picture is all --shot gives: choosing a recent project or playing a match
+    needs the window.
+  - licenses\THIRD-PARTY-NOTICES.md lists the libraries this uses and their licences.

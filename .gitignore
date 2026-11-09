@@ -1,0 +1,18 @@
+bin/
+obj/
+.vs/
+*.user
+codex/inbox/
+codex/outbox/
+TestResults/
+__pycache__/
+dist/
+
+# The quick start's own walkthrough project (docs/quick_start.md): a reader's, never committed
+.quick-start/
+
+# Claude Code's local worktrees and session files.
+.claude/
+
+# Rebuildable project-local asset cache.
+.bed/cache/

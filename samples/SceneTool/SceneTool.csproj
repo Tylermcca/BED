@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The `scene` command-line tool: the general scene document edited headless, one recorded command at a time. It's
+       the seam scripts, build steps and AI helpers use (goal 2, FUT-001): every change is a catalogue command, so it's
+       validated, refused whole, and replayable. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>scene</AssemblyName>
+    <RootNamespace>SceneTool</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Brutal.Authoring\Brutal.Authoring.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,42 @@
+{
+  "kind": "journal",
+  "version": 1,
+  "entries": [
+    {
+      "op": "do",
+      "command": "toy.add",
+      "version": 1,
+      "args": {
+        "id": "lamp",
+        "label": "Lamp",
+        "x": 1,
+        "y": 2
+      }
+    },
+    {
+      "op": "do",
+      "command": "toy.move",
+      "version": 1,
+      "args": {
+        "id": "lamp",
+        "x": 3,
+        "y": 4
+      }
+    },
+    {
+      "op": "do",
+      "command": "toy.rename",
+      "version": 1,
+      "args": {
+        "id": "lamp",
+        "label": "Desk lamp"
+      }
+    },
+    {
+      "op": "undo"
+    },
+    {
+      "op": "redo"
+    }
+  ]
+}

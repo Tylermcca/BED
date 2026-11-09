@@ -1,0 +1,1 @@
+{"type":"object","required":["kind","version","objects"],"properties":{"kind":{"const":"scene"},"version":{"const":1},"objects":{"type":"array"}}}

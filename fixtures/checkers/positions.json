@@ -1,0 +1,1744 @@
+{
+  "kind": "checkers-positions",
+  "version": 1,
+  "rules": "english-draughts",
+  "source": "https://wcdf.net/rules/rules_of_checkers_english.pdf",
+  "positions": [
+    {
+      "id": "opening",
+      "why": "WCDF 1.8,1.11,1.13,1.15; INVENTED position. Only the four dark front men can move. The edge a3 has b4; each of c3,e3,g3 has two vacant neighbours. Seven paths; rear ranks are occupied.",
+      "to_move": "dark",
+      "board": [
+        "-l-l-l-l",
+        "l-l-l-l-",
+        "-l-l-l-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        "d-d-d-d-",
+        "-d-d-d-d",
+        "d-d-d-d-"
+      ],
+      "legal": [
+        [
+          "a3",
+          "b4"
+        ],
+        [
+          "c3",
+          "b4"
+        ],
+        [
+          "c3",
+          "d4"
+        ],
+        [
+          "e3",
+          "d4"
+        ],
+        [
+          "e3",
+          "f4"
+        ],
+        [
+          "g3",
+          "f4"
+        ],
+        [
+          "g3",
+          "h4"
+        ]
+      ],
+      "after": {
+        "move": [
+          "a3",
+          "b4"
+        ],
+        "board": [
+          "-l-l-l-l",
+          "l-l-l-l-",
+          "-l-l-l-l",
+          ".-.-.-.-",
+          "-d-.-.-.",
+          ".-d-d-d-",
+          "-d-d-d-d",
+          "d-d-d-d-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "dark_centre_steps",
+      "why": "WCDF 1.15; INVENTED position. c3's forward neighbours b4,d4 are empty; no adjacent light piece.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-d-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "b4"
+        ],
+        [
+          "c3",
+          "d4"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "b4"
+        ],
+        "board": [
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-d-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_centre_steps",
+      "why": "WCDF 1.15; INVENTED position. f6's lower-rank neighbours e5,g5 are empty; a1 is remote.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-l-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        "d-.-.-.-"
+      ],
+      "legal": [
+        [
+          "f6",
+          "e5"
+        ],
+        [
+          "f6",
+          "g5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "f6",
+          "e5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-l-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "d-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "dark_left_edge",
+      "why": "WCDF 1.15; INVENTED position. Only b4 stays on the board from a3.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        "d-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "a3",
+          "b4"
+        ]
+      ],
+      "after": {
+        "move": [
+          "a3",
+          "b4"
+        ],
+        "board": [
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-d-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "dark_right_edge",
+      "why": "WCDF 1.15; INVENTED position. Only g3 stays on the board from h2.",
+      "to_move": "dark",
+      "board": [
+        "-l-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-d",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "h2",
+          "g3"
+        ]
+      ],
+      "after": {
+        "move": [
+          "h2",
+          "g3"
+        ],
+        "board": [
+          "-l-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-d-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_left_edge",
+      "why": "WCDF 1.15; INVENTED position. Only b6 stays on the board in light's forward direction.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        "l-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-d",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "a7",
+          "b6"
+        ]
+      ],
+      "after": {
+        "move": [
+          "a7",
+          "b6"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-l-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-d",
+          ".-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "light_right_edge",
+      "why": "WCDF 1.15; INVENTED position. Only g5 stays on the board from h6.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        "d-.-.-.-"
+      ],
+      "legal": [
+        [
+          "h6",
+          "g5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "h6",
+          "g5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-l-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "d-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "one_piece_partly_blocked",
+      "why": "WCDF 1.15; INVENTED position. b4 blocks c3's left step but can itself step to a5,c5; c3 retains d4. No jumps.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-d-.-.-.",
+        ".-d-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "d4"
+        ],
+        [
+          "b4",
+          "a5"
+        ],
+        [
+          "b4",
+          "c5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "d4"
+        ],
+        "board": [
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-d-d-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "occupied_capture_landing",
+      "why": "WCDF 1.15,1.18; INVENTED position. d4 cannot be jumped by c3 because e5 is occupied. e5 cannot capture backwards. Quiet destinations are b4,d6,f6.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-d-.-",
+        "-.-l-.-.",
+        ".-d-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "b4"
+        ],
+        [
+          "e5",
+          "d6"
+        ],
+        [
+          "e5",
+          "f6"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "b4"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-d-.-",
+          "-d-l-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "forced_capture_single",
+      "why": "WCDF 1.18,1.20; INVENTED position. c3 jumps d4 to e5; a1's quiet b2 and c3's quiet b4 are excluded. e5 has no further target.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-l-.-.",
+        ".-d-.-.-",
+        "-.-.-.-.",
+        "d-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "e5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "e5"
+        ],
+        "board": [
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-d-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "d-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_forced_capture",
+      "why": "WCDF 1.18,1.20; INVENTED position. f6 jumps e5 to d4. Light's other quiet possibilities are excluded. No next target at c3/e3.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-l-.",
+        ".-.-d-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        "d-.-.-.-"
+      ],
+      "legal": [
+        [
+          "f6",
+          "d4"
+        ]
+      ],
+      "after": {
+        "move": [
+          "f6",
+          "d4"
+        ],
+        "board": [
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-l-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "d-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "choice_one_man",
+      "why": "WCDF 1.18,1.20; INVENTED position. Both b4/a5 and d4/e5 are available jump pairs. Either endpoint has no continuation.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-l-l-.-.",
+        ".-d-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "a5"
+        ],
+        [
+          "c3",
+          "e5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "a5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "d-.-.-.-",
+          "-.-l-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "choice_two_men",
+      "why": "WCDF 1.18,1.20; INVENTED position. a3 can take b4, e3 can take f4. Both captures terminate; no quiet move is listed.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-l-.-l-.",
+        "d-.-d-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "a3",
+          "c5"
+        ],
+        [
+          "e3",
+          "g5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "a3",
+          "c5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-d-.-.-",
+          "-.-.-l-.",
+          ".-.-d-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "short_capture_need_not_be_longest",
+      "why": "WCDF 1.19,1.20; INVENTED position. The b4 branch ends at a5 after one victim. The d4 branch must continue over f6 to g7. Both full paths are choices.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-l-.",
+        ".-.-.-.-",
+        "-l-l-.-.",
+        ".-d-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "a5"
+        ],
+        [
+          "c3",
+          "e5",
+          "g7"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "a5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-l-.",
+          "d-.-.-.-",
+          "-.-l-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "two_jumps_same_direction",
+      "why": "WCDF 1.18,1.19; INVENTED position. a1 crosses b2 to c3, then d4 to e5. Stopping at c3 omits a continuation; e5 has none.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-l-.-.",
+        ".-.-.-.-",
+        "-l-.-.-.",
+        "d-.-.-.-"
+      ],
+      "legal": [
+        [
+          "a1",
+          "c3",
+          "e5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "a1",
+          "c3",
+          "e5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-d-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "two_jumps_zigzag",
+      "why": "WCDF 1.18,1.19; INVENTED position. c1 crosses d2 to e3, then turns across d4 to c5. No other first or second branch.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-l-.-.",
+        ".-.-.-.-",
+        "-.-l-.-.",
+        ".-d-.-.-"
+      ],
+      "legal": [
+        [
+          "c1",
+          "e3",
+          "c5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c1",
+          "e3",
+          "c5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-d-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "branch_after_first_jump",
+      "why": "WCDF 1.19,1.20; INVENTED position. First landing c3 is forced; its b4 and d4 targets give two terminal branches a5,e5.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-l-l-.-.",
+        ".-.-.-.-",
+        "-l-.-.-.",
+        "d-.-.-.-"
+      ],
+      "legal": [
+        [
+          "a1",
+          "c3",
+          "a5"
+        ],
+        [
+          "a1",
+          "c3",
+          "e5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "a1",
+          "c3",
+          "a5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "d-.-.-.-",
+          "-.-l-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "branch_with_unequal_lengths",
+      "why": "WCDF 1.19,1.20; INVENTED position. At c3 the a5 branch stops. The e5 branch has an extra f6/g7 leg. Both sequences, not their prefixes, are present.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-l-.",
+        ".-.-.-.-",
+        "-l-l-.-.",
+        ".-.-.-.-",
+        "-l-.-.-.",
+        "d-.-.-.-"
+      ],
+      "legal": [
+        [
+          "a1",
+          "c3",
+          "a5"
+        ],
+        [
+          "a1",
+          "c3",
+          "e5",
+          "g7"
+        ]
+      ],
+      "after": {
+        "move": [
+          "a1",
+          "c3",
+          "a5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-l-.",
+          "d-.-.-.-",
+          "-.-l-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_two_jumps",
+      "why": "WCDF 1.18,1.19; INVENTED position. h8 takes g7 to f6, then e5 to d4. Rank decreases on each leg.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-d-",
+        "-.-.-.-.",
+        ".-.-d-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "h8",
+          "f6",
+          "d4"
+        ]
+      ],
+      "after": {
+        "move": [
+          "h8",
+          "f6",
+          "d4"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-l-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "light_branch_after_first",
+      "why": "WCDF 1.19,1.20; INVENTED position. h8's first f6 landing branches over g5 to h4 or e5 to d4; both then end.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-d-",
+        "-.-.-.-.",
+        ".-.-d-d-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "h8",
+          "f6",
+          "h4"
+        ],
+        [
+          "h8",
+          "f6",
+          "d4"
+        ]
+      ],
+      "after": {
+        "move": [
+          "h8",
+          "f6",
+          "h4"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-d-.-",
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "dark_crown_quiet_edge",
+      "why": "WCDF 1.15,1.16; INVENTED position. a7 has only b8, where its after-board contains D rather than d.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        "d-.-.-.-",
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "a7",
+          "b8"
+        ]
+      ],
+      "after": {
+        "move": [
+          "a7",
+          "b8"
+        ],
+        "board": [
+          "-D-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "dark_crown_quiet_choice",
+      "why": "WCDF 1.15,1.16; INVENTED position. Both b8,d8 are vacant crown-row neighbours. Chosen b8 is crowned.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-d-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-l",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c7",
+          "b8"
+        ],
+        [
+          "c7",
+          "d8"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c7",
+          "b8"
+        ],
+        "board": [
+          "-D-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-l",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_crown_quiet_edge",
+      "why": "WCDF 1.15,1.16; INVENTED position. h2 has only g1 in light's forward direction, producing L.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        "d-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-l",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "h2",
+          "g1"
+        ]
+      ],
+      "after": {
+        "move": [
+          "h2",
+          "g1"
+        ],
+        "board": [
+          "-.-.-.-.",
+          "d-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-L-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "light_crown_quiet_choice",
+      "why": "WCDF 1.15,1.16; INVENTED position. e1 and g1 are both vacant; either crowns the light man.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        "d-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-l-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "f2",
+          "e1"
+        ],
+        [
+          "f2",
+          "g1"
+        ]
+      ],
+      "after": {
+        "move": [
+          "f2",
+          "e1"
+        ],
+        "board": [
+          "-.-.-.-.",
+          "d-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-L-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "dark_capture_crown_stops",
+      "why": "WCDF 1.16,1.19; INVENTED position. b6 takes c7 to d8. e7/f6 would be a backward king jump, but this newly crowned man's turn has ended.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-l-l-.-",
+        "-d-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "b6",
+          "d8"
+        ]
+      ],
+      "after": {
+        "move": [
+          "b6",
+          "d8"
+        ],
+        "board": [
+          "-.-D-.-.",
+          ".-.-l-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_capture_crown_stops",
+      "why": "WCDF 1.16,1.19; INVENTED position. g3 takes f2 to e1. d2/c3 remains available only on a future king turn; d2 survives the after-board.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-l-",
+        "-.-d-d-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "g3",
+          "e1"
+        ]
+      ],
+      "after": {
+        "move": [
+          "g3",
+          "e1"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-d-.-.",
+          ".-.-L-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "dark_king_four_steps",
+      "why": "WCDF 1.17; INVENTED position. All four adjacent diagonals from d4 are vacant; no adjacent opponent. Longer slides are absent.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-D-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "d4",
+          "c3"
+        ],
+        [
+          "d4",
+          "e3"
+        ],
+        [
+          "d4",
+          "c5"
+        ],
+        [
+          "d4",
+          "e5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "d4",
+          "c3"
+        ],
+        "board": [
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-D-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_king_four_steps",
+      "why": "WCDF 1.17; INVENTED position. All four adjacent diagonals from e5 are vacant. King directions are independent of side.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-L-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        "d-.-.-.-"
+      ],
+      "legal": [
+        [
+          "e5",
+          "d4"
+        ],
+        [
+          "e5",
+          "f4"
+        ],
+        [
+          "e5",
+          "d6"
+        ],
+        [
+          "e5",
+          "f6"
+        ]
+      ],
+      "after": {
+        "move": [
+          "e5",
+          "d4"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-L-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "d-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "dark_king_corner_step",
+      "why": "WCDF 1.17; INVENTED position. Only b2 is an on-board neighbour; c3 and longer slides are absent.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        "D-.-.-.-"
+      ],
+      "legal": [
+        [
+          "a1",
+          "b2"
+        ]
+      ],
+      "after": {
+        "move": [
+          "a1",
+          "b2"
+        ],
+        "board": [
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-D-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "king_forward_capture",
+      "why": "WCDF 1.20,1.21; INVENTED position. d4 is the sole adjacent target and e5 is vacant. Quiet king steps are suppressed.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-l-.-.",
+        ".-D-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "e5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "e5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-D-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "king_backward_capture",
+      "why": "WCDF 1.20,1.21; INVENTED position. The lower-rank d4/c3 pair supplies the only capture. The king may take backwards.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-D-.-",
+        "-.-l-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "e5",
+          "c3"
+        ]
+      ],
+      "after": {
+        "move": [
+          "e5",
+          "c3"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-D-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_king_backward_capture",
+      "why": "WCDF 1.20,1.21; INVENTED position. For light, d4/e5 is backward, but L can jump it. No other victim exists.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-d-.-.",
+        ".-L-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "e5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "e5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-L-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "king_changes_rank_direction",
+      "why": "WCDF 1.19,1.21; INVENTED position. The king goes upward over d4 and downward over f4. Already jumped d4 cannot be taken on the return diagonal.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-l-l-.",
+        ".-D-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "e5",
+          "g3"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "e5",
+          "g3"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-D-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "king_capture_fork",
+      "why": "WCDF 1.20,1.21; INVENTED position. Two adjacent upper targets give two terminal paths; the king's quiet lower steps are excluded.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-l-l-.-.",
+        ".-D-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "a5"
+        ],
+        [
+          "c3",
+          "e5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "a5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "D-.-.-.-",
+          "-.-l-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "king_loop_no_piece_twice",
+      "why": "WCDF 1.19,1.20,1.21; INVENTED position. The four-victim diamond can be traversed in either direction and returns to vacated c3. A second circuit would jump the same victims twice and is excluded.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-l-l-.",
+        ".-D-.-.-",
+        "-.-l-l-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "e5",
+          "g3",
+          "e1",
+          "c3"
+        ],
+        [
+          "c3",
+          "e1",
+          "g3",
+          "e5",
+          "c3"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "e5",
+          "g3",
+          "e1",
+          "c3"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-D-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "dark_man_cannot_capture_backward",
+      "why": "WCDF 1.15,1.18,1.25.4; INVENTED position. d4 is behind the man; c3 is not a jump destination. Empty forward d6,f6 remain.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-d-.-",
+        "-.-l-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "e5",
+          "d6"
+        ],
+        [
+          "e5",
+          "f6"
+        ]
+      ],
+      "after": {
+        "move": [
+          "e5",
+          "d6"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-d-.-.",
+          ".-.-.-.-",
+          "-.-l-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_man_cannot_capture_backward",
+      "why": "WCDF 1.15,1.18,1.25.4; INVENTED position. d4 lies behind light's forward direction. Empty b2,d2 are its two moves.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-d-.-.",
+        ".-l-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "b2"
+        ],
+        [
+          "c3",
+          "d2"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "b2"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-d-.-.",
+          ".-.-.-.-",
+          "-l-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    },
+    {
+      "id": "blocked_dark_loses",
+      "why": "WCDF 1.18,1.30; INVENTED position. b8 occupies a7's only neighbour; c9 is off-board, so a7 has neither step nor jump. Dark has no move.",
+      "to_move": "dark",
+      "board": [
+        "-l-.-.-.",
+        "d-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": []
+    },
+    {
+      "id": "blocked_light_loses",
+      "why": "WCDF 1.18,1.30; INVENTED position. g1 occupies h2's only forward neighbour; f0 is off-board. Light has no move.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-l",
+        ".-.-.-d-"
+      ],
+      "legal": []
+    },
+    {
+      "id": "no_dark_pieces_loses",
+      "why": "WCDF 1.30; INVENTED position. There is no dark starting square, hence no dark move.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-l-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": []
+    },
+    {
+      "id": "no_light_pieces_loses",
+      "why": "WCDF 1.30; INVENTED position. There is no light starting square, hence no light move.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-d-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": []
+    },
+    {
+      "id": "blocked_king_other_man_moves",
+      "why": "WCDF 1.15,1.17,1.18; INVENTED position. a1's king is blocked by its own b2 man and cannot jump a friend. That man has a3,c3; the side is not immobile.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-l",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-d-.-.-.",
+        "D-.-.-.-"
+      ],
+      "legal": [
+        [
+          "b2",
+          "a3"
+        ],
+        [
+          "b2",
+          "c3"
+        ]
+      ],
+      "after": {
+        "move": [
+          "b2",
+          "a3"
+        ],
+        "board": [
+          "-.-.-.-l",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "d-.-.-.-",
+          "-.-.-.-.",
+          "D-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "man_captures_king",
+      "why": "WCDF 1.18,1.20; INVENTED position. A king on d4 is still a capturable opponent for the man at c3. The capturing man stays d on e5.",
+      "to_move": "dark",
+      "board": [
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-L-.-.",
+        ".-d-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-"
+      ],
+      "legal": [
+        [
+          "c3",
+          "e5"
+        ]
+      ],
+      "after": {
+        "move": [
+          "c3",
+          "e5"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-d-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-"
+        ],
+        "to_move": "light"
+      }
+    },
+    {
+      "id": "light_king_corner_not_flying",
+      "why": "WCDF 1.17; INVENTED position. Only adjacent g7 is available; f6,e5 and further same-diagonal squares are not extra moves.",
+      "to_move": "light",
+      "board": [
+        "-.-.-.-L",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        ".-.-.-.-",
+        "-.-.-.-.",
+        "d-.-.-.-"
+      ],
+      "legal": [
+        [
+          "h8",
+          "g7"
+        ]
+      ],
+      "after": {
+        "move": [
+          "h8",
+          "g7"
+        ],
+        "board": [
+          "-.-.-.-.",
+          ".-.-.-L-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          ".-.-.-.-",
+          "-.-.-.-.",
+          "d-.-.-.-"
+        ],
+        "to_move": "dark"
+      }
+    }
+  ]
+}

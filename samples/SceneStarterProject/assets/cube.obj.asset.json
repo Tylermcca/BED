@@ -1,0 +1,22 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "c0bec0bec0bec0bec0bec0bec0bec0be",
+  "source": "cube.obj",
+  "sourceHash": "1ad0e42fb45d96d76614350d10c061d20878b28c64840fef0fe17227f8cdd6e2",
+  "importer": {
+    "id": "obj",
+    "version": 1
+  },
+  "settings": {
+    "scale": 1,
+    "upAxis": "Y"
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/SceneStarterProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

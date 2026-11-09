@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "First task settings",
+  "type": "object",
+  "required": [
+    "kind",
+    "presets"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "enum": [
+        "first-task-settings"
+      ]
+    },
+    "presets": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "x-label": "name",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "rounds",
+          "reserve"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rounds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Total rounds. Must be greater than reserve."
+          },
+          "reserve": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99,
+            "description": "Rounds held in reserve; keep this below rounds."
+          }
+        }
+      }
+    }
+  }
+}

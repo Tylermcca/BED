@@ -1,0 +1,6 @@
+# Every text file is stored and checked out with LF, on every machine, so a test's text (raw strings included) is the same
+# in every checkout: core.autocrlf had made the main checkout's fixtures CRLF while a worktree's stayed LF (found by A048).
+* text=auto eol=lf
+*.png binary
+*.glb binary
+*.blend binary

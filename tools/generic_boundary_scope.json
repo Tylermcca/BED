@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "purpose": "technical development-library census, NOT an adopted release/pack allowlist",
+  "status": "owner-confirmed seven-library technical census only, 2026-11-08 inbox; not release adoption",
+  "projects": [
+    {
+      "path": "src/Brutal.Authoring/Brutal.Authoring.csproj",
+      "assembly": "Brutal.Authoring"
+    },
+    {
+      "path": "src/Brutal.Authoring.Data/Brutal.Authoring.Data.csproj",
+      "assembly": "Brutal.Authoring.Data"
+    },
+    {
+      "path": "src/Brutal.Authoring.Editor/Brutal.Authoring.Editor.csproj",
+      "assembly": "Brutal.Authoring.Editor"
+    },
+    {
+      "path": "src/Brutal.Authoring.Import/Brutal.Authoring.Import.csproj",
+      "assembly": "Brutal.Authoring.Import"
+    },
+    {
+      "path": "src/Brutal.Authoring.Agent/Brutal.Authoring.Agent.csproj",
+      "assembly": "Brutal.Authoring.Agent"
+    },
+    {
+      "path": "src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj",
+      "assembly": "Brutal.Authoring.Editor.ImGui"
+    },
+    {
+      "path": "src/Brutal.Authoring.Editor.Text/Brutal.Authoring.Editor.Text.csproj",
+      "assembly": "Brutal.Authoring.Editor.Text"
+    }
+  ],
+  "support_projects": [
+    "third_party/ImCode/src/ImCode/ImCode.csproj",
+    "third_party/ImCode/src/ImCode.Text/ImCode.Text.csproj"
+  ],
+  "consumer_roots": [
+    "ExampleGame",
+    "SampleConsumer"
+  ],
+  "engine_free": [
+    "Brutal.Authoring",
+    "Brutal.Authoring.Data",
+    "Brutal.Authoring.Editor",
+    "Brutal.Authoring.Import",
+    "Brutal.Authoring.Agent"
+  ],
+  "no_imcode": [
+    "Brutal.Authoring",
+    "Brutal.Authoring.Data",
+    "Brutal.Authoring.Editor",
+    "Brutal.Authoring.Import",
+    "Brutal.Authoring.Agent",
+    "Brutal.Authoring.Editor.ImGui"
+  ],
+  "binary_assemblies_unverified": true,
+  "source_exclusions": [],
+  "lineage_exclusions": "A237/A249 security-work inspection/replay/fix lineage and outbox artifacts are not inputs; no per-file denial inferred"
+}

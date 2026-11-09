@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../src/Brutal.Authoring/Brutal.Authoring.csproj" />
+    <ProjectReference Include="../../src/Brutal.Authoring.Editor/Brutal.Authoring.Editor.csproj" />
+  </ItemGroup>
+</Project>

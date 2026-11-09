@@ -1,0 +1,8 @@
+{
+  "id": "checkers",
+  "name": "Checkers",
+  "version": "1.0.0",
+  "api": "0.1",
+  "license": "MIT",
+  "description": "English draughts made with the authoring tools: set up a board, play it by clicking, let the computer move, replay a match."
+}

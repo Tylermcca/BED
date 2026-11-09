@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The editor window, drawn with Dear ImGui through BRUTAL (D3, from A007's inventory: Ahwoo.Brutal.Core 2026.10.1 +
+       Ahwoo.Brutal.ImGui 2026.10.2, the line our BRUTAL games use, headless-testable). It draws the UI-free editor model and owns no document
+       state of its own. No window, GPU or GLFW here: a host application supplies those. Games never reference this (goal 6).
+       BRUTAL's analyzer (UTF-8 UI strings) applies here; the test project turns off that one rule. -->
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Brutal.Authoring.Editor\Brutal.Authoring.Editor.csproj" />
+    <PackageReference Include="Ahwoo.Brutal.Core" />
+    <PackageReference Include="Ahwoo.Brutal.ImGui" />
+    <!-- No third-party code here: the Text panel and the ImCode it's built on are Brutal.Authoring.Editor.Text, which a host
+         plugs in through DataWorkspace.FilePanels (a test checks this assembly references no ImCode). -->
+  </ItemGroup>
+  <ItemGroup>
+    <!-- BRUTAL's logo and notice, which a program built with BRUTAL must show and ship (BRUTAL License v1.0, 2.2, 2.3). -->
+    <EmbeddedResource Include="Branding\LOGO_BRUTAL_WHT.png" LogicalName="LOGO_BRUTAL_WHT.png" />
+    <EmbeddedResource Include="Branding\NOTICE.txt" LogicalName="NOTICE.txt" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,384 @@
+{
+  "kind": "licence-pairs",
+  "version": 1,
+  "pairs": [
+    {
+      "a": "MIT",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/MIT.html#licenseText"
+    },
+    {
+      "a": "MIT",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/MIT.html#licenseText"
+    },
+    {
+      "a": "BSD-2-Clause",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/BSD-2-Clause.html#licenseText"
+    },
+    {
+      "a": "BSD-2-Clause",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/BSD-2-Clause.html#licenseText"
+    },
+    {
+      "a": "BSD-3-Clause",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/BSD-3-Clause.html#licenseText"
+    },
+    {
+      "a": "BSD-3-Clause",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/BSD-3-Clause.html#licenseText"
+    },
+    {
+      "a": "Zlib",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/Zlib.html#licenseText"
+    },
+    {
+      "a": "Zlib",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/Zlib.html#licenseText"
+    },
+    {
+      "a": "ISC",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/ISC.html#licenseText"
+    },
+    {
+      "a": "ISC",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/ISC.html#licenseText"
+    },
+    {
+      "a": "Unlicense",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/Unlicense.html#licenseText"
+    },
+    {
+      "a": "Unlicense",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/Unlicense.html#licenseText"
+    },
+    {
+      "a": "CC0-1.0",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/CC0-1.0.html#licenseText"
+    },
+    {
+      "a": "CC0-1.0",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/CC0-1.0.html#licenseText"
+    },
+    {
+      "a": "BSL-1.0",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/BSL-1.0.html#licenseText"
+    },
+    {
+      "a": "BSL-1.0",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "The permissive grant allows combination while retaining its conditions.",
+      "source": "https://spdx.org/licenses/BSL-1.0.html#licenseText"
+    },
+    {
+      "a": "GPL-2.0-only",
+      "b": "Apache-2.0",
+      "clash": true,
+      "why": "Apache's additional requirements conflict with fixed GPLv2 redistribution terms.",
+      "source": "https://www.apache.org/licenses/GPL-compatibility.html#:~:text=GPL%20version%202"
+    },
+    {
+      "a": "GPL-2.0-only",
+      "b": "GPL-3.0-only",
+      "clash": true,
+      "why": "Neither fixed GPL version permits this cross-version combination.",
+      "source": "https://www.gnu.org/licenses/gpl-faq.en.html#v2v3Compatibility"
+    },
+    {
+      "a": "GPL-2.0-only",
+      "b": "AGPL-3.0-only",
+      "clash": true,
+      "why": "GPLv2 section 6 bars extra restrictions and AGPLv3 section 13 only bridges GPLv3.",
+      "source": "https://spdx.org/licenses/GPL-2.0-only.html#licenseText"
+    },
+    {
+      "a": "GPL-2.0-only",
+      "b": "LGPL-3.0-only",
+      "clash": true,
+      "why": "LGPLv3 has no route for a GPLv2-only combined work.",
+      "source": "https://www.gnu.org/licenses/license-list.en.html#LGPLv3"
+    },
+    {
+      "a": "GPL-2.0-or-later",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "Selecting GPLv3 supplies a common permitted version.",
+      "source": "https://www.gnu.org/licenses/gpl-faq.en.html#v2v3Compatibility"
+    },
+    {
+      "a": "GPL-2.0-or-later",
+      "b": "Apache-2.0",
+      "clash": false,
+      "why": "Selecting GPLv3 supplies the Apache-compatible combination route.",
+      "source": "https://www.apache.org/licenses/GPL-compatibility.html#:~:text=GPLv3"
+    },
+    {
+      "a": "GPL-2.0-or-later",
+      "b": "AGPL-3.0-only",
+      "clash": false,
+      "why": "Select GPLv3, then use its explicit AGPLv3 combination permission.",
+      "source": "https://spdx.org/licenses/GPL-3.0-only.html#licenseText"
+    },
+    {
+      "a": "GPL-3.0-only",
+      "b": "AGPL-3.0-only",
+      "clash": false,
+      "why": "Both section 13 provisions permit combination while each part retains its licence.",
+      "source": "https://spdx.org/licenses/GPL-3.0-only.html#licenseText"
+    },
+    {
+      "a": "GPL-2.0-only",
+      "b": "GPL-2.0-or-later",
+      "clash": false,
+      "why": "GPLv2 section 9 permits selecting GPLv2 for the or-later component.",
+      "source": "https://spdx.org/licenses/GPL-2.0-only.html#licenseText"
+    },
+    {
+      "a": "Apache-2.0",
+      "b": "AGPL-3.0-only",
+      "clash": false,
+      "why": "Apache requirements can be satisfied in an AGPLv3 combination.",
+      "source": "https://www.gnu.org/licenses/license-compatibility.en.html#:~:text=Apache"
+    },
+    {
+      "a": "LGPL-2.1-only",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "LGPLv2.1 section 3 expressly permits conversion to GPLv2.",
+      "source": "https://spdx.org/licenses/LGPL-2.1-only.html#licenseText"
+    },
+    {
+      "a": "LGPL-2.1-only",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "LGPLv2.1 section 3 permits conversion to a newer GPL despite the only suffix.",
+      "source": "https://spdx.org/licenses/LGPL-2.1-only.html#licenseText"
+    },
+    {
+      "a": "LGPL-3.0-only",
+      "b": "GPL-2.0-or-later",
+      "clash": false,
+      "why": "Select GPLv3 for the GPL component and follow LGPLv3's incorporated GPLv3 terms.",
+      "source": "https://spdx.org/licenses/LGPL-3.0-only.html#licenseText"
+    },
+    {
+      "a": "LGPL-3.0-only",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "LGPLv3 consists of GPLv3 with additional permissions.",
+      "source": "https://spdx.org/licenses/LGPL-3.0-only.html#licenseText"
+    },
+    {
+      "a": "LGPL-2.1-only",
+      "b": "Apache-2.0",
+      "clash": false,
+      "why": "Convert the LGPL component to GPLv3 under section 3, then retain Apache conditions.",
+      "source": "https://spdx.org/licenses/LGPL-2.1-only.html#licenseText"
+    },
+    {
+      "a": "LGPL-3.0-only",
+      "b": "Apache-2.0",
+      "clash": false,
+      "why": "A GPLv3-compatible combination route retains the Apache conditions.",
+      "source": "https://www.gnu.org/licenses/license-compatibility.en.html#:~:text=Apache"
+    },
+    {
+      "a": "LGPL-2.1-only",
+      "b": "AGPL-3.0-only",
+      "clash": false,
+      "why": "Convert to GPLv3 under LGPL section 3, then use the GPLv3/AGPLv3 bridge.",
+      "source": "https://spdx.org/licenses/LGPL-2.1-only.html#licenseText"
+    },
+    {
+      "a": "LGPL-3.0-only",
+      "b": "AGPL-3.0-only",
+      "clash": false,
+      "why": "The GPLv3/AGPLv3 bridge remains available for the LGPLv3-based component.",
+      "source": "https://spdx.org/licenses/AGPL-3.0-only.html#licenseText"
+    },
+    {
+      "a": "LGPL-2.1-only",
+      "b": "LGPL-3.0-only",
+      "clash": false,
+      "why": "LGPLv2.1's section 3 conversion supplies a GPLv3 combination route.",
+      "source": "https://spdx.org/licenses/LGPL-2.1-only.html#licenseText"
+    },
+    {
+      "a": "MPL-2.0",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "Plain MPL permits this qualifying Larger Work through section 3.3 secondary licensing.",
+      "source": "https://www.mozilla.org/en-US/MPL/2.0/#distribution-of-a-larger-work"
+    },
+    {
+      "a": "MPL-2.0",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "Plain MPL permits this qualifying Larger Work through section 3.3 secondary licensing.",
+      "source": "https://www.mozilla.org/en-US/MPL/2.0/#distribution-of-a-larger-work"
+    },
+    {
+      "a": "MPL-2.0",
+      "b": "GPL-2.0-or-later",
+      "clash": false,
+      "why": "Plain MPL permits this qualifying Larger Work through section 3.3 secondary licensing.",
+      "source": "https://www.mozilla.org/en-US/MPL/2.0/#distribution-of-a-larger-work"
+    },
+    {
+      "a": "MPL-2.0",
+      "b": "AGPL-3.0-only",
+      "clash": false,
+      "why": "Plain MPL permits this qualifying Larger Work through section 3.3 secondary licensing.",
+      "source": "https://www.mozilla.org/en-US/MPL/2.0/#distribution-of-a-larger-work"
+    },
+    {
+      "a": "MPL-2.0",
+      "b": "LGPL-2.1-only",
+      "clash": false,
+      "why": "Plain MPL permits this qualifying Larger Work through section 3.3 secondary licensing.",
+      "source": "https://www.mozilla.org/en-US/MPL/2.0/#distribution-of-a-larger-work"
+    },
+    {
+      "a": "MPL-2.0",
+      "b": "LGPL-3.0-only",
+      "clash": false,
+      "why": "Plain MPL permits this qualifying Larger Work through section 3.3 secondary licensing.",
+      "source": "https://www.mozilla.org/en-US/MPL/2.0/#distribution-of-a-larger-work"
+    },
+    {
+      "a": "MPL-2.0",
+      "b": "Apache-2.0",
+      "clash": false,
+      "why": "Mozilla expressly allows this combination while the MPL-covered files retain their obligations.",
+      "source": "https://www.mozilla.org/en-US/MPL/2.0/FAQ/#mpl-bsd-and-apache"
+    },
+    {
+      "a": "MPL-2.0",
+      "b": "LicenseRef-Closed",
+      "clash": false,
+      "why": "Separate proprietary files may form a Larger Work while MPL-covered source remains available.",
+      "source": "https://www.mozilla.org/en-US/MPL/2.0/FAQ/#virality"
+    },
+    {
+      "a": "GPL-2.0-only",
+      "b": "LicenseRef-Closed",
+      "clash": true,
+      "why": "GPLv2 sections 2b and 3 require rights and source the defined closed component withholds.",
+      "source": "https://spdx.org/licenses/GPL-2.0-only.html#licenseText"
+    },
+    {
+      "a": "GPL-3.0-only",
+      "b": "LicenseRef-Closed",
+      "clash": true,
+      "why": "GPLv3 sections 5c and 6 require rights and source the defined closed component withholds.",
+      "source": "https://spdx.org/licenses/GPL-3.0-only.html#licenseText"
+    },
+    {
+      "a": "GPL-2.0-or-later",
+      "b": "LicenseRef-Closed",
+      "clash": true,
+      "why": "Every selectable GPL version requires rights and source the defined closed component withholds.",
+      "source": "https://spdx.org/licenses/GPL-2.0-only.html#licenseText"
+    },
+    {
+      "a": "AGPL-3.0-only",
+      "b": "LicenseRef-Closed",
+      "clash": true,
+      "why": "AGPLv3 sections 5c and 6 require rights and source the defined closed component withholds.",
+      "source": "https://spdx.org/licenses/AGPL-3.0-only.html#licenseText"
+    },
+    {
+      "a": "LGPL-2.1-only",
+      "b": "LicenseRef-Closed",
+      "clash": null,
+      "why": "The actual closed EULA must permit LGPL section 6 replacement/relinking and debugging rights; the label omits those facts (also https://www.gnu.org/licenses/gpl-faq.en.html#LGPLStaticVsDynamic).",
+      "source": "https://spdx.org/licenses/LGPL-2.1-only.html#licenseText"
+    },
+    {
+      "a": "LGPL-3.0-only",
+      "b": "LicenseRef-Closed",
+      "clash": null,
+      "why": "The actual closed EULA and packaging must satisfy LGPL section 4 replacement/relinking and debugging rights; the label omits those facts (also https://www.gnu.org/licenses/gpl-faq.en.html#LGPLStaticVsDynamic).",
+      "source": "https://spdx.org/licenses/LGPL-3.0-only.html#licenseText"
+    },
+    {
+      "a": "MIT",
+      "b": "LicenseRef-Closed",
+      "clash": false,
+      "why": "MIT permits proprietary combinations while its copyright and permission notices remain.",
+      "source": "https://spdx.org/licenses/MIT.html#licenseText"
+    },
+    {
+      "a": "BSD-3-Clause",
+      "b": "LicenseRef-Closed",
+      "clash": false,
+      "why": "Proprietary combinations can retain BSD notices and comply with its non-endorsement condition.",
+      "source": "https://spdx.org/licenses/BSD-3-Clause.html#licenseText"
+    },
+    {
+      "a": "Apache-2.0",
+      "b": "LicenseRef-Closed",
+      "clash": false,
+      "why": "Apache section 4 permits different terms for a derivative while requiring its original conditions.",
+      "source": "https://spdx.org/licenses/Apache-2.0.html#licenseText"
+    },
+    {
+      "a": "GPL-2.0-only",
+      "b": "GPL-2.0-only",
+      "clash": false,
+      "why": "GPLv2 sections 1 to 3 allow distribution while retaining the same applicable terms.",
+      "source": "https://spdx.org/licenses/GPL-2.0-only.html#licenseText"
+    },
+    {
+      "a": "GPL-3.0-only",
+      "b": "GPL-3.0-only",
+      "clash": false,
+      "why": "GPLv3 sections 4 to 6 allow distribution while retaining the same applicable terms.",
+      "source": "https://spdx.org/licenses/GPL-3.0-only.html#licenseText"
+    }
+  ]
+}

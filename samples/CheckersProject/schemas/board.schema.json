@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Checkers position",
+  "description": "A board and whose turn it is. The board's rows run from the top; each character is a square: - a light square, . an empty dark square, d and l dark and light men, D and L kings.",
+  "type": "object",
+  "required": ["kind", "version", "to_move", "board"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "kind": { "const": "checkers.game", "description": "Marks this file as a checkers position." },
+    "version": { "const": 1 },
+    "to_move": { "enum": ["dark", "light"], "description": "Whose turn it is." },
+    "board": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 16,
+      "description": "The rows, top first. Use the Board panel to set squares by clicking.",
+      "items": { "type": "string", "pattern": "^[-.dlDL]+$" }
+    }
+  }
+}

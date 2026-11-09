@@ -1,0 +1,11 @@
+{
+  "game": "Starter",
+  "labels": [
+    { "file": "wares.json", "list": "/wares", "field": "name" },
+    { "file": "recipes.json", "list": "/recipes", "field": "name" }
+  ],
+  "references": [
+    { "file": "recipes.json", "at": "/recipes/*/makes", "target": { "file": "wares.json", "list": "/wares", "key": "id" }, "evidence": "recipes.schema.json: makes names a ware's id" },
+    { "file": "recipes.json", "at": "/recipes/*/from", "target": { "file": "wares.json", "list": "/wares", "key": "id" }, "evidence": "recipes.schema.json: from names a ware's id" }
+  ]
+}

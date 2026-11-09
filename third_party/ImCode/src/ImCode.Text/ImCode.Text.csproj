@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ImCode.Text</RootNamespace>
+    <Description>UI independent text model for ImCode: document, selection, undo, editing commands</Description>
+  </PropertyGroup>
+
+</Project>

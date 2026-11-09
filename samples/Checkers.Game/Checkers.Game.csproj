@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Checkers as a game: its own window, just the board and the match, as a player would have it (the user,
+       2026-11-01: play inside the editor while making it, and in its own window as the game). The same rules code as
+       the editor, so the two cannot disagree. The editor starts it on the position being edited. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- For a player's zip: the game's window with no console window beside it, and nothing changed for anyone else. -->
+    <OutputType Condition="'$(PlayerBuild)' == 'true'">WinExe</OutputType>
+    <AssemblyName>play-checkers</AssemblyName>
+    <RootNamespace>CheckersPlay</RootNamespace>
+    <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Checkers\Checkers.csproj" />
+    <ProjectReference Include="..\..\src\Brutal.Authoring.Editor.App\Brutal.Authoring.Editor.App.csproj" />
+  </ItemGroup>
+  <Import Project="..\..\build\Notices.targets" />
+</Project>

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><RootNamespace>RoutePuzzleSample.Authoring</RootNamespace><GenerateDependencyFile>true</GenerateDependencyFile><NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../RoutePuzzle/RoutePuzzle.csproj" />
+    <ProjectReference Include="../../src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj" Private="false" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,19 @@
+# Contribution and source-header policy proposal
+
+## Status and decisions
+The repository already uses MIT (LICENSE.txt, chosen by its owner); dependencies retain their own terms. This document proposes contributor workflow. **Decision (the owner, 2026-11-08): the DCO sign-off below is adopted** (see CONTRIBUTING.md, Sign-off). No CLA and no rights transfer. Bot enforcement waits until public CI exists. This document authorizes no publication.
+
+Recommend a Developer Certificate of Origin (DCO) sign-off for future public contributions, subject to the owner's review of its actual terms and contributor communication. It records a contributor's certification of their right to submit; it is not copyright assignment or a substitute for provenance review. Alternative: retain current review/provenance requirements without formal sign-off, with less explicit contributor attestation and less workflow friction. A CLA adds administration and legal drafting; no need for one is established here. Do not retrospectively demand signatures or invent contributor consent.
+
+## Header convention
+Technically agreed for this report: first-party C# uses standalone `// SPDX-License-Identifier: MIT`; first-party Python uses standalone `# SPDX-License-Identifier: MIT`. Place the line in the leading blank/single-line-comment block, before code or a Python module docstring. UTF-8 BOM, shebang and coding comments may precede it; surrounding whitespace is ignored. Identifier and expression must match exactly. C# block comments, later comments and string literals do not meet this narrow convention. No inferred copyright name/year is added.
+This is report-only hygiene, not a claim MIT legally requires a header on every file. Keep the actual copyright and permission notice in distributed copies/substantial portions as required by LICENSE.txt. SPDX shorthand does not replace the full distribution notice or dependency obligations.
+
+## Coverage and usage
+Use tools/report_source_headers.py with --root and --manifest. A manifest has exactly nonempty string `scope`, nonempty string `excluded`, and a nonempty `files` array of reviewed relative forward-slash paths. Example: {"scope":"one reviewed original file", "excluded":"all other files, dependencies and generated content", "files":["src/Brutal.Authoring/AuthoringInfo.cs"]}.
+No recursive discovery is performed. Review eligibility before listing files; the manifest does not itself grant access or establish ownership. Do not list vendored/generated/dependency code or private/licensed inputs; preserve all upstream notices. Import/rights work excluded from this card is not inspected. Other extensions are unsupported, not silently clean. Missing/unreadable/unsupported files appear explicitly; coverage_complete describes the named list only. Missing headers do not fail a gate; no files are modified. Invalid manifest/invocation is a usage error.
+Do not wire the tool into mandatory CI or bulk-add headers from this proposal. First review reports and decide incremental adoption. A clean sample report is neither a whole-repository census nor legal clearance.
+
+## Contribution review and remaining owner choices
+Keep CONTRIBUTING.md's existing original-content, provenance, focused tests and review practices. Preserve upstream attribution; adding an MIT marker cannot relicense someone else's work. Ask maintainers when ownership or permissible use is unclear; do not submit private records or purchased assets. Supported public contribution destinations and a private security-reporting route must be chosen and verified by the owner before public guidance links to them. No destination is invented here.
+Provenance: MIXED standard SPDX comment syntax and the existing MIT licence with original report-only tooling. DCO is a recommendation, not an accepted agreement. No dependency added.

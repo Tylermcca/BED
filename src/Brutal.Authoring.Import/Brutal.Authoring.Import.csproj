@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- glTF import (worksheet AT-020..023, D4): reads .glb/.gltf through SharpGLTF.Core (MIT, recorded in
+       THIRD-PARTY-NOTICES.md), bakes node transforms, converts to a project frame and reports what it found. The core takes
+       no third-party package; this project does. Games never reference it (goal 6). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Brutal.Authoring\Brutal.Authoring.csproj" />
+    <PackageReference Include="SharpGLTF.Core" />
+  </ItemGroup>
+</Project>

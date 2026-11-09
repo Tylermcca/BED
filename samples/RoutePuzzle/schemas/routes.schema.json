@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Route puzzle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "version",
+    "title",
+    "start",
+    "goal",
+    "energy",
+    "places"
+  ],
+  "properties": {
+    "kind": {
+      "const": "sample.route-puzzle"
+    },
+    "version": {
+      "const": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "start": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,23}$",
+      "minLength": 1,
+      "maxLength": 24
+    },
+    "goal": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,23}$",
+      "minLength": 1,
+      "maxLength": 24
+    },
+    "energy": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30
+    },
+    "places": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "exits"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,23}$",
+            "minLength": 1,
+            "maxLength": 24
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "exits": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "to",
+                "cost"
+              ],
+              "properties": {
+                "to": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_-]{0,23}$",
+                  "minLength": 1,
+                  "maxLength": 24
+                },
+                "cost": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

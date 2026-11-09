@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- datacheck: validate every JSON data file in a folder against its JSON Schema, in one go ("check everything", goal 15). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>datacheck</AssemblyName>
+    <RootNamespace>DataCheck</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Brutal.Authoring.Data\Brutal.Authoring.Data.csproj" />
+  </ItemGroup>
+</Project>

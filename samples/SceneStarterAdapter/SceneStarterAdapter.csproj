@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><RootNamespace>SceneStarterAdapter</RootNamespace></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj" Private="false" /></ItemGroup>
+</Project>

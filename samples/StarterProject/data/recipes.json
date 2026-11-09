@@ -1,0 +1,7 @@
+{
+  "recipes": [
+    { "id": "mill", "name": "Milling", "makes": "flour", "from": "wheat", "minutes": 20 },
+    { "id": "bake", "name": "Baking", "makes": "bread", "from": "flour", "minutes": 45 },
+    { "id": "throw", "name": "Pottery", "makes": "pot", "from": "clay", "minutes": 90 }
+  ]
+}

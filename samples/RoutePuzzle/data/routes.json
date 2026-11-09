@@ -1,0 +1,49 @@
+{
+  "kind": "sample.route-puzzle",
+  "version": 1,
+  "title": "A short climb",
+  "start": "trailhead",
+  "goal": "summit",
+  "energy": 5,
+  "places": [
+    {
+      "id": "trailhead",
+      "label": "Trailhead",
+      "exits": [
+        {
+          "to": "brook",
+          "cost": 1
+        },
+        {
+          "to": "ridge",
+          "cost": 3
+        }
+      ]
+    },
+    {
+      "id": "brook",
+      "label": "Brook",
+      "exits": [
+        {
+          "to": "summit",
+          "cost": 3
+        }
+      ]
+    },
+    {
+      "id": "ridge",
+      "label": "Ridge",
+      "exits": [
+        {
+          "to": "summit",
+          "cost": 3
+        }
+      ]
+    },
+    {
+      "id": "summit",
+      "label": "Summit",
+      "exits": []
+    }
+  ]
+}
