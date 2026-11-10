@@ -8,7 +8,18 @@ namespace Brutal.Authoring.Editor.ImGui;
 public sealed class AssetsPanel(AssetBrowser browser, Action<AssetEntry>? dragSource = null)
 {
     private readonly ImInputString search = new(1024, ""u8);
+    private readonly AssetCatalog? catalog;
+    private AssetCatalog.Lease? thumbnailLease;
+    private AssetThumbnail? thumbnail;
+    private string thumbnailWhy = "";
+    private AssetCatalog.Lease? modelDetailsLease;
+    private int? modelParts;
+    private string modelWhy = "";
     private bool problemsOnly;
+
+    // Only the workspace's admitted catalog supplies pixels; browser paths never do.
+    internal AssetsPanel(AssetBrowser browser, AssetCatalog catalog, Action<AssetEntry>? dragSource)
+        : this(browser, dragSource) => this.catalog = catalog;
     private (string Guid, string Path)? selected;
 
     /// <summary>The selected current entry, or null if it disappeared on refresh.</summary>
@@ -18,7 +29,7 @@ public sealed class AssetsPanel(AssetBrowser browser, Action<AssetEntry>? dragSo
     /// <summary>The existing panel registration seam; hosts choose when to attach it.</summary>
     public Panel AsPanel() => new("editor.assets", "Assets", Draw, Width: 480, Height: 500);
 
-    /// <summary>Draws searchable records and truthful model diagnostics without reading asset contents.</summary>
+    /// <summary>Draws searchable records, metadata and a bounded preview of admitted texture content.</summary>
     public void Draw()
     {
         Ui.InputText("Search assets"u8, search);
@@ -42,13 +53,14 @@ public sealed class AssetsPanel(AssetBrowser browser, Action<AssetEntry>? dragSo
             Ui.TextWrapped($"Path: {current.RelativePath}");
             Ui.TextWrapped($"ID: {current.Guid}");
             Ui.TextWrapped($"Importer: {current.Importer}");
-            Ui.TextWrapped("Asset type: not provided by this browser."u8);
+            Ui.TextWrapped(FileType(current.RelativePath));
             Ui.TextWrapped($"Licence: {(string.IsNullOrWhiteSpace(current.Licence) ? "Not recorded" : current.Licence)}");
             Ui.TextWrapped($"AI use: {current.AiUse}");
             if (browser.Index.Resolve(current.Guid) is null)
-                Ui.TextWrapped("Cannot resolve this asset: its source is missing or its identity is ambiguous. See the reported problems."u8);
+                Ui.TextWrapped("Source file unavailable: it is missing or shares an ID with another asset. Check the problems below."u8);
             else
-                Ui.TextWrapped("Source indexed. This does not prove current imported content or permission to export."u8);
+                Ui.TextWrapped("Source file found. Placement and export need separate checks."u8);
+            DrawThumbnail(current);
             foreach (var issue in current.Issues) Ui.TextWrapped($"{issue.Severity}: {issue.Message}");
         }
         else Ui.TextWrapped(selected is null ? "Select an asset to see its details." : "The selected asset is no longer listed. Select another asset.");
@@ -58,6 +70,61 @@ public sealed class AssetsPanel(AssetBrowser browser, Action<AssetEntry>? dragSo
             Ui.TextWrapped("Not imported"u8);
             foreach (var path in browser.NotImported) Ui.TextWrapped(path);
         }
+    }
+    private void DrawThumbnail(AssetEntry entry)
+    {
+        if (catalog is null) return;
+        var resolution = catalog.Resolve(entry.Guid);
+        var texturePath = Path.GetExtension(entry.RelativePath).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".tga" or ".bedtex";
+        var lease = resolution.Current;
+        if (lease is null || browser.Index.Resolve(entry.Guid) is null)
+        {
+            thumbnailLease = null; thumbnail = null;modelDetailsLease=null;modelParts=null;
+            if (texturePath) Ui.TextWrapped($"Texture preview unavailable: {(lease is null ? resolution.Reason : "The source file is missing or its ID is shared.")}");
+            return;
+        }
+        if (lease.Texture is null && !texturePath)
+        {
+            thumbnailLease = null; thumbnail = null;
+            if(Path.GetExtension(entry.RelativePath).ToLowerInvariant() is not (".obj" or ".gltf" or ".glb"))return;
+            if(!ReferenceEquals(lease,modelDetailsLease))
+            {
+                modelDetailsLease=lease;modelParts=null;modelWhy="";
+                try
+                {
+                    if(lease.Length>Brutal.Authoring.Runtime.BedMeshReader.MaxBytes)throw new InvalidDataException("The model exceeds the details byte limit.");
+                    var bytes=new byte[lease.Length];lease.CopyTo(bytes);
+                    modelParts=Brutal.Authoring.Runtime.BedMeshReader.Decode(bytes).Parts.Count;
+                }
+                catch(InvalidDataException error){modelWhy=error.Message;}
+            }
+            Ui.TextWrapped(modelParts is {} count?$"Model: {entry.RelativePath}, {count} {(count==1?"part":"parts")}.":$"Model details unavailable: {modelWhy}");
+            return;
+        }
+        modelDetailsLease=null;modelParts=null;
+        if (!ReferenceEquals(lease, thumbnailLease))
+        {
+            thumbnailLease = lease;
+            thumbnail = AssetThumbnail.Create(lease, out thumbnailWhy);
+        }
+        if (thumbnail is null) { Ui.TextWrapped($"Texture preview unavailable: {thumbnailWhy}"); return; }
+        var description=$"Texture thumbnail: {entry.RelativePath}, {thumbnail.Width} x {thumbnail.Height} pixels";
+        Ui.TextWrapped(description,"asset.thumbnail.description");
+        Ui.TextWrapped($"Size: {thumbnail.Width} x {thumbnail.Height} pixels");
+        thumbnail.Draw(description);
+    }
+
+    private static string FileType(string path)
+    {
+        var extension = Path.GetExtension(path).ToUpperInvariant();
+        return extension switch
+        {
+            ".OBJ" => "Model (OBJ)",
+            ".GLTF" => "Model (glTF)",
+            ".GLB" => "Model (GLB)",
+            "" => "File type: not specified",
+            _ => $"File type: {extension[1..]}"
+        };
     }
 }
 

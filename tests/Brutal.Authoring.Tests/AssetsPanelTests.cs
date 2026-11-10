@@ -46,8 +46,8 @@ public sealed class AssetsPanelTests
     {
         using var r=new Rig();r.Click("lamp.txt",UiRole.ListItem);
         Assert.Equal("11111111111111111111111111111111",r.Panel.Selected!.Guid);
-        Assert.Contains("Importer: synthetic",r.Text);Assert.Contains("Asset type: not provided",r.Text);
-        Assert.Contains("AI use: Forbidden",r.Text);Assert.Contains("does not prove current imported content",r.Text);
+        Assert.Contains("Importer: synthetic",r.Text);Assert.Contains("File type: TXT",r.Text);
+        Assert.Contains("AI use: Forbidden",r.Text);Assert.Contains("Source file found. Placement and export need separate checks.",r.Text);
         Assert.Contains("Not imported",r.Text);Assert.Contains("new.txt",r.Text);
     }
     [Fact]
@@ -57,7 +57,7 @@ public sealed class AssetsPanelTests
         Assert.DoesNotContain(Ui.Snapshot().Nodes,n=>n.Role==UiRole.ListItem&&n.Label=="lamp.txt");
         Assert.Equal("lamp.txt",r.Panel.Selected!.RelativePath);
         r.Click("Problems only",UiRole.Checkbox);r.Click("missing.txt (needs attention)",UiRole.ListItem);
-        Assert.Contains("Cannot resolve this asset",r.Text);Assert.Contains("has no asset beside it",r.Text);
+        Assert.Contains("Source file unavailable: it is missing or shares an ID with another asset.",r.Text);Assert.Contains("has no asset beside it",r.Text);
     }
     [Fact]
     public void Removed_selection_is_not_silently_rebound_after_external_refresh()

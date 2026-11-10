@@ -67,53 +67,13 @@ public sealed class SampleLinkedPlayTests
     }
 
     [Fact]
-    public void Public_adapter_and_program_host_reach_ready_and_stop_without_saving_the_scene_draft()
+    public void Public_adapter_and_program_host_run_saved_files_and_stop_without_saving_the_scene_draft()
     {
-        var root=Directory.CreateTempSubdirectory("bed-linked-sample-").FullName;
-        try
-        {
-            var data=Directory.CreateDirectory(Path.Combine(root,"data")).FullName;
-            var schemas=Directory.CreateDirectory(Path.Combine(root,"schemas")).FullName;
-            var level=Path.Combine(data,"level.json");File.WriteAllText(level,SceneText);
-            File.WriteAllText(Path.Combine(schemas,"scene.schema.json"),"""{"type":"object","required":["kind","version","objects"],"properties":{"kind":{"const":"scene"},"version":{"const":1},"objects":{"type":"array"}}}""");
-            File.WriteAllText(Path.Combine(root,"reference_map.json"),"""{"game":"SceneStarter","labels":[],"references":[]}""");
-            var loaded=Adapters.Load([Path.Combine(AppContext.BaseDirectory,"adapters","SceneStarterAdapter.dll")]);
-            Assert.Empty(loaded.Problems);var adapter=Assert.Single(loaded.Loaded);
-            using var headless=new HeadlessHost(1000,800) {Drawing=false};
-            using var launcher=BedProgram.SetUp(new ProjectLauncher(new RecentProjects(Path.Combine(root,"recent.json"))) {Loaded=loaded.Loaded});
-            Assert.IsType<LinkedPlayHost>(launcher.LinkedPlayHost);
-            Assert.True(launcher.Open(ProjectPaths.In(root)!),launcher.Said);Assert.Same(adapter,launcher.Using);
-            var workspace=launcher.Workspace!;Assert.True(workspace.Show("level.json"),workspace.Said);
-            var window=workspace.SceneWindow!;EditorWindow<Scene>.Configure(ImGui.GetIO());
-            headless.Frames(window.DrawDocked,2);
-            Assert.True(window.Editor.Execute(new MoveObject("root",new Vector3(9,8,7)),"root"));
-            var draft=window.Editor.Session.Current;var revision=window.Editor.Session.Revision;
-            var undo=window.Editor.Session.History.UndoCount;var journal=window.Editor.Session.Journal.Count;
-            Assert.True(window.Run(EditorWindow<Scene>.PlayAction+EditorWindow<Scene>.LinkedPlayModeId));
-            Assert.True(window.LinkedPlaySavePending);Assert.True(window.AnswerLinkedPlay(SaveChangesChoice.DontSave),window.Status);
-            var preview=Assert.IsType<LinkedPlayPreview>(window.Editor.Game);
-            Assert.Equal(PlayInputChoice.Saved,preview.Session.Snapshot.Choice);
-            Assert.Equal(SceneText,Encoding.UTF8.GetString(preview.Session.Snapshot.CopyPayload()));
-            void Until(Func<bool> done)
-            {
-                var clock=Stopwatch.StartNew();
-                while(!done() && clock.Elapsed<TimeSpan.FromSeconds(5)) {headless.Frame(window.DrawDocked);Thread.Sleep(5);}
-                Assert.True(done(),preview.Status);
-            }
-            Until(()=>preview.Session.State is LinkedPlayState.Running or LinkedPlayState.Faulted);
-            Assert.Equal(LinkedPlayState.Running,preview.Session.State);Assert.Null(preview.Session.Error);
-            Assert.True(window.Run("editor.stop"));
-            Until(()=>window.Editor.Playing is null);
-            Assert.Equal(LinkedPlayState.Stopped,preview.Session.State);Assert.Null(preview.Session.Error);Assert.True(preview.HasCompleted);
-            Assert.Same(draft,window.Editor.Session.Current);Assert.Equal(revision,window.Editor.Session.Revision);
-            Assert.True(window.Editor.Session.Dirty);Assert.Equal(undo,window.Editor.Session.History.UndoCount);
-            Assert.Equal(journal,window.Editor.Session.Journal.Count);Assert.Equal(SceneText,File.ReadAllText(level));
-        }
-        finally
-        {
-            var owned=Path.GetFullPath(root);var temporary=Path.GetFullPath(Path.GetTempPath());
-            Assert.StartsWith(temporary,owned,StringComparison.OrdinalIgnoreCase);
-            Directory.Delete(owned,true);
-        }
+        using var r=new SamplePlayJourneyTests.CommonRig();Assert.IsType<ProjectPlayBridge>(r.Factory.Bridge);Assert.Same(r.Adapter,r.Launcher.Using);
+        r.Play();var game=r.Choose("Don't Save");r.AssertSavedInput(SceneText);r.Unchanged();
+        Assert.Equal("Running.",game.StatusAtStart);Assert.True(r.Window.Editor.Session.Dirty);
+        r.Stop(game);Assert.True(game.HasCompleted);Assert.False(r.Workspace.ProjectPlaySavePending);r.Unchanged();
+        Assert.Same(r.Draft,r.Window.Editor.Session.Current);Assert.Equal(r.Revision,r.Window.Editor.Session.Revision);
+        Assert.Equal(r.Undo,r.Window.Editor.Session.History.UndoCount);Assert.Equal(r.Journal,r.Window.Editor.Session.Journal.Count);Assert.Equal(SceneText,File.ReadAllText(r.File));
     }
 }

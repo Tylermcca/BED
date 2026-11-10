@@ -15,7 +15,7 @@ There are no dates. A release ships when everything in it works from start to fi
 - **Works with AI.** An AI assistant uses the same checked commands you do, and only makes changes you approve.
 - **Open source.** MIT licensed, with original samples and a record of every third-party licence.
 
-## 0.2: the first release (in progress)
+## 0.2: the first release (release candidate: 0.2.1-rc.1)
 
 The goal: someone new to BED can open the sample level, add a model, position it, press Play to run the game, and export a Windows build that runs without BED.
 
@@ -26,7 +26,7 @@ The goal: someone new to BED can open the sample level, add a model, position it
 - Right-click menus, and tooltips that show shortcuts and explain why a command is unavailable.
 - Light and dark themes that follow Windows, and sharp text at any display scaling.
 - Panels you can move into their own windows; the layout is remembered and can be reset.
-- Screen reader support (being checked in real windows before release).
+- Screen readers can read the whole editor in real windows. Pressing buttons and typing through assistive tools is still being finished.
 - Tables, forms, links between files, checks, and undo for every edit.
 - AI assistants can read, check and edit data through the command line and MCP.
 
@@ -37,28 +37,28 @@ The goal: someone new to BED can open the sample level, add a model, position it
 - Undo any change, and save, close and reopen a level with nothing lost.
 - If a change can't be saved exactly (for example, skewing an object), BED explains why instead of quietly changing it.
 
-### Assets: mostly done
+### Assets: done
 - Browse the project's models and drop them into a level by dragging or with the keyboard.
 - OBJ and glTF models, with import settings (scale, which way is up) and reimport that keeps placed objects intact.
 - Every asset records where it came from and its licence, and BED won't include an asset in a build if its licence doesn't allow it.
-- Textures in the 3D view.
-- In progress: full support for textured models, and loading a project's assets when it opens.
+- Textured models in the 3D view, in Play and in builds.
+- A project's models are ready when it opens.
 
 ### Play: done
 - Press Play and the game starts in its own window, from your saved files. If you have unsaved edits, BED asks first.
 - The game's messages appear in BED's console. Stop closes it cleanly.
 - If the game crashes, BED keeps running and your unsaved edits are safe.
 
-### Build: in progress
+### Build: done
 - BED runs the game's own build, checks every file it produces and the licences of everything included, and test-runs the result.
 - A failed or cancelled build never touches your last good one.
-- In progress: the Export build command, and copying a tested build to a folder you choose.
+- Export build copies a tested build to a new or empty folder you choose.
 
 ### Before release
-- An automated test of the whole workflow on the sample level, from opening it to exporting a build.
-- Hands-on testing in real windows, including with a screen reader and in the 3D view.
-- Using BED for a real task on one of my own games.
-- A preview build for testers, then the release.
+- Done: an automated test of the whole workflow on the sample level, from opening it to exporting a build.
+- Done: using BED for real work on one of my own games. All of that game's design data is now edited in BED.
+- Done: hands-on testing in real windows, including the 3D view.
+- Now: the 0.2.1-rc.1 release candidate for testers, then the release.
 
 ## 0.3: next
 

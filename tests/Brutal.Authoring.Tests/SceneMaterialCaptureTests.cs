@@ -71,4 +71,19 @@ public sealed class SceneMaterialCaptureTests
         var a=plain.Pick(new(400,300));var b=explicitMaterial.Pick(new(400,300));
         Assert.Equal("object",a.ItemId);Assert.Equal(a.ItemId,b.ItemId);Assert.Equal(a.Distance,b.Distance);
     }
+
+    [Fact]
+    public void Parts_capture_owns_every_stream_and_refuses_inconsistent_or_nested_combined_geometry()
+    {
+        var first=Triangle() with {Material=new(new(1,0,0,1))};
+        var second=Triangle() with {Positions=[Vector3.One,Vector3.UnitX,Vector3.UnitY],Material=new(new(0,1,0,1))};
+        var mesh=new MeshData([..first.Positions,..second.Positions],[0,1,2,3,4,5]){Parts=new[]{first,second}};
+        var request=Capture(mesh);var item=Assert.Single(request.Items);Assert.Equal(2,item.Payloads.Count);
+        first.Positions[0]=new(99);second.Indices[0]=2;
+        Assert.Equal(Vector3.Zero,item.Payloads[0].Positions[0]);Assert.Equal(0,item.Payloads[1].Indices[0]);
+        Assert.Equal(new Vector4(1,0,0,1),item.Payloads[0].Material.BaseColor);
+        Assert.Throws<ArgumentException>(()=>Capture(mesh with {Positions=[Vector3.Zero]}));
+        Assert.Throws<ArgumentException>(()=>Capture(Triangle() with {Parts=Array.Empty<MeshData>()}));
+        Assert.Throws<ArgumentException>(()=>Capture(Triangle() with {Parts=new[]{Triangle() with {Parts=new[]{Triangle()}}}}));
+    }
 }

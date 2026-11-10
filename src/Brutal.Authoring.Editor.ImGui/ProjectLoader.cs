@@ -13,7 +13,13 @@ internal static class ProjectLoader
     internal static LoadedProject? Open(ProjectPaths project, bool noAdapter, IProjectAdapter? selected,
         IReadOnlyList<IProjectAdapter> adapters, out string refusal)
     {
+        using var preparation=HeadlessStartupTiming.Preparation("project_load_ms");
         refusal = "";
+        if(project.Root is {} root)
+        {
+            try{if(string.IsNullOrWhiteSpace(root)||!Directory.Exists(root))return Refuse("Choose an existing project root.",out refusal);project=project with{Root=Path.GetFullPath(root)};}
+            catch(Exception error)when(error is ArgumentException or NotSupportedException or PathTooLongException){return Refuse("The project root is invalid: "+error.Message,out refusal);}
+        }
         if (project.Data.Trim().Length == 0 || !Directory.Exists(project.Data))
             return Refuse(project.Data.Trim().Length == 0 ? "Choose the data folder: the folder of your game's JSON files." : $"There's no data folder at {project.Data}. Check the path, or choose it with Browse.", out refusal);
         if (project.Schemas.Trim().Length == 0 || !Directory.Exists(project.Schemas))
@@ -21,7 +27,7 @@ internal static class ProjectLoader
         if (!Directory.EnumerateFiles(project.Schemas, "*.json").Any())
             return Refuse($"{project.Schemas} holds no schemas (.json files). Is it the right folder? A schema is named after its data file: wares.json is checked by wares.schema.json.", out refusal);
         // Explicit and root maps are checked before calling any adapter, preserving refusal order.
-        project = project with { Map = AdapterMap.Resolve(project.Map, project.Data, null, project.Folder) };
+        project = project with { Map = AdapterMap.Resolve(project.Map, project.Data, null, project.Root??project.Folder) };
         ReferenceMap? map = null;
         if (project.Map is { Length: > 0 } mapFile)
         {
@@ -37,7 +43,7 @@ internal static class ProjectLoader
             // Only the chosen adapter's actual assembly may provide the final fallback.
             // An adapter chosen from a file has a real Location; one built into the single-file app has "", which the code below treats as "no file".
 #pragma warning disable IL3000
-            project = project with { Map = AdapterMap.Resolve(null, project.Data, adapter.GetType().Assembly.Location, project.Folder) };
+            project = project with { Map = AdapterMap.Resolve(null, project.Data, adapter.GetType().Assembly.Location, project.Root??project.Folder) };
 #pragma warning restore IL3000
             if (project.Map is { Length: > 0 } fallback)
             {
@@ -63,7 +69,7 @@ internal static class ProjectLoader
         {
             return Refuse($"{label} couldn't open the project: {e.Message}. That's a fault in the adapter, not your data: choose None (plain data) to open it without.", out refusal);
         }
-        var full = project with { Data = Path.GetFullPath(project.Data), Schemas = Path.GetFullPath(project.Schemas), Map = project.Map is { Length: > 0 } m ? Path.GetFullPath(m) : null };
+        var full = project with { Data = Path.GetFullPath(project.Data), Schemas = Path.GetFullPath(project.Schemas), Map = project.Map is { Length: > 0 } m ? Path.GetFullPath(m) : null,Root=project.Root };
         return new(data, map, adapter, label, full, notes);
     }
 

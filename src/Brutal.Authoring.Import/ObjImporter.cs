@@ -7,12 +7,19 @@ namespace Brutal.Authoring.Import;
 /// Reads Wavefront OBJ geometry (worksheet IM-09: a kit module in its native frame). Each <c>o</c> or <c>g</c> starts a
 /// named mesh; faces are fanned into triangles; <c>v/vt/vn</c> references, including negative ones, are resolved. The
 /// frame converts every point once (pass <see cref="ProjectFrame.Gltf"/>, the identity, for a file already in the
-/// project's frame). Materials and texture files are not read here.
+/// project's frame). Same-folder MTL/base-colour image reads are pinned; source paths never become asset identities.
 /// </summary>
 public static class ObjImporter
 {
     /// <summary>Imports <paramref name="path"/>, converting with <paramref name="frame"/>.</summary>
     public static ImportResult Import(string path, ProjectFrame frame)
+    {
+        try { return ImportCore(path, frame); }
+        catch (Exception e) when (e is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException or FormatException or OverflowException)
+        { return Refuse($"{Path.GetFileName(path)}: {e.Message}"); }
+    }
+
+    private static ImportResult ImportCore(string path, ProjectFrame frame)
     {
         var name = Path.GetFileName(path);
         string[] lines;
@@ -26,6 +33,14 @@ public static class ObjImporter
         var current = "default";
         var faces = new List<(int V, int T, int N)[]>();
         var issues = new List<Issue>();
+        var library = new ObjMaterialLibrary(path);
+        foreach (var raw in lines)
+        {
+            var tokens = raw.Split('#')[0].Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Length > 0 && tokens[0] == "mtllib")
+                foreach (var file in tokens[1..]) library.Load(file);
+        }
+        string? material = null;
 
         ImportResult? Bad(int line, string why) => Refuse($"{name}: line {line}: {why}");
 
@@ -55,7 +70,7 @@ public static class ObjImporter
                     if (flip) tris.AddRange([a, c, b]); else tris.AddRange([a, b, c]);
                 }
             meshes.Add(new ImportedMesh(current, current, [.. pos], nrm.Count == pos.Count ? [.. nrm] : [], uv.Count == pos.Count ? [.. uv] : [],
-                [.. tris], null, 1f, flip, false));
+                [.. tris], material, 1f, flip, false) { MaterialInfo = material is null ? null : library.Resolve(material) });
             faces.Clear();
         }
 
@@ -74,6 +89,10 @@ public static class ObjImporter
                     case "o" or "g":
                         Close();
                         current = parts.Length > 1 ? string.Join(' ', parts[1..]) : "default";
+                        break;
+                    case "usemtl":
+                        Close();
+                        material = parts.Length > 1 ? string.Join(' ', parts[1..]) : null;
                         break;
                     case "f":
                         if (parts.Length < 4) return Bad(n + 1, "a face needs at least three corners")!;
@@ -106,8 +125,10 @@ public static class ObjImporter
 
         if (meshes.Count == 0) return Refuse($"{name}: no faces");
         if (meshes.All(m => m.Uv0.Length == 0)) issues.Add(Issue.Warning($"{name}: UV0 is absent"));
-        var asset = new ImportedAsset(meshes, [], [], [], 0, 0, [], meshes.Count);
-        return new ImportResult(issues.Count == 0 ? ImportOutcome.Imports : ImportOutcome.ImportsWithWarnings, asset, issues);
+        var textures = meshes.Select(m => m.MaterialInfo).OfType<ImportedMaterial>().Where(m => m.BaseColorTexture is not null)
+            .Distinct().Select(m => new ImportedTexture(m.Name, "BaseColor", "sRGB", m.BaseColorTexture!, false)).ToArray();
+        var asset = new ImportedAsset(meshes, [], textures, library.Names, 0, 0, [], meshes.Count);
+        return new ImportResult(issues.Count == 0 ? ImportOutcome.Imports : ImportOutcome.ImportsWithWarnings, asset, issues) { ExternalReads = library.Reads };
     }
 
     private const string NotFinite = "not a finite number";

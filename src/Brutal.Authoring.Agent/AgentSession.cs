@@ -234,6 +234,13 @@ public sealed class AgentSession
             ["data"] = Project.DataFolder,
             ["readOnly"] = Project.ReadOnly,
             ["files"] = files,
+            ["sceneTool"] = new JsonObject
+            {
+                ["invoke"] = "scene do <scene.json> <command> <args-json>",
+                ["note"] = "These typed scene commands run through SceneTool; the data calls below do not execute them.",
+                ["commands"] = new JsonArray(SceneKit.Catalog().Commands.Where(c=>!c.Internal)
+                    .Select(c=>(JsonNode)new JsonObject { ["id"]=c.Id,["version"]=c.Version,["label"]=c.Label }).ToArray()),
+            },
             ["calls"] = new JsonArray(
                 "describe: this summary",
                 "find(file, list, text?): items in a list whose label or fields contain text",

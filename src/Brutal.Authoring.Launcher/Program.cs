@@ -25,6 +25,8 @@ public static class Program
           load anyway. Both are optional: plain data with schemas opens without one.
           --settings keeps the recent-projects list in that folder instead of your own settings (for tests and trials).
           --shot draws the screen into a PNG instead of opening a window.
+          --probe-play <folder> [--probe-args "<args>"] [--timeout 30] checks saved-files Play headlessly through normal exit; JSON on success.
+          --probe-export <folder> --destination <empty folder> [--timeout 60] builds, verifies and copies saved files headlessly; JSON on success.
 
         BRUTAL game development framework is Copyright (c) 2024 Ahwoo Limited. See NOTICE.txt.
         """;
@@ -32,7 +34,9 @@ public static class Program
     /// <summary>What the app adds to every project it opens: the Text panel (a data file's JSON as text) on each file.</summary>
     public static ProjectLauncher SetUp(ProjectLauncher launcher)
     {
-        launcher.LinkedPlayHost ??= new LinkedPlayHost();
+        launcher.ProjectPlayHost ??= new ProjectPlayBridge();
+        launcher.GameExportHost ??=new ExportBuildHost(8192,256,TimeSpan.FromMinutes(5));
+        launcher.AssetCatalogProvisioner ??= new AssetCatalogProvisioner();
         launcher.SetUpWorkspace = workspace =>
         {
             workspace.AddTextPanel();
@@ -66,6 +70,57 @@ public static class Program
             output.WriteLine("BED " + BuildVersion.Current);
             return 0;
         }
+        if (args.Length > 0 && args[0] == "--probe-play")
+        {
+            var seconds = 30;string[] probeArguments=[];
+            try
+            {
+                if(args.Length<2||string.IsNullOrWhiteSpace(args[1]))throw new ArgumentException();
+                var seen=new HashSet<string>(StringComparer.Ordinal);
+                for(var i=2;i<args.Length;i+=2)
+                {
+                    if(i+1>=args.Length||!seen.Add(args[i]))throw new ArgumentException();
+                    switch(args[i])
+                    {
+                        case "--timeout":
+                            if(!int.TryParse(args[i+1],out seconds)||seconds is <=0 or >300)throw new ArgumentException();
+                            break;
+                        case "--probe-args":probeArguments=ProbeArguments.Parse(args[i+1]);break;
+                        default:throw new ArgumentException();
+                    }
+                }
+            }
+            catch(ArgumentException)
+            { errors.WriteLine("usage: BED --probe-play <project folder> [--probe-args \"<args>\"] [--timeout <1..300 seconds>]"); return 1; }
+            if (RuntimeCheckWindows.Check(errors) != 0) return 1;
+            return Probe(args[1], seconds, probeArguments, output, errors);
+        }
+
+        if(args.Length>0 && args[0]=="--probe-export")
+        {
+            var seconds=60;string? destination=null;
+            try
+            {
+                if(args.Length<2||string.IsNullOrWhiteSpace(args[1]))throw new ArgumentException();
+                var seen=new HashSet<string>(StringComparer.Ordinal);
+                for(var i=2;i<args.Length;i+=2)
+                {
+                    if(i+1>=args.Length||!seen.Add(args[i]))throw new ArgumentException();
+                    switch(args[i])
+                    {
+                        case "--destination":destination=args[i+1];break;
+                        case "--timeout":if(!int.TryParse(args[i+1],out seconds)||seconds is <=0 or >300)throw new ArgumentException();break;
+                        default:throw new ArgumentException();
+                    }
+                }
+                if(string.IsNullOrWhiteSpace(destination))throw new ArgumentException();
+            }
+            catch(ArgumentException)
+            {errors.WriteLine("usage: BED --probe-export <project folder> --destination <empty folder> [--timeout <1..300 seconds>]");return 1;}
+            if(RuntimeCheckWindows.Check(errors)!=0)return 1;
+            return ProbeExport(args[1],destination,seconds,output,errors);
+        }
+
         string? folder = null, data = null, schemas = null, map = null, shot = null;
         var adapterDlls = new List<string>();
         for (var i = 0; i < args.Length; i++)
@@ -87,6 +142,14 @@ public static class Program
         if (runtime != 0) return runtime;
         return Open(folder, data, schemas, map, shot, adapterDlls, output, errors, settings);
     }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static int Probe(string folder, int seconds, IReadOnlyList<string> probeArguments, TextWriter output, TextWriter errors)
+        => PlayProbe.Run(folder, TimeSpan.FromSeconds(seconds), output, errors, probeArguments);
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static int ProbeExport(string folder,string destination,int seconds,TextWriter output,TextWriter errors)
+        => ExportProbe.Run(folder,destination,TimeSpan.FromSeconds(seconds),output,errors);
 
     // Keep native-bearing locals and adapter calls beyond the prerequisite decision's JIT boundary.
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
@@ -111,11 +174,21 @@ public static class Program
 
         if (shot is not null)
         {
+            // A screenshot explicitly requests a view. Normal startup keeps typed scenes unopened.
+            if (launcher.Workspace is { } workspace &&
+                workspace.Project.Files.FirstOrDefault(file => workspace.Documents.IsScene(file.Name)) is { } scene &&
+                !workspace.Show(scene.Name))
+            {
+                errors.WriteLine(workspace.Said);
+                launcher.Dispose();
+                return 1;
+            }
             using var host = new HeadlessHost(1600, 900);
             EditorWindow<DataDocument>.Configure(Brutal.ImGuiApi.ImGui.GetIO());
             host.Frames(launcher.Draw, 4);
             host.Save(shot);
             output.WriteLine($"Drew the screen into {Path.GetFullPath(shot)}.");
+            launcher.Dispose();
             return 0;
         }
         launcher.Splash = new BrutalSplash();   // the BRUTAL logo before the start screen (BRUTAL License v1.0, 2.2)

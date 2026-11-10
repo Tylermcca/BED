@@ -23,6 +23,7 @@ Library and adapter samples build a component for a host; they are not standalon
 | RoutePuzzle | Runtime-only route model/loader; `dotnet build samples/RoutePuzzle/RoutePuzzle.csproj -c Release`; use its authoring companion to play, as [documented](RoutePuzzle/README.md). |
 | RoutePuzzle.Authoring | Data editing, frozen Check and workspace-owned Play; `dotnet build samples/RoutePuzzle.Authoring/RoutePuzzle.Authoring.csproj -c Release`, then follow [the opening instructions](RoutePuzzle/README.md#opening-it-after-integration). |
 | FirstTask | The newcomer task: change a settings preset, see a mistake caught, check, save and undo; `dotnet build samples/FirstTask/FirstTask.csproj -c Release`, then open `samples/FirstTask` in BED and follow [the first task guide](../docs/guide/first_task.md). |
+| RuntimeInspect | Print a saved level’s objects, mesh parts and textures without an editor; `dotnet run --project samples/RuntimeInspect/RuntimeInspect.csproj -- samples/SceneStarterProject` after preparing the sample in BED once. See [its README](RuntimeInspect/README.md). |
 | SceneStarter | A tiny self-made game that loads a level with only the runtime reader; used to prove an exported build runs without BED. `dotnet build samples/SceneStarter/SceneStarter.csproj -c Release`. |
 | SceneStarterAdapter | Connects BED to SceneStarter so Play launches the sample as its own program; `dotnet build samples/SceneStarterAdapter/SceneStarterAdapter.csproj -c Release`. |
 
@@ -34,3 +35,7 @@ To build the samples and the solution's other projects, run `dotnet build Brutal
 
 The index checker does not run that build, GUI samples, import workloads or tests.
 
+
+## Runtime assets
+
+The game-facing `src/Brutal.Authoring.Runtime` library reads saved project asset generations and BEDMESH geometry without an Editor, ImGui or BRUTAL dependency. Build it with `dotnet build src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj -c Release`. It does not derive assets or grant export permission.

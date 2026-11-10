@@ -56,10 +56,23 @@ public sealed class AdapterAcceptanceTests
             Directory.GetFiles(Root, "*.json", SearchOption.AllDirectories)
                 .Where(p => !p.StartsWith(Path.Combine(Root, "settings") + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                 .ToDictionary(p => p, File.ReadAllBytes);
-        public void SameFiles(Dictionary<string, byte[]> before)
+        public void SameFiles(Dictionary<string, byte[]> before, bool publishedEmptyCache = false)
         {
             var after = Files();
-            Assert.Equal(before.Keys.Order(), after.Keys.Order());
+            IEnumerable<string> expected = before.Keys;
+            if (publishedEmptyCache)
+            {
+                var projectRoot = Path.GetDirectoryName(Paths.Data)!;
+                var published = Brutal.Authoring.Runtime.ProjectAssets.Open(projectRoot);
+                Assert.Empty(published.ArtifactNames);
+                var cache = Path.Combine(projectRoot, ".bed", "cache");
+                var generation = Path.Combine(cache, "generations", published.Id);
+                var cacheFiles = new[] { Path.Combine(cache, "current.json"), Path.Combine(cache, "owner.lock"),
+                    Path.Combine(generation, "manifest.json"), Path.Combine(generation, "owner.txt") };
+                Assert.Equal(cacheFiles.Order(), Directory.GetFiles(cache, "*", SearchOption.AllDirectories).Order());
+                expected = expected.Concat(cacheFiles.Where(p => p.EndsWith(".json", StringComparison.Ordinal)));
+            }
+            Assert.Equal(expected.Order(), after.Keys.Order());
             foreach (var p in before.Keys) Assert.Equal(before[p], after[p]);
         }
         public void HistorySurvives() =>
@@ -620,7 +633,7 @@ public sealed class AdapterAcceptanceTests
         var args = new List<string> { "--adapter", bad, "--settings", Path.GetDirectoryName(r.History)!, "--shot", shot };
         if (project) args.Insert(0, Path.GetDirectoryName(r.Paths.Data)!);
         var ex = Record.Exception(() => Assert.Equal(0, App.Run(args.ToArray(), o, err, Path.Combine(r.Root, "unused-settings"))));
-        r.SameFiles(before); r.HistorySurvives(); Assert.Null(ex);
+        r.SameFiles(before, publishedEmptyCache: project); r.HistorySurvives(); Assert.Null(ex);
         Assert.Contains("FaultyGardenAdapter.dll", err.ToString()); Assert.True(new FileInfo(shot).Length > 1000);
         if (project) Assert.Contains("Opened Copper garden", o.ToString());
         Assert.False(Directory.Exists(Path.Combine(r.Root, "unused-settings")));

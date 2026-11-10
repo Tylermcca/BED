@@ -58,6 +58,22 @@ public sealed class AccessKitViewportBridgeTests
     }
 
     [Fact]
+    public void A_secondary_window_without_size_or_scale_yet_is_skipped_not_fatal()
+    {
+        // Found in the 0.2.1-rc.1 real-window walk: opening a project whose layout floats a panel closed BED with
+        // "A visible viewport and positive finite physical scale are required" on the new window's first frame.
+        var rig = new Rig(); using var bridges = new AccessKitViewportBridges(rig.Attach);
+        bridges.Create(71, 42, "Floating");
+        var frame = Frame(Node(2, 71, "panel"));
+        Assert.False(bridges.Publish(71, 42, frame, "Floating", new(100, 200, 0, 0), 2, 2));
+        Assert.False(bridges.Publish(71, 42, frame, "Floating", new(100, 200, 400, 300), 0, 0));
+        Assert.False(bridges.Publish(71, 42, frame, "Floating", new(100, 200, 400, 300), float.NaN, 1));
+        Publish(bridges, 71, 42, frame);   // once it has a size and scale, it publishes as normal
+        rig.Made[0].Window.Read();
+        Assert.Equal("panel", rig.Made[0].Tree.ValueText);
+    }
+
+    [Fact]
     public void Each_HWND_receives_only_its_own_nodes_and_its_actual_origin_and_scale()
     {
         var rig = new Rig(); using var bridges = new AccessKitViewportBridges(rig.Attach);

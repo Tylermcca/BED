@@ -44,18 +44,20 @@ public sealed class SceneAccessibilityTests
             var item=window.Editor.Session.Current.Find("item")!;
             Assert.Equal(new Vector3(2.5f,0,0),item.Position);Assert.Equal(new Vector3(2,1,1),item.Scale);
             Assert.True(Math.Abs(Quaternion.Dot(Quaternion.CreateFromAxisAngle(Vector3.UnitY,MathF.PI/2),item.Rotation))>0.99999f);
-            // Duplicate has an explicitly configured shortcut; this does not claim a shipped default binding.
-            window.Shortcuts.Set("scene.duplicate","Ctrl+D");
+            // Duplicate now has a shipped default and places the copy beside the original.
+            Assert.Equal("Ctrl+D",window.Shortcuts.For("scene.duplicate")!.Value.ToString());
             Assert.True(window.HandleKey(Chord.Parse("Ctrl+D")),window.Status);
             Assert.Equal(2,window.Editor.Session.Current.Objects.Length);
             var copy=Assert.Single(window.Editor.Session.Current.Objects,o=>o.Id!="item");
-            Assert.Equal(item.Position,copy.Position);Assert.Equal(item.Rotation,copy.Rotation);Assert.Equal(item.Scale,copy.Scale);
+            Assert.Equal(item.Position+Vector3.UnitX,copy.Position);Assert.Equal(item.Rotation,copy.Rotation);Assert.Equal(item.Scale,copy.Scale);
             Assert.True(window.HandleKey(Chord.Parse("Ctrl+Z")));Assert.Single(window.Editor.Session.Current.Objects);
             Assert.True(window.HandleKey(Chord.Parse("Ctrl+Z")));Assert.Equal(Vector3.One,window.Editor.Session.Current.Find("item")!.Scale);
             Assert.True(window.HandleKey(Chord.Parse("Ctrl+Z")));Assert.Equal(Quaternion.Identity,window.Editor.Session.Current.Find("item")!.Rotation);
             Assert.True(window.HandleKey(Chord.Parse("Ctrl+Z")));Assert.Equal(Vector3.Zero,window.Editor.Session.Current.Find("item")!.Position);
             Assert.False(window.Editor.Session.History.CanUndo);
             Assert.Equal(original,File.ReadAllText(path));
+            // Duplicate selected its copies; undo removes them. Select the original again for the save exercise.
+            Assert.True(window.Editor.Select("item"));
             // Continue the actual host journey only through its typed Save route, never Session.Save.
             Assert.True(window.Inspector.Set("position.x",3.0));
             var checks=0;workspace.Documents.SceneSaveCheck=e=>{Assert.Same(window.Editor,e.Editor);checks++;return null;};

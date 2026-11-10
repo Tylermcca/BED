@@ -8,6 +8,10 @@ internal sealed class SceneDeviceOwner(DeviceEx device, PhysicalDevice physical,
 {
     private readonly int thread = Environment.CurrentManagedThreadId;
     private bool closed;
+    private SceneMeshResources<SceneMeshBuffer>? meshResources;
+    private SceneMeshResources<SceneMeshBuffer> Meshes=>meshResources??=new(g=>new SceneMeshBuffer(device,g));
+    private static readonly SceneIndexedGeometry FallbackMesh=new(new MeshPayload(
+        [new(-.65f,-.6f,.4f),new(.65f,-.6f,.4f),new(0,.65f,.4f)],[],[],[0,1,2],new(System.Numerics.Vector4.One)));
     private readonly object deviceGeneration=new();
     private readonly SceneTextureBudget materialBudget=new();
     private SceneMaterialCache<SceneMaterialTexture>? materials;
@@ -47,15 +51,15 @@ internal sealed class SceneDeviceOwner(DeviceEx device, PhysicalDevice physical,
     internal PhysicalDevice Physical { get { Check(); return physical; } }
     internal Queue Queue { get { Check(); return queue; } }
     internal int SafeSlot { get { Check(); if(slot<0) throw new InvalidOperationException("Prepare the frame slot before scene collection."); return slot; } }
-    internal void Safe(int frame) { Check(); slot=frame; requested.Clear();Previews.Safe(frame);materials?.Safe(frame); }
-    internal void Submitted() { Check();foreach(var texture in Previews.Collected())texture.Submitted();Previews.Submitted();materials?.Submitted();slot=-1; }
+    internal void Safe(int frame) { Check(); slot=frame; requested.Clear();Previews.Safe(frame);materials?.Safe(frame);Meshes.Safe(frame); }
+    internal void Submitted() { Check();foreach(var texture in Previews.Collected())texture.Submitted();Previews.Submitted();materials?.Submitted();meshResources?.Submitted();slot=-1; }
     internal SceneTarget Target(string view,int width,int height)
     {
         Check();ArgumentException.ThrowIfNullOrWhiteSpace(view);var key=(view,SafeSlot);
-        if(targets.TryGetValue(key,out var old)&&old.Width==width&&old.Height==height){old.ResetRequest();requested.Add(old);return old;}
+        if(targets.TryGetValue(key,out var old)&&old.Width==width&&old.Height==height){old.ResetRequest();old.Meshes=new Dictionary<(string Item,int Part),SceneMeshBuffer>{{("fallback",0),Meshes.Acquire(view,FallbackMesh)}};requested.Add(old);return old;}
         if(!targets.Keys.Any(k=>k.View==view)&&targets.Keys.Select(k=>k.View).Distinct().Count()>=2)
             throw new InvalidOperationException("Initial scene target budget is two views, one attachment set per frame slot.");
-        var next=new SceneTarget(device,physical,backend??throw new InvalidOperationException("Scene backend is not attached."),width,height);targets[key]=next;old?.Dispose();requested.Add(next);return next;
+        var next=new SceneTarget(device,physical,backend??throw new InvalidOperationException("Scene backend is not attached."),width,height);targets[key]=next;old?.Dispose();next.Meshes=new Dictionary<(string Item,int Part),SceneMeshBuffer>{{("fallback",0),Meshes.Acquire(view,FallbackMesh)}};requested.Add(next);return next;
     }
     internal SceneTarget Target(string view, SceneRenderRequest request, Func<SceneRenderIdentity> current,AssetCatalog? catalog=null)
     {
@@ -65,11 +69,16 @@ internal sealed class SceneDeviceOwner(DeviceEx device, PhysicalDevice physical,
         var width=checked((int)MathF.Ceiling(identity.Extent.X*identity.FramebufferScale.X));
         var height=checked((int)MathF.Ceiling(identity.Extent.Y*identity.FramebufferScale.Y));
         var target=Target(view,width,height); // Enforce the two-view/extent bound before any material allocation.
+        var geometry=new Dictionary<(string Item,int Part),SceneMeshBuffer>();
+        foreach(var item in request.Items)
+            for(var part=0;part<item.Payloads.Count;part++)
+                if(item.Payloads[part].Indices.Count>0)geometry.Add((item.Id,part),Meshes.Acquire(view,new SceneIndexedGeometry(item.Payloads[part])));
+        target.Meshes=geometry;
         var bindings=new Dictionary<(string Guid,string Hash),SceneSampledMaterial>();
         var reasons=new HashSet<string>(StringComparer.Ordinal);
-        foreach(var item in request.Items)
+        foreach(var payload in request.Items.SelectMany(item=>item.Payloads))
         {
-            var material=item.Payload.Material;if(material.TextureAssetGuid is not { } guid)continue;
+            var material=payload.Material;if(material.TextureAssetGuid is not { } guid)continue;
             var key=(guid,material.TextureSourceHash!);if(bindings.ContainsKey(key))continue;
             try
             {
@@ -84,7 +93,7 @@ internal sealed class SceneDeviceOwner(DeviceEx device, PhysicalDevice physical,
     }
     internal void RetainViews(IReadOnlySet<string> active)
     {
-        Check();materials?.RetainViews(active);var expired=targets.Keys.Where(key=>!active.Contains(key.View)).ToArray();
+        Check();materials?.RetainViews(active);meshResources?.RetainViews(active);var expired=targets.Keys.Where(key=>!active.Contains(key.View)).ToArray();
         if(expired.Length==0)return;
         // A closed view can occupy either in-flight slot. Retire both only once all submissions finish.
         device.WaitIdle();
@@ -94,7 +103,7 @@ internal sealed class SceneDeviceOwner(DeviceEx device, PhysicalDevice physical,
         }
     }
     // Only host shutdown after WaitIdle calls this; per-slot resize retires after that slot's fence.
-    internal void Close() { Check();previews?.Close();materials?.Close();foreach(var target in targets.Values)target.Dispose();targets.Clear();closed=true;slot=-1; }
+    internal void Close() { Check();previews?.Close();materials?.Close();meshResources?.Dispose();foreach(var target in targets.Values)target.Dispose();targets.Clear();closed=true;slot=-1; }
     private void Check()
     {
         if(Environment.CurrentManagedThreadId!=thread) throw new InvalidOperationException("Scene device access belongs to the render thread.");

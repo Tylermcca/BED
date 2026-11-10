@@ -49,14 +49,17 @@ public sealed class AssetCatalog : IDisposable
         internal readonly TextureInfo? Texture;
         /// <summary>Copied and sorted external source identities; immutable metadata, never a path resolver or payload.</summary>
         public IReadOnlyList<SourceFile> SourceFiles {get;}
+        /// <summary>Deep-owned producing metadata for pure export review, not a new acquisition or permission grant.</summary>
+        public AssetRecord ProducingRecord=>Record with {Settings=Record.Settings.Clone(),RightsFound=Record.RightsFound is null?null:Array.AsReadOnly(Record.RightsFound.ToArray())};
         /// <summary>Stable sidecar identity.</summary>
         public string Guid => Record.Guid;
-        /// <summary>Replaces this same GUID's content after a validated reimport, retaining its explicit dependency set and policy inputs.</summary>
-        public Input WithReimportedContent(AssetRecord record,byte[] pinnedSource,byte[] derived,string profile,IEnumerable<SourceFile>? sourceFiles=null)
+        /// <summary>Replaces this same GUID's content after a validated reimport, retaining policy inputs and, unless explicitly replaced, its dependency set.</summary>
+        /// <param name="dependencies">Optional producer-verified complete replacement dependency set; supplying it clears prior incomplete derivation state.</param>
+        public Input WithReimportedContent(AssetRecord record,byte[] pinnedSource,byte[] derived,string profile,IEnumerable<SourceFile>? sourceFiles=null,IEnumerable<string>? dependencies=null)
         {
             ArgumentNullException.ThrowIfNull(record);
             if(record.Guid!=Guid)throw new ArgumentException("Reimport must preserve the asset GUID.",nameof(record));
-            return new(record,pinnedSource,derived,Dependencies,Complete,profile,PolicyInputs,sourceFiles:sourceFiles??SourceFiles);
+            return new(record,pinnedSource,derived,dependencies??Dependencies,dependencies is not null||Complete,profile,PolicyInputs,sourceFiles:sourceFiles??SourceFiles);
         }
         /// <summary>Copies all input ownership, including JSON and rights metadata. Dependencies must be explicitly complete.</summary>
         public Input(AssetRecord record, byte[]? pinnedSource, byte[]? derived, IEnumerable<string> dependencies,

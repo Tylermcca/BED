@@ -2,35 +2,12 @@ using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 namespace Brutal.Authoring.Editor.App;
 
-/// <summary>Adapter-declared build command. The literal {output} argument is replaced by BED's owned output directory.
-/// No SDK discovery, shell, generated build switches or arbitrary project-script inference occurs.</summary>
-public sealed class GameBuildSpec
-{
-    private readonly GameLaunchSpec template;
-    /// <summary>Copies an admitted executable, working directory and bounded argv with exactly one whole output placeholder.</summary>
-    public GameBuildSpec(string executable,string workingDirectory,IEnumerable<string> arguments)
-    {
-        template=new(executable,workingDirectory,arguments);
-        if(template.Arguments.Count(a=>a=="{output}")!=1||template.Arguments.Any(a=>a.Contains("{output}",StringComparison.Ordinal)&&a!="{output}"))
-            throw new ArgumentException("Build argv needs exactly one whole {output} argument.",nameof(arguments));
-    }
-    /// <summary>Exact admitted executable.</summary>
-    public string Executable=>template.Executable;
-    /// <summary>Exact admitted working directory.</summary>
-    public string WorkingDirectory=>template.WorkingDirectory;
-    /// <summary>Owned argv template.</summary>
-    public IReadOnlyList<string> Arguments=>template.Arguments;
-    internal GameLaunchSpec Bind(string output)=>new(Executable,WorkingDirectory,Arguments.Select(a=>a=="{output}"?output:a));
-}
-/// <summary>One bounded plain build log line, not a Play protocol message.</summary>
-public sealed record GameBuildLog(bool Error,string Text);
-/// <summary>Terminal owned build result. Success means exact staged bytes were checked, never published.
-/// ManifestHash is empty when a post-build inventory could not be pinned.</summary>
-public sealed record GameBuildReceipt(string SavedRevision,string ManifestHash,string OutputDirectory,int? ExitCode,bool Succeeded,string Reason,ImmutableArray<ExportStagedOutput> Outputs);
 /// <summary>Single-use supervised build with explicit saved-state input and caller-declared staging allowlist.
 /// Caller supplies the captured saved revision; this host does not save drafts or infer live freshness.</summary>
 public sealed class GameBuildHost : IDisposable
 {
+    internal string? OwnedExportFolder {get;init;}
+    internal Action<GameBuildLog>? PersistentLog {get;init;}
     private readonly object gate=new();
     private readonly GameBuildSpec spec;
     private readonly string root,revision;
@@ -39,6 +16,7 @@ public sealed class GameBuildHost : IDisposable
     private readonly Guid attempt;
     private readonly CancellationTokenSource inventoryCancellation=new();
     private readonly string? priorGood;
+    private readonly GameExportPlan? exportPlan;
     /// <summary>Pinned post-build output manifest, available only after a successful inventory.</summary>
     public GameContentManifest? OutputManifest {get;private set;}
     private readonly int maxLine,maxLogs;
@@ -70,6 +48,15 @@ public sealed class GameBuildHost : IDisposable
         this.spec=spec;root=Path.GetFullPath(projectRoot);revision=savedRevision;this.declaration=declaration;
         attempt=Guid.NewGuid();priorGood=priorGoodManifestHash;maxLine=maxLineCharacters;maxLogs=maxPendingLines;this.timeout=timeout;
     }
+    /// <summary>Export-only route: requires every captured source file at the same declared output path and an explicit captured-input command.</summary>
+    public GameBuildHost(GameBuildSpec spec,string projectRoot,bool hasUnsavedChanges,GameExportPlan plan,
+        int maxLineCharacters,int maxPendingLines,TimeSpan timeout)
+        :this(spec,projectRoot,plan.Admission.SnapshotHash,hasUnsavedChanges,plan.Outputs,maxLineCharacters,maxPendingLines,timeout)
+    {
+        if(!spec.AcceptsSavedInput)throw new InvalidOperationException("This game's build does not take BED's saved level.");
+        if(!plan.Admission.Source.Nodes.All(n=>plan.Outputs.Paths.Contains(n.Output.Destination,StringComparer.Ordinal)))throw new InvalidOperationException("Every captured Saved file must be declared at the same output path.");
+        exportPlan=plan;
+    }
     /// <summary>Observed completion after Start; no publication or prior-good replacement occurs.</summary>
     public Task<GameBuildReceipt>? Completion {get;private set;}
     /// <summary>Starts one declared build in a fresh owned output folder, with no stdin protocol.</summary>
@@ -81,7 +68,10 @@ public sealed class GameBuildHost : IDisposable
     /// <summary>Drains bounded plain logs; this does not drive process lifetime.</summary>
     public ImmutableArray<GameBuildLog> DrainLogs(){lock(gate){var result=logs.ToImmutableArray();logs.Clear();return result;}}
     private void Log(string text,bool error)
-    {lock(gate){if(logs.Count>=maxLogs){fault??="Build output exceeded its pending-line budget.";child?.AbortOwned();return;}logs.Enqueue(new(error,text));}}
+    {
+        try{PersistentLog?.Invoke(new(error,text));}
+        catch(Exception e)when(e is IOException or UnauthorizedAccessException){Fault("The export log could not be written: "+e.Message);child?.AbortOwned();return;}
+        lock(gate){if(logs.Count>=maxLogs){fault??="Build output exceeded its pending-line budget.";child?.AbortOwned();return;}logs.Enqueue(new(error,text));}}
     private void Fault(string why){lock(gate){if(!canceled)fault??=why;}}
     /// <summary>Cancels only this attempt and owned Job. No directory or prior export is deleted.</summary>
     public void Cancel(){lock(gate){if(finished)return;canceled=true;inventoryCancellation.Cancel();child?.AbortOwned();staging?.Cancel(attempt);}}
@@ -92,7 +82,9 @@ public sealed class GameBuildHost : IDisposable
         {
             if(!OperatingSystem.IsWindows())throw new PlatformNotSupportedException("Build supervision needs Windows for now");
             output=PrepareOutput();
-            lock(gate){if(canceled)throw new OperationCanceledException();child=new(spec.Bind(output),4096,maxLine,Log,Fault);child.CloseInput();}
+            string? input=null;
+            if(exportPlan is not null){input=BuildInputStaging.Write(output,exportPlan.Admission);output=Path.Combine(output,"output");Directory.CreateDirectory(output);}
+            lock(gate){if(canceled)throw new OperationCanceledException();child=new(spec.BindOutput(output,input),4096,maxLine,Log,Fault);child.CloseInput();}
             var timer=Task.Delay(timeout);var done=await Task.WhenAny(child.Completion,timer).ConfigureAwait(false);
             if(done!=child.Completion){Fault("Build exceeded its time limit.");child.AbortOwned();}
             code=await child.Completion.ConfigureAwait(false);
@@ -102,6 +94,7 @@ public sealed class GameBuildHost : IDisposable
                 if(fault is not null)throw new InvalidOperationException(fault);
                 if(code!=0)throw new InvalidOperationException("Build exited with code "+code+".");
             }
+            if(exportPlan is not null)BuildInputStaging.Verify(input!,exportPlan.Admission);
             var outputs=Inspect(output);
             lock(gate)
             {
@@ -123,6 +116,7 @@ public sealed class GameBuildHost : IDisposable
         var full=Path.GetFullPath(root);var current=Path.GetPathRoot(full)!;
         foreach(var part in full[current.Length..].Split(Path.DirectorySeparatorChar,StringSplitOptions.RemoveEmptyEntries))
         {current=Path.Combine(current,part);RequireDirectory(current,false);}
+        if(OwnedExportFolder is {} owned){RequireDirectory(owned,false);return owned;}
         foreach(var part in new[]{".bed","cache","export"}){current=Path.Combine(current,part);RequireDirectory(current,true);}
         var output=Path.Combine(current,attempt.ToString("N"));
         if(Path.Exists(output))throw new IOException("Build output admission already exists.");
@@ -142,7 +136,8 @@ public sealed class GameBuildHost : IDisposable
     {
         if(declaration is not null)
         {
-            var pinned=BuildOutputInventory.Capture(output,declaration,attempt,priorGood,inventoryCancellation.Token);
+            var pinned=BuildOutputInventory.Capture(output,declaration,attempt,priorGood,inventoryCancellation.Token,
+                exportPlan is null?null:BuildInputStaging.ExpectedOutputs(exportPlan.Admission));
             lock(gate){if(canceled)throw new OperationCanceledException();OutputManifest=pinned.Manifest;staging=pinned.Staging;}
             return pinned.Staging.Outputs;
         }

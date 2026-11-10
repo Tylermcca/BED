@@ -1,0 +1,4 @@
+# Self-authored material
+newmtl wood
+Kd 1 1 1
+map_Kd textured-crate.png

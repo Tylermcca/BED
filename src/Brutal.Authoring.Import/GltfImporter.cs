@@ -32,6 +32,8 @@ public enum ImportOutcome
 public sealed record ImportedMesh(string Node, string Mesh, Vector3[] Positions, Vector3[] Normals, Vector2[] Uv0, int[] Triangles,
     string? Material, float WorldDeterminant, bool WindingFlipped, bool Skinned)
 {
+    /// <summary>Source material identity and linear base colour; texture paths are source references, never asset identities.</summary>
+    public ImportedMaterial? MaterialInfo { get; init; }
     /// <summary>The axis-aligned bounds of <see cref="Positions"/>.</summary>
     public (Vector3 Min, Vector3 Max) Bounds => (
         Positions.Aggregate(new Vector3(float.MaxValue), Vector3.Min),
@@ -227,7 +229,8 @@ public static class GltfImporter
                     if (Vector3.Cross(pos[b] - pos[a], pos[c] - pos[a]).LengthSquared() <= Degenerate) { removed++; continue; }
                     if (flip) tris.AddRange([a, c, b]); else tris.AddRange([a, b, c]);
                 }
-                meshes.Add(new ImportedMesh(node.Name ?? "", node.Mesh.Name ?? "", pos, nrm, uv, [.. tris], prim.Material?.Name, placeDet, flip, skinned));
+                meshes.Add(new ImportedMesh(node.Name ?? "", node.Mesh.Name ?? "", pos, nrm, uv, [.. tris], prim.Material?.Name, placeDet, flip, skinned)
+                { MaterialInfo = prim.Material is { } material ? ImportedMaterial.FromGltf(json, material.LogicalIndex, material.Name ?? "") : null });
             }
         }
         if (removed > 0) issues.Add(Issue.Warning($"{name}: removed {removed} degenerate triangle{(removed == 1 ? "" : "s")}"));

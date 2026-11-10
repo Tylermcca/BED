@@ -12,7 +12,7 @@ public sealed class GenericLibraryBoundaryTests
 {
     private static readonly string[] ExpectedLibraries =
     [
-        "Brutal.Authoring", "Brutal.Authoring.Data", "Brutal.Authoring.Editor",
+        "Brutal.Authoring", "Brutal.Authoring.Runtime", "Brutal.Authoring.Data", "Brutal.Authoring.Editor",
         "Brutal.Authoring.Import", "Brutal.Authoring.Agent",
         "Brutal.Authoring.Editor.ImGui", "Brutal.Authoring.Editor.Text"
     ];
@@ -139,18 +139,27 @@ public sealed class GenericLibraryBoundaryTests
     }
 
     [Fact]
-    public void Technical_scope_keeps_all_seven_libraries_and_two_bundled_support_assemblies()
+    public void Technical_scope_keeps_original_seven_plus_runtime_libraries_and_two_bundled_support_assemblies()
     {
         var scope = ReadScope();
-        Assert.Equal(7, scope.Assemblies.Length); Assert.Equal(2, scope.Support.Length);
+        Assert.Equal(8, scope.Assemblies.Length); Assert.Equal(2, scope.Support.Length);
     }
 
     [Fact]
-    public void All_seven_built_library_metadata_surfaces_remain_generic()
+    public void All_eight_built_library_metadata_surfaces_remain_generic()
     {
         var scope = ReadScope();
         foreach (var name in scope.Assemblies)
             Assert.Empty(Problems(name, ReadBuiltMetadata(name), scope));
+    }
+
+    [Fact]
+    public void Runtime_has_only_framework_references_and_no_project_or_package_dependency()
+    {
+        var runtime=ReadBuiltMetadata("Brutal.Authoring.Runtime");
+        Assert.All(runtime.References,name=>Assert.True(name.StartsWith("System.",StringComparison.Ordinal)||name=="netstandard",name));
+        var project=System.Xml.Linq.XDocument.Load(Path.Combine(RepoRoot(),"src","Brutal.Authoring.Runtime","Brutal.Authoring.Runtime.csproj"));
+        Assert.DoesNotContain(project.Descendants(),item=>item.Name.LocalName is "ProjectReference" or "PackageReference");
     }
 
     [Fact]

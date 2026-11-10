@@ -4,8 +4,10 @@ namespace SceneStarter;
 // Sample-specific exact output contract. No wildcard approval of a build's arbitrary files.
 public static class ExportInventory
 {
+    // Retained strict legacy scene-review fixture inventory. Ordinary exports use RuntimeFiles plus saved project paths.
     public static readonly IReadOnlyList<string> Required=Array.AsReadOnly(new[]{"SceneStarter.exe","SceneStarter.dll","SceneStarter.deps.json",
-        "SceneStarter.runtimeconfig.json","Brutal.Authoring.dll","scene.json","LICENSE.txt","NOTICE.txt"});
+        "SceneStarter.runtimeconfig.json","Brutal.Authoring.dll","Brutal.Authoring.Runtime.dll","scene.json","LICENSE.txt","NOTICE.txt"});
+    public static readonly IReadOnlyList<string> RuntimeFiles=Array.AsReadOnly(Required.Where(name=>name!="scene.json").ToArray());
     public static IReadOnlyDictionary<string,byte[]> Read(string folder)
     {
         var allowed=Required.ToHashSet(StringComparer.Ordinal);
@@ -25,13 +27,13 @@ public static class ExportInventory
         if(files.Count!=allowed.Count)throw new IOException("Missing export entries: "+string.Join(", ",allowed.Except(files.Keys)));
         using var deps=JsonDocument.Parse(files["SceneStarter.deps.json"]);
         var libraries=deps.RootElement.GetProperty("libraries").EnumerateObject().Select(p=>p.Name.Split('/')[0]).Order().ToArray();
-        if(!libraries.SequenceEqual(new[]{"Brutal.Authoring","SceneStarter"}))
-            throw new IOException("Export dependencies must contain only SceneStarter and pure Brutal.Authoring core.");
+        if(!libraries.SequenceEqual(new[]{"Brutal.Authoring","Brutal.Authoring.Runtime","SceneStarter"}))
+            throw new IOException("Export dependencies must contain only SceneStarter and pure Brutal.Authoring core/Runtime.");
         foreach(var target in deps.RootElement.GetProperty("targets").EnumerateObject())
             foreach(var library in target.Value.EnumerateObject())
                 if(library.Value.TryGetProperty("runtime",out var runtimeFiles))
                     foreach(var file in runtimeFiles.EnumerateObject())
-                        if(file.Name is not ("SceneStarter.dll" or "Brutal.Authoring.dll"))
+                        if(file.Name is not ("SceneStarter.dll" or "Brutal.Authoring.dll" or "Brutal.Authoring.Runtime.dll"))
                             throw new IOException("Unexpected runtime dependency: "+file.Name);
         using var runtime=JsonDocument.Parse(files["SceneStarter.runtimeconfig.json"]);
         var framework=runtime.RootElement.GetProperty("runtimeOptions").GetProperty("framework");

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><AssemblyName>SceneStarter</AssemblyName><DebugType>none</DebugType></PropertyGroup>
-  <ItemGroup><ProjectReference Include="../../src/Brutal.Authoring/Brutal.Authoring.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../src/Brutal.Authoring/Brutal.Authoring.csproj" /><ProjectReference Include="../../src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj" /></ItemGroup>
   <ItemGroup>
     <None Update="scene.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="../../LICENSE.txt" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

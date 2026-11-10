@@ -76,7 +76,20 @@ public sealed class AccessKitNativeTreeApi : IAccessKitTreeApi
         finally { if (tree != 0) Native.accesskit_tree_info_free(tree); }
     }
     /// <inheritdoc/>
-    public nint NewNode(byte role) { CheckThread(); return Native.accesskit_node_new(role); }
+    public nint NewNode(byte role)
+    {
+        CheckThread();var node=Native.accesskit_node_new(role);
+        if(node!=0 && role==AccessKitTreeEncoder.NativeRole(AccessKitProjectedRole.Status))
+        {
+            try
+            {
+                Native.accesskit_node_set_live(node,1); // ACCESSKIT_LIVE_POLITE in the pinned header.
+                Native.accesskit_node_set_live_atomic(node);
+            }
+            catch {Native.accesskit_node_free(node);throw;}
+        }
+        return node;
+    }
     /// <inheritdoc/>
     public void FreeNode(nint node) { CheckThread(); Native.accesskit_node_free(node); }
     /// <inheritdoc/>
@@ -123,6 +136,10 @@ public sealed class AccessKitNativeTreeApi : IAccessKitTreeApi
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)] internal static extern nint accesskit_node_new(byte role);
         [DefaultDllImportSearchPaths(DllImportSearchPath.ApplicationDirectory | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)] internal static extern void accesskit_node_free(nint node);
+        [DefaultDllImportSearchPaths(DllImportSearchPath.ApplicationDirectory | DllImportSearchPath.System32)]
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)] internal static extern void accesskit_node_set_live(nint node,byte value);
+        [DefaultDllImportSearchPaths(DllImportSearchPath.ApplicationDirectory | DllImportSearchPath.System32)]
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)] internal static extern void accesskit_node_set_live_atomic(nint node);
         [DefaultDllImportSearchPaths(DllImportSearchPath.ApplicationDirectory | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)] internal static extern void accesskit_node_set_label_with_length(nint node, byte[] value, nuint length);
         [DefaultDllImportSearchPaths(DllImportSearchPath.ApplicationDirectory | DllImportSearchPath.System32)]

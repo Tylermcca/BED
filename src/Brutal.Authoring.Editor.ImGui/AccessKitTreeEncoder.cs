@@ -44,6 +44,7 @@ public static class AccessKitTreeEncoder
         AccessKitProjectedRole.Row => 6, AccessKitProjectedRole.Cell => 2,
         AccessKitProjectedRole.TreeItem => 9, AccessKitProjectedRole.Tab => 120,
         AccessKitProjectedRole.Dialog => 66, AccessKitProjectedRole.Status => 116,
+        AccessKitProjectedRole.Canvas => 51,
         _ => throw new ArgumentOutOfRangeException(nameof(role)),
     };
 

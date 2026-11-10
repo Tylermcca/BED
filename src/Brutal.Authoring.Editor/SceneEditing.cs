@@ -21,7 +21,7 @@ public static class SceneEditing
     /// quaternion back as angles, so near straight up or down (pitch ±90°) yaw and roll share one turn and may read
     /// differently than typed; the rotation itself is exact.
     /// </summary>
-    public static ObjectType<Scene, SceneObject> ObjectType() => new("scene.object", "Object", (d, id) => d.Find(id),
+    public static ObjectType<Scene, SceneObject> ObjectType() => new ObjectType<Scene, SceneObject>("scene.object", "Object", (d, id) => SceneViewIndex.For(d).Find(id),
     [
         new("id", "Id", PropertyKind.Text, o => o.Id, Help: "Its stable id. Other objects refer to it by this."),
         new("asset", "Asset", PropertyKind.Text, o => o.Asset ?? "", (o, v) => new SetAsset(o.Id, Text(v)),
@@ -37,7 +37,7 @@ public static class SceneEditing
         Axis("scale.x", "Scale X", o => o.Scale.X, (o, x) => new ScaleObject(o.Id, o.Scale with { X = x }), "1 is its own size.", 1),
         Axis("scale.y", "Scale Y", o => o.Scale.Y, (o, y) => new ScaleObject(o.Id, o.Scale with { Y = y }), "1 is its own size.", 1),
         Axis("scale.z", "Scale Z", o => o.Scale.Z, (o, z) => new ScaleObject(o.Id, o.Scale with { Z = z }), "1 is its own size.", 1),
-    ]);
+    ]).WithStaticRows();
 
     /// <summary>
     /// For the editor window's <c>CommandFor</c> hook: palette commands that act on the selection.
@@ -80,12 +80,14 @@ public static class SceneEditing
 
     private sealed class SceneOutline : IDocumentOutline<Scene>
     {
+        // Immutable document identity already supplies the revision; the outline policy is fixed.
+        public long? Version => 0;
         public IEnumerable<string> ObjectIds(Scene document) => document.Objects.Select(o => o.Id);
 
-        public string? Label(Scene document, string objectId) => document.Find(objectId) is not { } o ? null
+        public string? Label(Scene document, string objectId) => SceneViewIndex.For(document).Find(objectId) is not { } o ? null
             : o.Properties.TryGetValue("name", out var n) && n.ValueKind == JsonValueKind.String && n.GetString() is { Length: > 0 } name ? name : o.Id;
 
-        public string? Parent(Scene document, string objectId) => document.Find(objectId)?.Parent;
+        public string? Parent(Scene document, string objectId) => SceneViewIndex.For(document).Find(objectId)?.Parent;
     }
 }
 
@@ -111,12 +113,13 @@ public static class SceneTranslation
         if (!Finite(delta)) return Refuse("The translation delta must be finite.");
         var errors = new SceneValidator().Validate(scene);
         if (errors.HasErrors()) return new([], [], errors);
+        var byId=scene.Objects.ToDictionary(item=>item.Id,StringComparer.Ordinal);
         var ids = selected.ToHashSet(StringComparer.Ordinal);
         foreach (var id in ids.Order(StringComparer.Ordinal))
-            if (scene.Find(id) is null) return Refuse($"The selected object '{id}' no longer exists.", id);
+            if (!byId.ContainsKey(id)) return Refuse($"The selected object '{id}' no longer exists.", id);
         bool HasSelectedAncestor(SceneObject o)
         {
-            for (var parent = o.Parent; parent is not null; parent = scene.Find(parent)!.Parent)
+            for (var parent = o.Parent; parent is not null; parent = byId[parent].Parent)
                 if (ids.Contains(parent)) return true;
             return false;
         }

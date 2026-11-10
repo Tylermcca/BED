@@ -9,9 +9,10 @@ using Brutal.Authoring.Editor.ImGui;
 namespace SceneStarterAdapter;
 
 /// <summary>Public catalog-pinned scene sample, connected to the declared standalone SceneStarter stdio peer.</summary>
-public sealed class SceneStarterAdapter : IProjectAdapter
+public sealed partial class SceneStarterAdapter : IProjectAdapter
 {
     private DataWorkspace? linkedWorkspace;
+    private string? savedProjectRoot;
     public string Name=>"SceneStarter";
     public bool Recognises(ProjectPaths project)
     {
@@ -26,6 +27,15 @@ public sealed class SceneStarterAdapter : IProjectAdapter
         return data;
     }
     public void Configure(EditorModel<DataDocument> editor,DataTableView table) { }
+    /// <summary>Ordinary saved-file Play from the project-owned game folder; no external program approval is implied.</summary>
+    public PlaySettings DefaultPlay(ProjectPaths project)
+    {
+        var root=Path.GetFullPath(project.Root??project.Folder??Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(project.Data)))!);
+        savedProjectRoot=root;
+        var source=Path.GetFullPath(Path.Combine(root,"..","SceneStarter","SceneStarter.csproj"));
+        PlayBuildSettings? build=File.Exists(source)?new("dotnet",["build",source,"-c","Release","-o","game"],[]):null;
+        return new("game/SceneStarter.exe",["--project","."],".",build);
+    }
     public GameLaunchSpec LinkedPlay(DataWorkspace workspace)
     {
         linkedWorkspace=workspace;
@@ -38,11 +48,11 @@ public sealed class SceneStarterAdapter : IProjectAdapter
         {
             // The launcher asks immediately after LinkedPlay(workspace); each stored converter owns that binding.
             var workspace=linkedWorkspace;
-            return input=>ConvertInput(input,workspace);
+            return input=>ConvertExportInput(input,workspace);
         }
     }
     private sealed record Pin(string guid,string sourceHash,string contentRevision,string policyRevision,string derivedHash,byte[] derived);
-    private static PlayConversion ConvertInput(PlaySnapshotDocument input,DataWorkspace? workspace)
+    private static PlayConversion ConvertExportInput(PlaySnapshotDocument input,DataWorkspace? workspace)
     {
         const string legacy="scene-starter.scene.v1", assetsFormat="scene-starter.scene.v2";
         if(Encoding.UTF8.GetByteCount(input.Text)>1024*1024) return new(legacy,null,"The SceneStarter scene accepts up to one MiB.");

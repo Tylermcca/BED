@@ -30,10 +30,13 @@ public static class ObjectContextMenu
             : editor.Playing is not null ? "Stop Play before deleting an object."
             : !editor.InFocus(id) ? "This object is outside the current focus."
             : editor.Selection.Count != 1 || editor.Primary != id ? "Select this object again before deleting it."
-            : window.Inspector?.CanRemoveHere != true ? "This object has no supported remove action." : null;
+            : editor is not EditorModel<Scene> && window.Inspector?.CanRemoveHere != true ? "This object has no supported remove action." : null;
         if (Ui.MenuItem("Delete"u8, ""u8, false, why is null, why))
-            result = window.Inspector!.RemoveHere() ? "Deleted object; Undo restores it."
+        {
+            if(editor is EditorModel<Scene>){window.Run("scene.remove");result=window.Status;}
+            else result = window.Inspector!.RemoveHere() ? "Deleted object; Undo restores it."
                 : string.Join(" ", window.Inspector.LastIssues.Select(issue => issue.Message));
+        }
         Ui.EndPopup();
         return result;
     }

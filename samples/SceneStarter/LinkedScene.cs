@@ -10,8 +10,8 @@ namespace SceneStarter;
 /// it has no authoring, editor, process-launch or UI dependency.</summary>
 public static class LinkedScene
 {
-    public const string Format="scene-starter.scene.v1";
-    public const string AssetFormat="scene-starter.scene.v2";
+    public const string Format=ScenePayload.Format;
+    public const string AssetFormat=ScenePayload.AssetFormat;
     private const int MaxLine=128*1024*1024,MaxPayload=96*1024*1024;
     private sealed record Identity(string Session,long Revision,string Hash);
 
@@ -34,8 +34,7 @@ public static class LinkedScene
             var bytes=root.GetProperty("payload").GetBytesFromBase64();
             if(bytes.Length>MaxPayload || (format==Format && bytes.Length>1024*1024)) throw new InvalidOperationException("The sample input exceeds its payload budget.");
             if(Hash(name,identity.Revision,bytes,format)!=identity.Hash) throw new InvalidOperationException("The scene snapshot hash differs from its envelope.");
-            var text=new UTF8Encoding(false,true).GetString(bytes);
-            var loaded=format==AssetFormat ? PinnedScenePayload.Read(bytes) : SceneRuntimeReader.Read(text,assetExists:_=>false);
+            var loaded=ScenePayload.Read(bytes,format);
             if(loaded.AssetIssues.Count!=0) throw new InvalidOperationException("This sample needs every scene asset to be pinned.");
             // Readiness follows the actual core parse and graph validation, never mere pipe receipt.
             Write(output,new {kind="ready",version=1,session=identity.Session,revision=identity.Revision,hash=identity.Hash,supported=3});

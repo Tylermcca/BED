@@ -15,6 +15,7 @@ internal sealed unsafe class SceneTarget : IDisposable
     private VkFramebuffer framebuffer;
     private bool disposed;
     private SceneRenderRequest? request;
+    internal IReadOnlyDictionary<(string Item,int Part),SceneMeshBuffer> Meshes {get;set;}=new Dictionary<(string Item,int Part),SceneMeshBuffer>();
     private Func<SceneRenderIdentity>? currentIdentity;
     private IReadOnlyDictionary<(string Guid,string Hash),SceneSampledMaterial>? materials;
     internal string MaterialStatus {get;private set;}="";
@@ -85,7 +86,7 @@ internal sealed unsafe class SceneTarget : IDisposable
         clear[0]=new VkClearColorValue();clear[1]=new VkClearDepthStencilValue{Depth=1,Stencil=0};
         command.BeginRenderPass(new VkRenderPassBeginInfo{RenderPass=pass,Framebuffer=framebuffer,RenderArea=new VkRect2D(new VkExtent2D(Width,Height)),ClearValueCount=2,ClearValues=clear},VkSubpassContents.Inline);
         command.SetViewport(0,[new VkViewport{Width=Width,Height=Height,MinDepth=0,MaxDepth=1}]);
-        command.SetScissor(0,[new VkRect2D(new VkExtent2D(Width,Height))]);if(request is null || request.Identity == currentIdentity!()) triangle!.Draw(command,request,materials);
+        command.SetScissor(0,[new VkRect2D(new VkExtent2D(Width,Height))]);if(request is null || request.Identity == currentIdentity!()) triangle!.Draw(command,request,Meshes,materials);
         command.EndRenderPass();
     }
     // Caller must establish fence safety before disposing or replacing this attachment set.

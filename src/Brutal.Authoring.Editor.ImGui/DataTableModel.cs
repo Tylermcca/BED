@@ -132,6 +132,9 @@ internal sealed class DataTableModel
     public BatchPlan PlanFill(string field, string text) =>
         Plan(Visible().Select(item => (item, field, text)).ToList());
 
+    internal BatchPlan PlanRows(IReadOnlyList<string> items,string field,string text)
+        =>Plan(items.Select(item=>(item,field,text)).ToList());
+
     /// <summary>
     /// Plans pasting a grid of tab-separated values (rows on lines, as a spreadsheet copies them), its top-left cell at
     /// <paramref name="item"/>'s row and <paramref name="field"/>'s column, in the order shown. INVENTED policy, from

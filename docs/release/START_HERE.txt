@@ -1,9 +1,9 @@
 BED - START HERE
 ================
 
-An editor for game data: lists of things (wares, ships, spells, recipes) kept as
-JSON files, each described by a JSON Schema. It checks every edit against the
-schema, so a typo or an impossible value is caught before it's saved.
+BED edits game data and 3D levels. Data files use JSON and JSON Schema; level
+objects can use models and textures from the project's Assets panel. Try the
+level journey below to add an object, move it, run Play and export a build.
 
 
 1. OPEN IT
@@ -43,6 +43,63 @@ Data folder, and click Open. Each position file gets a Board panel:
     with the position untouched.
   - "Play in its own window" starts the game itself, play-checkers.exe, on the
     position you're editing. You can also double-click play-checkers.exe in samples\checkers.
+
+
+2c. MAKE AND EXPORT A LEVEL
+--------------------------
+Keep the unpacked BED folder together, including samples and adapters.
+"Try the example" opens recipes. For the level sample, follow these steps:
+
+  1. OPEN THE LEVEL
+     Choose Open project (Ctrl+O) and select samples\scene-starter in this
+     unpacked folder. In Files, select level.json and press Enter.
+
+  2. ADD THE CRATE
+     Press Insert outside a text field, or choose Scene > Add object.
+     In the asset picker, select textured-crate.obj, then Add selected object.
+     The cube and pillar are available too. Read any refusal in Assets before
+     trying again; a missing model or texture must be fixed first.
+
+  3. MOVE AND SAVE
+     Select the new object in Objects or the 3D view. In Inspector, change
+     Position X to 4.5 and press Enter. Ctrl+Z undoes; Ctrl+Y redoes.
+     Press Ctrl+S to save the level. An object's position is relative to its
+     parent when it belongs to a group.
+
+  4. TRY PLAY
+     Press Play. If there are drafts, choose Save, Don't Save or Cancel.
+     Don't Save runs the saved level and keeps the draft in BED.
+     The sample is a console program: the Play console prints
+     "SceneStarter loaded saved level:" with object and mesh counts.
+     It does not open a separate 3D game window. Choose Stop to end the run
+     before editing or exporting again.
+     For a quick run that exits by itself, open Tools > Play settings and
+     use this Arguments (JSON list): ["--project",".","--seconds","0"].
+     Save Play settings, then press Play. A successful run exits with code 0.
+     If the program is missing or stale, use Build and Play and review the
+     exact command before approving it. Read build errors in the console.
+
+  5. EXPORT A BUILD
+     Stop Play and save with Ctrl+S. Choose File > Export build... and press
+     Build saved files. Wait for the build and unpacked-game check to pass.
+     Enter a new or empty Destination folder outside the project, then press
+     Copy build to folder... . BED refuses a folder that already has files.
+     Cancel export stops an export in progress and keeps your level edits.
+
+  6. RUN THE EXPORTED GAME
+     Open PowerShell in that destination folder and run:
+
+       .\SceneStarter.exe --project . --seconds 0
+
+     It prints "SceneStarter loaded saved level:" and exits with code 0.
+     This is the console sample loading your saved level and assets; it has
+     no separate game window. You can close BED before running this copy.
+     Keep the exported folder's data, .bed cache, program files and notices
+     together. The framework-dependent export needs the .NET 10 runtime on
+     the destination PC; it does not need BED.
+
+Ctrl+W closes the level through its save decision. Select it in Files and
+press Enter to reopen it. These models and the crate's texture are self-authored.
 
 
 3. OPEN YOUR OWN DATA
@@ -105,8 +162,8 @@ Adapters are programs; load only ones you trust.
 5. MORE
 -------
   - A game can add its own rules and panels with an ADAPTER: a DLL put in the
-    adapters folder. Two are included as examples: Starter (for the sample) and
-    Checkers. Adapters are programs: only add ones you trust.
+    adapters folder. The bundled recipes, checkers, first-task and level
+    samples include their own adapters. Only add adapters you trust.
   - Without a window (for scripts or trials): BED.exe --help lists
     its options. <folder> --shot picture.png draws the screen into a picture;
     --settings <folder> keeps the recent list there instead of your own.

@@ -2,7 +2,7 @@
 
 BED lets you and your AI assistant read, check and edit a game's JSON data through schema-checked tools. Use an MCP-compatible app or an assistant that can run commands. [Start with the AI guide](docs/guide/using_bed_with_ai.md) for a sample walkthrough, connection examples and when to approve writes.
 
-With a project data file open in BED, choose **Help > Use with an AI assistant** for setup examples with your project's paths filled in; the start screen's **Help: Use with an AI assistant** button shows examples for the bundled sample.
+With a project data file open in BED, choose **Help > Use with an AI assistant** for setup examples with your project's paths filled in.
 
 BED edits the data your game reads: lists of items, enemies, recipes, levels and settings, kept as JSON files. Every edit is checked as you make it, so a typo or an impossible value is caught before it's saved, not when the game crashes.
 
@@ -12,7 +12,7 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 
 ## Try it (Windows, 2 minutes)
 
-1. Download **BED-win-x64.zip** from the [Releases page](../../releases). It is a 0.2 preview: the data editor is complete, and the 3D level tools are still being finished (see the [roadmap](ROADMAP.md)).
+1. Download **BED-win-x64.zip** from the [Releases page](../../releases). The current download is **0.2.1-rc.1**, a release candidate for 0.2.
 2. Unzip it anywhere and double-click **BED.exe**. BED needs the Microsoft Visual C++ Redistributable (x64). If it is missing, install it from [Microsoft](https://aka.ms/vs/17/release/vc_redist.x64.exe), then open BED again.
 3. Click **Try the example**.
 4. Click a cell in the table, type a new value and press Enter.
@@ -20,6 +20,20 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 6. Press **Ctrl+Z** to undo and **Ctrl+S** to save.
 
 The zip also has a small checkers game made with BED. `START_HERE.txt` in the zip covers both.
+
+### Try a 3D level
+
+The download includes a level sample. **Try the example** opens recipes; open the level sample separately.
+
+1. Choose **Open project**, select `samples\scene-starter` in the unzipped folder (or `samples/SceneStarterProject` if you [build from source](#build-from-source)), and open **level.json** from **Files**.
+2. Press **Insert** outside a text field to open **Add object**, select the sample cube, pillar or textured crate, then choose **Add selected object**. Clear the selection first to place it on its own, or select an object to place it inside that group.
+3. Select the new object and change **Position X** in the Inspector, or drag a move handle. Press **Ctrl+Z** to undo and **Ctrl+S** to save.
+4. Choose **Play** to run the saved files. If asked, choose **Save**, **Don't Save** (keep your edits and run the saved version), or **Cancel**. Configure **Tools > Play settings...** if needed; choose **Build and Play** in **Play console** when the program needs building, and approve the displayed command if asked. Choose **Stop** to end the run. See the [Play guide](docs/guide/playing.md).
+5. Save, then choose **File > Export build** and **Build saved files**. When the build checks finish, enter a new or empty **Destination folder** and choose **Copy build to folder...**. See the [Export guide](docs/guide/exporting.md).
+
+See [levels](docs/guide/levels.md), [assets](docs/guide/assets.md), [Play](docs/guide/playing.md) and [troubleshooting Play and Export](docs/guide/troubleshooting.md) for help. Play and Export build both work from your saved files.
+
+Browse the [guide index](docs/guide/README.md) for everyday editing, levels, Play, Export and extension tutorials.
 
 ## Use it on your own data
 
@@ -32,15 +46,17 @@ Then click **Open**. If a file doesn't match its schema, BED still opens it and 
 
 ## What it does
 
+- **3D levels.** Add models, move, rotate and resize them, and undo or save your changes. Try the development walkthrough above.
+- **Assets.** Browse OBJ and glTF models, inspect their part counts and preview texture thumbnails. Add models to a level; BED explains any problems that block placement.
 - **Tables and forms** for your data, with undo and redo for every change.
 - **Links between files.** Click a name to jump to the item it refers to, and see everything that refers to an item.
 - **Your game's own rules.** A small C# adapter adds checks, panels or a playable preview for your game. See [Writing an adapter](docs/guide/writing_an_adapter.md).
 - **A command line** (`bed-cli.exe`) that makes the same checked edits, for scripts, AI assistants and screen readers.
-- **Keyboard and screen-reader friendly.** See [Using a screen reader](docs/guide/using_a_screen_reader.md).
+- **Keyboard controls and assistive tools.** See the [keyboard guide](docs/guide/keyboard.md) and the [screen-reader command-line walkthrough](docs/guide/using_a_screen_reader.md).
 
 ## What BED looks like
 
-BED opens a game's data folder and shows each file as a table you can sort, filter and fill. Pick a row to edit it in the inspector, follow a link to the item it points at, and undo anything. With a game's adapter loaded, BED also checks every edit against that game's own rules and can start the game with your changes in it.
+BED opens a game's data folder and shows each file as a table you can sort, filter and fill. Pick a row to edit it in the inspector, follow a link to the item it points at, and undo anything. With a game's adapter loaded, BED also checks every edit against that game's own rules and can start the game using your saved data.
 
 | | |
 |---|---|
@@ -66,7 +82,7 @@ I'm using BED on three or four games of my own at the moment, each a different k
 
 ## Roadmap
 
-BED's first release, 0.2, adds 3D levels, assets, Play and Windows builds to the data editor. 2D and prefabs come next. See [the roadmap](ROADMAP.md) for what's done and what's left.
+BED's first release, 0.2, adds 3D levels, assets, Play and Windows builds to the data editor. The current download, 0.2.1-rc.1, is its release candidate. 2D and prefabs come next. See [the roadmap](ROADMAP.md) for what's done and what's left.
 
 ## Build from source
 
@@ -78,7 +94,7 @@ cd BED
 dotnet run --project src/Brutal.Authoring.Launcher
 ```
 
-To make the same zip as the Releases page: `python tools/package_release.py`. It goes in `dist/`.
+To package your build as a Windows zip: `python tools/package_release.py`. It goes in `dist/`.
 
 ## Made with AI help
 

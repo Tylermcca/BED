@@ -17,6 +17,8 @@ public static class Program
           ai-setup [--json]                        print AI setup examples for --data/--schemas and optional --map/--adapter;
                                                     no project opening or adapter loading; writes no configuration
           ui [--json] [--script <json array>]          read/action only its own headless instance, never a live window; max32 steps
+          scene <file> <action> <args-json> [--preview] [--save]
+                                                    typed scene add, move, duplicate, delete, rename or group; previews by default
           describe                                  start here: files, what can be saved, lists, problems, calls
           find <file> <list> [text] [--limit N]     items in a list, by label or field text (50 shown unless --limit)
           get <file> <at>                           a value, its label, and where an id leads
@@ -203,6 +205,16 @@ public static class Program
         {
             if (!Directory.Exists(assets)) { errors.WriteLine($"there's no asset folder at {assets}. Check --assets."); return 2; }
             session.UseAssets(assets, ownNames);
+        }
+        if(rest[0]=="scene")
+        {
+            JsonObject sceneResult;
+            try{sceneResult=SceneCommandCall.Run(session,rest,preview,save);}
+            catch(ArgumentException error){errors.WriteLine(error.Message);errors.Write(Usage);return 2;}
+            catch(Exception error)when(error is IOException or UnauthorizedAccessException or DocumentFormatException or InvalidDocumentException)
+            {sceneResult=new(){["error"]="The scene command was refused: "+error.Message,["next"]="Resolve the file or validation error before trying again."};}
+            output.WriteLine(sceneResult.ToJsonString(new JsonSerializerOptions{WriteIndented=true}));
+            return sceneResult.ContainsKey("error")?1:0;
         }
         if (rest[0] == "mcp")
         {

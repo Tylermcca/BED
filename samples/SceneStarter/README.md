@@ -1,27 +1,27 @@
-# SceneStarter export review
+# SceneStarter saved files and export review
 
-A tiny self-authored console runtime sample. It uses only `Brutal.Authoring` core and the .NET 10 runtime, not BED editor assemblies, BRUTAL native libraries or a window. This is a framework-dependent Windows sample: the destination needs the .NET 10 runtime. It is not a standalone game or a release approval.
+A small self-authored console sample using `Brutal.Authoring` and `Brutal.Authoring.Runtime` with .NET 10. It has no Editor, ImGui or BRUTAL dependency and opens no window. This is a framework-dependent Windows sample; the destination needs the .NET 10 runtime.
 
-The supplied `scene.json` contains two objects, `root` and `child`, with a parent link, local transforms and a named reference. `--smoke` reads through `SceneRuntimeReader`, reconstructs runtime identities, checks the exact sample facts and refuses missing, malformed, unsupported-version or changed input. It never saves or repairs the scene. The standalone --smoke fixture refuses external assets. The separate linked Play v2 input accepts only GUIDs and copied derived bytes from the host-admitted pinned catalog; it does not discover asset files or change this export inventory.
+## Play saved project files
 
-## Owner acceptance
+`SceneStarter.exe --project PROJECT_ROOT` reads `data/level.json` and the published generation in `.bed/cache`. With no arguments it also accepts the root supplied in `BED_PROJECT`. Open the project in BED once to prepare its saved assets. The game derives nothing and never reads an editor draft, takes a cache owner lock or saves the project.
 
-These commands are for the owner to run from a trusted build checkout. Replace `FRESH_OUTPUT` with a new empty output directory. Do not reuse a previous export directory or disable inventory checks to accommodate unexpected files.
+The same `SavedScene.Open` consumer can read a copied project layout. It checks the level's identities, links and local transforms through the core scene reader, then obtains each exact asset GUID from the hash-verified generation and decodes it through the Runtime mesh reader. Missing, changed or unsupported inputs refuse with exit 3; success prints a plain loaded-level message. With no lifetime option it keeps running until closed. `--seconds N` keeps it running for 0 to 60 seconds after the real load and then exits; `--exit-code N` returns that code after the load (or after the chosen duration). Use `--seconds 0` for a bounded owner smoke. There is no game-readiness handshake.
+
+## Fixed export-review fixture
+
+The supplied `scene.json` is a separate fixed two-object review fixture. `--smoke scene.json` preserves its exact root/child/transform/reference checks and refuses external assets. `--review FOLDER` checks the exact runtime inventory and that fixed fixture; these commands do not replace ordinary saved-project Play.
+
+For an owner-reviewed trusted checkout:
 
 ```
 dotnet publish samples/SceneStarter/SceneStarter.csproj -c Release --no-restore --self-contained false -p:UseAppHost=true -p:PublishSingleFile=false -o FRESH_OUTPUT
 ```
 
-Then, from that output directory, run `SceneStarter.exe --review .` to check the files, and `SceneStarter.exe --smoke scene.json` to load the scene.
+Use a new output directory. From it, run `SceneStarter.exe --review .` and `SceneStarter.exe --smoke scene.json`. Review permits exactly `SceneStarter.exe`, `SceneStarter.dll`, `SceneStarter.deps.json`, `SceneStarter.runtimeconfig.json`, `Brutal.Authoring.dll`, `Brutal.Authoring.Runtime.dll`, `scene.json`, `LICENSE.txt` and `NOTICE.txt`. It rejects extra assemblies/source files, directories, links, missing notices, empty/oversized files and dependencies outside those three managed assemblies. It does not publish, replace prior output or grant redistribution rights.
 
-`--review` permits exactly `SceneStarter.exe`, `SceneStarter.dll`, `SceneStarter.deps.json`, `SceneStarter.runtimeconfig.json`, `Brutal.Authoring.dll`, `scene.json`, `LICENSE.txt` and `NOTICE.txt`. It rejects directories, links, empty or oversized files, missing notices, unexpected assemblies/source files and dependencies outside the two declared assemblies. After the inventory and scene smoke both succeed, it prints path/length/SHA-256 records and the smoke result. Exit 3 means refusal. It does not publish, replace a prior export, grant rights or prove binary authenticity against a hostile producer. Review only the owner's freshly built trusted sample.
+The `--build INPUT OUTPUT` producer copies the captured `data/level.json`, `.bed/cache/current.json` and that pointer's exact generation (manifest, owner marker and every derived model or texture). The host stages these files with relative paths, lengths and SHA-256 hashes. It checks the complete transport after the build and requires each saved file to match at the same output path. Other cache generations, staging files, locks, source assets and sidecars stay behind. Exports contain neither `payload.bin` nor the legacy `scene.json` fixture.
 
-Record the source commit, exact build and smoke commands, exit codes, stdout/stderr and the complete inventory. On separate copies, verify missing scene, malformed scene and unsupported version fail with exit 3 and no success text. Keep the valid output unchanged. Missing or failed owner smoke means export acceptance remains incomplete even if headless tests pass.
+Run the exported game from its own folder with `SceneStarter.exe --project . --seconds 0`. It uses the same `SavedScene.Open` / `ProjectAssets.Open` readers as Play and exits 0 after loading. The adapter's export smoke runs this command before BED offers to copy the verified build. Changed saved files, missing generation dependencies, changed producing policy and unretained asset attributions refuse export.
 
-## Integration boundary
-
-The approved future flow is: successful owned build, strict output walk/hash, EX04 staging from that captured inventory, then owner runtime smoke. The current `GameBuildHost` still requires pre-pinned outputs; this sample does not change that host or loosen `ExportStaging.Record`. Headless tests construct the post-build inventory from actual compiled sample bytes and demonstrate unchanged staging hash checks. They call the sample entry logic in-process; they are not evidence that a published/unpacked executable started successfully. No complete source-to-export integration is claimed until the host producer and owner smoke are supplied.
-
-The included LICENSE and NOTICE are preserved repository texts. No art, private data, editor source, test helper or external asset is part of this sample. Packaging rights review remains separate from byte inventory validation.
-
-The post-build host now accepts `BuildOutputDeclaration`, bound to admitted source check and origin receipts. It captures the exact declared output set after a zero exit, pins an output manifest with `SourceManifestHash`, and applies unchanged staging byte checks. Required notice coverage is explicit. The older pre-pinned staging overload remains compatible; it is not the new post-build route. No startup producer, owner publish, or exported-process smoke receipt is supplied by these source changes.
+Record actual build and smoke commands, exits and inventory before accepting an export. Source-level and headless fixture tests do not prove a complete published/unpacked release or native renderer. LICENSE and NOTICE remain the repository texts; no private art or game data belongs in the sample.

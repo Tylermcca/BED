@@ -1,6 +1,6 @@
-"""Reproduce SceneStarter's two self-authored OBJ assets and their stable sidecars.
+"""Reproduce SceneStarter's self-authored boxes, textured crate and stable sidecars.
 
-Only these four named outputs are written. Run --check to compare without writes.
+Only the nine named asset outputs are written. Run --check to compare without writes.
 No importer, application, subprocess, network or external data is used.
 """
 from __future__ import annotations
@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+from generate_textured_crate import outputs as crate_outputs
 
 ROOT = Path(__file__).resolve().parent
 ASSETS = ROOT / "assets"
@@ -38,6 +39,7 @@ def outputs() -> dict[str, bytes]:
                   "aiUse": "allowed"}
         result[source] = data
         result[source + ".asset.json"] = (json.dumps(record, indent=2) + "\n").encode("utf-8")
+    result.update(crate_outputs())
     return result
 
 def main() -> int:
@@ -50,12 +52,12 @@ def main() -> int:
         if wrong:
             print("Generated sample assets differ: " + ", ".join(wrong))
             return 1
-        print("All four generated asset files match.")
+        print("All nine generated asset files match.")
         return 0
     ASSETS.mkdir(exist_ok=True)
     for name, content in expected.items():
         (ASSETS / name).write_bytes(content)
-    print("Wrote the two self-authored OBJs and their stable sidecars.")
+    print("Wrote the boxes, textured crate and their stable sidecars.")
     return 0
 
 if __name__ == "__main__":

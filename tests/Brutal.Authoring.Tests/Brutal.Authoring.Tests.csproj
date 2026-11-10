@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- BRUTAL's analyzer asks UI code for UTF-8 string literals; tests pass ordinary strings to non-UI APIs, so that rule is off here. -->
     <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
   </PropertyGroup>
@@ -18,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Brutal.Authoring\Brutal.Authoring.csproj" />
+    <ProjectReference Include="../../src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj" />
     <ProjectReference Include="..\..\samples\Toy\Toy.csproj" />
     <ProjectReference Include="..\..\src\Brutal.Authoring.Editor\Brutal.Authoring.Editor.csproj" />
     <ProjectReference Include="..\..\src\Brutal.Authoring.Import\Brutal.Authoring.Import.csproj" />
@@ -32,6 +34,7 @@
     <ProjectReference Include="../../samples/Ladder/Ladder.csproj" />
     <ProjectReference Include="../../samples/SceneTool/SceneTool.csproj" />
     <ProjectReference Include="../../samples/SceneStarter/SceneStarter.csproj" />
+    <ProjectReference Include="../../samples/RuntimeInspect/RuntimeInspect.csproj" />
     <ProjectReference Include="../../samples/DataCheck/DataCheck.csproj" />
     <ProjectReference Include="../../src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj" />
     <ProjectReference Include="../../samples/ImportCheck/ImportCheck.csproj" />
@@ -72,17 +75,24 @@
   </ItemGroup>
   <Target Name="CopySceneStarterReviewInputs" AfterTargets="Build">
     <ItemGroup>
-      <SceneStarterReviewInput Include="../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.exe;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.deps.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.runtimeconfig.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Brutal.Authoring.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/scene.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/LICENSE.txt;../../samples/SceneStarter/bin/$(Configuration)/net10.0/NOTICE.txt" />
+      <SceneStarterReviewInput Include="../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.exe;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.deps.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.runtimeconfig.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Brutal.Authoring.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Brutal.Authoring.Runtime.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/scene.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/LICENSE.txt;../../samples/SceneStarter/bin/$(Configuration)/net10.0/NOTICE.txt" />
     </ItemGroup>
     <Copy SourceFiles="@(SceneStarterReviewInput)" DestinationFolder="$(OutDir)SceneStarterReview" />
   </Target>
   <Target Name="CopySceneStarterLinkedProof" AfterTargets="Build">
     <ItemGroup>
-      <SceneStarterProof Include="../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.exe;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.deps.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.runtimeconfig.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Brutal.Authoring.dll" />
+      <SceneStarterProof Include="../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.exe;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.deps.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.runtimeconfig.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Brutal.Authoring.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Brutal.Authoring.Runtime.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/LICENSE.txt;../../samples/SceneStarter/bin/$(Configuration)/net10.0/NOTICE.txt" />
       <SceneStarterProject Include="../../samples/SceneStarterProject/**/*" />
     </ItemGroup>
     <Copy SourceFiles="@(SceneStarterProof)" DestinationFolder="$(OutDir)samples/SceneStarter" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(SceneStarterProject)" DestinationFiles="@(SceneStarterProject->'$(OutDir)samples/scene-starter/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     <Copy SourceFiles="../../samples/SceneStarterAdapter/bin/$(Configuration)/net10.0/SceneStarterAdapter.dll" DestinationFolder="$(OutDir)adapters" SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup>
+    <ProjectReference Include="../ProjectPlayTestGame/ProjectPlayTestGame.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+  <Target Name="CopyProjectPlayTestGame" AfterTargets="Build">
+    <ItemGroup><ProjectPlayHelper Include="../ProjectPlayTestGame/bin/$(Configuration)/net10.0/ProjectPlayTestGame.exe;../ProjectPlayTestGame/bin/$(Configuration)/net10.0/ProjectPlayTestGame.dll;../ProjectPlayTestGame/bin/$(Configuration)/net10.0/ProjectPlayTestGame.deps.json;../ProjectPlayTestGame/bin/$(Configuration)/net10.0/ProjectPlayTestGame.runtimeconfig.json" /></ItemGroup>
+    <Copy SourceFiles="@(ProjectPlayHelper)" DestinationFolder="$(OutDir)ProjectPlayTestGame" SkipUnchangedFiles="true" />
   </Target>
 </Project>

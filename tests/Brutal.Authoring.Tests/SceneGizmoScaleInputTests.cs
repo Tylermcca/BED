@@ -86,7 +86,7 @@ public sealed class SceneGizmoScaleInputTests
         }
         public void Focus()
         {
-            for(var i=0;i<5;i++)
+            for(var i=0;i<8;i++)
             {
                 Host.Press(Draw,ImGuiKey.Tab);
                 if(Ui.Snapshot().Nodes.Any(n=>n.Role==UiRole.Canvas && n.Focused)) return;

@@ -39,6 +39,7 @@ public sealed class AssetReimportController:IDisposable
         why="";if(Volatile.Read(ref closed)!=0){why="The reimport controller is closed.";return false;}
         if(!busy.Wait(0)){why="A reimport is already in flight.";return false;}
         AssetCatalogPublisher.Staged? stage=null;bool published=false,sidecarSaved=false;Draft? draft=null;AssetRecord? updated=null;
+        MaterialTextureReimport? materialPreparation=null;
         AssetCatalog.Selection? selected=preview?.Selection;var followPreview=selected?.Admission==catalog.Admission;
         try
         {
@@ -62,16 +63,22 @@ public sealed class AssetReimportController:IDisposable
                 :throw new InvalidOperationException("This controller supports explicitly declared OBJ or glTF importers.");
             LastIssues=Array.AsReadOnly(imported.Issues.ToArray());
             if(imported.Outcome==ImportOutcome.Refused||imported.Asset is null)throw new InvalidOperationException(string.Join(" ",imported.Issues.Select(i=>i.Message)));
-            var mesh=Flatten(imported.Asset,options.Transform(frame),extension==".obj"?MeshUv0Origin.ObjBottomLeft:MeshUv0Origin.TopLeft);
+            materialPreparation=MaterialTextureReimport.Prepare(draft.Path,updated,imported.Asset);
+            var bindings=materialPreparation.Bindings;
             var sourceFiles=imported.ExternalReads.Select(r=>new AssetCatalog.SourceFile(r.RelativePath,r.SourceHash)).ToArray();
-            var derived=DerivedMeshCodec.Encode(mesh);var next=before.Select(i=>i.Guid==candidate.Guid?original.WithReimportedContent(updated,source,derived,"BEDMESH1",sourceFiles):i).ToArray();
+            var derived=ModelAssetGeneration.Encode(imported.Asset,options.Transform(frame),extension==".obj"?MeshUv0Origin.ObjBottomLeft:MeshUv0Origin.TopLeft,bindings);
+            var textures=bindings.Select(b=>b.Texture).OfType<MaterialTextureAdmission.Texture>().Distinct().ToArray();
+            if(textures.GroupBy(t=>t.Input.Guid,StringComparer.Ordinal).Any(g=>g.Count()>1))throw new InvalidOperationException("Multiple texture files use the same asset GUID.");
+            var textureIds=textures.Select(t=>t.Input.Guid).ToHashSet(StringComparer.Ordinal);
+            var next=before.Where(i=>i.Guid!=candidate.Guid&&!textureIds.Contains(i.Guid)).Concat(textures.Select(t=>t.Input))
+                .Append(original.WithReimportedContent(updated,source,derived,derived.AsSpan(0,8).SequenceEqual("BEDMESH2"u8)?"BEDMESH2":"BEDMESH1",sourceFiles,textureIds)).ToArray();
             using var validated=new AssetCatalog();if(!validated.Publish(validated.BeginRefresh(),next,out why))throw new InvalidOperationException(why);
             if(validated.Resolve(candidate.Guid).State!=AssetCatalog.State.Valid)throw new InvalidOperationException(validated.Resolve(candidate.Guid).Reason);
             var artifacts=new Dictionary<string,byte[]>();
             foreach(var input in next)
             {
                 var resolution=validated.Resolve(input.Guid);if(resolution.Current is not { } lease)continue;
-                var bytes=new byte[lease.Length];lease.CopyTo(bytes);artifacts.Add(input.Guid+".bin",bytes);
+                artifacts.Add(input.Guid+".bin",TextureAssetGeneration.StoredArtifact(lease));
             }
             var identity=Hash(JsonSerializer.SerializeToUtf8Bytes(next.OrderBy(i=>i.Guid,StringComparer.Ordinal).Select(i=>new{i.Guid,validated.Resolve(i.Guid).ContentRevision,validated.Resolve(i.Guid).PolicyRevision})));
             stage=publisher.Prepare(identity,artifacts);Check();
@@ -84,19 +91,22 @@ public sealed class AssetReimportController:IDisposable
             if(Hash(File.ReadAllBytes(draft.Path))!=updated.SourceHash||!catalog.CurrentInputs().SequenceEqual(before))
                 throw new InvalidOperationException("Source or complete catalog generation changed during reimport.");
             Check();
+            foreach(var texture in textures)texture.Revalidate();
             if(!publisher.Publish(stage,out why))throw new InvalidOperationException(why);published=true;
             updated.SaveReimport(draft.Path,draft.Sidecar);sidecarSaved=true;
             if(!catalog.Publish(catalog.BeginRefresh(),next,out why))throw new InvalidOperationException(why);
+            materialPreparation.Commit();
             if(followPreview&&selected?.AssetGuid==candidate.Guid&&preview?.Selection==selected&&catalog.Select(candidate.Guid) is { } current)preview.Select(current);
             why="";return true;
         }
-        catch(Exception e) when(e is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or OverflowException or JsonException or OperationCanceledException)
+        catch(Exception e) when(e is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or OverflowException or JsonException or OperationCanceledException)
         {
             var undo=new List<string>();
             if(sidecarSaved&&draft is not null&&updated is not null)
             {try{draft.Original.SaveReimport(draft.Path,updated.Write());}catch(Exception restore) when(restore is IOException or UnauthorizedAccessException or InvalidOperationException){undo.Add(restore.Message);}}
             if(published&&stage is not null&&!publisher.Rollback(stage,out var failure))undo.Add(failure);
             else if(!published&&stage is not null)publisher.Cancel(stage);
+            if(materialPreparation is not null&&!materialPreparation.Rollback(out var textureFailure))undo.Add(textureFailure);
             why=undo.Count==0?"Reimport failed: "+e.Message:"Reimport failed and could not be undone: "+string.Join(" ",undo);
             if(followPreview&&draft is not null&&selected?.AssetGuid==draft.Original.Guid&&preview?.Selection==selected)preview.Invalidate(why);return false;
         }

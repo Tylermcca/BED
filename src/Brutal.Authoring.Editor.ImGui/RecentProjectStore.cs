@@ -80,6 +80,7 @@ internal sealed class RecentProjectStore
         {
             if (p.Folder is { } folder) Path.GetFullPath(folder);
             else { Path.GetFullPath(p.Data); Path.GetFullPath(p.Schemas); }
+            if(p.Root is {} root)Path.GetFullPath(root);
             if (p.Map is { Length: > 0 } map) Path.GetFullPath(map);
             if (p.AdapterPath is { Length: > 0 } adapter) Path.GetFullPath(adapter);
             return true;

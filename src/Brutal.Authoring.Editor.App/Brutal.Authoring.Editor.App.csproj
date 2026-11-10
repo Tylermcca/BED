@@ -7,6 +7,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Private shared disk-space check; no UI dependency or public adapter contract. -->
+    <Compile Include="../Brutal.Authoring.Editor.ImGui/ExportDiskSpace.cs" Link="ExportDiskSpace.cs" />
     <ProjectReference Include="..\Brutal.Authoring.Editor.ImGui\Brutal.Authoring.Editor.ImGui.csproj" />
     <ProjectReference Include="..\Brutal.Authoring.Import\Brutal.Authoring.Import.csproj" />
     <PackageReference Include="Ahwoo.Brutal.Stb" />

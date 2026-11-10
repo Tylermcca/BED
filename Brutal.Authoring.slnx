@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj" />
     <Project Path="src/Brutal.Authoring/Brutal.Authoring.csproj" />
     <Project Path="src/Brutal.Authoring.Editor.Text/Brutal.Authoring.Editor.Text.csproj" />
     <Project Path="src/Brutal.Authoring.Editor/Brutal.Authoring.Editor.csproj" />
@@ -30,6 +31,7 @@
     <Project Path="samples/RoutePuzzle.Authoring/RoutePuzzle.Authoring.csproj" />
     <Project Path="samples/FirstTask/FirstTask.csproj" />
     <Project Path="samples/SceneStarter/SceneStarter.csproj" />
+    <Project Path="samples/RuntimeInspect/RuntimeInspect.csproj" />
     <Project Path="samples/SceneStarterAdapter/SceneStarterAdapter.csproj" />
   </Folder>
   <Folder Name="/tools/">
@@ -42,6 +44,7 @@
     <Project Path="tests/RoutePuzzle.Sample.Tests/RoutePuzzle.Sample.Tests.csproj" />
     <Project Path="tests/LinkedPlayTestGame/LinkedPlayTestGame.csproj" />
     <Project Path="tests/LinkedBuildTestGame/LinkedBuildTestGame.csproj" />
+    <Project Path="tests/ProjectPlayTestGame/ProjectPlayTestGame.csproj" />
   </Folder>
 </Solution>
 

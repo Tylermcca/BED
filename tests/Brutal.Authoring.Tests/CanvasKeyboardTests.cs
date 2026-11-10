@@ -182,11 +182,20 @@ public sealed class CanvasKeyboardTests : IDisposable
             Assert.Equal(ImGui.Internal.FindWindowByName("Canvas keys").GetID("Rotate (R)").Value, NavId);
             host.Press(Draw, ImGuiKey.Tab);
             Assert.Equal(ImGui.Internal.FindWindowByName("Canvas keys").GetID("Scale (S)").Value, NavId);
+            // UI16's snap controls follow the tools in the canvas toolbar.
+            host.Press(Draw, ImGuiKey.Tab);
+            Assert.Equal(ImGui.Internal.FindWindowByName("Canvas keys").GetID("Snap (B)").Value, NavId);
+            host.Press(Draw, ImGuiKey.Tab);
+            Assert.Equal(ImGui.Internal.FindWindowByName("Canvas keys").GetID("Grid step (m)").Value, NavId);
         }
         host.Press(Draw, ImGuiKey.Tab);
         Assert.Equal(ImGui.Internal.FindWindowByName("Canvas keys").GetID("After").Value, NavId);
         if (viewport)
         {
+            host.Press(Draw, ImGuiKey.Tab, shift: true);
+            Assert.Equal(ImGui.Internal.FindWindowByName("Canvas keys").GetID("Grid step (m)").Value, NavId);
+            host.Press(Draw, ImGuiKey.Tab, shift: true);
+            Assert.Equal(ImGui.Internal.FindWindowByName("Canvas keys").GetID("Snap (B)").Value, NavId);
             host.Press(Draw, ImGuiKey.Tab, shift: true);
             Assert.Equal(ImGui.Internal.FindWindowByName("Canvas keys").GetID("Scale (S)").Value, NavId);
             host.Press(Draw, ImGuiKey.Tab, shift: true);

@@ -4,7 +4,7 @@ start here").
     python tools/package_release.py [--out dist] [--rid win-x64]
 
 It publishes BED.exe (the editor), bed-cli.exe (the command line) and play-checkers.exe as single self-contained files,
-with the Visual C++ prerequisite explained in START_HERE.txt; adds the three samples under samples/, their adapters under adapters/, START_HERE.txt and
+with the Visual C++ prerequisite explained in START_HERE.txt; adds the data and level samples under samples/, their adapters under adapters/, START_HERE.txt and
 the licences; zips it; then unpacks the zip into a fresh folder and opens each sample there headless (--shot), so a zip that
 doesn't run is never reported as built. Prints the zip's path and size, or why it failed (exit 1).
 """
@@ -56,6 +56,17 @@ REQUIRED = [
     "adapters/starter/StarterAdapter.dll",
     "adapters/checkers/CheckersAdapter.dll",
     "adapters/first-task/FirstTaskAdapter.dll",
+    "samples/scene-starter/data/level.json",
+    "samples/scene-starter/schemas/scene.schema.json",
+    "samples/scene-starter/reference_map.json",
+    "samples/scene-starter/assets/cube.obj",
+    "samples/scene-starter/assets/cube.obj.asset.json",
+    "samples/scene-starter/assets/pillar.obj",
+    "samples/scene-starter/assets/pillar.obj.asset.json",
+    "adapters/scene-starter/SceneStarterAdapter.dll",
+    "samples/scene-starter/game/SceneStarter.exe",
+    "samples/scene-starter/game/LICENSE.txt",
+    "samples/scene-starter/game/NOTICE.txt",
 ]
 
 # Only these files and folders may sit at the top of a release.
@@ -121,6 +132,38 @@ def copy_ai_guide(stage: Path) -> None:
     shutil.copy2(ROOT / "docs" / "guide" / "using_bed_with_ai.md", guides / "using_bed_with_ai.md")
 
 
+SCENE_EXPORT_RUNTIME = ("SceneStarter.exe", "SceneStarter.dll", "SceneStarter.deps.json", "SceneStarter.runtimeconfig.json",
+                        "Brutal.Authoring.dll", "Brutal.Authoring.Runtime.dll", "LICENSE.txt", "NOTICE.txt")
+REQUIRED += tuple("samples/scene-starter/game/export/" + name for name in SCENE_EXPORT_RUNTIME)
+
+
+def copy_scene_sample(stage: Path, runtime: Path, export_runtime: Path | None = None) -> None:
+    """Copy saved sample inputs and the published single-file game; BED prepares its cache on open."""
+    for name in ("SceneStarter.exe", "LICENSE.txt", "NOTICE.txt"):
+        if not (runtime / name).is_file():
+            raise RuntimeError("SceneStarter publish is missing " + name)
+    if export_runtime is not None:
+        for name in SCENE_EXPORT_RUNTIME:
+            if not (export_runtime / name).is_file():
+                raise RuntimeError("SceneStarter export runtime is missing " + name)
+    source = ROOT / "samples" / "SceneStarterProject"
+    # A prior local open must not ship its derived generation/owner lock. Preserve
+    # project.json (saved launch settings); startup publishes from the shipped inputs.
+    def skip_generated(folder: str, names: list[str]) -> list[str]:
+        if Path(folder) == source:
+            return ["game"] if "game" in names else []
+        return ["cache"] if Path(folder) == source / ".bed" and "cache" in names else []
+    shutil.copytree(source, stage / "samples" / "scene-starter", ignore=skip_generated)
+    destination = stage / "samples" / "scene-starter" / "game"
+    destination.mkdir(parents=True, exist_ok=True)
+    for name in ("SceneStarter.exe", "LICENSE.txt", "NOTICE.txt"):
+        shutil.copy2(runtime / name, destination / name)
+    if export_runtime is not None:
+        (destination / "export").mkdir()
+        for name in SCENE_EXPORT_RUNTIME:
+            shutil.copy2(export_runtime / name, destination / "export" / name)
+
+
 def build(stage: Path, rid: str) -> None:
     if rid != "win-x64":
         raise RuntimeError("AccessKit C 0.23.2 is vendored only for win-x64")
@@ -128,6 +171,11 @@ def build(stage: Path, rid: str) -> None:
         app = publish("src/Brutal.Authoring.Launcher/Brutal.Authoring.Launcher.csproj", rid, Path(tmp) / "app")
         cli = publish("src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj", rid, Path(tmp) / "cli")
         game = publish("samples/Checkers.Game/Checkers.Game.csproj", rid, Path(tmp) / "game")   # play-checkers, the game itself
+        scene = publish("samples/SceneStarter/SceneStarter.csproj", rid, Path(tmp) / "scene")
+        # Play keeps its self-contained executable. Export needs explicit pure runtime files to copy and verify.
+        export_runtime = Path(tmp) / "scene-export"
+        run(["dotnet", "publish", "samples/SceneStarter/SceneStarter.csproj", "-c", "Release", "-r", rid,
+             "--self-contained", "false", "-p:PublishSingleFile=false", "-p:DebugType=none", "-o", str(export_runtime), "--nologo", "-v:q"])
         stage.mkdir(parents=True)
         shutil.copy2(app / "BED.exe", stage / "BED.exe")
         shutil.copy2(cli / "bed-cli.exe", stage / "bed-cli.exe")
@@ -136,11 +184,13 @@ def build(stage: Path, rid: str) -> None:
         shutil.copytree(ROOT / "samples" / "StarterProject", stage / "samples" / "recipes")
         shutil.copytree(ROOT / "samples" / "CheckersProject", stage / "samples" / "checkers")
         shutil.copy2(game / "play-checkers.exe", stage / "samples" / "checkers" / "play-checkers.exe")
+        copy_scene_sample(stage, scene, export_runtime)
     # Adapters keep only what BED.exe doesn't already carry: it holds BRUTAL and these tools' own libraries, which
     # adapters share; the checkers rules are the checkers adapter's own.
     for name, folder, project, own in [("starter", "StarterAdapter", "StarterAdapter", ["StarterAdapter."]),
                                        ("checkers", "CheckersAdapter", "CheckersAdapter", ["CheckersAdapter.", "Checkers."]),
-                                       ("first-task", "FirstTask", "FirstTask", ["FirstTaskAdapter."])]:
+                                       ("first-task", "FirstTask", "FirstTask", ["FirstTaskAdapter."]),
+                                       ("scene-starter", "SceneStarterAdapter", "SceneStarterAdapter", ["SceneStarterAdapter."])]:
         adapter_out = stage / "adapters" / name
         run(["dotnet", "build", f"samples/{folder}/{project}.csproj", "-c", "Release", "-o", str(adapter_out), "--nologo", "-v:q"])
         for f in adapter_out.iterdir():
@@ -295,6 +345,126 @@ def verify_ai_setup(unpacked: Path, guide: Path) -> str:
     return "AI guide link and all three AI setup examples pass."
 
 
+def verify_scene_play(unpacked: Path) -> str:
+    """Run the packaged BED host, not a test-host adapter or peer-only handshake."""
+    command = [str(unpacked / "BED.exe"), "--probe-play", str(unpacked / "samples" / "scene-starter"), "--probe-args", "--seconds 0", "--timeout", "30"]
+    try:
+        result = subprocess.run(command, cwd=unpacked, capture_output=True, text=True, timeout=40)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise RuntimeError("Packaged level Play probe failed to complete: " + str(error)) from error
+    if result.returncode != 0:
+        raise RuntimeError(f"Packaged level Play probe failed (exit {result.returncode}): {result.stderr[-2000:]}")
+    try:
+        reply = json.loads(result.stdout)
+        if reply.get("status") != "passed" or reply.get("completed") is not True or type(reply.get("exitCode")) is not int or reply["exitCode"] != 0 or reply.get("document") != "level.json":
+            raise ValueError("missing level completion or code-0 proof")
+        if not any(isinstance(line, dict) and line.get("error") is False
+                   and isinstance(line.get("text"), str) and line["text"].startswith("SceneStarter loaded saved level: ")
+                   for line in reply.get("output", [])):
+            raise ValueError("missing saved-level-loaded output")
+    except (ValueError, TypeError, AttributeError) as error:
+        raise RuntimeError("Packaged level Play probe returned invalid evidence: " + str(error)) from error
+    return "Packaged level Play loads saved files and exits with code 0."
+
+
+
+def verify_saved_export(project: Path, exported: Path) -> int:
+    """Independently compare the complete saved level/cache closure at its declared output paths."""
+    import hashlib
+    import re
+    try:
+        pointer_bytes = (project / ".bed/cache/current.json").read_bytes()
+        pointer = json.loads(pointer_bytes)
+        identity = pointer["Id"]
+        if not isinstance(identity, str) or not re.fullmatch(r"[0-9a-f]{32}", identity):
+            raise ValueError("invalid source generation identity")
+        prefix = ".bed/cache/generations/" + identity + "/"
+        manifest_bytes = (project / (prefix + "manifest.json")).read_bytes()
+        if hashlib.sha256(manifest_bytes).hexdigest() != pointer["ManifestHash"]:
+            raise ValueError("source generation manifest hash differs")
+        manifest = json.loads(manifest_bytes)
+        if manifest["Id"] != identity or not isinstance(manifest["Artifacts"], list):
+            raise ValueError("source generation manifest is invalid")
+        paths = {"data/level.json", ".bed/cache/current.json", prefix + "manifest.json", prefix + "owner.txt"}
+        for artifact in manifest["Artifacts"]:
+            name = artifact["Name"]
+            if (not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_.-]+", name)
+                    or name in {".", "..", "owner.txt", "manifest.json"} or prefix + name in paths):
+                raise ValueError("invalid or repeated artifact name")
+            data = (project / (prefix + name)).read_bytes()
+            if (type(artifact["Length"]) is not int or artifact["Length"] != len(data)
+                    or hashlib.sha256(data).hexdigest() != artifact["Sha256"]):
+                raise ValueError("source artifact differs from its manifest: " + name)
+            paths.add(prefix + name)
+        expected_cache = {name for name in paths if name.startswith(".bed/cache/")}
+        actual_cache = {p.relative_to(exported).as_posix() for p in (exported / ".bed/cache").rglob("*") if p.is_file()}
+        if actual_cache != expected_cache:
+            raise ValueError("exported cache closure has missing or extra files")
+        for relative in sorted(paths):
+            if (project / relative).read_bytes() != (exported / relative).read_bytes():
+                raise ValueError("exported saved file differs: " + relative)
+        if (exported / "payload.bin").exists() or (exported / "scene.json").exists():
+            raise ValueError("export contains retired captured payload files")
+        return len(paths)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise RuntimeError("Packaged level export saved-file verification failed: " + str(error)) from error
+
+
+
+def verify_scene_export(unpacked: Path) -> str:
+    """Export through the packaged BED owner, independently verify saved bytes, then run the copied game."""
+    import hashlib
+    project = unpacked / "samples/scene-starter"
+    def source_hashes():
+        return {p.relative_to(project).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in project.rglob("*") if p.is_file()
+                and not p.relative_to(project).as_posix().startswith((".bed/cache/", "data/.bed/cache/export/"))}
+    before = source_hashes()
+    try:
+        level = json.loads((project / "data/level.json").read_text(encoding="utf-8"))
+        if not any(item.get("asset") == "c8a7e000000000000000000000000001" for item in level["objects"]):
+            raise ValueError("the packaged saved level does not place the textured crate")
+        with tempfile.TemporaryDirectory(prefix="bed-release-export-") as temporary:
+            destination = Path(temporary) / "exported game"
+            command = [str(unpacked / "BED.exe"), "--probe-export", str(project), "--destination", str(destination), "--timeout", "60"]
+            result = subprocess.run(command, cwd=unpacked, capture_output=True, text=True, encoding="utf-8", timeout=75)
+            if result.returncode != 0:
+                raise ValueError(f"export probe failed (exit {result.returncode}): {result.stderr[-2000:]}")
+            reply = json.loads(result.stdout)
+            if (reply.get("status") != "passed" or reply.get("verified") is not True or reply.get("copied") is not True
+                    or reply.get("document") != "level.json" or Path(reply.get("destination", "")).resolve() != destination.resolve()):
+                raise ValueError("missing verified-copy evidence")
+            actual = {p.relative_to(destination).as_posix(): p for p in destination.rglob("*") if p.is_file()}
+            files = reply.get("files")
+            if (not isinstance(files, list) or not files or type(reply.get("fileCount")) is not int
+                    or reply["fileCount"] != len(files) or len(actual) != len(files)):
+                raise ValueError("copied file inventory count differs")
+            seen = set()
+            total = 0
+            for item in files:
+                name = item["path"]
+                if name not in actual or name in seen:
+                    raise ValueError("copied file inventory paths differ")
+                data = actual[name].read_bytes()
+                if (type(item["length"]) is not int or item["length"] != len(data)
+                        or item["sha256"] != hashlib.sha256(data).hexdigest()):
+                    raise ValueError("copied file inventory hashes differ")
+                seen.add(name)
+                total += len(data)
+            if type(reply.get("totalBytes")) is not int or reply["totalBytes"] != total:
+                raise ValueError("copied byte total differs")
+            saved_count = verify_saved_export(project, destination)
+            game = subprocess.run([str(destination / "SceneStarter.exe"), "--project", ".", "--seconds", "0"],
+                                  cwd=destination, capture_output=True, text=True, encoding="utf-8", timeout=15)
+            if game.returncode != 0 or "SceneStarter loaded saved level: 3 objects, 1 meshes." not in game.stdout.splitlines():
+                raise ValueError(f"exported game failed (exit {game.returncode}): {game.stdout[-1000:]} {game.stderr[-1000:]}")
+            if source_hashes() != before:
+                raise ValueError("the package export changed source files or project settings")
+            return f"Packaged level exports with the crate; {saved_count} saved level/cache files match exactly; copied game exits with code 0."
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, subprocess.TimeoutExpired) as error:
+        raise RuntimeError("Packaged level export journey failed: " + str(error)) from error
+
+
 def verify(zip_path: Path) -> str:
     """Unpacks the zip into a fresh folder and opens the sample headless there. Returns what the app said."""
     with tempfile.TemporaryDirectory(prefix="bed-release-") as tmp:
@@ -326,9 +496,11 @@ def verify(zip_path: Path) -> str:
                                capture_output=True, text=True, timeout=120)
         if first.returncode != 0 or "FirstTask" not in first.stdout and "first" not in first.stdout.lower():
             raise RuntimeError(f"the unpacked app didn't open the first-task sample with its adapter:\n{first.stdout}\n{first.stderr}")
+        scene = verify_scene_play(unpacked)
+        exported = verify_scene_export(unpacked)
         mcp = verify_mcp(unpacked)
         ai_setup = verify_ai_setup(unpacked, guide)
-        return f"{said} {checkers.stdout.strip().splitlines()[0]} {first.stdout.strip().splitlines()[0]} play-checkers starts. {mcp} {ai_setup}"
+        return f"{said} {checkers.stdout.strip().splitlines()[0]} {first.stdout.strip().splitlines()[0]} play-checkers starts. {scene} {exported} {mcp} {ai_setup}"
 
 
 def main(argv: list[str] | None = None) -> int:

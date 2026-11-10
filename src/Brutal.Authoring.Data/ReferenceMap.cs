@@ -265,6 +265,27 @@ public sealed class ReferenceMap
         };
     }
 
+    // Reverse searches enumerate many unchanged links after one file changes. Keep each entry's answer under
+    // exactly the same file/session/immutable-document dependencies as the existing cell resolver.
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<DataProject,
+        Dictionary<(Entry Entry, string Pointer, JsonValueKind Kind, string? Text), (ReferenceResult Result, (string Name, DataFile File, object Session, object Document)[] Read)>> entryResults = new();
+
+    private ReferenceResult ResolveEntry(Entry entry, DataProject project, string file, string pointer, IReadOnlyList<string> parts, JsonElement value)
+    {
+        var key = (entry, pointer, value.ValueKind, value.ValueKind switch { JsonValueKind.String => value.GetString(), JsonValueKind.Number => value.GetRawText(), _ => null });
+        var answers = entryResults.GetOrCreateValue(project);
+        lock (answers)
+            if (answers.TryGetValue(key, out var kept) && Fresh(project, kept.Read)) return kept.Result;
+        var result = ResolveWith(entry, project, file, parts, value);
+        if (FilesRead(project, entry) is { } read)
+            lock (answers)
+            {
+                if (answers.Count >= MostKept) answers.Clear();
+                answers[key] = (result, read);
+            }
+        return result;
+    }
+
     private ReferenceResult ResolveWith(Entry entry, DataProject project, string file, IReadOnlyList<string> parts, JsonElement value)
     {
         string? id = entry.Keys ? (parts.Count > 0 ? parts[^1] : null)
@@ -484,24 +505,32 @@ public sealed class ReferenceMap
                 var parts = Pointer.Split(at);
                 // Each entry's own meaning (found by A056): a key rule and a value rule on one place are two links. Two rules of the same
                 // meaning on one place are one ambiguous link, said once, by the first of them, as every other route says (found by A205).
-                var same = SameMeaning(entry, parts);
+                var same = SameMeaning(entry, parts, at);
                 if (same.Count > 1)
                 {
                     if (ReferenceEquals(same[0], entry))
                         yield return (new ReferenceTarget(entry.File, at), new(ReferenceOutcome.Ambiguous, Note: $"{same.Count} map entries describe this place's {(entry.Keys ? "key" : "value")}"));
                     continue;
                 }
-                yield return (new ReferenceTarget(entry.File, at), ResolveWith(entry, project, entry.File, parts, value));
+                yield return (new ReferenceTarget(entry.File, at), ResolveEntry(entry, project, entry.File, at, parts, value));
             }
         }
     }
 
     // The entries of this one's meaning (key or value) that describe this place, in the map's order.
-    private List<Entry> SameMeaning(Entry entry, IReadOnlyList<string> parts)
+    private readonly Dictionary<(Entry Entry, string Pointer), List<Entry>> sameMeaning = new();
+    private List<Entry> SameMeaning(Entry entry, IReadOnlyList<string> parts, string pointer)
     {
-        var parent = parts.Take(Math.Max(0, parts.Count - 1)).ToList();
-        return [.. references.Where(e => e.File == entry.File && e.Keys == entry.Keys
-            && (e.Keys ? Matches(e.At, parent) : Matches(e.At, parts) || Matches(e.At, parent) && parts.Count > 0 && IsIndex(parts[^1])))];
+        lock (sameMeaning)
+        {
+            if (sameMeaning.TryGetValue((entry, pointer), out var kept)) return kept;
+            var parent = parts.Take(Math.Max(0, parts.Count - 1)).ToList();
+            var found = references.Where(e => e.File == entry.File && e.Keys == entry.Keys
+                && (e.Keys ? Matches(e.At, parent) : Matches(e.At, parts) || Matches(e.At, parent) && parts.Count > 0 && IsIndex(parts[^1]))).ToList();
+            if (sameMeaning.Count >= MostKept) sameMeaning.Clear();
+            sameMeaning[(entry, pointer)] = found;
+            return found;
+        }
     }
 
     // Every value at a place pattern, with its pointer.

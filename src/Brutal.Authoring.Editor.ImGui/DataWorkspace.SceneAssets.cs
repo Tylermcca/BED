@@ -13,6 +13,14 @@ public sealed partial class DataWorkspace
         public required Func<string?> Unavailable;
     }
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<EditorModel<Scene>, SceneAssetsBinding> sceneAssetBindings = new();
+    private ProjectAssetCatalog? ownedProjectAssets;
+    internal void BindProjectAssets(ProjectAssetCatalog assets)
+    {
+        if (!BindSceneAssets(assets.Browser, assets.Catalog)) { assets.Dispose(); return; }
+        ownedProjectAssets?.Dispose();
+        ownedProjectAssets = assets;
+    }
+    internal void ReleaseProjectAssets() { ownedProjectAssets?.Dispose(); ownedProjectAssets = null; }
     private AssetCatalog? sceneAssets;
     /// <summary>The host-admitted scene catalog, or null. Reading it grants no source or distribution permission.</summary>
     public AssetCatalog? SceneAssets => sceneAssets;
@@ -28,7 +36,7 @@ public sealed partial class DataWorkspace
         sceneAssets = catalog;
         scenePlacement?.Cancel();
         scenePlacement = new AssetPlacement(this, catalog);
-        sceneAssetPicker = new AssetsPanel(browser, scenePlacement.DrawSource);
+        sceneAssetPicker = new AssetsPanel(browser, catalog, scenePlacement.DrawSource);
         return true;
     }
 
@@ -62,6 +70,8 @@ public sealed partial class DataWorkspace
         {
             if (sceneAssetPicker is null) { Ui.TextWrapped("No asset catalog for this project"u8); return; }
             sceneAssetPicker.Draw();
+            foreach (var problem in ownedProjectAssets?.Problems ?? []) Ui.TextWrapped(problem);
+            foreach (var warning in ownedProjectAssets?.Warnings ?? []) Ui.TextWrapped(warning);
             var currentKey = sceneAssetPicker.Selected is { } item ? (item.Guid, item.RelativePath) : ((string, string)?)null;
             if (currentKey != selectedKey)
             {

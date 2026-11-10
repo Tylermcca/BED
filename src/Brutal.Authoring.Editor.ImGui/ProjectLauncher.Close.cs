@@ -22,12 +22,10 @@ public sealed partial class ProjectLauncher
     private bool ConfirmBefore(Func<bool> continuation)
     {
         if (decisionExecuting) return true;
-        if (Workspace?.Documents.HasSceneBindings == true)
-            return Say(false, "Typed scenes need their own save/discard decision before replacing this project.");
-        if (Workspace is not { } open || open.Project.Dirty.Count == 0) return true;
+        if (Workspace is not { } open || open.TransitionDraftCount == 0) return true;
         if (pendingTransition is null) { pendingTransition=continuation;focusSave=true; }
         closeAnyway=true;
-        return Say(false, $"{open.Project.Dirty.Count} file(s) have unsaved edits. Choose Save, Don't Save or Cancel.");
+        return Say(false, $"{open.TransitionDraftCount} file(s) have unsaved edits. Choose Save, Don't Save or Cancel.");
     }
 
     /// <summary>Whether the shared save decision is waiting for an answer.</summary>
@@ -40,8 +38,7 @@ public sealed partial class ProjectLauncher
         if (choice==SaveChangesChoice.Cancel)
         { pendingTransition=null;closeAnyway=false;return Say(false,"Cancelled; the project is still open."); }
         if (choice is not (SaveChangesChoice.Save or SaveChangesChoice.DontSave)) return Say(false,"Choose Save, Don't Save or Cancel.");
-        if (Workspace?.Documents.HasSceneBindings == true) return Say(false,"Typed scenes need their own save/discard decision.");
-        if (choice==SaveChangesChoice.Save && Workspace is { } open && !open.SaveAll())
+        if (choice==SaveChangesChoice.Save && Workspace is { } open && !open.SaveTransitionDrafts())
             return Say(false,open.Said);
         pendingTransition=null;closeAnyway=false;
         decisionExecuting=true;
@@ -64,12 +61,12 @@ public sealed partial class ProjectLauncher
 
     private void DrawCloseAnyway()
     {
-        if (ImGui.Begin("Save changes?###launcher.close"u8, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoSavedSettings))
+        if (Ui.Begin("Save changes?###launcher.close"u8, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoSavedSettings))
         {
-            ImGui.TextWrapped($"Save changes to {(Current is { } current ? Name(current) : "this project") }?");
+            Ui.TextWrapped($"Save changes to {(Current is { } current ? Name(current) : "this project") }?");
             if (Workspace is { } open)
-                foreach (var file in open.Project.Dirty) ImGui.Text(file.Name);
-            ImGui.TextWrapped(Said);
+                foreach (var file in open.Project.Files.Where(f=>f.Dirty||open.Documents.TryGetOpenScene(f.Name,out var scene)&&scene!.Session.Dirty)) Ui.Text(file.Name);
+            Ui.TextWrapped(Said);
             if (focusSave) { ImGui.SetKeyboardFocusHere();focusSave=false; }
             if (Ui.Button("Save"u8)) AnswerSaveChanges(SaveChangesChoice.Save);
             ImGui.SameLine();
@@ -79,6 +76,6 @@ public sealed partial class ProjectLauncher
             if (ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && ImGui.IsKeyPressed(ImGuiKey.Escape,false))
                 AnswerSaveChanges(SaveChangesChoice.Cancel);
         }
-        ImGui.End();
+        Ui.End();
     }
 }

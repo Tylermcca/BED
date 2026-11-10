@@ -177,7 +177,15 @@ public sealed class DocumentSession<TDoc> where TDoc : class
         var candidate = Current;
         var recorded = new List<ICommand<TDoc>>(commands.Count);
         var warnings = new List<Issue>();
-        foreach (var command in commands)
+        if(Current is Scene scene&&commands.Count>1&&commands.All(command=>command is MoveObject)
+            &&SceneMoveBatch.TryApply(scene,commands.Cast<MoveObject>().ToArray(),out var moved))
+        {
+            foreach(var command in commands)Catalog.InfoFor(command);
+            if(!moved!.Ok){LastIssues=moved.Issues;return null;}
+            candidate=(TDoc)(object)moved.Document!;
+            recorded.AddRange(commands);
+        }
+        else foreach (var command in commands)
         {
             Catalog.InfoFor(command);   // an unregistered command is a programming error, not a user one
             var result = command.Apply(candidate);
@@ -248,13 +256,27 @@ public sealed class DocumentSession<TDoc> where TDoc : class
         Changed?.Invoke();
     }
 
+    /// <summary>Optional owner policy checked before Save, Revert and CheckDisk touch a full path. Return a plain
+    /// refusal or null to allow access. Save throws IOException, Revert returns false with LastIssues, and CheckDisk
+    /// reports ChangedOnDisk on refusal. Null preserves normal session behavior. Keep the callback free of side effects;
+    /// it may be called again immediately before writing.</summary>
+    public Func<string, string?>? FileAccessRefusal { get; set; }
+
+    private string? AccessRefusal(string path)
+    {
+        try { return FileAccessRefusal?.Invoke(path); }
+        catch (Exception e) when (e is not OutOfMemoryException) { return "The file access policy failed: " + e.Message; }
+    }
+
     /// <summary>Saves to <see cref="FilePath"/>, or to <paramref name="path"/> (which becomes the session's file). Atomic:
     /// the text goes to a temporary file beside the target, is flushed, then replaces it. On failure the old file is untouched
     /// and the exception propagates.</summary>
     public void Save(string? path = null)
     {
         var target = Path.GetFullPath(path ?? FilePath ?? throw new InvalidOperationException("this session has no file; pass a path"));
+        if (AccessRefusal(target) is { } refusal) throw new IOException(refusal);
         var text = Format.Write(Current);
+        if (AccessRefusal(target) is { } changed) throw new IOException(changed);
         AtomicFile.Write(target, text);
         FilePath = target;
         savedText = diskText = text;
@@ -279,6 +301,7 @@ public sealed class DocumentSession<TDoc> where TDoc : class
     public DiskState CheckDisk()
     {
         if (FilePath is null) return DiskState.NoFile;
+        if (AccessRefusal(FilePath) is not null) return DiskState.ChangedOnDisk;
         if (!File.Exists(FilePath)) return DiskState.Missing;
         string text;
         try { text = File.ReadAllText(FilePath); }
@@ -295,6 +318,7 @@ public sealed class DocumentSession<TDoc> where TDoc : class
         TDoc document;
         try
         {
+            if (AccessRefusal(FilePath) is { } refusal) throw new IOException(refusal);
             text = Canonical.ReadText(FilePath);
             document = Format.Read(text);
         }

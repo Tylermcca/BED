@@ -14,6 +14,39 @@ public static class Program
     {
         try
         {
+            if(args.Length==0||args[0] is "--project" or "--seconds" or "--exit-code")
+            {
+                var project=Environment.GetEnvironmentVariable("BED_PROJECT");double? seconds=null;int exitCode=0;var exitChosen=false;
+                var seen=new HashSet<string>(StringComparer.Ordinal);
+                for(var i=0;i<args.Length;i+=2)
+                {
+                    if(i+1>=args.Length||!seen.Add(args[i]))throw new ArgumentException("Use each sample option once with its value.");
+                    switch(args[i])
+                    {
+                        case "--project":project=args[i+1];break;
+                        case "--seconds":
+                            if(!double.TryParse(args[i+1],System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out var value)||!double.IsFinite(value)||value<0||value>60)
+                                throw new ArgumentException("Sample seconds must be between 0 and 60.");
+                            seconds=value;break;
+                        case "--exit-code":
+                            if(!int.TryParse(args[i+1],out exitCode)||exitCode<0||exitCode>255)throw new ArgumentException("Sample exit code must be between 0 and 255.");
+                            exitChosen=true;break;
+                        default:throw new ArgumentException("Use --project, --seconds or --exit-code for saved-project Play.");
+                    }
+                }
+                if(string.IsNullOrWhiteSpace(project))throw new ArgumentException("Choose a saved project with --project or BED_PROJECT.");
+                var saved=SavedScene.Open(project);
+                output.WriteLine($"SceneStarter loaded saved level: {saved.Level.Scene.Objects.Count()} objects, {saved.Meshes.Count} meshes.");output.Flush();
+                if(seconds is {} duration)Thread.Sleep(TimeSpan.FromSeconds(duration));else if(!exitChosen)Thread.Sleep(Timeout.Infinite);
+                return exitCode;
+            }
+            if(args is ["--build",var inputDirectory,var outputDirectory])
+            {ExportBuild.Create(inputDirectory,outputDirectory,AppContext.BaseDirectory);output.WriteLine("SceneStarter build copied checked saved project files.");return 0;}
+            if(args is ["--smoke-payload",var payloadPath])
+            {
+                var loaded=ScenePayload.Read(File.ReadAllBytes(payloadPath));
+                output.WriteLine($"SceneStarter payload smoke passed: {loaded.Scene.Objects.Count()} objects.");return 0;
+            }
             if(args.Length!=2 || args[0] is not ("--smoke" or "--review"))
                 throw new ArgumentException("Use --smoke SCENE_FILE or --review UNPACKED_FOLDER.");
             if(args[0]=="--smoke") Smoke(File.ReadAllText(args[1]));
@@ -28,7 +61,7 @@ public static class Program
             return 0;
         }
         catch(Exception e) when(e is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException
-            or DocumentFormatException or InvalidDocumentException or JsonException or KeyNotFoundException)
+            or InvalidDataException or DocumentFormatException or InvalidDocumentException or JsonException or KeyNotFoundException or FormatException or OverflowException or System.Text.DecoderFallbackException)
         { error.WriteLine("SceneStarter refused: "+e.Message); return 3; }
     }
 

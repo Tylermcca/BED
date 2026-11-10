@@ -27,8 +27,9 @@ public static class SceneMaterialDraws
         ArgumentNullException.ThrowIfNull(request);var result=new List<SceneMaterialDraw>();
         var vp=request.Camera.View*request.Camera.Projection(request.Identity.Extent);
         foreach(var item in request.Items)
+        foreach(var p in item.Payloads)
         {
-            var p=item.Payload;var matrix=item.World*vp;var tint=p.Material.BaseColor;
+            var matrix=item.World*vp;var tint=p.Material.BaseColor;
             Vector4 Clip(int i){var c=Vector4.Transform(new Vector4(p.Positions[i],1),matrix);return new(c.X,-c.Y,c.Z,c.W);}
             Vector2 Uv(int i)=>p.Uv0.Count==0?Vector2.Zero:p.Uv0[i];
             for(var i=0;i<p.Indices.Count;i+=3)

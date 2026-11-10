@@ -14,6 +14,9 @@ using ImGui = Brutal.ImGuiApi.ImGui;
 /// <param name="Map">A reference map file (links between items), or null.</param>
 public sealed record ProjectPaths(string Data, string Schemas, string? Map = null)
 {
+    /// <summary>Explicit project root for settings, saved cache and Play; independent of nested data folders.</summary>
+    public string? Root {get;init;}
+
     /// <summary>The original folder for adapter-discovered paths; null for explicitly chosen folders.</summary>
     public string? Folder { get; init; }
 
@@ -92,10 +95,17 @@ public sealed partial class ProjectLauncher : IDisposable
     private ImInputString mapText = new(1024, ""u8);
     /// <summary>Optional host-owned dialogs; null retains the existing ImGui browser.</summary>
     public IFileDialogs? FileDialogs { get; set; }
+    /// <summary>App-owned asset startup acquisition, absent in hosts that do not support it.</summary>
+    public IAssetCatalogProvisioner? AssetCatalogProvisioner { get; set; }
     /// <summary>App-owned linked host, set before opening. Null keeps existing in-process Play only.</summary>
     public ILinkedPlayHost? LinkedPlayHost { get; set; }
+    /// <summary>Common saved-files Play factory, for adapter and plain projects alike.</summary>
+    public IProjectPlayHost? ProjectPlayHost {get;set;}
+    /// <summary>App-owned actual build and smoke bridge.</summary>
+    public IGameExportHost? GameExportHost {get;set;}
 
     private readonly FolderPicker picker = new();
+    private readonly Shortcuts shortcuts=new();
     private int picking = -1;
     private bool closeAnyway;
 
@@ -114,6 +124,7 @@ public sealed partial class ProjectLauncher : IDisposable
         var initial = Recent.Items.FirstOrDefault(p => Directory.Exists(p.Data) && Directory.Exists(p.Schemas)) ?? sample;
         if (initial is not null) FillPaths(initial);
         ReadPreferences();
+        KeysPanel.LoadPreferences(shortcuts,Path.Combine(Path.GetDirectoryName(SettingsFile)!,"shortcuts.json"));
     }
 
     /// <summary>The settings file beside the recent list: the person's text size and app theme.</summary>
@@ -216,11 +227,25 @@ public sealed partial class ProjectLauncher : IDisposable
         // Everything is made first, and only then shown, listed and made current: a fault on the way leaves the launcher as it was,
         // never a half-made project (found by A200).
         DataWorkspace workspace;
+        DataWorkspace? pendingWorkspace = null;
         int refused;
+        // Resolve before adapter redirection: nested opened data must not move the project root.
+        var projectRoot=Path.GetFullPath(full.Root??full.Folder??Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(full.Data))!);
         try
         {
             // The adapter's per-file setup is given the workspace and file too (IProjectAdapter's default passes them by).
-            workspace = new DataWorkspace(data, map: map) { CloseProject = () => Close(), ConfigureFile = adapter is { } a ? a.Configure : null };
+            workspace = pendingWorkspace = new DataWorkspace(data,shortcuts:shortcuts,map:map) { CloseProject = () => Close(), RecentProjectsMenu=DrawRecentMenu, ConfigureFile = adapter is { } a ? a.Configure : null };
+            try
+            {
+                var admitted = new ProjectPaths(data.DataFolder, data.SchemaFolder, full.Map){Root=projectRoot,Folder=full.Folder};
+                if (AssetCatalogProvisioner?.Open(admitted, adapter?.AssetsFolder(admitted)) is { } assets)
+                    workspace.BindProjectAssets(assets);
+            }
+            catch (Exception e) { notes.Add("Assets are unavailable: " + e.Message); }
+            workspace.BindPlaySettings(projectRoot,
+                adapter?.DefaultPlay(new ProjectPaths(data.DataFolder,data.SchemaFolder,full.Map){Root=projectRoot,Folder=full.Folder}),
+                Path.GetDirectoryName(SettingsFile)!,()=>FileDialogs);
+            if(ProjectPlayHost is {} projectPlay)workspace.BindProjectPlay(projectPlay);
             // Capture actual opened folders and resolved map, not recent-entry guesses or adapter-sidecar inference.
             // Panel availability follows the existing per-file editor: an empty workspace has no file panel yet.
             try
@@ -233,14 +258,10 @@ public sealed partial class ProjectLauncher : IDisposable
             }
             catch (Exception e) { notes.Add($"AI setup examples are unavailable: {e.Message}"); }
             // The host's own setup is guarded too: a fault in it costs that setup, never the project (found by A188).
-            if(adapter is not null && LinkedPlayHost is { } linkedHost)
+            if(adapter is not null&&GameExportHost is {} exportHost&&adapter.Build(workspace) is {} build&&adapter.Export(workspace) is {} export)
             {
-                try
-                {
-                    if(adapter.LinkedPlay(workspace) is { } spec && adapter.PlaySnapshot is { } converter)
-                        workspace.BindLinkedPlay(spec,converter,linkedHost);
-                }
-                catch(Exception error) {notes.Add("Linked Play is unavailable: "+error.Message);}
+                workspace.BindExport(build,export,exportHost);
+                workspace.BindExportPreferences(Path.GetDirectoryName(Path.GetFullPath(Recent.File))!);
             }
             try { SetUpWorkspace?.Invoke(workspace); }
             catch (Exception e) { notes.Add($"The editor's own workspace setup failed: {e.Message}. The project is open; some panels or settings may be missing."); }
@@ -249,22 +270,26 @@ public sealed partial class ProjectLauncher : IDisposable
                 try { workspace.Checks.Add([.. adapter.Checks]); }
                 catch (Exception e) { notes.Add($"{label}'s checks weren't added: {e.Message}"); }   // all or none (found by A073)
             }
-            refused = data.Files.Count(f => !f.Open());
+            // Typed scenes remain listed until explicitly chosen; their reserved DataFile isn't a refused data open.
+            refused = data.Files.Count(file => !workspace.Documents.IsScene(file.Name) && !file.Open());
         }
         catch (Exception e) when (adapter is not null)
         {
+            pendingWorkspace?.ReleaseProjectAssets();
             return Say(false, $"{label} failed while the project was opening: {e.Message}. That's a fault in the game connection, not your data: choose Data only to open it without.");
         }
         // The project being replaced stops its game first: nothing may run on from it (B4).
         if (Workspace?.StopAll().Fault is { Length: > 0 } stopFault) notes.Add(stopFault);   // said with the new project's message
+        Workspace?.ReleaseProjectAssets();
         Workspace = workspace;
         Current = full;
         Using = adapter;
         closeAnyway = false;
         // Keep explicit/root map provenance, never the loader's inferred adapter sidecar.
         // Use the actual opened folders: a game's adapter may translate its root to a nested data folder.
+        // Remember that root only when redirection would otherwise lose it; plain entries keep their existing shape.
         var recent = new ProjectPaths(data.DataFolder, data.SchemaFolder,
-            AdapterMap.Resolve(project.Map, project.Data, null));
+            AdapterMap.Resolve(project.Map, project.Data, null,project.Root??project.Folder)){Root=full.Root??(!string.Equals(full.Data,data.DataFolder,StringComparison.OrdinalIgnoreCase)?projectRoot:null)};
         if (remembered?.AdapterPath is not null || remembered?.AdapterType is not null)
             recent = recent with { AdapterPath = remembered.AdapterPath, AdapterType = remembered.AdapterType };
         else if (adapter is not null && ExternalAdapterPath(adapter) is { } external)
@@ -330,7 +355,7 @@ public sealed partial class ProjectLauncher : IDisposable
         if (FolderProjects.Find(folder, explicitMap, noAdapter, selected, candidates, out var why) is not { } found)
             return Say(false, why);
         var metadata = remembered ?? (found.Paths.Folder is null ? null : new ProjectPaths("", "", explicitMap));
-        var paths = remembered?.Folder is { } original ? found.Paths with { Folder = original } : found.Paths;
+        var paths = remembered?.Folder is { } original ? found.Paths with { Folder = original,Root=found.Paths.Root??remembered.Root } : found.Paths;
         // A provider recent remains folder-based even if a later standard layout wins discovery.
         return OpenWith(paths, noAdapter, found.Adapter, candidates, metadata, notice);
     }
@@ -343,6 +368,7 @@ public sealed partial class ProjectLauncher : IDisposable
         if (open.Documents.HasSceneBindings) return Say(false, "Typed scenes need their own save/discard decision before closing this project.");
         if (!discard && !ConfirmBefore(() => Close())) return false;
         var fault = open.StopAll().Fault;   // a running game stops before its project goes (B4); a refused close, above, left it running
+        open.ReleaseProjectAssets();
         Workspace = null;
         Using = null;   // nothing open, so no adapter in use (found by A064)
         Current = null;
@@ -367,6 +393,7 @@ public sealed partial class ProjectLauncher : IDisposable
         if (Workspace is { } w)
         {
             w.Draw();
+            if(pendingRecentOpen is {} recent){pendingRecentOpen=null;OpenRecent(recent);}
             DrawFolderReplacement();
             if (closeAnyway) DrawCloseAnyway();
             return;
@@ -518,16 +545,21 @@ public interface IProjectAdapter
     /// <summary>Recognises a nonstandard project folder and returns its paths, relative to that folder or absolute. Null declines.</summary>
     ProjectPaths? FindProject(string folder) => null;
 
+    /// <summary>Optional assets folder for a nested layout; null uses the admitted data folder's sibling assets.</summary>
+    string? AssetsFolder(ProjectPaths project) => null;
+
     /// <summary>Opens the project's data with the game's rules.</summary>
     DataProject Open(ProjectPaths project);
 
     /// <summary>The game's own checks (its tools, run on a snapshot: piece J), shown in the Checks panel beside the
     /// tools' link check. None by default.</summary>
     IEnumerable<ICheck> Checks => [];
-    /// <summary>Optional immutable admitted linked-game declaration. Null retains existing in-process modes.</summary>
-    GameLaunchSpec? LinkedPlay(DataWorkspace workspace) => null;
-    /// <summary>Game-owned runtime conversion for linked Play; null never selects an invented fallback format.</summary>
-    PlaySnapshotConverter? PlaySnapshot => null;
+    /// <summary>Optional defaults for project-owned saved-files Play settings; project fields override them individually.</summary>
+    PlaySettings? DefaultPlay(ProjectPaths project) => null;
+    /// <summary>Optional game-owned build command accepting explicit captured Saved input.</summary>
+    GameBuildSpec? Build(DataWorkspace workspace) => null;
+    /// <summary>Optional game-owned Saved source/check/origin/output and smoke declarations.</summary>
+    GameExportDeclaration? Export(DataWorkspace workspace) => null;
 
 
     /// <summary>Adds the game's panels or play modes to each file's editor.</summary>

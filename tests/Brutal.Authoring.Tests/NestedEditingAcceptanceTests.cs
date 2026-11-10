@@ -108,7 +108,8 @@ public sealed class NestedEditingAcceptanceTests(ITestOutputHelper output)
         }
         internal void Field(string[] stack,string caption,string value)
         {
-            Focus(stack,caption,"##"+caption);
+            // Field identity stays on its exact row when override markers or wrapping change its caption.
+            Focus(stack,caption+"###field","##"+caption+"###field");
             if(!ImGui.GetIO().WantTextInput)Host.Press(Draw,ImGuiKey.Enter);
             Host.Press(Draw,ImGuiKey.A,ctrl:true);Host.Type(Draw,value);
         }
@@ -334,7 +335,7 @@ public sealed class NestedEditingAcceptanceTests(ITestOutputHelper output)
         ui.Field(["list","\u001f/list/1","\u001f/list/1/mass"],"mass","unfinished");
         ui.Host.Press(ui.Draw,ImGuiKey.Enter);Assert.Equal(2,r.At("/unit/list/1/mass").GetInt32());
         ui.Button(["list","\u001f/list/0"],"Remove",mouse:true);Assert.Equal("c",r.At("/unit/list/1/id").GetString());
-        ui.Focus(["list","\u001f/list/1","\u001f/list/1/mass"],"mass","##mass");
+        ui.Focus(["list","\u001f/list/1","\u001f/list/1/mass"],"mass###field","##mass###field");
         if(!ImGui.GetIO().WantTextInput)ui.Host.Press(ui.Draw,ImGuiKey.Enter);
         ui.Host.Press(ui.Draw,ImGuiKey.A,ctrl:true);ui.Host.Press(ui.Draw,ImGuiKey.C,ctrl:true);
         Assert.Equal("3",ImGui.GetClipboardText().ToString());Assert.Equal(3,r.At("/unit/list/1/mass").GetInt32());

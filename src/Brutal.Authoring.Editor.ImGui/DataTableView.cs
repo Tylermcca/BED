@@ -16,7 +16,7 @@ using ImGui = Brutal.ImGuiApi.ImGui;
 /// filter only change what's shown, never the file's order (INVENTED guard: a header click never moves an item). Lists
 /// and nested objects show as summaries; edit them in the inspector.
 /// </summary>
-public sealed class DataTableView
+public sealed partial class DataTableView
 {
     private readonly DataTableModel model;
     private readonly Dictionary<string, ImInputString> texts = [];
@@ -241,17 +241,22 @@ public sealed class DataTableView
     /// edit (the schema, the focus, a game playing). Returns false, saying why in <see cref="Said"/>, when it's refused.</summary>
     public bool Apply(BatchPlan plan)
     {
+        if(selectedFill is {} captured&&ReferenceEquals(captured.Plan,plan)
+            &&(Editor.Session.Revision!=captured.Revision||!ReferenceEquals(Editor.Session.Current,captured.Document)
+                ||Shown!=captured.List||!Editor.Selection.SequenceEqual(captured.Selection)))
+        {Said="The data or row selection changed; preview the selected-row edit again.";return false;}
         if (!plan.Ok) { Said = string.Join(" ", plan.Problems); return false; }
         if (plan.Commands.Count == 0) { Said = "Nothing to change: every cell already has that value."; return true; }
         if (Editor.Playing is { } playing) { Said = $"'{playing.Title}' is playing; stop it to edit."; return false; }
-        var outside = plan.Commands.OfType<SetValue>().Select(c => ItemOf(c.At)).Where(i => !Editor.InFocus(i)).Distinct().ToList();
+        var touched=ReferenceEquals(selectedFill?.Plan,plan)?selectedFill!.Selection:plan.Commands.OfType<SetValue>().Select(c=>ItemOf(c.At)).Distinct().ToArray();
+        var outside = touched.Where(i => !Editor.InFocus(i)).Distinct().ToList();
         if (outside.Count > 0) { Said = $"{outside.Count} of these rows are outside the place you're focused on; step out of focus to edit them."; return false; }
-        if (Editor.Session.Execute(new SetValues(plan.Commands.OfType<SetValue>().ToList())))   // one rebuild, one journal entry (A033)
+        if (Editor.Execute(new SetValues(plan.Commands.OfType<SetValue>().ToList()),touched))   // one rebuild, one journal entry (A033)
         {
             Said = $"Set {plan.Commands.Count} cell{(plan.Commands.Count == 1 ? "" : "s")} as one step.";
             return true;
         }
-        Said = Explain(Editor.Session.LastIssues);
+        Said = Explain(Editor.Refused.Count>0?Editor.Refused:Editor.Session.LastIssues);
         return false;
     }
 
@@ -262,6 +267,7 @@ public sealed class DataTableView
         return plan.Operation switch
         {
             "fill" => $"Filled {cells}; one Undo reverses the whole fill.",
+            "selected fill" => $"Set {cells} in selected rows; one Undo reverses the whole edit.",
             "paste" => $"Pasted {cells}; one Undo reverses the whole paste.",
             _ => $"Set {cells} as one step; one Undo reverses the whole edit.",
         };
@@ -349,7 +355,9 @@ public sealed class DataTableView
                 var item = visible[r];
                 Ui.TableNextRow(ImGuiTableRowFlags.None, 0);
                 Ui.TableSetColumnIndex(0);
-                if (Ui.Selectable($"{RowLabel(doc, item)}##{item}", Editor.Selection.Contains(item))) Editor.Select(item);
+                var picked=Ui.Selectable($"{RowLabel(doc, item)}##{item}",Editor.Selection.Contains(item));
+                SelectTableRow(visible,r,picked);
+                ImGui.SetItemTooltip("Ctrl+click or Ctrl+Space selects several rows. Shift+click selects a range."u8);
                 RowContext(item, columns);
                 var cells = RowsOf(item);
                 for (var c = 0; c < columns.Count; c++)
@@ -450,11 +458,11 @@ public sealed class DataTableView
         // Apply or Cancel took its row away with the focus in it (A210): focus lands on a button that stays (never a text box,
         // which would take Ctrl+Z for itself): Paste at cell with a cell picked, else Fill shown rows.
         if (refocusAfterPlan && Anchor is null) { ImGui.SetKeyboardFocusHere(); refocusAfterPlan = false; }
-        if (Ui.Button("Fill shown rows"u8)) { fillText.EvaluateLength(); pending = PlanFill(fillField, fillText.ToString()); }
+        if (Ui.Button("Fill shown rows"u8)) { selectedFill=null;fillText.EvaluateLength(); pending = PlanFill(fillField, fillText.ToString()); }
         ImGui.SameLine();
         Ui.BeginDisabled(Anchor is null);
         if (refocusAfterPlan) { ImGui.SetKeyboardFocusHere(); refocusAfterPlan = false; }
-        if (Ui.Button("Paste at cell"u8) && Anchor is { } at) pending = PlanPaste(at.Item, at.Field, ImGui.GetClipboardText().ToString() ?? "");
+        if (Ui.Button("Paste at cell"u8) && Anchor is { } at) {selectedFill=null;pending = PlanPaste(at.Item, at.Field, ImGui.GetClipboardText().ToString() ?? "");}
         Ui.EndDisabled();
         if (pending is { } plan)
         {
@@ -471,14 +479,20 @@ public sealed class DataTableView
             Ui.BeginDisabled(!plan.Ok || plan.Commands.Count == 0);
             if (Ui.SmallButton("Apply"u8))
             {
-                if (Apply(plan) && plan.Commands.Count > 0) Said = AppliedSentence(plan);
+                var selected=ReferenceEquals(selectedFill?.Plan,plan);
+                var applied=Apply(plan);
+                if (applied && plan.Commands.Count > 0) Said = AppliedSentence(plan);
+                else if(!applied&&selected)SelectedApplyRefused();
                 pending = null;
-                refocusAfterPlan = true;
+                selectedFill=null;
+                if(selected)focusSelectedFill=true;else refocusAfterPlan=true;
             }
             Ui.EndDisabled();
             ImGui.SameLine();
-            if (Ui.SmallButton("Cancel"u8)) { pending = null; refocusAfterPlan = true; }
+            if (Ui.SmallButton("Cancel"u8))
+            {var selected=ReferenceEquals(selectedFill?.Plan,plan);pending=null;selectedFill=null;if(selected)focusSelectedFill=true;else refocusAfterPlan=true;}
         }
+        SelectedFillControls();
     }
 
     // ---- the keyboard (A029 P0.7, found by A037) ----

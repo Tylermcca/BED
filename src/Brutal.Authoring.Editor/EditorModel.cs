@@ -430,12 +430,12 @@ public sealed class EditorModel<TDoc> where TDoc : class
 
     /// <summary>Applies a command through the session, refusing it while a game is playing, or when it names an object
     /// outside the focus.</summary>
-    public bool Execute(ICommand<TDoc> command, params string[] touches) => MayEdit(touches) && Session.Execute(command);
+    public bool Execute(ICommand<TDoc> command, params string[] touches) => MayEdit(touches) && MayApply([command],touches) && Session.Execute(command);
 
     /// <summary>Applies several commands as one undo step, all or none, under the same refusals as <see cref="Execute"/>.
     /// <paramref name="touches"/> names every object the batch changes, not just the selected one: a focus refuses a batch
     /// that reaches outside it.</summary>
-    public bool ExecuteBatch(IReadOnlyList<ICommand<TDoc>> commands, params string[] touches) => MayEdit(touches) && Session.ExecuteBatch(commands);
+    public bool ExecuteBatch(IReadOnlyList<ICommand<TDoc>> commands, params string[] touches) => MayEdit(touches) && MayApply(commands,touches) && Session.ExecuteBatch(commands);
 
     /// <summary>As <see cref="ExecuteBatch"/>, for a change decided a while ago, such as a drag let go: also refused when the
     /// document has moved on from <paramref name="revision"/>, or a named object can't be found. The commands' bodies stay
@@ -444,13 +444,29 @@ public sealed class EditorModel<TDoc> where TDoc : class
     {
         if (!MayEdit(touches)) return false;
         if (Session.Revision != revision) return Refuse("the document changed since this began; try it again");
-        if (touches.FirstOrDefault(id => Outline.Label(Session.Current, id) is null) is { } gone) return Refuse($"'{gone}' isn't in the document any more");
-        return Session.ExecuteBatch(commands);
+        // The built-in scene outline labels exactly its known IDs; avoid a linear Scene.Find per touched object.
+        // Custom outlines retain their own label-based refusal semantics.
+        var known=ReferenceEquals(Outline,SceneEditing.Outline)?KnownIds():null;
+        if (touches.FirstOrDefault(id => known is null?Outline.Label(Session.Current,id) is null:!known.Contains(id)) is { } gone) return Refuse($"'{gone}' isn't in the document any more");
+        return MayApply(commands,touches) && Session.ExecuteBatch(commands);
     }
+
+    /// <summary>Optional host admission policy, called before Execute, ExecuteBatch or ExecuteAt commits an edit.
+    /// Arguments are the current document, the candidate commands in order, and the caller's declared touched IDs.
+    /// Return a plain refusal reason, or null to use the normal session validation and journal.
+    /// Null preserves the default behaviour. Undo and redo of existing history do not call this policy.</summary>
+    /// <remarks>The callback inspects commands before application; it must not mutate the document or commit an edit.
+    /// It applies to this editor model; direct session operations retain their own policy.</remarks>
+    public Func<TDoc,IReadOnlyList<ICommand<TDoc>>,IReadOnlyList<string>,string?>? EditRefusal {get;set;}
+
+    private bool MayApply(IReadOnlyList<ICommand<TDoc>> commands,IReadOnlyList<string> touches)
+        => EditRefusal?.Invoke(Session.Current,commands,touches) is not {} why || Refuse(why);
 
     private bool MayEdit(string[] touches)
     {
         if (Playing is { } p) return Refuse($"'{p.Title}' is playing; stop it to edit");
+        // With no focused subtree every known or unknown touch is in focus; label lookups cannot refuse it.
+        if(FocusedOn is null){Refused=[];return true;}
         var locked = touches.Where(id => Outline.Label(Session.Current, id) is not null && !InFocus(id)).ToList();
         if (locked.Count > 0)
         {

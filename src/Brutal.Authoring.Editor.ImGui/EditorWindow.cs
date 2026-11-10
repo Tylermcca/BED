@@ -1,5 +1,6 @@
 using Brutal.Authoring.Data;
 using Brutal.ImGuiApi;
+using Brutal.ImGuiApi.Internal;
 using Brutal.Numerics;
 
 namespace Brutal.Authoring.Editor.ImGui;
@@ -17,6 +18,46 @@ public sealed class EditorWindow<TDoc> where TDoc : class
 {
     private readonly ImInputString paletteText = new(256, ""u8);
     private readonly InspectorController<TDoc> inspectorController;
+    internal Func<IReadOnlyDictionary<string,string>>? OutlineAssetNames;
+    private readonly ImInputString outlineSearch=new(512,""u8);
+    private bool outlineSearchFocus,outlineHadFocus;
+    private (TDoc Doc,long? Version,string? Focus,string Query,IReadOnlyDictionary<string,string> Names,IReadOnlyList<(string Id,int Depth,bool Place)> Rows)? filteredOutline;
+    private static readonly IReadOnlyDictionary<string,string> EmptyOutlineNames=new Dictionary<string,string>();
+    private ImGuiID outlineSearchId;
+    private void ClearOutlineSearch()
+    {
+        outlineSearch.SetValue("".AsSpan());
+        var native=ImGui.Internal.GetInputTextState(outlineSearchId);
+        if(!native.IsNull())native.ReloadUserBufAndMoveToEnd();
+        filteredOutline=null;outlineSelectionAnchor=null;outlineMoveTo=null;outlineSearchFocus=true;
+    }
+    private IReadOnlyList<(string Id,int Depth,bool Place)> FilterOutline(IReadOnlyList<(string Id,int Depth,bool Place)> rows)
+    {
+        var query=Text(outlineSearch).Trim();if(query.Length==0)return rows;
+        var document=Editor.Session.Current;var names=OutlineAssetNames?.Invoke()??EmptyOutlineNames;
+        var version=Editor.Outline.Version;var sceneOutline=ReferenceEquals(Editor.Outline,SceneEditing.Outline);var cacheable=version is not null||sceneOutline;
+        if(cacheable&&filteredOutline is {} known&&ReferenceEquals(known.Doc,document)&&known.Version==version&&known.Focus==Editor.FocusedOn&&known.Query==query&&ReferenceEquals(known.Names,names))return known.Rows;
+        var sceneObjects=new Dictionary<string,SceneObject>(StringComparer.Ordinal);
+        if(document is Scene scene)foreach(var o in scene.Objects)sceneObjects.TryAdd(o.Id,o);
+        var visible=rows.Select(r=>r.Id).ToHashSet(StringComparer.Ordinal);var keep=new HashSet<string>(StringComparer.Ordinal);
+        bool Contains(string? text)=>text?.Contains(query,StringComparison.OrdinalIgnoreCase)==true;
+        foreach(var row in rows)
+        {
+            sceneObjects.TryGetValue(row.Id,out var item);var asset=item?.Asset;
+            if(!Contains(row.Id)&&!(item is null&&Contains(Label(row.Id)))&&!Contains(asset)&&!(asset is not null&&names.TryGetValue(asset,out var name)&&Contains(name)))continue;
+            var current=row.Id;var visited=new HashSet<string>(StringComparer.Ordinal);
+            while(current is not null&&visible.Contains(current)&&visited.Add(current))
+            {keep.Add(current);current=sceneOutline&&sceneObjects.TryGetValue(current,out var parent)?parent.Parent:Editor.Outline.Parent(document,current);}
+        }
+        var result=rows.Where(row=>keep.Contains(row.Id)).ToArray();
+        filteredOutline=cacheable?(document,version,Editor.FocusedOn,query,names,result):null;return result;
+    }
+    private readonly SceneDeleteUi? sceneDelete;
+    internal Func<(bool Ok,string Message)>? SceneCopy,ScenePaste;
+    internal Func<string?>? ScenePasteUnavailable;
+    internal Func<(bool Ok,string Message)>? SceneHide,SceneLock;
+    internal Func<string,string>? OutlineBadges;
+    private readonly SceneRenameUi? sceneRename;
     private bool paletteRequested;   // open it on the next frame
     private bool paletteShowing;     // open now (or about to be)
     private bool paletteCloseRequested;
@@ -40,6 +81,21 @@ public sealed class EditorWindow<TDoc> where TDoc : class
         if (!editor.Panels.Any(p => p.Id == BedAbout.Panel.Id)) editor.Add(BedAbout.Panel);
         Inspector = inspector;
         Shortcuts = shortcuts ?? new Shortcuts();
+        if(editor is EditorModel<Scene> scene)
+        {
+            Shortcuts.Default("scene.duplicate","Ctrl+D").Default("scene.remove","Delete")
+                .Default("scene.group","Ctrl+G").Default("scene.ungroup","Ctrl+Shift+G").Default("editor.rename_object","F2");
+            sceneDelete=new(scene,message=>status=message,()=>ProjectPlaying?.Invoke()==true);
+            sceneRename=new(scene,message=>status=message,()=>ProjectPlaying?.Invoke()==true,(id,next,revision,selection)=>
+            {
+                var focused=scene.FocusedOn;
+                var touches=scene.Session.Current.Objects.Where(o=>o.Id==id||o.Parent==id||o.References.Values.Contains(id)).Select(o=>o.Id).ToArray();
+                if(!scene.ExecuteAt(revision,[new RenameObject(id,next)],touches))
+                    return(false,Explain(scene.Refused.Count>0?scene.Refused:scene.Session.LastIssues));
+                if(focused is not null)scene.FocusOn(focused==id?next:focused);
+                scene.Select(next);ClearOutlineSearch();return(true,$"Renamed '{id}' to '{next}'; parent and named references follow.");
+            });
+        }
         KeysPanel.Attach(editor, Shortcuts, () => PaletteEntries(""));
         GettingStartedPanel.Attach(editor);
         CommandFor = commandFor;
@@ -158,6 +214,8 @@ public sealed class EditorWindow<TDoc> where TDoc : class
     /// <summary>Runs whatever <paramref name="pressed"/> is bound to. Returns false when it's bound to nothing.</summary>
     public bool HandleKey(Chord pressed)
     {
+        if(sceneRename is {HasPending:true}&&pressed==Escape){sceneRename.Cancel();return true;}
+        if(sceneDelete is {HasPending:true}&&pressed==Escape){sceneDelete.Cancel();return true;}
         if(linkedPlayPrompt && pressed==Escape) {AnswerLinkedPlay(SaveChangesChoice.Cancel);return true;}
         if(linkedPlayPrompt && pressed==Chord.Parse("Enter")) {AnswerLinkedPlay(SaveChangesChoice.Save);return true;}
         if (saveAsOpen && pressed == Escape)
@@ -235,10 +293,29 @@ public sealed class EditorWindow<TDoc> where TDoc : class
     /// <summary>Runs an editor action (<c>editor.*</c>) or a document command by id. Returns false when it can't.</summary>
     public bool Run(string id)
     {
+        if(id=="editor.build_play" && ProjectBuildAndPlayAction is {} buildProject)
+            return ProjectPlayUnavailable?.Invoke(true) is {} why?Say(false,"",why):buildProject();
+        if(ProjectPlayAction is {} projectPlay && id.StartsWith(PlayAction,StringComparison.Ordinal))return projectPlay();
+        if(ProjectStopAction is {} stopProject && id=="editor.stop")return Say(stopProject(),"Stopping Play.","Nothing is playing.");
         if (Editor.Playing is { } playing && id is not ("editor.stop" or "editor.palette") && !id.StartsWith(PanelAction, StringComparison.Ordinal))
             return Say(false, "", $"'{playing.Title}' is playing; stop it first.");
+        if(id is "scene.copy" or "scene.paste")
+        {
+            if(!inspectorController.TryCommitPending(out var why))return Say(false,"",why);
+            if(id=="scene.paste"&&ProjectPlaying?.Invoke()==true)return Say(false,"","Stop Play before pasting objects.");
+            var action=id=="scene.copy"?SceneCopy:ScenePaste;
+            if(action is null)return Say(false,"","Object copy and paste needs an open project.");
+            var result=action();return Say(result.Ok,result.Message,result.Message);
+        }
         switch (id)
         {
+            case "editor.hide_objects":
+            case "editor.lock_objects":
+                var viewChoice=(id=="editor.hide_objects"?SceneHide:SceneLock)?.Invoke()??(false,"Scene view choices are unavailable here.");
+                status=viewChoice.Item2;return viewChoice.Item1;
+            case "editor.rename_object":
+                if(!inspectorController.TryCommitPending(out var pendingWhy))return Say(false,"",pendingWhy);
+                return sceneRename?.Request()??Say(false,"","This file has no scene objects to rename.");
             case "editor.stop":
                 if(Editor.Game is LinkedPlayPreview linked && !linked.HasCompleted)
                     return Say(linked.RequestStop(),"Stopping linked Play.","Linked Play is finishing; waiting for owned resources.");
@@ -282,9 +359,23 @@ public sealed class EditorWindow<TDoc> where TDoc : class
                         }
                 return Say(false, "", $"There's no panel action '{id[PanelCommandAction.Length..]}'.");
         }
+        if(Editor is EditorModel<Scene> groupEditor&&id is "scene.group" or "scene.ungroup")
+        {
+            if(ProjectPlaying?.Invoke()==true)return Say(false,"","Stop Play before grouping or ungrouping objects.");
+            if(!inspectorController.TryCommitPending(out var why))return Say(false,"",why);
+            var result=id=="scene.group"?SceneGroupUi.Group(groupEditor):SceneGroupUi.Ungroup(groupEditor);
+            return Say(result.Ok,result.Message,result.Message);
+        }
         var info = Editor.Session.Catalog.Commands.FirstOrDefault(c => c.Id == id);
         if (info is null) return Say(false, "", $"There's no command '{id}'.");
         if ((CommandFor?.Invoke(info, Editor) ?? Editor.Make(info.Id)) is not { } command) return Say(false, "", $"{info.Label} needs details: use the inspector.");
+        if(sceneDelete is not null&&command is RemoveObject remove)return sceneDelete.Request(remove);
+        if(Editor is EditorModel<Scene> sceneEditor&&command is DuplicateGroup duplicate)
+        {
+            if(ProjectPlaying?.Invoke()==true)return Say(false,"","Stop Play before duplicating objects.");
+            var duplicated=SceneDuplicateUi.Run(sceneEditor,duplicate,out var why);
+            return Say(duplicated,why,why);
+        }
         var ok = Editor.Execute(command);
         return Say(ok, $"{info.Label}: done.", Explain(Editor.Refused.Count > 0 ? Editor.Refused : Editor.Session.LastIssues));
     }
@@ -297,6 +388,20 @@ public sealed class EditorWindow<TDoc> where TDoc : class
     /// When set, replaces the default Save path and SaveRefusal for Save only; Save as is unchanged.
     /// A result is final: no second session write follows either success or refusal.</summary>
     public Func<(bool Success, string Message)>? SaveAction { get; set; }
+    /// <summary>Optional workspace-owned export command, shown only for declared adapters.</summary>
+    public Action? ExportBuildAction {get;set;}
+    internal Action? RecentProjectsMenu {get;set;}
+    /// <summary>Workspace-owned project Play settings, independent of adapter availability.</summary>
+    public Action? PlaySettingsAction {get;set;}
+    /// <summary>Workspace-owned saved-files Play request. Null retains the legacy host route.</summary>
+    public Func<bool>? ProjectPlayAction {get;set;}
+    /// <summary>Workspace-owned stop request.</summary>
+    public Func<bool>? ProjectStopAction {get;set;}
+    /// <summary>Whether the workspace still owns a running or stopping process.</summary>
+    public Func<bool>? ProjectPlaying {get;set;}
+    internal Func<bool>? ProjectBuildAndPlayAction {get;set;}
+    internal Func<bool,string?>? ProjectPlayUnavailable {get;set;}
+
 
     private bool Save()
     {
@@ -328,6 +433,9 @@ public sealed class EditorWindow<TDoc> where TDoc : class
         }
     }
 
+    // An owning workspace can keep Save as within its admission and per-file policy.
+    internal Func<string, (bool Saved, string Message)>? ManagedSaveAs { get; init; }
+
     /// <summary>Saves to <paramref name="path"/> (relative paths are from the current folder), which becomes the
     /// document's file. Returns false, saying why, when it can't (a game is playing, the path is empty or unwritable);
     /// the edits stay either way.</summary>
@@ -339,6 +447,12 @@ public sealed class EditorWindow<TDoc> where TDoc : class
         try
         {
             var full = Path.GetFullPath(path.Trim());
+            if (ManagedSaveAs is { } managed)
+            {
+                var result = managed(full);
+                if (result.Saved) saveAsOpen = false;
+                return Say(result.Saved, result.Saved ? result.Message : "", result.Saved ? "" : result.Message);
+            }
             Editor.Session.Save(full);
             saveAsOpen = false;
             return Say(true, $"Saved to {Path.GetFileName(full)}.", "");
@@ -426,6 +540,25 @@ public sealed class EditorWindow<TDoc> where TDoc : class
         static UiActionPresentation Toolbar(UiActionContext c, string label, bool enabled = true) => new(c, label, true, enabled, null);
         static UiActionPresentation Hidden(UiActionContext c, string label) => new(c, label, false, false, null);
 
+        if(SceneHide is not null)
+        {
+            var viewReason=Editor.Playing is not null||ProjectPlaying?.Invoke()==true?"Stop Play before changing view choices.":Editor.Selection.Count==0?"Select objects first.":null;
+            Add("editor.hide_objects",c=>c==UiActionContext.Toolbar?Hidden(c,"Hide/show objects"):Palette(c,"Hide/show objects",viewReason));
+            Add("editor.lock_objects",c=>c==UiActionContext.Toolbar?Hidden(c,"Lock/unlock objects"):Palette(c,"Lock/unlock objects",viewReason));
+        }
+        if(SceneCopy is not null)
+        {
+            Add("scene.copy",c=>c==UiActionContext.Toolbar?Hidden(c,"Copy objects"):Palette(c,"Copy objects",Editor.Selection.Count==0?"Select objects to copy first.":null));
+            Add("scene.paste",c=>c==UiActionContext.Toolbar?Hidden(c,"Paste objects"):Palette(c,"Paste objects",ProjectPlaying?.Invoke()==true||Editor.Playing is not null?"Stop Play before pasting objects.":ScenePasteUnavailable?.Invoke()));
+        }
+        if(Editor is EditorModel<Scene>)
+        {
+            var groupPlaying=Editor.Playing is not null||ProjectPlaying?.Invoke()==true;
+            Add("scene.group",c=>c==UiActionContext.Toolbar?Hidden(c,"Group objects"):Palette(c,"Group objects",groupPlaying?"Stop Play before grouping objects.":Editor.Selection.Count==0?"Select objects to group first.":null));
+            Add("scene.ungroup",c=>c==UiActionContext.Toolbar?Hidden(c,"Ungroup parent"):Palette(c,"Ungroup parent",groupPlaying?"Stop Play before ungrouping objects.":Editor.Selection.Count!=1?"Select one parent to ungroup.":null));
+        }
+        if(sceneRename is not null)Add("editor.rename_object",c=>c==UiActionContext.Toolbar?Hidden(c,"Rename object")
+            :Palette(c,"Rename object",Editor.Playing is not null||ProjectPlaying?.Invoke()==true?"Stop Play before renaming an object.":Editor.Selection.Count!=1?"Select one object to rename.":null));
         Add("editor.undo", c => c == UiActionContext.Toolbar
             ? Toolbar(c, "Undo", Editor.Session.History.CanUndo && Editor.Playing is null)
             : Palette(c, "Undo", Editor.Session.History.CanUndo ? null : "nothing to undo"));
@@ -454,10 +587,22 @@ public sealed class EditorWindow<TDoc> where TDoc : class
 
         // Match the old palette's one playing-state choice per query. The toolbar keeps its existing branch/order.
         var playing = Editor.Playing;
-        Add("editor.stop", c => playing is null ? Hidden(c, "Stop") : c == UiActionContext.Toolbar
-            ? Toolbar(c, $"Stop {playing.Title}") : Palette(c, $"Stop playing {playing.Title}"));
-        foreach (var mode in Editor.PlayModes)
-            Add(PlayAction + mode.Id, c => playing is null ? Palette(c, $"Play {mode.Title}") : Hidden(c, $"Play {mode.Title}"));
+        if(ProjectPlayAction is not null)
+        {
+            var running=ProjectPlaying?.Invoke()==true;
+            var reason=running?"Stop the running program first.":ProjectPlayUnavailable?.Invoke(false);
+            Add(PlayAction+"project",c=>Palette(c,"Play",reason));
+            Add("editor.stop",c=>Palette(c,"Stop",running?null:"Nothing is playing."));
+            Add("editor.build_play",c=>Palette(c,"Build and Play",running?"Stop the running program first.":
+                ProjectBuildAndPlayAction is null?"Set a build command in Tools > Play settings":ProjectPlayUnavailable?.Invoke(true)));
+        }
+        else
+        {
+            Add("editor.stop", c => playing is null ? Hidden(c, "Stop") : c == UiActionContext.Toolbar
+                ? Toolbar(c, $"Stop {playing.Title}") : Palette(c, $"Stop playing {playing.Title}"));
+            foreach (var mode in Editor.PlayModes)
+                Add(PlayAction + mode.Id, c => playing is null ? Palette(c, $"Play {mode.Title}") : Hidden(c, $"Play {mode.Title}"));
+        }
         foreach (var panel in Editor.Panels)
             Add(PanelAction + panel.Id, c => c == UiActionContext.Toolbar || panel.ShowWhen?.Invoke() == false ? Hidden(c, panel.Title)
                 : Palette(c, (Editor.IsOpen(panel.Id) ? "Hide " : "Show ") + panel.Title));
@@ -507,7 +652,7 @@ public sealed class EditorWindow<TDoc> where TDoc : class
             SaveAsRow();
             Breadcrumb();
             ImGui.Separator();
-            if (Ui.BeginChild("outliner"u8, new float2(260, -ImGui.GetFrameHeightWithSpacing()), ImGuiChildFlags.Borders)) Outliner();
+            if (Ui.BeginChild("outliner"u8, new float2(260, -ImGui.GetFrameHeightWithSpacing()), ImGuiChildFlags.Borders)) Outliner();else outlineHadFocus=false;
             Ui.EndChild();
             ImGui.SameLine();
             if (Ui.BeginChild("inspector"u8, new float2(0, -ImGui.GetFrameHeightWithSpacing()), ImGuiChildFlags.Borders)) inspectorController.Draw();
@@ -519,6 +664,7 @@ public sealed class EditorWindow<TDoc> where TDoc : class
         Game();
         Palette();
         LinkedPlaySavePrompt();
+        sceneDelete?.Draw();
         NotePopups();
     }
 
@@ -602,14 +748,30 @@ public sealed class EditorWindow<TDoc> where TDoc : class
     // undoes the typing, not the document.
     private void Keys()
     {
+        if(KeysPanel.Capture(Editor,Shortcuts,KeyNames))return;
         var io = ImGui.GetIO();
+        if(sceneRename is {HasPending:true}&&ImGui.IsKeyPressed(ImGuiKey.Escape,false)){HandleKey(Escape);return;}
+        if(outlineHadFocus&&Text(outlineSearch).Length>0&&!popupWasOpen&&ImGui.IsKeyPressed(ImGuiKey.Escape,false))
+        {ClearOutlineSearch();return;}
+        if(outlineHadFocus&&io.KeyCtrl&&!io.KeyAlt&&!io.KeySuper&&ImGui.IsKeyPressed(ImGuiKey.F,false))return;
         // Escape still reaches the palette and the Save-as row while their fields have the keyboard: it's their way out.
         if ((paletteShowing || saveAsOpen) && ImGui.IsKeyPressed(ImGuiKey.Escape, false))
         {
             HandleKey(Chord.Parse("Escape"));
             return;
         }
-        if (io.WantTextInput) return;
+        if (io.WantTextInput)
+        {
+            // Function-key Play controls remain available while editing a field; ordinary typing stays local.
+            if(ProjectPlayAction is not null)
+                foreach(var (key,name) in KeyNames)
+                {
+                    if(name.Length<2||name[0]!='F'||!ImGui.IsKeyPressed(key,false))continue;
+                    var chord=Chord.Parse((io.KeyCtrl?"Ctrl+":"")+(io.KeyShift?"Shift+":"")+(io.KeyAlt?"Alt+":"")+name);
+                    if(Shortcuts.Action(chord) is "editor.play.project" or "editor.stop" or "editor.build_play")HandleKey(chord);
+                }
+            return;
+        }
         // A popup that's open (a dropdown) takes Escape for itself; it doesn't also step out of focus (found by A031).
         // ImGui closes it on Escape at the start of the frame, so ask whether one was open at the end of the last one.
         if ((popupWasOpen || ImGui.IsPopupOpen(""u8, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel)) && ImGui.IsKeyPressed(ImGuiKey.Escape, false)) return;
@@ -694,7 +856,8 @@ public sealed class EditorWindow<TDoc> where TDoc : class
             if (Ui.Begin("Save as###saveas"u8, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar)) SaveAsRow();
             Ui.End();
         }
-        if (Ui.Begin("Outliner###outliner"u8)) Outliner();
+        if(sceneRename is {FocusWindow:true})ImGui.SetNextWindowFocus();
+        if (Ui.Begin("Outliner###outliner"u8)) Outliner();else outlineHadFocus=false;
         Ui.End();
         if (Ui.Begin("Inspector###inspector"u8)) inspectorController.Draw();
         Ui.End();
@@ -702,6 +865,7 @@ public sealed class EditorWindow<TDoc> where TDoc : class
         Game();
         Palette();
         LinkedPlaySavePrompt();
+        sceneDelete?.Draw();
         NotePopups();
     }
 
@@ -804,11 +968,13 @@ public sealed class EditorWindow<TDoc> where TDoc : class
             Missing("New project...", "Comes with the start window (A439)");
             Missing("Open project...", "Comes with the start window (A439)");
             Missing("Open file...", "Choose a file in this project's Files panel.");
-            Missing("Open recent", "Choose a recent project from the start window.");
+            if(RecentProjectsMenu is {} recent&&Begin("Recent projects")){recent();End();}
+            else if(RecentProjectsMenu is null)Missing("Recent projects", "This host has no recent-project list.");
             ImGui.Separator();
             Item("Save", "editor.save");
             Item("Save as...", "editor.file_save_as");
             Item("Save all", PanelCommandAction + "project.files/save_all");
+            if(ExportBuildAction is {} export&&Choice("Export build...","",false,true))export();
             ImGui.Separator();
             Item("Close", "editor.close");
             Item("Close project", PanelCommandAction + "project.files/close_project");
@@ -820,10 +986,23 @@ public sealed class EditorWindow<TDoc> where TDoc : class
             Item("Undo", "editor.undo");
             Item("Redo", "editor.redo");
             ImGui.Separator();
+            if(Editor is EditorModel<Scene>)
+            {
+                var reason=ProjectPlaying?.Invoke()==true?"Stop Play before duplicating objects.":Editor.Playing is not null?"Stop Play before duplicating objects.":Editor.Selection.Count==0?"Select objects to duplicate first.":null;
+                if(Choice("Duplicate",Shortcuts.For("scene.duplicate")?.ToString()??"",false,reason is null,reason))Run("scene.duplicate");
+            }
+            if(Editor is EditorModel<Scene>){Item("Group", "scene.group");Item("Ungroup", "scene.ungroup");}
             Missing("Cut", "A safe cut action is not available yet.");
-            Item("Copy", PanelCommandAction + "editor.table/copy");
-            Item("Paste", PanelCommandAction + "editor.table/paste");
-            Missing("Delete", "Use the selected object's available delete action.");
+            Item("Copy", Editor is EditorModel<Scene>?"scene.copy":PanelCommandAction + "editor.table/copy");
+            Item("Paste", Editor is EditorModel<Scene>?"scene.paste":PanelCommandAction + "editor.table/paste");
+            if(sceneDelete is not null)
+            {
+                var reason=ProjectPlaying?.Invoke()==true||Editor.Playing is not null?"Stop Play before deleting objects.":Editor.Selection.Count!=1?"Select one object to delete.":null;
+                if(Choice("Delete",Shortcuts.For("scene.remove")?.ToString()??"",false,reason is null,reason))Run("scene.remove");
+            }
+            else Missing("Delete", "Use the selected object's available delete action.");
+            if(sceneRename is not null)Item("Rename object", "editor.rename_object");
+            if(SceneHide is not null){Item("Hide/show objects","editor.hide_objects");Item("Lock/unlock objects","editor.lock_objects");}
             Missing("Select all", "Use selection controls in the current panel.");
             Missing("Find...", "Use the find field in Properties.");
             Item("Fill column...", PanelCommandAction + "editor.table/fill");
@@ -870,6 +1049,7 @@ public sealed class EditorWindow<TDoc> where TDoc : class
         }
         if (Begin("Tools", true))
         {
+            if(PlaySettingsAction is {} settings&&Choice("Play settings...","",false,true))settings();
             Panel("Checks", "project.checks");
             Panel("Suggested changes", "project.proposals");
             var checks = UiActions().Where(a => a.Id.StartsWith(PanelCommandAction + "project.checks/run.", StringComparison.Ordinal)).ToArray();
@@ -879,7 +1059,11 @@ public sealed class EditorWindow<TDoc> where TDoc : class
                 End();
             }
             Missing("Run all checks", "Run individual checks from Checks; no quick-check batch is registered.");
-            if (Editor.Playing is not null) Item("Stop", "editor.stop");
+            if(ProjectPlayAction is not null)
+            {
+                Item("Play",PlayAction+"project");Item("Build and Play","editor.build_play");Item("Stop","editor.stop");
+            }
+            else if (Editor.Playing is not null) Item("Stop", "editor.stop");
             else if (Editor.PlayModes.Count == 0) Missing("Play", "This project has no play mode");
             else if (Begin("Play", true))
             {
@@ -924,7 +1108,13 @@ public sealed class EditorWindow<TDoc> where TDoc : class
             if (Ui.Button("Checks"u8))
                 UiActions().First(a => a.Id == PanelAction + "project.checks").Invoke();
         }
-        if (Editor.Playing is not null)
+        if(ProjectPlayAction is not null)
+        {
+            ImGui.SameLine();
+            Button(ProjectPlaying?.Invoke()==true?"editor.stop":PlayAction+"project",ProjectPlaying?.Invoke()==true?"Stop":"Play");
+            if(ProjectBuildAndPlayAction is not null){ImGui.SameLine();Button("editor.build_play","Build and Play");}
+        }
+        else if (Editor.Playing is not null)
         {
             ImGui.SameLine();
             Button("editor.stop", "Stop");
@@ -958,26 +1148,110 @@ public sealed class EditorWindow<TDoc> where TDoc : class
         }
     }
 
-    // The outline as a tree: each object under its parent, indented. Double-clicking a place focuses on it.
+    private string? outlineSelectionAnchor, outlineMoveTo, outlineFocusedRow;
+    private object? outlineNavigationRows;
+    private (TDoc Doc,long? Version,string? Focus)? outlineSelectionContext;
+    private string[] outlineExpectedSelection=[];
+    private int outlineMoveFrame=-1;
+
+    private static int OutlineIndex(IReadOnlyList<(string Id,int Depth,bool Place)> rows,string? id)
+    {for(var i=0;i<rows.Count;i++)if(rows[i].Id==id)return i;return -1;}
+    private void RememberOutlineSelection(string anchor)
+    {
+        outlineSelectionAnchor=anchor;outlineExpectedSelection=Editor.Selection.ToArray();
+        outlineSelectionContext=(Editor.Session.Current,Editor.Outline.Version,Editor.FocusedOn);
+    }
+    private void ExtendOutlineSelection(IReadOnlyList<(string Id,int Depth,bool Place)> rows,int from,int to)
+    {
+        if(outlineSelectionContext is not {} context || !ReferenceEquals(context.Doc,Editor.Session.Current)
+            ||context.Version!=Editor.Outline.Version||context.Focus!=Editor.FocusedOn||!outlineExpectedSelection.SequenceEqual(Editor.Selection))
+            outlineSelectionAnchor=Editor.Primary??rows[from].Id;
+        var anchor=OutlineIndex(rows,outlineSelectionAnchor);if(anchor<0)anchor=from;
+        var direction=to>=anchor?1:-1;
+        Editor.Select(Enumerable.Range(0,Math.Abs(to-anchor)+1).Select(i=>rows[anchor+i*direction].Id).ToArray());
+        RememberOutlineSelection(rows[anchor].Id); // The last selected id remains the keyboard cursor in either direction.
+    }
+    private void OutlineSelectionKeys(IReadOnlyList<(string Id,int Depth,bool Place)> rows,int row,bool activated)
+    {
+        var id=rows[row].Id;var io=ImGui.GetIO();
+        if(ImGui.IsItemFocused()&&!io.WantTextInput&&!io.KeyAlt&&!io.KeySuper)
+        {
+            if(io.KeyCtrl&&!io.KeyShift&&ImGui.IsKeyPressed(ImGuiKey.Space,false))
+            {Editor.Toggle(id);RememberOutlineSelection(id);return;} // Ignore Selectable's simultaneous Space activation.
+            var step=io.KeyShift&&!io.KeyCtrl?(ImGui.IsKeyPressed(ImGuiKey.DownArrow)?1:ImGui.IsKeyPressed(ImGuiKey.UpArrow)?-1:0):0;
+            if(step!=0&&outlineMoveFrame!=ImGui.GetFrameCount())
+            {
+                var next=Math.Clamp(row+step,0,rows.Count-1);ImGui.Internal.NavMoveRequestCancel();
+                if(next!=row){ExtendOutlineSelection(rows,row,next);outlineMoveTo=rows[next].Id;}
+                outlineMoveFrame=ImGui.GetFrameCount();return;
+            }
+        }
+        if(!activated)return;
+        if(io.KeyCtrl)Editor.Toggle(id);else Editor.Select(id);
+        RememberOutlineSelection(id);
+        if(rows[row].Place&&ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))Run("editor.focus_in");
+    }
+
+    // Only visible rows and a pending keyboard target are labelled; no whole-outline drawing for range navigation.
     private void Outliner()
     {
-        var rows = OutlineRows();
-        // Only the rows on screen are drawn and labelled (ImGui's list clipper), as in the table: a large file's outline asked
-        // every label every frame (found by A179).
-        var clipper = new ImGuiListClipper();
-        clipper.Begin(rows.Count, -1);
-        while (clipper.Step())
-            for (var r = clipper.DisplayStart; r < clipper.DisplayEnd; r++)
+        // Scene range navigation must not add a row or alter the established data-outline focus order.
+        var scene=Editor.Session.Current is Scene;
+        outlineHadFocus=scene&&ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
+        if(scene)
+        {
+            var io=ImGui.GetIO();
+            if(outlineHadFocus&&io.KeyCtrl&&!io.KeyAlt&&!io.KeySuper&&ImGui.IsKeyPressed(ImGuiKey.F,false))outlineSearchFocus=true;
+            if(outlineSearchFocus){ImGui.SetKeyboardFocusHere();outlineSearchFocus=false;}
+            outlineSearchId=ImGui.GetID("Search objects"u8);
+            Ui.InputText("Search objects"u8,outlineSearch,ImGuiInputTextFlags.EscapeClearsAll);
+            Ui.TextWrapped("Ctrl+F searches IDs and asset names. Escape clears."u8);
+        }
+        if(scene)Ui.TextWrapped("Shift+Up/Down extends selection. Ctrl+Space toggles the focused object."u8);
+        // Keep this scene count region above the clipped list, with one identity and count-only text.
+        if(scene)
+        {
+            var selected=Editor.Selection.Count;
+            Ui.Status(selected==1?"1 object selected":$"{selected} objects selected","outliner.selection.count");
+        }
+        var rows=scene?FilterOutline(OutlineRows()):OutlineRows();
+        if(scene&&rows.Count==0&&Text(outlineSearch).Trim().Length>0)Ui.TextWrapped("No objects match this search."u8);
+        if(scene&&ImGui.IsWindowFocused()&&!ReferenceEquals(outlineNavigationRows,rows))
+        {
+            // A removed/hidden keyboard row leaves a native NavId that Tab cannot find again.
+            // Repair only this already-focused window, never take focus from an Inspector or popup.
+            if(outlineFocusedRow is {} previous&&OutlineIndex(rows,previous)<0)
+            {var primary=OutlineIndex(rows,Editor.Primary);outlineMoveTo=rows.Count==0?null:rows[primary>=0?primary:0].Id;outlineFocusedRow=null;}
+            outlineNavigationRows=rows;
+        }
+        var clipper=new ImGuiListClipper();clipper.Begin(rows.Count,-1);
+        if(sceneRename?.PendingId is {} renameId)
+        {var index=OutlineIndex(rows,renameId);if(index>=0)clipper.IncludeItemByIndex(index);}
+        if(scene&&outlineMoveTo is {} target)
+        {var index=OutlineIndex(rows,target);if(index>=0)clipper.IncludeItemByIndex(index);else outlineMoveTo=null;}
+        while(clipper.Step())
+            for(var r=clipper.DisplayStart;r<clipper.DisplayEnd;r++)
             {
-                var (id, depth, place) = rows[r];
-                if (depth > 0) ImGui.Indent(depth * 14);
-                if (Ui.Selectable($"{(place ? "> " : "")}{Label(id)}##obj{id}", Editor.Selection.Contains(id), ImGuiSelectableFlags.AllowDoubleClick))
+                var (id,depth,place)=rows[r];if(depth>0)ImGui.Indent(depth*14);
+                if(sceneRename?.DrawRow(id)==true){if(depth>0)ImGui.Unindent(depth*14);continue;}
+                var activated=Ui.Selectable($"{(place?"> ":"")}{Label(id)}{OutlineBadges?.Invoke(id)??""}##obj{id}",Editor.Selection.Contains(id),ImGuiSelectableFlags.AllowDoubleClick);
+                if(scene&&(outlineMoveTo==id||sceneRename?.TakeFocusRow(id)==true))
                 {
-                    if (ImGui.GetIO().KeyCtrl) Editor.Toggle(id); else Editor.Select(id);
-                    if (place && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left)) Run("editor.focus_in");
+                    ImGui.Internal.SetFocusID(ImGui.GetItemID(),ImGui.Internal.GetCurrentWindow());ImGui.SetNavCursorVisible(true);
+                    ImGui.SetScrollHereY();outlineMoveTo=null;
                 }
-                if (ObjectContextMenu.Draw(this, id) is { } message) status = message;
-                if (depth > 0) ImGui.Unindent(depth * 14);
+                if(scene)
+                {
+                    if(ImGui.IsItemFocused())outlineFocusedRow=id;
+                    OutlineSelectionKeys(rows,r,activated);
+                }
+                else if(activated)
+                {
+                    if(ImGui.GetIO().KeyCtrl)Editor.Toggle(id);else Editor.Select(id);
+                    if(place&&ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))Run("editor.focus_in");
+                }
+                if(ObjectContextMenu.Draw(this,id) is {} message)status=message;
+                if(depth>0)ImGui.Unindent(depth*14);
             }
         clipper.End();
     }

@@ -79,7 +79,7 @@ public sealed class SceneNewcomerTests
             Assert.Equal(3,window.Editor.Session.Current.Objects.Length);
             var copy=Assert.Single(window.Editor.Session.Current.Objects,o=>o.Id!=parent.Id&&o.Id!=child.Id);
             Assert.Equal(child.Parent,copy.Parent);Assert.Equal(child.Asset,copy.Asset);
-            Assert.Equal(child.Position,copy.Position);Assert.Equal(child.Rotation,copy.Rotation);Assert.Equal(child.Scale,copy.Scale);
+            Assert.Equal(child.Position+Vector3.UnitX,copy.Position);Assert.Equal(child.Rotation,copy.Rotation);Assert.Equal(child.Scale,copy.Scale);
             Press(ImGuiKey.Z,ctrl:true);Assert.Equal(new[]{parent,child},window.Editor.Session.Current.Objects);
             Assert.Equal(initial,File.ReadAllText(path));
             var calls=0;workspace.Documents.SceneSaveCheck=e=>{Assert.Same(window.Editor,e.Editor);calls++;return null;};

@@ -91,7 +91,7 @@ public sealed class SceneGizmoRotationInputTests
         }
         public void Focus()
         {
-            for(var i=0;i<4;i++)
+            for(var i=0;i<8;i++)
             {
                 Host.Press(Draw,ImGuiKey.Tab);
                 if(Ui.Snapshot().Nodes.Any(node=>node.Role==UiRole.Canvas && node.Focused)) return;

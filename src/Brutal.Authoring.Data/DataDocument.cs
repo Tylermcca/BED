@@ -18,8 +18,11 @@ public sealed record DataDocument(JsonElement Root)
     /// here, so hand formatting (a short object kept on one line, say) survives and a diff shows only the edit.</summary>
     public JsonElement? Source { get; init; }
 
-    /// <summary>The file's line ending as it was read ("\r\n" or "\n"), kept on save; null for a new document (written
-    /// with "\n").</summary>
+    // Retain whitespace outside the root too, and exact mixed endings for an unchanged file.
+    internal string? SourceText { get; init; }
+
+    /// <summary>The file's most common line ending ("\r\n" or "\n"), used for edited content; ties use "\n".
+    /// Null for a new document (written with "\n").</summary>
     public string? LineEnding { get; init; }
 
     /// <summary>The value at <paramref name="pointer"/>, or null when there's nothing there.</summary>
@@ -106,8 +109,8 @@ public static class Pointer
 /// <summary>
 /// Reads and writes data files, keeping their style so an edit changes only the edited lines in a diff: two-space
 /// indentation, the file's own key order and number spellings (<c>1.0</c> stays <c>1.0</c>), characters written as
-/// themselves rather than escaped, the file's own line endings (LF for a new file; a file read with CRLF keeps CRLF) and a
-/// final newline (the style of Python's <c>json.dumps(indent=2, ensure_ascii=False)</c> and of most hand-written JSON).
+/// themselves rather than escaped, the file's majority line ending and its original trailing whitespace. An unchanged
+/// file is returned exactly as read. New files use LF and a final newline.
 /// </summary>
 /// <param name="kind">A name for this kind of data, shown to people; the file itself isn't checked for it.</param>
 public sealed class DataFormat(string kind = "data") : IDocumentFormat<DataDocument>
@@ -133,7 +136,8 @@ public sealed class DataFormat(string kind = "data") : IDocumentFormat<DataDocum
             return new DataDocument(root)
             {
                 Source = root,
-                LineEnding = text.Contains("\r\n") ? "\r\n" : "\n",
+                SourceText = text,
+                LineEnding = MajorityLineEnding(text),
             };
         }
         catch (JsonException e)
@@ -169,16 +173,41 @@ public sealed class DataFormat(string kind = "data") : IDocumentFormat<DataDocum
         }
     }
 
+    private static string MajorityLineEnding(string text)
+    {
+        var crlf = 0;
+        var lf = 0;
+        for (var i = 0; i < text.Length; i++)
+            if (text[i] == '\n')
+            {
+                if (i > 0 && text[i - 1] == '\r') crlf++;
+                else lf++;
+            }
+        return crlf > lf ? "\r\n" : "\n";
+    }
+
     /// <inheritdoc />
     public string Write(DataDocument document)
     {
+        if (document.SourceText is { } original && document.Source is { } source && JsonSchemas.Same(document.Root, source))
+            return original;
+
         var text = new StringBuilder();
         Emit(text, document.Root, document.Source, 0);
-        // The file's own line ending is kept, untouched lines included (found by A048: a CRLF file came back LF on every
-        // line, so a one-value edit rewrote the whole file). A final line ending is always written.
-        var lf = text.ToString().Replace("\r\n", "\n") + "\n";
-        return document.LineEnding == "\r\n" ? lf.Replace("\n", "\r\n") : lf;
+        var body = text.ToString().Replace("\r\n", "\n");
+        if (document.LineEnding == "\r\n") body = body.Replace("\n", "\r\n");
+        if (document.SourceText is not { } input) return body + (document.LineEnding ?? "\n");
+
+        // JsonElement excludes outer whitespace. Preserve it separately, especially the exact final
+        // newline (or its absence), even if it differs from the body's majority line ending.
+        var start = 0;
+        var end = input.Length;
+        while (start < end && JsonWhitespace(input[start])) start++;
+        while (end > start && JsonWhitespace(input[end - 1])) end--;
+        return input[..start] + body + input[end..];
     }
+
+    private static bool JsonWhitespace(char c) => c is ' ' or '\t' or '\r' or '\n';
 
     // Writes a value at nesting depth (two spaces a level). When it's unchanged from the original (same place, same
     // JSON), the original text goes out as it was: its inner lines already carry the right indentation, because an

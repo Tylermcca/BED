@@ -71,6 +71,8 @@ public sealed class CheckSnapshot
     private readonly Dictionary<string, byte[]> inputs;
     private readonly string options;
     private Func<string, string?>? schemaFor;
+    private bool recursive;
+    private Func<string, bool>? admit;
 
     private CheckSnapshot(Dictionary<string, byte[]> inputs, string signature, string options, string meaning)
     {
@@ -130,7 +132,7 @@ public sealed class CheckSnapshot
         if (!inputs.ContainsKey(key)) throw new ArgumentException("The target is not in the captured project.", nameof(file));
         var copy = inputs.ToDictionary(p => p.Key, p => p.Value.ToArray(), StringComparer.Ordinal);
         copy[key] = Encoding.UTF8.GetBytes(new DataFormat().Write(candidate));
-        return new CheckSnapshot(copy, Signature, options, Canonical(options, sameNumbers: true)) { schemaFor = schemaFor };
+        return new CheckSnapshot(copy, Signature, options, Canonical(options, sameNumbers: true)) { schemaFor = schemaFor, recursive = recursive, admit = admit };
     }
 
     /// <summary>The same capture in two steps (A184 rank 4): the moment is pinned now, cheaply, on the caller's thread: each draft's
@@ -148,17 +150,17 @@ public sealed class CheckSnapshot
             var inputs = new Dictionary<string, byte[]>(StringComparer.Ordinal);
             foreach (var (name, path, draft) in files)
             {
+                if (project.Paths.Refusal(name) is { } unsafePath) throw new IOException(unsafePath);
                 if (draft is not null) inputs["data/" + name] = Encoding.UTF8.GetBytes(new DataFormat().Write(draft));
                 else if (File.Exists(path)) inputs["data/" + name] = File.ReadAllBytes(path);
             }
             // A file put in the folder by another program is checked too, without waiting for the editor to list it (A066).
-            var onDisk = Directory.Exists(dataFolder) ? Directory.EnumerateFiles(dataFolder, "*.json").Order(StringComparer.Ordinal) : Enumerable.Empty<string>();
-            foreach (var path in onDisk)
-                inputs.TryAdd("data/" + Path.GetFileName(path), File.ReadAllBytes(path));
+            foreach (var (name, path) in project.Paths.Files(missingIsEmpty: true).OrderBy(file => file.Name, StringComparer.Ordinal))
+                inputs.TryAdd("data/" + name, File.ReadAllBytes(path));
             foreach (var schema in Directory.EnumerateFiles(schemaFolder, "*.json"))
                 inputs["schemas/" + Path.GetFileName(schema)] = File.ReadAllBytes(schema);
             if (mapText is not null) inputs["map"] = Encoding.UTF8.GetBytes(mapText);
-            return new CheckSnapshot(inputs, signature, plain, same) { schemaFor = schemaFor };
+            return new CheckSnapshot(inputs, signature, plain, same) { schemaFor = schemaFor, recursive = project.Recursive, admit = project.Admission };
         };
     }
 
@@ -238,11 +240,13 @@ public sealed class CheckSnapshot
         {
             var parts = new StringBuilder();
             foreach (var (name, draft, path) in listed)
-                parts.Append(name).Append(draft).Append(Stamp(path)).Append('|');   // a draft's file stamped too: one deleted or changed under it shows (A198)
+            {
+                if (project.Paths.Refusal(name) is { } unsafePath) throw new IOException(unsafePath);
+                parts.Append(name).Append(draft).Append(Stamp(path)).Append('|');
+            }   // a draft's file stamped too: one deleted or changed under it shows (A198)
             // Files on disk the editor hasn't listed yet count too, so one added outside makes a result stale at once (A066).
-            var onDisk = Directory.Exists(dataFolder) ? Directory.EnumerateFiles(dataFolder, "*.json").Order(StringComparer.Ordinal) : Enumerable.Empty<string>();
-            foreach (var path in onDisk.Where(p => !names.Contains(Path.GetFileName(p))))
-                parts.Append(Path.GetFileName(path)).Append(Stamp(path)).Append('|');
+            foreach (var (name, path) in project.Paths.Files(missingIsEmpty: true).OrderBy(file => file.Name, StringComparer.Ordinal).Where(file => !names.Contains(file.Name)))
+                parts.Append(name).Append(Stamp(path)).Append('|');
             foreach (var schema in Directory.EnumerateFiles(schemaFolder, "*.json").Order(StringComparer.Ordinal))
                 parts.Append(Path.GetFileName(schema)).Append(Stamp(schema)).Append('|');
             return parts.ToString();
@@ -263,9 +267,17 @@ public sealed class CheckSnapshot
         Directory.CreateDirectory(Path.Combine(folder, "data"));
         Directory.CreateDirectory(Path.Combine(folder, "schemas"));
         foreach (var (name, bytes) in inputs)
-            File.WriteAllBytes(name == "map" ? Path.Combine(folder, "reference_map.json") : Path.Combine(folder, name.Replace('/', Path.DirectorySeparatorChar)), bytes);
+        {
+            var target = name == "map" ? Path.Combine(folder, "reference_map.json") : Path.Combine(folder, name.Replace('/', Path.DirectorySeparatorChar));
+            if (recursive && new DataPaths(folder, true).Refusal(Path.GetRelativePath(folder, target).Replace('\\', '/')) is { } unsafePath)
+                throw new IOException(unsafePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            if (recursive && new DataPaths(folder, true).Refusal(Path.GetRelativePath(folder, target).Replace('\\', '/')) is { } changed)
+                throw new IOException(changed);
+            File.WriteAllBytes(target, bytes);
+        }
         map = Text("map") is { } m ? ReferenceMap.Read(m) : null;
-        var copy = DataProject.Open(Path.Combine(folder, "data"), Path.Combine(folder, "schemas"), readOnly: true);
+        var copy = DataProject.Open(Path.Combine(folder, "data"), Path.Combine(folder, "schemas"), readOnly: true, recursive: recursive, admit: admit);
         copy.SchemaFor = schemaFor;   // or a check's copy would refuse the files the project opens
         return copy;
     }

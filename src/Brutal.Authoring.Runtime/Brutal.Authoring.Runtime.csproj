@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Game-facing, read-only saved assets. Framework only: no editor, importer, renderer or packages. -->
+</Project>

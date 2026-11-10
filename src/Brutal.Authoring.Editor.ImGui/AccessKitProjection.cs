@@ -37,8 +37,10 @@ public enum AccessKitProjectedRole
     Tab,
     /// <summary>A dialog.</summary>
     Dialog,
-    /// <summary>A status region, without an implicit live-announcement policy.</summary>
+    /// <summary>A status region, encoded as polite and atomic by the native adapter.</summary>
     Status,
+    /// <summary>A custom-drawn canvas, retaining its value and selectable children.</summary>
+    Canvas,
 }
 
 /// <summary>One managed node for the pinned native encoder. Children and bounds are fully specified on replacement.</summary>
@@ -101,6 +103,7 @@ public sealed class AccessKitProjection
         UiRole.Tab => AccessKitProjectedRole.Tab,
         UiRole.Dialog => AccessKitProjectedRole.Dialog,
         UiRole.Status => AccessKitProjectedRole.Status,
+        UiRole.Canvas => AccessKitProjectedRole.Canvas,
         _ => throw new ArgumentOutOfRangeException(nameof(role)),
     };
 

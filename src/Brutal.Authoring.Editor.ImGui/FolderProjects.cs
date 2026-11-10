@@ -36,9 +36,21 @@ internal static class FolderProjects
                     var schemas = Full(paths.Schemas);
                     if (!Directory.Exists(data) || !Directory.Exists(schemas))
                     { why = $"{ProjectLoader.NameOf(provider)} returned a data or schema folder that doesn't exist."; return null; }
-                    var map = AdapterMap.Resolve(explicitMap, data, null, folder)
+                    string? root = null;
+                    if (paths.Root is not null)
+                    {
+                        if (string.IsNullOrWhiteSpace(paths.Root))
+                        { why = $"{ProjectLoader.NameOf(provider)} returned an empty project root."; return null; }
+                        root = Full(paths.Root);
+                        if (!Directory.Exists(root))
+                        { why = $"{ProjectLoader.NameOf(provider)} returned a project root that doesn't exist."; return null; }
+                        var relative = Path.GetRelativePath(root, data);
+                        if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+                        { why = $"{ProjectLoader.NameOf(provider)} returned a project root that doesn't contain its data folder."; return null; }
+                    }
+                    var map = AdapterMap.Resolve(explicitMap, data, null, root ?? folder)
                         ?? (paths.Map is { Length: > 0 } supplied ? Full(supplied) : null);
-                    return new(new ProjectPaths(data, schemas, map) { Folder = folder }, provider);
+                    return new(new ProjectPaths(data, schemas, map) { Folder = folder, Root = root }, provider);
                 }
             }
             why = $"{folder} doesn't hold a data folder and a schemas folder, and no adapter recognises it. Choose the two folders separately.";

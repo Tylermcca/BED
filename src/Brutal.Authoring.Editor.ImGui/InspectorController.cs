@@ -162,9 +162,11 @@ internal sealed class InspectorController<TDoc> where TDoc : class
         var selection = string.Join(",", Editor.Selection);
         // A box's live typing mustn't outlive a change of selection, or Enter writes it into the same field of another object
         // (found by A096). Only then do the ids change, which makes ImGui let go of the box.
+        if(selection!=lastSelection)nudgeKey=null;
         if (selection != lastSelection && wasEditing) fieldEpoch++;
         lastSelection = selection;
         if (fieldEpoch > 0) ImGui.PushID(fieldEpoch);
+        Ui.TextWrapped("Number fields: Up/Down +/-1; Shift x10; Ctrl x0.1. Release the arrows to finish one undo step."u8);
         var top = Inspector.Rows();
         foreach (var row in top) InspectorRowView(row, selection, top);
         if (fieldEpoch > 0) ImGui.PopID();
@@ -404,6 +406,8 @@ internal sealed class InspectorController<TDoc> where TDoc : class
             return;
         }
         if (row.Kind != PropertyKind.Toggle) label = Fit(row, label);
+        // Override markers and label wrapping change the display, never the focused field identity.
+        label += "###field";
         switch (row.Kind)
         {
             case PropertyKind.Choice:   // a dropdown of the allowed values (an enum, say)
@@ -469,14 +473,41 @@ internal sealed class InspectorController<TDoc> where TDoc : class
     // A text box for a field. What was typed is committed on Enter or on leaving the box. When the edit is refused, the
     // typed text stays in the box to be corrected rather than snapping back (found by A031); a successful edit, or the
     // selection changing, clears it.
-    private void TextField(InspectorRow row, string label, string shown, Func<string, (bool Ok, string? Why)> commit)
+    private unsafe void TextField(InspectorRow row, string label, string shown, Func<string, (bool Ok, string? Why)> commit)
     {
         var key = string.Join(",", Editor.Selection) + "/" + row.Id;
         drawnFields.Add(key);
         if (TooLong(shown, out var said)) { Ui.TextDisabled(said); return; }
         if (!textFields.TryGetValue(key, out var field) || (!ImGui.IsAnyItemActive() && !keptTyped.Contains(key) && Text(field) != shown))
             textFields[key] = field = TextBox(shown);
-        var entered = Ui.InputText(label, field, ImGuiInputTextFlags.EnterReturnsTrue);
+        var numeric=row.Kind is PropertyKind.Number or PropertyKind.Integer;
+        // Native history callbacks own Up/Down and update only the text preview until both arrows are released.
+        int Nudge(ImGuiInputTextCallbackData* raw)
+        {
+            var text=System.Runtime.InteropServices.Marshal.PtrToStringUTF8((nint)(byte*)raw->Buf,raw->BufTextLen)??"";
+            if(!double.TryParse(text,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out var value)||!double.IsFinite(value))
+            {status="Enter a finite number before nudging.";return 0;}
+            var io=ImGui.GetIO();var step=(io.KeyShift?10:1)*(io.KeyCtrl?.1:1);
+            var next=value+(raw->EventKey==ImGuiKey.UpArrow?step:-step);
+            if(!double.IsFinite(next)||row.Range is {} range&&!range.Allows(next))
+            {status="That nudge is outside this field's allowed range.";return 0;}
+            if(row.Kind==PropertyKind.Integer&&next!=Math.Truncate(next))
+            {status="This field needs a whole number; use Up/Down or Shift+Up/Down.";return 0;}
+            if(nudgeKey!=key){nudgeKey=key;nudgeRevision=Editor.Session.Revision;}
+            var data=new ImGuiInputTextCallbackDataPtr(raw);data.DeleteChars(0,raw->BufTextLen);
+            data.InsertChars(0,next.ToString("R",System.Globalization.CultureInfo.InvariantCulture));
+            return 0;
+        }
+        var entered = Ui.InputText(label, field, ImGuiInputTextFlags.EnterReturnsTrue|(numeric?ImGuiInputTextFlags.CallbackHistory:0),numeric?Nudge:null);
+        if(numeric)Ui.NameItem(label,row.Label); // Fit may draw the visible label above a hidden native label.
+        var finishedNudge=false;
+        if(nudgeKey==key&&(!ImGui.IsItemActive()||(!ImGui.IsKeyDown(ImGuiKey.UpArrow)&&!ImGui.IsKeyDown(ImGuiKey.DownArrow))))
+        {
+            nudgeKey=null;
+            if(Editor.Session.Revision!=nudgeRevision)
+            {ImGui.Internal.ClearActiveID();field.SetValue(shown.AsSpan());status="The document changed; nudge the current value again.";return;}
+            finishedNudge=true;
+        }
         if (ImGui.IsItemActive()) editing = (key, field, shown, commit);
         if (Text(field) == shown)
         {
@@ -484,7 +515,8 @@ internal sealed class InspectorController<TDoc> where TDoc : class
             keptInList.Remove(key);
             return;
         }
-        if (!(entered || ImGui.IsItemDeactivatedAfterEdit())) return;
+        if(nudgeKey==key)return;
+        if (!(entered || finishedNudge || ImGui.IsItemDeactivatedAfterEdit())) return;
         var (ok, why) = commit(Text(field));
         if (ok) { keptTyped.Remove(key); keptInList.Remove(key); }
         else
@@ -499,6 +531,8 @@ internal sealed class InspectorController<TDoc> where TDoc : class
         ReportField(row, ok, why);
     }
 
+    private string? nudgeKey;
+    private long nudgeRevision;
     private readonly HashSet<string> keptTyped = new(StringComparer.Ordinal);
     private (string Key, ImInputString Field, string Shown, Func<string, (bool Ok, string? Why)> Commit)? editing;
     private bool wasEditing;

@@ -12,11 +12,28 @@ public sealed class SceneRenderItem
     internal SceneRenderItem(ViewportItem item)
     {
         Id = item.Id; World = item.World; Colour = item.Colour;
-        if (!Enum.IsDefined(item.Mesh.Uv0Origin)) throw new ArgumentException("Unknown mesh UV origin.");
-        var uv = item.Mesh.Uv0 ?? [];
-        Payload = new(item.Mesh.Positions, item.Mesh.Normals ?? [],
-            item.Mesh.Uv0Origin == MeshUv0Origin.ObjBottomLeft ? uv.Select(p => new Vector2(p.X, 1f - p.Y)) : uv, item.Mesh.Indices,
-            item.Mesh.Material ?? DisplayMaterial(item.Colour));
+        MeshPayload Capture(MeshData mesh)
+        {
+            if (!Enum.IsDefined(mesh.Uv0Origin)) throw new ArgumentException("Unknown mesh UV origin.");
+            var uv = mesh.Uv0 ?? [];
+            return new(mesh.Positions, mesh.Normals ?? [],
+                mesh.Uv0Origin == MeshUv0Origin.ObjBottomLeft ? uv.Select(p => new Vector2(p.X, 1f - p.Y)) : uv,
+                mesh.Indices, mesh.Material ?? DisplayMaterial(item.Colour));
+        }
+        Payload = Capture(item.Mesh);
+        if (item.Mesh.Parts is { } parts)
+        {
+            if (parts.Count == 0 || parts.Any(p => p is null || p.Parts is not null))
+                throw new ArgumentException("Mesh parts must be a nonempty, non-nested list.");
+            var captured = parts.Select(Capture).ToArray();
+            var positions = captured.SelectMany(p => p.Positions);
+            var offset = 0; var indices = new List<int>();
+            foreach (var part in captured) { indices.AddRange(part.Indices.Select(i => checked(i + offset))); offset = checked(offset + part.Positions.Count); }
+            if (!Payload.Positions.SequenceEqual(positions) || !Payload.Indices.SequenceEqual(indices))
+                throw new ArgumentException("Combined mesh geometry must match its ordered parts.");
+            Payloads = Array.AsReadOnly(captured);
+        }
+        else Payloads = Array.AsReadOnly(new[] { Payload });
         if (string.IsNullOrWhiteSpace(Id) || !Finite(World))
             throw new ArgumentException("A scene item requires a stable ID and finite transform.");
     }
@@ -26,14 +43,18 @@ public sealed class SceneRenderItem
     public Matrix4x4 World { get; }
     /// <summary>The original packed display color, retained for existing CPU and triangle consumers.</summary>
     public uint Colour { get; }
-    /// <summary>Owned immutable geometry and material; not a texture admission or resource lease.</summary>
+    /// <summary>Combined immutable geometry for compatibility and CPU picking. Material consumers use Payloads for every part.</summary>
     public MeshPayload Payload { get; }
+    /// <summary>All immutable ordered material parts. A single-part mesh contains exactly the existing Payload.</summary>
+    public IReadOnlyList<MeshPayload> Payloads { get; }
     /// <summary>Owned model-space positions in source order, compatible with existing consumers.</summary>
     public IReadOnlyList<Vector3> Positions => Payload.Positions;
     /// <summary>Owned triangle indices in source order, compatible with existing consumers.</summary>
     public IReadOnlyList<int> Indices => Payload.Indices;
-    internal ViewportItem MutableCopy() => new(Id, World, new(Positions.ToArray(), Indices.ToArray())
-    { Normals = Payload.Normals.ToArray(), Uv0 = Payload.Uv0.ToArray(), Uv0Origin = MeshUv0Origin.TopLeft, Material = Payload.Material }, Colour);
+    private static MeshData Copy(MeshPayload payload) => new(payload.Positions.ToArray(), payload.Indices.ToArray())
+    { Normals = payload.Normals.ToArray(), Uv0 = payload.Uv0.ToArray(), Uv0Origin = MeshUv0Origin.TopLeft, Material = payload.Material };
+    internal ViewportItem MutableCopy() => new(Id, World, Copy(Payload) with
+    { Parts = ReferenceEquals(Payloads[0], Payload) ? null : Array.AsReadOnly(Payloads.Select(Copy).ToArray()) }, Colour);
     private static SceneMaterial DisplayMaterial(uint colour)
     {
         static float Linear(uint channel)

@@ -123,6 +123,52 @@ class ReadmeStepsTests(unittest.TestCase):
         root = repository()
         validate(root, (root/"README.md").read_text(encoding="utf-8-sig"))
 
+    def test_level_walkthrough_names_existing_controls_and_separates_download_from_development(self):
+        root = repository()
+        text = (root/"README.md").read_text(encoding="utf-8-sig")
+        for word in ("SceneStarterProject", "level.json", "Add selected object", "Position X", "**Play**", "**Stop**"):
+            self.assertIn(word, text)
+        for page in ("levels", "assets", "playing", "exporting"):
+            self.assertIn(f"docs/guide/{page}.md", text)
+            self.assertTrue((root/f"docs/guide/{page}.md").is_file())
+        placement = (root/"src/Brutal.Authoring.Editor.ImGui/DataWorkspace.SceneAssets.cs").read_text(encoding="utf-8-sig")
+        self.assertIn("Add selected object", placement)
+        launcher = (root/"src/Brutal.Authoring.Launcher/Brutal.Authoring.Launcher.csproj").read_text(encoding="utf-8-sig")
+        # The build must supply the adapter; the reader need not learn its assembly name.
+        self.assertIn("SceneStarterAdapter/SceneStarterAdapter.csproj", launcher)
+        self.assertIn("samples/SceneStarterProject", launcher)
+        self.assertIn("0.2.1-rc.1", text)
+        self.assertIn("The download includes a level sample", text)
+        self.assertIn("samples\scene-starter", text)
+        self.assertIn("#build-from-source", text)
+        self.assertNotIn("next preview download", text)
+        self.assertNotIn("Export build** is the next integration step", text)
+
+    def test_export_steps_name_landed_menu_controls_and_keep_copy_gate_and_empty_folder_rule(self):
+        root = repository()
+        text = (root/"docs/guide/exporting.md").read_text(encoding="utf-8-sig")
+        readme = (root/"README.md").read_text(encoding="utf-8-sig")
+        window = (root/"src/Brutal.Authoring.Editor.ImGui/EditorWindow.cs").read_text(encoding="utf-8-sig")
+        dialog = (root/"src/Brutal.Authoring.Editor.ImGui/ExportBuildDialog.cs").read_text(encoding="utf-8-sig")
+        self.assertIn('Choice("Export build..."', window)
+        for label in ("Build saved files", "Destination folder", "Copy build to folder..."):
+            self.assertIn(label, text)
+            self.assertIn(label, readme)
+            self.assertIn(f'"{label}"u8', dialog)
+        self.assertIn("Cancel export", text)
+        self.assertIn("only after verification succeeds", text)
+        self.assertIn("new or empty", text)
+        self.assertIn("refuses a destination that already contains files", text)
+        self.assertIn("Export build is in BED **0.2.1-rc.1** and later", text)
+        self.assertNotIn("development build", text)
+
+    def test_reader_guides_omit_old_protocol_and_implementation_jargon(self):
+        root = repository()
+        text = "\n".join((root/file).read_text(encoding="utf-8-sig") for file in (
+            "README.md", "docs/guide/levels.md", "docs/guide/assets.md", "docs/guide/playing.md", "docs/guide/building.md"))
+        for old in ("runtime peer", "catalog-backed", "parent/local transforms", "linked readiness exchange", "bounded sample protocol"):
+            self.assertNotIn(old, text)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(dir=os.environ.get("A379_FIXTURE_ROOT"))
         self.addCleanup(self.temp.cleanup)

@@ -607,7 +607,59 @@ Read `checks.png`: the completed name check is clean after the draft rename. The
 
 `PanelSide.Right` docks it on the right; other right-side panels can share that space as tabs. The proof temporarily closes the custom panel to expose Checks, then reverses them for `panel.png`. Read that image too: it must say Lamp count: 2 and explain the intensity rule. This small status panel belongs on the right. For a large map use PanelSide.Centre, as in [the complete map composition](start_here.md#map-inside-the-adapter); Width is only an initial floating-size hint, not an override of the dock's allocated region. Draw the map using the available content height. The panel is read-only. For editable controls, submit session commands so validation, undo and the draft all agree; do not change JSON or disk behind the session.
 
-## A play mode across files
+## Give Play the game's saved-file command
+
+Implement `DefaultPlay(ProjectPaths)` to suggest the program, literal arguments, working folder and optional build command. BED uses these defaults when `.bed/project.json` has no Play settings. Saved fields override defaults; omitted fields inherit them, and an empty argument array clears default arguments. The adapter does not write settings or approve a command.
+
+`ProjectPaths.Root` is the project root for Play settings, relative program/build paths and the saved asset cache. It is separate from `Data`: your data may live several folders below it. A folder provider should return an absolute Root, or a Root relative to the folder being inspected. It must exist and contain the returned data folder. Keep it when translating project paths. BED supplies a resolved absolute Root to `DefaultPlay`; do not reconstruct it from the parent of nested data.
+
+This standalone adapter uses a nonstandard `content/game` layout. Compile it in a separate class library with the same reference as P02; replace its example paths and arguments with your game's actual build output and command. Its game must accept `--project .` and read saved files from that folder. Discovery and default settings only describe files and commands; neither launches anything.
+
+<!-- DOC09 compiling Play adapter -->
+```csharp
+using System;
+using System.IO;
+using Brutal.Authoring.Data;
+using Brutal.Authoring.Editor;
+using Brutal.Authoring.Editor.ImGui;
+
+// INVENTED example layout and command; BORROWED public adapter contract.
+public sealed class SavedGameAdapter : IProjectAdapter
+{
+    public string Name => "Saved game example";
+
+    public ProjectPaths? FindProject(string folder)
+    {
+        var root = Path.GetFullPath(folder);
+        var data = Path.Combine(root, "content", "game");
+        var schemas = Path.Combine(root, "schemas");
+        return Directory.Exists(data) && Directory.Exists(schemas)
+            ? new ProjectPaths(data, schemas) { Root = root }
+            : null;
+    }
+
+    public DataProject Open(ProjectPaths paths) => DataProject.Open(paths.Data, paths.Schemas);
+    public void Configure(EditorModel<DataDocument> editor, DataTableView table) { }
+
+    public PlaySettings? DefaultPlay(ProjectPaths paths)
+    {
+        var root = paths.Root ?? throw new ArgumentException("Supply the project root.");
+        return new PlaySettings(
+            program: Path.Combine(root, "src", "Game", "bin", "Release", "net10.0", "Game.exe"),
+            arguments: ["--project", "."],
+            workingFolder: root,
+            build: new PlayBuildSettings("dotnet",
+                ["build", "src/Game/Game.csproj", "-c", "Release"],
+                ["src/**/*.cs", "src/**/*.csproj", "Directory.*.props"]));
+    }
+}
+```
+
+Play offers the normal save decision for pending edits and runs the game against saved files. Build and Play runs the declared build from the project root, then starts the same program; input globs let BED detect when a rebuild is needed. The build command and programs outside the project still require the person's exact-command approval. A changed command needs approval again. Keep arguments as separate strings, never a shell command line. See [Play](playing.md) for settings, freshness checks and stopping.
+
+## An in-process play mode across files
+
+The following is the separate embedded preview API. For the game executable and the common F5 command, use `DefaultPlay` above.
 
 A play mode (`PlayMode<DataDocument>`) is handed only its own file's document. When a game needs more than one file, implement the other overload, `Configure(DataWorkspace workspace, DataFile file, EditorModel<DataDocument> editor, DataTableView table)`; the general app calls it, and by default it calls the two-argument one. Register the mode there, and have its `Start` read each file's current draft from `workspace.Project` (`Find(name)?.Session?.Current`) when Play is pressed: that's what the person sees, unsaved edits included. Never read the files from disk behind the editor, and never write anything while starting or playing.
 
@@ -702,13 +754,12 @@ The default returns null. Non-null recognises that folder and selects that adapt
 `new ProjectPaths("content", "content")` after checking its own marker. Decline unrelated folders with null.
 This is discovery only: do not write files or start a game from this method.
 
-BED tries the standard `data/` plus `schemas/` layout first. If absent, it asks the explicitly selected
-adapter, or otherwise the discovered adapters in order, stopping at the first non-null answer.
+An explicitly selected adapter gets the first chance to recognise the folder; a null answer falls back to the standard layout. With automatic selection, BED tries the standard `data/` plus `schemas/` layout first, then asks the discovered adapters in order, stopping at the first non-null answer.
 Relative returned paths resolve against the original folder. Empty/missing/invalid folders or an adapter
 exception produce a plain refusal, never an automatic switch to another provider. The normal project loader
 still validates schemas and maps before opening a workspace.
 
-Map order is an explicit map, `reference_map.json` in the original folder, the provider's Map,
+Map order is an explicit map, `reference_map.json` in the declared Root (or the original folder when Root is absent), the provider's Map,
 then the existing adapter-DLL sidecar. Explicit data/schema arguments remain explicit and bypass folder discovery.
 `ProjectLauncher.OpenFolder(folder, explicitMap)` exposes the positional-folder map override; old OpenFolder calls remain valid.
 

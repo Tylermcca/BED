@@ -43,6 +43,12 @@ public sealed class ViewportView<TDoc> where TDoc : class
     public IReadOnlyList<ScaleHandle> ScaleTargets=>scaleTargets;
     /// <summary>Scale-factor delta snap; 0.1 means ten percent. Nonpositive disables it; Alt toggles it.</summary>
     public float ScaleSnap { get; set; }=.1f;
+    internal Func<string?>? TransformRefusal;
+    private bool MayTransform()
+    {
+        if(TransformRefusal?.Invoke() is not {} why)return true;
+        Said=why;return false;
+    }
     private bool focusCanvas;
     /// <summary>Current implemented tool; switch through SetTool so an active capture is cancelled.</summary>
     public ViewportTool Tool { get; private set; }
@@ -186,7 +192,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
         if(scaleGesture is not null && (!scaleGesture.Validate(Source) || scaleCapture is not { } scaling
             || scaling.Snap!=ScaleSnap || scaling.Camera!=Camera)) CancelScale();
         var toolbar = ToV(ImGui.GetCursorScreenPos());
-        var header = ImGui.GetFrameHeightWithSpacing();
+        var header = 2*ImGui.GetFrameHeightWithSpacing();
         var origin = toolbar + new Vector2(0,header);
         var size = Vector2.Max(ToV(ImGui.GetContentRegionAvail())-new Vector2(0,header), new Vector2(64, 64));
         if(moveCapture is { } move && move.Size!=size) CancelMove();
@@ -219,6 +225,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
         var displayed = scaleGesture is { Active:true } scalingPreview ? scalingPreview.PreviewDocument
             : rotationGesture is { Active:true } rotating ? rotating.PreviewDocument : Editor.Session.Current;
         var items = Source.Items(displayed).ToList();
+        var selectionSummary=SelectionSummary(ReferenceEquals(displayed,Editor.Session.Current)?items:Source.Items(Editor.Session.Current).ToList());
         if (drag is { } d && dragTo is { } to)   // show the object where it's being dragged to
             items = items.Select(i => i.Id == d.Id ? i with { World = i.World * Matrix4x4.CreateTranslation(to - d.Start) } : i).ToList();
         if (moveGesture is { Active: true } moving)
@@ -258,18 +265,19 @@ public sealed class ViewportView<TDoc> where TDoc : class
             if(presenter.TryImage(renderViewId,frame,RenderIdentity,out var image,out var why,MaterialCatalog))
             {
                 draw.AddImage(image,ToF(origin),ToF(origin+size));gpu=true;RenderStatus=why;
-                if(MaterialCatalog is null&&frame.Items.Any(i=>i.Payload.Material.TextureAssetGuid is not null))
+                if(MaterialCatalog is null&&frame.Items.Any(i=>i.Payloads.Any(p=>p.Material.TextureAssetGuid is not null)))
                     RenderStatus="Material texture placeholder: no admitted catalog.";
             }
             else RenderStatus="CPU view: "+why;
         }
-        if(!gpu&&RenderRequest?.Items.Any(i=>i.Payload.Material.TextureAssetGuid is not null)==true)
+        if(!gpu&&RenderRequest?.Items.Any(i=>i.Payloads.Any(p=>p.Material.TextureAssetGuid is not null))==true)
             RenderStatus+=(RenderStatus.Length==0?"CPU view: ":" ")+"Material textures are not displayed.";
         DrawItems(draw, items, origin, size, treeCanvas,paint:!gpu);
         DrawMoveHandles(draw, items, origin, size, treeCanvas);
         if (focused && ImGui.GetCurrentContext().NavCursorVisible)   // inside the canvas, where nothing drawn over it hides it
             draw.AddRect(ToF(origin + new Vector2(2, 2)), ToF(origin + size - new Vector2(2, 2)), ImGui.GetColorU32(ImGuiCol.NavCursor), 0, ImDrawFlags.None, 2);
         DrawNavigationStatus(draw, origin, size, treeCanvas);
+        DrawSelectionStatus(draw,origin,size,treeCanvas,selectionSummary);
         draw.PopClipRect();
         Input(hovered, origin, size);
         if (focused) Keyboard();
@@ -283,8 +291,28 @@ public sealed class ViewportView<TDoc> where TDoc : class
         ImGui.SameLine();
         if(Ui.SmallButton("Scale (S)"u8)) SetTool(ViewportTool.Scale);
         Ui.EndDisabled();
+        var snapping=Grid.Enabled;
+        if(Ui.Checkbox("Snap (B)"u8,ref snapping))SetSnapping(snapping);
+        ImGui.SameLine();ImGui.SetNextItemWidth(100);
+        var step=Grid.Size.X.ToString("0.##",System.Globalization.CultureInfo.InvariantCulture)+" m";
+        if(Ui.BeginCombo("Grid step (m)"u8,step))
+        {
+            foreach(var choice in new[]{.1f,.25f,.5f,1f})
+                if(Ui.Selectable(choice.ToString("0.##",System.Globalization.CultureInfo.InvariantCulture)+" m",Grid.Size==new Vector3(choice)))
+                {CancelInput();Grid=Grid with{Size=new Vector3(choice)};focusCanvas=true;}
+            Ui.EndCombo();
+        }
         Ui.EndDisabled();
         ImGui.SetCursorScreenPos(after); ImGui.Dummy(new float2(0,0));
+    }
+
+    private void SetSnapping(bool enabled)
+    {
+        CancelInput();
+        var size=Grid.Size;
+        if(!float.IsFinite(size.X)||!float.IsFinite(size.Y)||!float.IsFinite(size.Z)||size.X<=0||size.Y<=0||size.Z<=0)size=new(.5f);
+        Grid=Grid with{Enabled=enabled,Size=size};RotationSnap=enabled?MathF.PI/12:0;
+        Said=enabled?"Move snapping on; rotation snaps to 15 degrees.":"Move and rotation snapping off.";focusCanvas=true;
     }
 
     // The keys while it has the keyboard focus (see the class summary). Arrows are its own: ImGui's move to a neighbour
@@ -295,6 +323,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
         var keys = ImGui.GetIO();
         if (!keys.KeyCtrl && !keys.KeyAlt && !keys.KeySuper && !keys.WantTextInput)
         {
+            if (ImGui.IsKeyPressed(ImGuiKey.B, false)) SetSnapping(!Grid.Enabled);
             if (ImGui.IsKeyPressed(ImGuiKey.F, false)) FrameSelected();
             if (ImGui.IsKeyPressed(ImGuiKey.G, false)) SetTool(ViewportTool.Move);
             if (ImGui.IsKeyPressed(ImGuiKey.R, false)) SetTool(ViewportTool.Rotate);
@@ -336,8 +365,8 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private void DrawNavigationStatus(ImDrawListPtr draw,Vector2 origin,Vector2 size,int canvas)
     {
-        var step=Grid.Enabled&&Grid.Size.X>0?Grid.Size.X:1f;
-        var status="F: frame selected | Right-drag: orbit | Shift+right-drag: pan\nWheel or +/-: zoom | Grid: "+step.ToString("0.###",System.Globalization.CultureInfo.InvariantCulture)+" m";
+        var step=Grid.Size.X>0?Grid.Size.X:.5f;
+        var status="F: frame selected | Right-drag: orbit | Shift+right-drag: pan\nWheel or +/-: zoom | Grid: "+step.ToString("0.###",System.Globalization.CultureInfo.InvariantCulture)+" m | Snap: "+(Grid.Enabled?"on":"off")+" (B)";
         if(Editor.Playing is not null) status="View navigation unavailable during Play.\nGrid: "+step.ToString("0.###",System.Globalization.CultureInfo.InvariantCulture)+" m";
         var text=ImGui.CalcTextSize(status);var at=origin+new Vector2(8,MathF.Max(8,size.Y-text.Y-ImGui.GetTextLineHeight()-16));
         draw.AddText(ToF(at),new ImColor8(235,235,235,255),status);
@@ -346,6 +375,22 @@ public sealed class ViewportView<TDoc> where TDoc : class
             Editor.Playing is null?null:"a game is playing",false,false,false,null,null,null,canvas,UiActions.None,UiIdKind.Semantic));
     }
 
+    private string SelectionSummary(IReadOnlyList<ViewportItem> items)
+    {
+        if(Editor.Primary is not {} id||items.FirstOrDefault(item=>item.Id==id) is not {} selected)return "No object selected.";
+        var name=Editor.Outline.Label(Editor.Session.Current,id)??id;var position=selected.World.Translation;
+        string Number(float value)=>value.ToString("R",System.Globalization.CultureInfo.InvariantCulture);
+        return (Editor.Selection.Count>1?Editor.Selection.Count+" objects selected. Primary: ":"Selected: ")+name+
+            ". World position: X "+Number(position.X)+", Y "+Number(position.Y)+", Z "+Number(position.Z)+" metres.";
+    }
+    private void DrawSelectionStatus(ImDrawListPtr draw,Vector2 origin,Vector2 size,int canvas,string summary)
+    {
+        var parent=Ui.Tree.At(canvas);Ui.Tree.Update(canvas,parent with{Value=summary});
+        var line=ImGui.GetTextLineHeight();var at=origin+new Vector2(8,MathF.Max(8,size.Y-line*4-20));
+        draw.AddText(ToF(at),new ImColor8(235,235,235,255),summary);
+        var id=(parent.Id^0xA1103UL)*1099511628211UL;
+        Ui.Tree.Record(new(id,UiRole.Status,summary,new(at.X,at.Y,MathF.Max(0,size.X-16),line),true,null,false,false,false,null,null,null,canvas,UiActions.None,UiIdKind.Semantic,ViewportId:parent.ViewportId));
+    }
     // Enter steps through the objects in the order the source gives them.
     private void PickNext(int step)
     {
@@ -360,6 +405,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
     // One grid cell along the ground axis nearest the camera's right (Left, Right) or its facing (Up, Down).
     private void Nudge(string id, int x, int y)
     {
+        if(!MayTransform())return;
         if (Source.Items(Editor.Session.Current).FirstOrDefault(i => i.Id == id) is not { } item) return;
         var right = new Vector3(MathF.Cos(Camera.Yaw), 0, -MathF.Sin(Camera.Yaw));
         var ahead = new Vector3(MathF.Sin(Camera.Yaw), 0, MathF.Cos(Camera.Yaw));
@@ -443,7 +489,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
         if (ImGui.GetIO().KeyCtrl) Editor.Toggle(hit.Id);
         else if (!Editor.Selection.Contains(hit.Id)) Editor.Select(hit.Id);
         Said = $"Picked {hit.Id}.";
-        if(!move) return;
+        if(!move||!MayTransform()) return;
         var item = items.First(i => i.Id == hit.Id);
         var start = item.World.Translation;
         var grab = ray.At(hit.Distance);
@@ -466,6 +512,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private void DrawMoveHandles(ImDrawListPtr draw, List<ViewportItem> items, Vector2 origin, Vector2 size, int canvas)
     {
+        if(TransformRefusal?.Invoke() is not null){moveTargets=[];rotationTargets=[];scaleTargets=[];return;}
         moveTargets = []; rotationTargets=[]; scaleTargets=[];
         var item = Editor.Primary is { } primary ? items.FirstOrDefault(value => value.Id == primary) : null;
         if (item is not null && Editor.Playing is null && Tool==ViewportTool.Move) moveTargets = MoveHandles.Layout(Camera, item.World.Translation, size, MoveBasis, HandleScale);
@@ -529,6 +576,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private bool MoveInput(bool hovered, Vector2 origin, Vector2 size)
     {
+        if(!MayTransform())return false;
         var io=ImGui.GetIO(); var mouse=ToV(io.MousePos)-origin;
         if (moveGesture is not null)
         {
@@ -577,6 +625,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private void DrawRotationRings(ImDrawListPtr draw,Vector3 pivot,Vector2 origin,Vector2 size,int canvas)
     {
+        if(TransformRefusal?.Invoke() is not null){rotationTargets=[];return;}
         rotationTargets=RotationRings.Layout(Camera,pivot,size,MoveBasis,HandleScale);
         foreach(var ring in rotationTargets)
         {
@@ -597,6 +646,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private bool RotationInput(bool hovered,Vector2 origin,Vector2 size)
     {
+        if(!MayTransform())return false;
         var io=ImGui.GetIO(); var mouse=ToV(io.MousePos)-origin;
         if(rotationGesture is not null)
         {
@@ -631,6 +681,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private void NudgeRotation(MoveHandleKind axis,int sign)
     {
+        if(!MayTransform())return;
         if(Source is not IViewportTransformSource<TDoc> source || Editor.Primary is not { } primary
             || Source.Items(Editor.Session.Current).FirstOrDefault(item=>item.Id==primary) is not { } item) return;
         using var gesture=ViewportTransformGesture<TDoc>.Begin(Editor,Source);
@@ -652,6 +703,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private void DrawScaleHandles(ImDrawListPtr draw,Matrix4x4 world,Vector2 origin,Vector2 size,int canvas)
     {
+        if(TransformRefusal?.Invoke() is not null){scaleTargets=[];return;}
         // Keep the captured axes fixed while the preview crosses zero into a mirror.
         scaleTargets=ScaleHandles.Layout(Camera,scaleGesture is { } captured
             && Editor.Primary is { } id ? Source.Items(captured.Document).First(item=>item.Id==id).World : world,size,HandleScale);
@@ -676,6 +728,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private bool ScaleInput(bool hovered,Vector2 origin,Vector2 size)
     {
+        if(!MayTransform())return false;
         var io=ImGui.GetIO(); var mouse=ToV(io.MousePos)-origin;
         if(scaleGesture is not null)
         {
@@ -711,6 +764,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private void NudgeScale(int sign)
     {
+        if(!MayTransform())return;
         if(Source is not IViewportTransformSource<TDoc> source) return;
         using var gesture=ViewportTransformGesture<TDoc>.Begin(Editor,Source);
         if(gesture is null) { Said="This selection cannot be scaled."; return; }
@@ -728,6 +782,7 @@ public sealed class ViewportView<TDoc> where TDoc : class
 
     private void NudgeConstraint(MoveHandleKind kind, int sign)
     {
+        if(!MayTransform())return;
         var io=ImGui.GetIO(); var snapped=Grid.Enabled!=io.KeyAlt;
         var index=kind==MoveHandleKind.X ? 0 : kind==MoveHandleKind.Y ? 1 : 2;
         var cell=snapped && Grid.Size[index]>0 ? Grid.Size[index] : .5f;
@@ -765,27 +820,37 @@ public sealed class ViewportView<TDoc> where TDoc : class
     {
         var tris = new List<(float Depth, Vector2 A, Vector2 B, Vector2 C, ImColor8 Colour)>();
         var eye = Camera.Eye;
+        var selection = Editor.Selection.ToHashSet(StringComparer.Ordinal);
         foreach (var item in items)
         {
-            var selected = Editor.Selection.Contains(item.Id);
+            var selected = selection.Contains(item.Id);
             UiBounds itemBounds = default;
-            var world = item.Mesh.Positions.Select(p => Vector3.Transform(p, item.World)).ToArray();
-            for (var i = 0; i + 2 < item.Mesh.Indices.Length; i += 3)
+            foreach(var mesh in item.Mesh.Parts ?? new[] { item.Mesh })
             {
-                var (a, b, c) = (world[item.Mesh.Indices[i]], world[item.Mesh.Indices[i + 1]], world[item.Mesh.Indices[i + 2]]);
-                var normal = Vector3.Cross(b - a, c - a);
-                if (normal.LengthSquared() < 1e-12f) continue;
-                normal = Vector3.Normalize(normal);
-                var centre = (a + b + c) / 3;
-                if (Vector3.Dot(normal, eye - centre) <= 0) normal = -normal;   // two-sided: mirrored scales still show
-                if (Camera.Project(a, size) is not { } pa || Camera.Project(b, size) is not { } pb || Camera.Project(c, size) is not { } pc) continue;
-                if(!paint && selected)
-                    draw.AddTriangle(ToF(origin+pa.Screen),ToF(origin+pb.Screen),ToF(origin+pc.Screen),new ImColor8(255,200,60,255),1.5f);
-                var min = Vector2.Min(pa.Screen, Vector2.Min(pb.Screen, pc.Screen)) + origin;
-                var max = Vector2.Max(pa.Screen, Vector2.Max(pb.Screen, pc.Screen)) + origin;
-                itemBounds = itemBounds.Union(new(min.X, min.Y, max.X-min.X, max.Y-min.Y));
-                var light = 0.35f + 0.65f * MathF.Max(0, Vector3.Dot(normal, Light));
-                if(paint) tris.Add((Vector3.DistanceSquared(eye, centre), pa.Screen, pb.Screen, pc.Screen, Shade(item.Colour, light, selected)));
+                var colour = mesh.Material is { } material ? PackColour(material.BaseColor) : item.Colour;
+                var world = mesh.Positions.Select(p => Vector3.Transform(p, item.World)).ToArray();
+                var projected = world.Select(p => Camera.Project(p, size)).ToArray();
+                for (var i = 0; i + 2 < mesh.Indices.Length; i += 3)
+                {
+                    var (a, b, c) = (world[mesh.Indices[i]], world[mesh.Indices[i + 1]], world[mesh.Indices[i + 2]]);
+                    var normal = Vector3.Cross(b - a, c - a);
+                    if (normal.LengthSquared() < 1e-12f) continue;
+                    if (projected[mesh.Indices[i]] is not { } pa || projected[mesh.Indices[i + 1]] is not { } pb || projected[mesh.Indices[i + 2]] is not { } pc) continue;
+                    var min = Vector2.Min(pa.Screen, Vector2.Min(pb.Screen, pc.Screen)) + origin;
+                    var max = Vector2.Max(pa.Screen, Vector2.Max(pb.Screen, pc.Screen)) + origin;
+                    itemBounds = itemBounds.Union(new(min.X, min.Y, max.X-min.X, max.Y-min.Y));
+                    // Keep the same semantic bounds and complete GPU request. A CPU triangle wholly
+                    // outside the canvas (plus its outline feather) cannot contribute visible pixels.
+                    if (max.X < origin.X - 2 || max.Y < origin.Y - 2
+                        || min.X > origin.X + size.X + 2 || min.Y > origin.Y + size.Y + 2) continue;
+                    if(!paint && selected)
+                        draw.AddTriangle(ToF(origin+pa.Screen),ToF(origin+pb.Screen),ToF(origin+pc.Screen),new ImColor8(255,200,60,255),1.5f);
+                    normal = Vector3.Normalize(normal);
+                    var centre = (a + b + c) / 3;
+                    if (Vector3.Dot(normal, eye - centre) <= 0) normal = -normal;   // two-sided: mirrored scales still show
+                    var light = 0.35f + 0.65f * MathF.Max(0, Vector3.Dot(normal, Light));
+                    if(paint) tris.Add((Vector3.DistanceSquared(eye, centre), pa.Screen, pb.Screen, pc.Screen, Shade(colour, light, selected)));
+                }
             }
             Ui.RecordCanvasItem(treeCanvas, item.Id, item.Id, itemBounds, selected);
         }
@@ -796,6 +861,12 @@ public sealed class ViewportView<TDoc> where TDoc : class
         foreach (var t in tris.OrderByDescending(t => t.Depth))
             if(paint) draw.AddTriangleFilled(ToF(origin + t.A), ToF(origin + t.B), ToF(origin + t.C), t.Colour);
         draw.Flags = flags;
+    }
+
+    private static uint PackColour(Vector4 linear)
+    {
+        static uint Channel(float x) => (uint)Math.Clamp((int)MathF.Round(255 * (x <= .0031308f ? x * 12.92f : 1.055f * MathF.Pow(x, 1 / 2.4f) - .055f)), 0, 255);
+        return Channel(linear.X) | Channel(linear.Y) << 8 | Channel(linear.Z) << 16 | 0xff000000;
     }
 
     private static ImColor8 Shade(uint colour, float light, bool selected)

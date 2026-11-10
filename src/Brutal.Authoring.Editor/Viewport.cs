@@ -25,6 +25,9 @@ public sealed record MeshData(Vector3[] Positions, int[] Indices)
     /// <summary>Explicit opaque material; null uses the viewport item display color at capture.</summary>
     public SceneMaterial? Material {get;init;}
 
+    /// <summary>Optional ordered, non-nested material parts. Positions and Indices must contain their combined geometry for picking and bounds.</summary>
+    public IReadOnlyList<MeshData>? Parts { get; init; }
+
     /// <summary>A cube one metre across, centred on the origin: the stand-in for an object with no mesh (an empty, a
     /// missing asset).</summary>
     public static readonly MeshData Cube = MakeCube();
@@ -100,6 +103,24 @@ public sealed record Camera(Vector3 Target, float Yaw, float Pitch, float Distan
 
     private const float MaxPitch = 89 * MathF.PI / 180;
 
+    // Camera records are immutable; a with-expression has a new weak identity and cannot reuse
+    // the old pose's matrix. Retain only the latest viewport size for each live camera.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Camera, ProjectMatrix> projectMatrices = new();
+    private sealed class ProjectMatrix
+    {
+        private sealed record Entry(Vector2 Size, Matrix4x4 Matrix);
+        private Entry? latest;
+        internal Matrix4x4 At(Camera camera, Vector2 size)
+        {
+            var current = Volatile.Read(ref latest);
+            if (current is not null && current.Size == size) return current.Matrix;
+            var next = new Entry(size, camera.View * camera.Projection(size));
+            Volatile.Write(ref latest, next);
+            return next.Matrix;
+        }
+    }
+    private Matrix4x4 ViewProjection(Vector2 size) => projectMatrices.GetValue(this, static _ => new()).At(this, size);
+
     /// <summary>The direction it looks: along +Z at yaw 0, tipped down by a positive pitch.</summary>
     public Vector3 Forward => new(MathF.Cos(Pitch) * MathF.Sin(Yaw), -MathF.Sin(Pitch), MathF.Cos(Pitch) * MathF.Cos(Yaw));
 
@@ -117,7 +138,7 @@ public sealed record Camera(Vector3 Target, float Yaw, float Pitch, float Distan
     /// 1 far); null when it's behind the camera.</summary>
     public (Vector2 Screen, float Depth)? Project(Vector3 world, Vector2 size)
     {
-        var clip = Vector4.Transform(new Vector4(world, 1), View * Projection(size));
+        var clip = Vector4.Transform(new Vector4(world, 1), ViewProjection(size));
         if (clip.W <= 1e-6f) return null;
         var ndc = new Vector3(clip.X, clip.Y, clip.Z) / clip.W;
         return (new Vector2((ndc.X + 1) / 2 * size.X, (1 - ndc.Y) / 2 * size.Y), ndc.Z);
@@ -126,7 +147,7 @@ public sealed record Camera(Vector3 Target, float Yaw, float Pitch, float Distan
     /// <summary>The ray from the eye through pixel <paramref name="screen"/> of a viewport of <paramref name="size"/> pixels.</summary>
     public Ray RayAt(Vector2 screen, Vector2 size)
     {
-        Matrix4x4.Invert(View * Projection(size), out var inverse);
+        Matrix4x4.Invert(ViewProjection(size), out var inverse);
         var x = screen.X / size.X * 2 - 1;
         var y = 1 - screen.Y / size.Y * 2;
         var near = Vector4.Transform(new Vector4(x, y, 0, 1), inverse);
@@ -241,11 +262,7 @@ public sealed class SceneViewport(Func<string, MeshData?>? meshes = null) : IVie
     /// <summary>An object's world transform: scale, then rotation, then position, then its parent's, and so on up.</summary>
     public static Matrix4x4 World(Scene scene, string id)
     {
-        var m = Matrix4x4.Identity;
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        for (var o = scene.Find(id); o is not null && seen.Add(o.Id); o = o.Parent is { } p ? scene.Find(p) : null)
-            m *= Matrix4x4.CreateScale(o.Scale) * Matrix4x4.CreateFromQuaternion(o.Rotation) * Matrix4x4.CreateTranslation(o.Position);
-        return m;
+        return SceneViewIndex.For(scene).World(id);
     }
 
     /// <inheritdoc />
@@ -266,7 +283,7 @@ public sealed class SceneViewport(Func<string, MeshData?>? meshes = null) : IVie
     /// <inheritdoc />
     public ICommand<Scene>? MoveTo(Scene scene, string id, Vector3 world)
     {
-        if (scene.Find(id) is not { } o) return null;
+        if (SceneViewIndex.For(scene).Find(id) is not { } o) return null;
         var parent = o.Parent is { } p ? World(scene, p) : Matrix4x4.Identity;
         if (!Matrix4x4.Invert(parent, out var inverse)) return null;
         return new MoveObject(id, Vector3.Transform(world, inverse));

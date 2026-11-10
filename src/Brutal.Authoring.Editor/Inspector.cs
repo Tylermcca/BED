@@ -44,6 +44,13 @@ public sealed record PropertyDescriptor<TDoc, TObj>(string Id, string Label, Pro
 public sealed record ObjectType<TDoc, TObj>(string Id, string Label, Func<TDoc, string, TObj?> Find,
     IReadOnlyList<PropertyDescriptor<TDoc, TObj>> Properties) : IObjectType<TDoc> where TDoc : class where TObj : class
 {
+    // Only fixed built-in finders/descriptor sets opt into the existing row cache.
+    // A host's with-expression replacing either part returns to live null-version behavior.
+    private ObjectType<TDoc, TObj>? StaticRowsSource { get; init; }
+    internal ObjectType<TDoc, TObj> WithStaticRows() => this with { StaticRowsSource = this };
+    long? IObjectType<TDoc>.RowsVersion => StaticRowsSource is { } source
+        && ReferenceEquals(source.Find, Find) && ReferenceEquals(source.Properties, Properties) ? 0 : null;
+
     /// <inheritdoc />
     public IReadOnlyList<InspectorRow> Rows(TDoc document, IReadOnlyList<string> ids)
     {
@@ -401,8 +408,9 @@ public sealed class Inspector<TDoc> where TDoc : class
 
     private bool Run(IReadOnlyList<ICommand<TDoc>> commands)
     {
-        var ok = commands.Count == 1 ? Editor.Session.Execute(commands[0]) : Editor.Session.ExecuteBatch(commands);
-        LastIssues = ok ? [] : Editor.Session.LastIssues;
+        var touches=Editor.Selection.ToArray();
+        var ok = commands.Count == 1 ? Editor.Execute(commands[0],touches) : Editor.ExecuteBatch(commands,touches);
+        LastIssues = ok ? [] : Editor.Refused.Count>0 ? Editor.Refused : Editor.Session.LastIssues;
         return ok;
     }
 

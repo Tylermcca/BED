@@ -94,11 +94,11 @@ public sealed class DataAcceptanceTests
     }
 
     [Fact]
-    public void Missing_final_newline_is_added_by_the_documented_writer_style()
+    public void Missing_final_newline_is_preserved_on_save()
     {
-        // DataDocument.cs:99 promises LF and a final newline; this is the one intentional round-trip normalization.
+        // Existing files keep their exact ending; only newly constructed documents get a final newline.
         const string text = "{ \"n\": 1.0, \"word\": \"雪\" }";
-        Assert.Equal(text + "\n", Format.Write(Format.Read(text)));
+        Assert.Equal(text, Format.Write(Format.Read(text)));
     }
 
     [Fact]

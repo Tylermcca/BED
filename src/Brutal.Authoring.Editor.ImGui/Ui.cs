@@ -165,6 +165,30 @@ public static partial class Ui
         Item(UiRole.TextField, Label(label), id, (flags & ImGuiInputTextFlags.ReadOnly) != 0 ? UiActions.Focus : UiActions.SetValue | UiActions.Focus, value: value);
         return result;
     }
+    /// <summary>Draws a native multiline text field and records the same text, focus, value-action and read-only semantics as InputText.</summary>
+    public static bool InputTextMultiline(ImString label, ImInputString input, in float2 size, ImGuiInputTextFlags flags = 0,
+        ImGuiInputTextCallback? callback = null, nint userData = default)
+    {
+        var id = Im.GetID(label).Value;
+        var oldValue = (flags & ImGuiInputTextFlags.Password) != 0 ? "[password]" : Value(input);
+        var allowed = (flags & ImGuiInputTextFlags.ReadOnly) != 0 ? UiActions.Focus : UiActions.SetValue | UiActions.Focus;
+        var request = BeforeAction(UiRole.TextField, id, label, allowed, value: oldValue);
+        if (request is not null)
+        {
+            var visibleSize = new float2(size.X > 0 ? size.X : Im.CalcItemWidth(), size.Y > 0 ? size.Y : Im.GetTextLineHeight() * 8);
+            if (!Im.IsRectVisible(visibleSize) || System.Text.Encoding.UTF8.GetByteCount(request.Value!) >= input.Capacity) { RejectAction(request); request = null; }
+            else
+            {
+                if (Im.GetCurrentContext().ActiveId.Value == id) Im.Internal.ClearActiveID();
+                input.SetValue(request.Value.AsSpan());
+            }
+        }
+        var result = Im.InputTextMultiline(label, input, size, flags, callback, userData);
+        if (ApplyAction(request)) { FinishTextAction(); result = true; }
+        var value = (flags & ImGuiInputTextFlags.Password) != 0 ? "[password]" : Value(input);
+        Item(UiRole.TextField, Label(label), id, allowed, value: value);
+        return result;
+    }
     /// <summary>Delegate Checkbox to ImGui unchanged and record the corresponding semantic item or scope.</summary>
     public static bool Checkbox(ImString label, ref bool value)
     { var id = Im.GetID(label).Value; var request = BeforeAction(UiRole.Checkbox, id, label, UiActions.Focus | UiActions.Toggle); var result = Im.Checkbox(label, ref value); var synthetic = ApplyAction(request); if (synthetic && !result) value = !value; result |= synthetic; Item(UiRole.Checkbox, Label(label), id, UiActions.Toggle | UiActions.Focus, check: value); return result; }

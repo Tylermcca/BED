@@ -4,7 +4,8 @@ namespace Brutal.Authoring.Data;
 
 /// <summary>
 /// A folder of JSON data files and a folder of their schemas, opened together as one project: the first piece of the
-/// basic-functions plan. Every <c>*.json</c> file directly in the data folder is listed; each opens on demand
+/// basic-functions plan. Every <c>*.json</c> file directly in the data folder is listed (subfolders too when recursive
+/// admission is enabled); each opens on demand
 /// into its own <see cref="DocumentSession{TDoc}"/>, with its own undo, save and outside-change check. A file's schema is
 /// named by its <c>$schema</c> field (the file name is used) or else by its own name (<c>wares.json</c> →
 /// <c>wares.schema.json</c>), the same rule as <c>datacheck</c>.
@@ -44,8 +45,11 @@ public sealed class DataProject
     private readonly Func<string, IValidator<DataDocument>?>? rules;
 
     private DataProject(string dataFolder, string schemaFolder, JsonSchemas schemas, bool readOnly, Func<string, string?>? readOnlyFile,
-        Func<string, IValidator<DataDocument>?>? rules)
+        Func<string, IValidator<DataDocument>?>? rules, bool recursive, Func<string, bool>? admit)
     {
+        Recursive = recursive;
+        Paths = new(dataFolder, recursive, admit);
+        Admission = admit;
         this.readOnlyFile = readOnlyFile;
         this.rules = rules;
         DataFolder = dataFolder;
@@ -54,16 +58,30 @@ public sealed class DataProject
         ReadOnly = readOnly;
     }
 
+    /// <summary>The original five-argument entry point, retained for already compiled adapters. Opens a flat project.</summary>
+    public static DataProject Open(string dataFolder, string schemaFolder, bool readOnly, Func<string, string?>? readOnlyFile,
+        Func<string, IValidator<DataDocument>?>? rules) => Open(dataFolder, schemaFolder, readOnly, readOnlyFile, rules, recursive: false);
+
+    /// <summary>The six-argument recursive entry point, retained for already compiled adapters.</summary>
+    public static DataProject Open(string dataFolder, string schemaFolder, bool readOnly, Func<string, string?>? readOnlyFile,
+        Func<string, IValidator<DataDocument>?>? rules, bool recursive) => Open(dataFolder, schemaFolder, readOnly, readOnlyFile, rules, recursive, admit: null);
+
     /// <summary>Opens a project. Throws <see cref="DirectoryNotFoundException"/> when either folder is missing, and
     /// <see cref="JsonException"/> when a schema isn't valid JSON. No data file is read until it's opened.</summary>
     /// <param name="readOnlyFile">Why a file (by name) may not be saved, or null when it may: a game marks files another
     /// tool writes, such as ones a spreadsheet exports, so the editor never becomes a second, silent writer.</param>
+    /// <param name="admit">Optional pure per-name inclusion rule for recursive mode. Names are canonical relative
+    /// paths. Return false to exclude a file from admission, checks and file operations. Exceptions refuse admission;
+    /// null keeps every JSON file. The same name must always receive the same decision.</param>
+    /// <param name="recursive">Opt in to canonical relative JSON paths in subfolders. Links are never followed;
+    /// the default keeps the existing flat project behavior.</param>
     /// <param name="rules">A game's own rules for a file (by name), checked with its schema on opening and on every edit,
     /// so an edit the game would refuse is refused here, with the game's message: rules between fields a schema can't
     /// state, or the game's own loader. Null when the schema is the whole story.</param>
     public static DataProject Open(string dataFolder, string schemaFolder, bool readOnly = false, Func<string, string?>? readOnlyFile = null,
-        Func<string, IValidator<DataDocument>?>? rules = null)
+        Func<string, IValidator<DataDocument>?>? rules = null, bool recursive = false, Func<string, bool>? admit = null)
     {
+        if (admit is not null && !recursive) throw new ArgumentException("An admission predicate requires recursive mode.", nameof(admit));
         var data = Path.GetFullPath(dataFolder);
         var schemaDir = Path.GetFullPath(schemaFolder);
         if (!Directory.Exists(data)) throw new DirectoryNotFoundException($"there's no data folder at {data}");
@@ -71,13 +89,20 @@ public sealed class DataProject
         // In a shared folder only *.schema.json files are schemas: a broken data file beside them stays one unopened file with
         // its reasons, never a project that can't open (found by A218).
         var shared = string.Equals(data.TrimEnd(Path.DirectorySeparatorChar), schemaDir.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase);
-        var project = new DataProject(data, schemaDir, JsonSchemas.FromFolder(schemaDir, shared ? "*.schema.json" : "*.json"), readOnly, readOnlyFile, rules);
+        var project = new DataProject(data, schemaDir, JsonSchemas.FromFolder(schemaDir, shared ? "*.schema.json" : "*.json"), readOnly, readOnlyFile, rules, recursive, admit);
         project.Refresh();
         return project;
     }
 
     /// <summary>The data folder, as a full path.</summary>
     public string DataFolder { get; }
+
+    /// <summary>Whether JSON files in subfolders are admitted too. Names are canonical forward-slash paths relative
+    /// to DataFolder. Junctions and symbolic links are never followed in this mode.</summary>
+    public bool Recursive { get; }
+
+    internal DataPaths Paths { get; }
+    internal Func<string, bool>? Admission { get; }
 
     /// <summary>The schema folder, as a full path.</summary>
     public string SchemaFolder { get; }
@@ -102,7 +127,7 @@ public sealed class DataProject
     public ProtectedNames? ProtectedNames { get; set; }
 
     /// <summary>Why the file called <paramref name="name"/> may not be saved, or null when it may.</summary>
-    public string? ReadOnlyReason(string name) => ReadOnly ? "the project is open read-only" : readOnlyFile?.Invoke(name);
+    public string? ReadOnlyReason(string name) => ReadOnly ? "the project is open read-only" : Paths.Refusal(name) ?? readOnlyFile?.Invoke(name);
 
     /// <summary>Which schema a file uses, by its name, when that isn't <c>name.schema.json</c> and the file can't say so
     /// itself: many files under one schema that forbids a <c>$schema</c> field. Null falls back to the usual way. Set it
@@ -125,6 +150,23 @@ public sealed class DataProject
     /// slow to run on every edit, or one that needs several files, such as a game's own validator over the whole project.
     /// People and agents both meet it; the edits stay, unsaved, to be corrected. None by default.</summary>
     public Func<DataFile, string?>? SaveCheck { get; set; }
+
+    /// <summary>Raised synchronously on the save caller's thread (the UI completion thread in BED) after dirty files
+    /// have been committed and their sessions marked saved. A dirty single Save raises one notification; SaveAll
+    /// raises one containing only files actually written, after the whole operation. No-op and refused saves do not
+    /// raise it. The list is read-only. Observers cannot veto an already completed save; exceptions are traced and
+    /// contained so other observers still run.</summary>
+    public event Action<IReadOnlyList<DataFile>>? FilesSaved;
+
+    internal void NotifySaved(IReadOnlyList<DataFile> files)
+    {
+        if (files.Count == 0 || FilesSaved is not { } observers) return;
+        var saved = Array.AsReadOnly(files.Distinct().ToArray());
+        foreach (Action<IReadOnlyList<DataFile>> observer in observers.GetInvocationList())
+            try { observer(saved); }
+            catch (Exception error) { System.Diagnostics.Trace.TraceError($"A FilesSaved observer failed after the save completed: {error}"); }
+    }
+
 
     /// <summary>A game's last word before a file is made, renamed, deleted or put back: why it mustn't be, or null. The other
     /// half of <see cref="SaveCheck"/>, which only sees edits: deleting a file others depend on writes no edit. People and
@@ -189,7 +231,7 @@ public sealed class DataProject
     /// edits aren't lost; a missing file that's back returns to unopened, or keeps its session.</summary>
     public void Refresh()
     {
-        var onDisk = Directory.EnumerateFiles(DataFolder, "*.json").Select(Path.GetFileName).OfType<string>()
+        var onDisk = Paths.Files().Select(f => f.Name)
             .Where(n => !SharedFolder || !IsSchemaName(n)).ToHashSet(StringComparer.Ordinal);
         foreach (var name in onDisk.Where(n => files.All(f => f.Name != n))) files.Add(new DataFile(this, name));
         foreach (var f in files) f.Present = onDisk.Contains(f.Name);
@@ -213,6 +255,7 @@ public sealed class DataProject
         if (Judging) return Dirty;   // what it's judging stays as it was: nested, nothing moves
         var going = Dirty.ToList();
         var failed = new List<DataFile>();
+        var committed = new List<DataFile>();
         try
         {
             while (true)
@@ -225,8 +268,10 @@ public sealed class DataProject
                 // Then the writing, and if that fails after all, it's put back and treated like any other refusal (found by A102, L02).
                 if (refused is null)
                 {
-                    if (WriteTogether(going) is not { } couldnt) break;
-                    (refused, why) = couldnt;
+                    var couldnt = WriteTogether(going, out var written);
+                    committed.AddRange(written);
+                    if (couldnt is null) break;
+                    (refused, why) = couldnt.Value;
                     going.RemoveAll(f => !f.Dirty && f != refused);   // one that couldn't be put back is written, and says so
                 }
                 refused.Refuse(why!);
@@ -235,17 +280,20 @@ public sealed class DataProject
             }
         }
         finally { savingTogether = null; }
+        NotifySaved(committed);
         return failed;
     }
 
     // Writes them all, or none. The file that wouldn't go and why, or null if all of them did.
-    private static (DataFile File, string Why)? WriteTogether(IReadOnlyList<DataFile> group)
+    private static (DataFile File, string Why)? WriteTogether(IReadOnlyList<DataFile> group, out IReadOnlyList<DataFile> written)
     {
         var texts = group.Select(f => f.Session!.TextToSave).ToList();
         var result = FileGroup.Write([.. group.Select((f, i) => new GroupFile(f.Path, f.Session!.ExpectedOnDisk, texts[i]))]);
         // Each session is told only what's true of its file: one that holds something unknown stays a draft, and meets it as an outside change.
+        var committed = new List<DataFile>();
         for (var i = 0; i < group.Count; i++)
-            if (result.States[i] == GroupFileState.Written) group[i].Written(texts[i]);
+            if (result.States[i] == GroupFileState.Written) { group[i].Written(texts[i]); committed.Add(group[i]); }
+        written = committed;
         if (result.Failed is not { } failed) return null;
         var stuck = group.Where((_, i) => i != failed && result.States[i] != GroupFileState.AsItWas).Select(f => f.Name).ToList();
         var why = $"{result.Why} {DataFile.WhatToDo}";
@@ -310,11 +358,16 @@ public sealed class DataProject
         var text = new DataFormat().Write(document);
         if (AskFileCheck(new FileChange(FileChangeKind.Create, name, null, text)) is { } stopped) { why = stopped; return false; }
         if (NotWritable() is { } denied) { why = $"{name} can't be made: {denied}"; return false; }
+        if (Recursive && Refusal(name, mustExist: false) is { } changed) { why = changed; return false; }
         if (preview) { why = $"Would make {name} from {schema}: {JsonSerializer.Serialize(root)}"; return true; }
         try
         {
-            using var stream = new FileStream(Path.Combine(DataFolder, name), FileMode.CreateNew);   // never over a file made meanwhile
-            stream.Write(System.Text.Encoding.UTF8.GetBytes(text));
+            if (Recursive) Paths.WriteNew(name, System.Text.Encoding.UTF8.GetBytes(text));
+            else
+            {
+                using var stream = new FileStream(Paths.Target(name), FileMode.CreateNew); // never over a file made meanwhile
+                stream.Write(System.Text.Encoding.UTF8.GetBytes(text));
+            }
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { why = $"{name} can't be written: {e.Message}"; return false; }
         var made = Add(name);
@@ -354,8 +407,12 @@ public sealed class DataProject
         if (preview) { why = $"Would copy {name}."; return true; }
         try
         {
-            using var stream = new FileStream(Path.Combine(DataFolder, name), FileMode.CreateNew);
-            stream.Write(System.Text.Encoding.UTF8.GetBytes(text));
+            if (Recursive) Paths.WriteNew(name, System.Text.Encoding.UTF8.GetBytes(text));
+            else
+            {
+                using var stream = new FileStream(Paths.Target(name), FileMode.CreateNew);
+                stream.Write(System.Text.Encoding.UTF8.GetBytes(text));
+            }
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         { why = $"{name} can't be written: {e.Message}"; return false; }
@@ -393,8 +450,9 @@ public sealed class DataProject
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { why = $"{from} can't be read now: {e.Message}"; return false; }
         if (AskFileCheck(new FileChange(FileChangeKind.Rename, from, to)) is { } stopped) { why = stopped; return false; }
         if (NotWritable() is { } denied) { why = $"{from} can't be renamed: {denied}"; return false; }
+        if (Recursive && (Refusal(from, true) ?? Refusal(to, false)) is { } changed) { why = changed; return false; }
         if (preview) { why = $"Would rename {from} to {to}."; return true; }
-        try { File.Move(file.Path, Path.Combine(DataFolder, to)); }
+        try { File.Move(file.Path, Paths.Target(to)); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { why = $"{from} can't be renamed: {e.Message}"; return false; }
         var wasOpen = file.Session is not null;
         file.Close();
@@ -415,6 +473,7 @@ public sealed class DataProject
         if (file.Dirty) { why = $"{name} has unsaved edits: save them, or close it to drop them, first"; return false; }
         if (AskFileCheck(new FileChange(FileChangeKind.Delete, name)) is { } stopped) { why = stopped; return false; }
         if (NotWritable(file.Path) is { } denied) { why = $"{name} can't be deleted: {denied}"; return false; }
+        if (Recursive && Refusal(name, true) is { } changed) { why = changed; return false; }
         if (preview) { why = $"Would delete {name}."; return true; }
         try
         {
@@ -434,6 +493,7 @@ public sealed class DataProject
     /// again.</summary>
     public bool Restore(string name, out string why)
     {
+        if (Paths.Refusal(name) is { } unsafePath) { why = unsafePath; return false; }
         var at = deleted.FindLastIndex(d => d.Name == name);
         if (at < 0) { why = $"{name} wasn't deleted here"; return false; }
         // A name the host marks read-only isn't written either, even to put a file back (found by A062).
@@ -441,10 +501,14 @@ public sealed class DataProject
         if (AskFileCheck(new FileChange(FileChangeKind.Restore, name, null, System.Text.Encoding.UTF8.GetString(deleted[at].Bytes))) is { } stopped) { why = stopped; return false; }
         try
         {
-            using var stream = new FileStream(Path.Combine(DataFolder, name), FileMode.CreateNew);
-            stream.Write(deleted[at].Bytes);
+            if (Recursive) Paths.WriteNew(name, deleted[at].Bytes);
+            else
+            {
+                using var stream = new FileStream(Paths.Target(name), FileMode.CreateNew);
+                stream.Write(deleted[at].Bytes);
+            }
         }
-        catch (IOException e) { why = $"{name} can't be put back: {e.Message}"; return false; }
+        catch (Exception e) when (e is IOException || Recursive && e is UnauthorizedAccessException) { why = $"{name} can't be put back: {e.Message}"; return false; }
         deleted.RemoveAt(at);
         if (Find(name) is { } kept) kept.Present = true; else Add(name);
         why = $"Restored {name}.";
@@ -469,6 +533,8 @@ public sealed class DataProject
     {
         try
         {
+            if (Paths.SafetyRefusal("probe.json") is { } unsafePath) return unsafePath;
+            if (file is not null && Paths.Refusal(Path.GetRelativePath(DataFolder, file).Replace('\\', '/')) is { } unsafeFile) return unsafeFile;
             if (file is not null && File.Exists(file) && File.GetAttributes(file).HasFlag(FileAttributes.ReadOnly))
                 return $"{Path.GetFileName(file)} is marked read-only on disk";
             var probe = Path.Combine(DataFolder, $".brutal-write-check-{Guid.NewGuid():N}.tmp");
@@ -484,13 +550,15 @@ public sealed class DataProject
 
     private string? Refusal(string name, bool mustExist)
     {
+        if (Paths.Refusal(name) is { } unsafePath) return unsafePath;
         if (TypedAdmissionRefusal(name) is { } typed) return typed;
         if (ReadOnly) return "the project is open read-only";
-        if (name.Length == 0 || name != Path.GetFileName(name) || !name.EndsWith(".json", StringComparison.Ordinal) || name.StartsWith('.')
-            || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        var leaf = Recursive ? name.Split('/')[^1] : name;
+        if (leaf.Length == 0 || (!Recursive && name != Path.GetFileName(name)) || !name.EndsWith(".json", StringComparison.Ordinal) || leaf.StartsWith('.')
+            || leaf.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
             return $"'{name}' isn't a plain file name ending in .json";
         // A name longer than a folder entry can hold is refused here, where a preview sees it, not only by the act (found by A208).
-        if (name.Length > MostNameLength) return $"'{name[..20]}...' is {name.Length} characters; a file name can have at most {MostNameLength}";
+        if ((Recursive ? name.Split('/').Max(p => p.Length) : name.Length) > MostNameLength) return $"'{name[..20]}...' is {name.Length} characters; a file name can have at most {MostNameLength}";
         if (readOnlyFile?.Invoke(name) is { } why) return $"{name} is read-only: {why}";
         if (mustExist) return Find(name) is { Present: true } ? null : $"there's no file called {name} in the folder";
         return Find(name) is not null || File.Exists(Path.Combine(DataFolder, name)) ? $"there's already a file called {name}" : null;
@@ -577,7 +645,7 @@ public sealed class DataFile
         Name = name;
     }
 
-    /// <summary>Its file name, such as <c>wares.json</c>.</summary>
+    /// <summary>Its file name, such as <c>wares.json</c>, or canonical relative path in a recursive project.</summary>
     public string Name { get; }
 
     /// <summary>Its full path.</summary>
@@ -596,7 +664,7 @@ public sealed class DataFile
 
     /// <summary>Where it stands. A file gone from disk is <see cref="DataFileState.Missing"/> even with a session: an open
     /// file is checked on disk each time (otherwise it would read as open until the folder was listed again).</summary>
-    public DataFileState State => !Present || Session is not null && !File.Exists(Path) ? DataFileState.Missing
+    public DataFileState State => project.Paths.Refusal(Name) is not null ? DataFileState.Refused : !Present || Session is not null && !File.Exists(Path) ? DataFileState.Missing
         : Session is { Repairing: true } ? DataFileState.Repairing : Session is not null ? DataFileState.Open
         : Problems.Count > 0 ? DataFileState.Refused : DataFileState.NotOpened;
 
@@ -613,6 +681,7 @@ public sealed class DataFile
 
     internal bool Open(string? pinned)
     {
+        if (project.Paths.Refusal(Name) is { } unsafePath) return Fail(unsafePath);
         if (project.TypedAdmissionRefusal(Name) is { } typed) return Fail(typed);
         if (Session is not null) return true;
         if (!File.Exists(Path)) { Present = false; return Fail($"{Name} isn't in the folder any more"); }
@@ -629,7 +698,9 @@ public sealed class DataFile
         {
             IValidator<DataDocument> validator = new DataValidator(project.Schemas, Schema);
             if (project.RulesFor(Name) is { } extra) validator = new AllOf<DataDocument>(validator, extra);
+            if (project.Paths.Refusal(Name) is { } changed) return Fail(changed);
             Session = DocumentSession<DataDocument>.Open(Path, new DataFormat(), validator, DataKit.Catalog());
+            BindAccessPolicy();
             Problems = [];
             return true;
         }
@@ -645,6 +716,7 @@ public sealed class DataFile
     /// can't be read as JSON or has no schema.</summary>
     public bool Repair()
     {
+        if (project.Paths.Refusal(Name) is { } unsafePath) return Fail(unsafePath);
         if (project.TypedAdmissionRefusal(Name) is { } typed) return Fail(typed);
         if (Open()) return true;
         if (Schema is null || project.Schemas.Find(Schema) is null) return false;
@@ -652,11 +724,19 @@ public sealed class DataFile
         if (project.RulesFor(Name) is { } extra) validator = new AllOf<DataDocument>(validator, extra);
         try
         {
+            if (project.Paths.Refusal(Name) is { } changed) return Fail(changed);
             Session = DocumentSession<DataDocument>.OpenForRepair(Path, new DataFormat(), validator, DataKit.Catalog());
+            BindAccessPolicy();
             Problems = Session.Problems;
             return true;
         }
         catch (DocumentFormatException e) { return Fail($"{Name} can't be read: {e.Message}"); }
+    }
+
+    private void BindAccessPolicy()
+    {
+        if (project.Recursive)
+            Session!.FileAccessRefusal = path => project.Paths.Refusal(System.IO.Path.GetRelativePath(project.DataFolder, path).Replace('\\', '/'));
     }
 
     /// <summary>Saves its edits. Refused, returning false with <see cref="Problems"/> saying why, when the project or
@@ -721,9 +801,12 @@ public sealed class DataFile
 
     internal bool Write()
     {
-        try { Session!.Save(); }
+        if (project.Paths.Refusal(Name) is { } unsafePath) return Fail(unsafePath);
+        var wasDirty = Session!.Dirty;
+        try { Session.Save(); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return Fail($"{Name} can't be written: {e.Message} {WhatToDo}"); }
         Problems = [];
+        if (wasDirty) project.NotifySaved([this]);
         return true;
     }
 

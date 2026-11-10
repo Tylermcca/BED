@@ -1,11 +1,15 @@
 {
   "version": 1,
   "purpose": "technical development-library census, NOT an adopted release/pack allowlist",
-  "status": "owner-confirmed seven-library technical census only, 2026-11-08 inbox; not release adoption",
+  "status": "owner-approved eight-library technical census: original seven plus framework-only Runtime, 2026-11-09; not release adoption",
   "projects": [
     {
       "path": "src/Brutal.Authoring/Brutal.Authoring.csproj",
       "assembly": "Brutal.Authoring"
+    },
+    {
+      "path": "src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj",
+      "assembly": "Brutal.Authoring.Runtime"
     },
     {
       "path": "src/Brutal.Authoring.Data/Brutal.Authoring.Data.csproj",
@@ -45,7 +49,8 @@
     "Brutal.Authoring.Data",
     "Brutal.Authoring.Editor",
     "Brutal.Authoring.Import",
-    "Brutal.Authoring.Agent"
+    "Brutal.Authoring.Agent",
+    "Brutal.Authoring.Runtime"
   ],
   "no_imcode": [
     "Brutal.Authoring",
@@ -53,7 +58,8 @@
     "Brutal.Authoring.Editor",
     "Brutal.Authoring.Import",
     "Brutal.Authoring.Agent",
-    "Brutal.Authoring.Editor.ImGui"
+    "Brutal.Authoring.Editor.ImGui",
+    "Brutal.Authoring.Runtime"
   ],
   "binary_assemblies_unverified": true,
   "source_exclusions": [],

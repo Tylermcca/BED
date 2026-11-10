@@ -22,10 +22,12 @@ public sealed unsafe class HeadlessHost : IDisposable
     private readonly ImGuiContextPtr context;
     private readonly Dictionary<ulong, (int Width, int Height, byte[] Rgba)> textures = [];
     private ulong nextTexture = 1;
+    private readonly HeadlessStartupTiming? startupTiming;
 
     /// <summary>A host with a display of <paramref name="width"/> × <paramref name="height"/> pixels.</summary>
     public HeadlessHost(int width = 1280, int height = 800)
     {
+        startupTiming=HeadlessStartupTiming.Create();
         Width = width;
         Height = height;
         Pixels = new uint[width * height];
@@ -44,6 +46,7 @@ public sealed unsafe class HeadlessHost : IDisposable
         platform.Platform_GetClipboardTextFn = (nint)(delegate* unmanaged[Cdecl]<nint, byte*>)&GetClipboard;
         platform.Platform_SetClipboardTextFn = (nint)(delegate* unmanaged[Cdecl]<nint, byte*, void>)&SetClipboard;
         clipboard = Marshal.StringToCoTaskMemUTF8("");
+        startupTiming?.Mark("headless_context_ms");
     }
 
     /// <summary>The display width in pixels.</summary>
@@ -65,13 +68,19 @@ public sealed unsafe class HeadlessHost : IDisposable
     /// <summary>Runs one frame of <paramref name="draw"/> and rasterises it into <see cref="Pixels"/>.</summary>
     public void Frame(Action draw)
     {
+        startupTiming?.Mark("before_frame_ms");
         ImGui.SetCurrentContext(context);
         ImGuiFrame.Begin();
+        startupTiming?.Mark("begin_frame_ms");
         draw();
+        startupTiming?.Mark("draw_ui_ms");
         ImGui.Render();
         UiTree.EndFrame();
+        startupTiming?.Mark("imgui_render_ms");
         if (Drawing) Rasterise(ImGui.GetDrawData());
         else UpdateTextures(ImGui.GetDrawData());   // ImGui still needs its texture requests answered
+        startupTiming?.Mark("raster_ms");
+        startupTiming?.EndFrame(Drawing,ImGui.GetDrawData().TotalVtxCount,Width,Height);
     }
 
     /// <summary>Runs <paramref name="count"/> frames, letting layout and popups settle.</summary>

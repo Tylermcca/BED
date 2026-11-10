@@ -46,8 +46,12 @@ public sealed class SceneStarterPinnedPlayTests
             var derived=DerivedMeshCodec.Encode(new MeshData(mesh.Positions,mesh.Triangles));
             Assert.True(Catalog.Publish(Catalog.BeginRefresh(),[new(record,source,derived,[],true,profile,"self-authored sample")],out var why),why);
             Workspace=new(DataProject.Open(data,schemas));Assert.True(Workspace.BindSceneAssets(new AssetBrowser(assets,".obj"),Catalog));
-            adapter??=Adapter();Spec=adapter.LinkedPlay(Workspace)!;Assert.NotNull(Spec);
-            ConvertInput=adapter.PlaySnapshot!;Assert.NotNull(ConvertInput);
+            adapter??=Adapter();
+            // The generic interface no longer offers a protocol Play route. Retain these exact component
+            // witnesses through the trusted sample's legacy concrete surface, without changing loader context.
+            var type=adapter.GetType();
+            Spec=(GameLaunchSpec)type.GetMethod("LinkedPlay",[typeof(DataWorkspace)])!.Invoke(adapter,[Workspace])!;Assert.NotNull(Spec);
+            ConvertInput=(PlaySnapshotConverter)type.GetProperty("PlaySnapshot")!.GetValue(adapter)!;Assert.NotNull(ConvertInput);
         }
         public PlaySnapshotResult Capture(string text=Text)=>PlaySnapshot.Create(new("level.json",7,text,text),PlayInputChoice.Saved,ConvertInput);
         public void Dispose()

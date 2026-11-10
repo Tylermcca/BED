@@ -243,6 +243,27 @@ public sealed record AddObject(SceneObject Object) : ICommand<Scene>
         : CommandResult<Scene>.Refused(Issue.Error($"an object called '{Object.Id}' already exists", Object.Id));
 }
 
+/// <summary>Renames an object in place and remaps every parent and named reference to its new id.</summary>
+/// <param name="Id">The existing object id.</param>
+/// <param name="NewId">An unused id starting with a lowercase letter, followed by lowercase letters, digits or underscores.</param>
+public sealed record RenameObject(string Id, string NewId) : ICommand<Scene>
+{
+    /// <inheritdoc />
+    public CommandResult<Scene> Apply(Scene d)
+    {
+        if(d.Find(Id) is null)return CommandResult<Scene>.Refused(Issue.Error($"there is no object called '{Id}'",Id));
+        if(string.IsNullOrEmpty(NewId)||NewId[0] is <'a' or >'z'||NewId.Any(c=>c is not (>= 'a' and <= 'z') and not (>= '0' and <= '9') and not '_'))
+            return CommandResult<Scene>.Refused(Issue.Error("An object ID must start with a lowercase letter and use only lowercase letters, digits and underscores.",Id));
+        if(d.Find(NewId) is not null)return CommandResult<Scene>.Refused(Issue.Error($"an object called '{NewId}' already exists; choose a different ID",Id));
+        return CommandResult<Scene>.Done(new Scene([..d.Objects.Select(o=>o with
+        {
+            Id=o.Id==Id?NewId:o.Id,
+            Parent=o.Parent==Id?NewId:o.Parent,
+            References=o.References.ToImmutableSortedDictionary(kv=>kv.Key,kv=>kv.Value==Id?NewId:kv.Value,StringComparer.Ordinal)
+        })]));
+    }
+}
+
 /// <summary>Moves an object.</summary>
 /// <param name="Id">The id of the existing object to move.</param>
 /// <param name="Position">The replacement position in metres in the project coordinate frame, not an offset from the old position.</param>
@@ -369,6 +390,7 @@ public static class SceneKit
     public static CommandCatalog<Scene> Catalog() => new CommandCatalog<Scene>()
         .Register<AddObject>("scene.add", 1, "Add object")
         .Register<MoveObject>("scene.move", 1, "Move object")
+        .Register<RenameObject>("scene.rename", 1, "Rename object")
         .Register<SetSceneProperty>("scene.set_property", 1, "Set property")
         .Register<RemoveObject>("scene.remove", 1, "Remove object")
         .Register<DuplicateGroup>("scene.duplicate", 1, "Duplicate")

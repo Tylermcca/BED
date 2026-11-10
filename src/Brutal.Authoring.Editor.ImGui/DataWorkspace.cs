@@ -36,6 +36,23 @@ public sealed partial class DataWorkspace : IDisposable
     private readonly Dictionary<string, EditorWindow<DataDocument>> windows = new(StringComparer.Ordinal);
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<SceneDocumentEntry, ViewportView<Scene>> sceneViews = new();
     private readonly Dictionary<string, EditorWindow<Scene>> sceneWindows = new(StringComparer.Ordinal);
+    private sealed class SceneFilesBinding { public required DataWorkspace Owner; }
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<EditorModel<Scene>, SceneFilesBinding> sceneFiles = new();
+    private void AttachSceneFiles(EditorModel<Scene> editor)
+    {
+        var binding=sceneFiles.GetValue(editor, key=>
+        {
+            var state=new SceneFilesBinding {Owner=this};
+            var panel=FilesPanel;
+            key.Add(panel with {Draw=()=>state.Owner.DrawFiles(),Commands=panel.Commands?.Select(command=>
+                new PanelCommand(command.Id,command.Label,
+                    ()=>state.Owner.FilesPanel.Commands!.Single(c=>c.Id==command.Id).Run(),
+                    ()=>state.Owner.FilesPanel.Commands!.Single(c=>c.Id==command.Id).Unavailable?.Invoke())).ToArray()});
+            return state;
+        });
+        binding.Owner=this;
+    }
+
     private readonly Dictionary<string, DataTableView> tables = new(StringComparer.Ordinal);
     private readonly Stack<(string File, string? Item)> history = new();
     private readonly Shortcuts shortcuts;
@@ -69,6 +86,7 @@ public sealed partial class DataWorkspace : IDisposable
         Proposals = new EditProposals(project, Checks, map);
         Map = map;
         this.shortcuts = shortcuts ?? new Shortcuts();
+        this.shortcuts.Default(EditorWindow<DataDocument>.PanelAction+"project.find_replace","Ctrl+H");
         this.configure = configure;
     }
 
@@ -184,6 +202,12 @@ public sealed partial class DataWorkspace : IDisposable
     {
         var stopped = false;
         var faults = new List<string>();
+        if(projectPlay is not null)
+        {
+            stopped=!projectPlay.HasCompleted;
+            try {DisposeProjectPlay();}
+            catch(Exception error){faults.Add("Project Play failed while stopping: "+error.Message);}
+        }
         foreach (var editor in windows.Values.Select(w => w.Editor).Where(e => e.Playing is not null).ToList())
         {
             var title = editor.Playing!.Title;
@@ -201,7 +225,7 @@ public sealed partial class DataWorkspace : IDisposable
 
     /// <summary>Stops any running game (<see cref="StopPlay"/>). A host calls it when it closes or replaces the project, or shuts
     /// down. The project and its drafts are untouched: disposing doesn't save, close files or discard edits.</summary>
-    public void Dispose() { StopPlay(); Proposals.Dispose(); }
+    public void Dispose() { ReleaseObjectClipboard(); exportDialog?.Dispose(); StopPlay(); Proposals.Dispose(); ReleaseProjectAssets(); }
 
     // Stops a game running in the window shown for name, before its file is renamed, deleted or its window forgotten. What
     // failed while stopping, to say with the action's own message (" ..."), or "".
@@ -317,11 +341,17 @@ public sealed partial class DataWorkspace : IDisposable
             if (!sceneWindows.TryGetValue(name, out var previous) || !ReferenceEquals(previous.Editor, entry!.Editor))
             {
                 var editor = entry!.Editor;
+                var flags=Flags(name);
                 AttachSceneAssets(name, entry);
                 shortcuts.Default("editor.close", "Ctrl+W");
                 sceneViews.GetValue(entry, key =>
                 {
-                    var view = new ViewportView<Scene>(key.Editor, new SceneViewport());
+                    ViewportView<Scene>? view = null;
+                    var source = new SceneCatalogSource(() => { if (view is not null) { view.CancelInput(); view.SourceGeneration++; } });
+                    view = new ViewportView<Scene>(key.Editor, source);
+                    source.Catalog = SceneAssets;
+                    source.Flags=flags;
+                    view.MaterialCatalog = SceneAssets;
                     key.Editor.Add(view.AsPanel());
                     return view;
                 });
@@ -329,6 +359,8 @@ public sealed partial class DataWorkspace : IDisposable
                     new Inspector<Scene>(editor).Add(SceneEditing.ObjectType()), shortcuts, SceneEditing.CommandFor)
                 {
                     CloseDocument = () => RequestSceneClose(name, entry),
+                    CopyObject = _ => sceneWindows[name].Run("scene.copy"),
+                    OutlineAssetNames = SceneAssetSearchNames,
                     SaveRefusal = () => Project.ReadOnlyReason(name) ?? "Scene Save as is not connected to the project's save/conflict policy yet.",
                     SaveAction = () =>
                     {
@@ -340,6 +372,9 @@ public sealed partial class DataWorkspace : IDisposable
                     }
                 };
             }
+            BindSceneClipboard(sceneWindows[name]);
+            BindSceneViewChoices(name,sceneWindows[name],Flags(name));
+            AttachSceneFiles(sceneWindows[name].Editor);
             BindLinked(sceneWindows[name],name);
             Active = file;
             AdapterProblem = null;
@@ -632,6 +667,11 @@ public sealed partial class DataWorkspace : IDisposable
         return Said;
     }
 
+    /// <summary>Raised synchronously on the caller's owner thread after each FinishSaves pump, including pumps with no
+    /// pending saves. Draw pumps once per frame; headless hosts call FinishSaves themselves. Observer exceptions are
+    /// traced and contained; they cannot undo a completed save or prevent later observers from running.</summary>
+    public event Action? Ticked;
+
     /// <summary>Finishes background saves whose check has answered: each is saved through its window's own save, or says why it
     /// wasn't (<see cref="Said"/>). <see cref="Draw"/> calls it every frame; a host that draws no frames calls it itself.</summary>
     public void FinishSaves()
@@ -650,21 +690,59 @@ public sealed partial class DataWorkspace : IDisposable
             try { Said = window.Run("editor.save") ? $"Saved {name}." : window.Status; }
             finally { approved.Remove(name); }
         }
+        if (Ticked is { } observers)
+            foreach (Action observer in observers.GetInvocationList())
+                try { observer(); }
+                catch (Exception error) { System.Diagnostics.Trace.TraceError($"A workspace tick observer failed: {error}"); }
+    }
+
+    private (bool Success, string Message) SaveOwnedFile(DataFile file, object session)
+    {
+        var revision = file.Session?.Revision;
+        if (BeforeSaving(file, session) is { } refusal) return (false, refusal);
+        // BeforeSaving owns host checks (including background approvals); do not run them a second time.
+        // Recheck disk/access immediately before the owning DataFile performs its one write and notification.
+        var why = file.Dirty ? file.WhyNotNow(revision) : file.WhyNotSaved();
+        if (why is not null) return (false, why);
+        if (!file.Dirty) return (true, "Saved.");
+        var saved = file.Write();
+        return (saved, saved ? "Saved." : string.Join(" ", file.Problems.Select(p => p.Message)));
+    }
+
+    private (bool Saved, string Message) SaveNestedCopy(DataFile source, string path)
+    {
+        var name = Path.GetRelativePath(Project.DataFolder, path).Replace('\\', '/');
+        if (!Project.CreateFromText(name, source.Session!.Format.Write(source.Session.Current), out var why))
+            return (false, why);
+        // The source draft and its undo history remain owned by its original file. The saved copy
+        // gets the target's schema/rules and its own ordinary managed session, rather than retargeting the source validator.
+        var shown = Show(name);
+        return (true, shown ? $"Saved copy as {name}. The original draft is still open."
+            : $"Saved copy as {name}, but it could not be shown: {Said}. The original draft is still open.");
     }
 
     /// <summary>Draws the shown file's editor, docked; with no file shown, just the file list.</summary>
     public void Draw()
     {
         FinishSaves();
+        PrepareRecentProjectsUi();
+        PrepareExportUi();
+        PreparePlaySettingsUi();
+        DrawWorkspaceStatusBar();
         if (SceneWindow is { } scene)
         {
             // The view is shared by scene authority, but the visible workspace owns this frame's admitted source.
             if (SceneViewport is { } view)
             {
                 view.DropTarget = scenePlacement is { } placement ? placement.DrawTarget : null;
+                if (view.Source is SceneCatalogSource source) source.Catalog = SceneAssets;
                 view.MaterialCatalog = SceneAssets;
             }
+            AttachSceneFiles(scene.Editor);
             scene.DrawDocked();
+            DrawSceneClose();
+            scenePlacement?.FinishFrame();
+            return;
         }
         else if (Window is { } w) { w.DrawDocked(); DrawSceneClose(); scenePlacement?.FinishFrame(); return; }
         ImGui.SetNextWindowSize(new float2(FilesPanel.Width, FilesPanel.Height), ImGuiCond.FirstUseEver);
@@ -696,7 +774,7 @@ public sealed partial class DataWorkspace : IDisposable
             CanBackElsewhere = () => history.Count > 0,
         };
         tables[file.Name] = table;
-        editor.Add(FilesPanel).Add(table.AsPanel());
+        editor.Add(FilesPanel).Add(table.AsPanel()).Add(FindReplacePanel);
         var problems = new List<string>();
         foreach (var extra in FilePanels)
         {
@@ -715,6 +793,8 @@ public sealed partial class DataWorkspace : IDisposable
         {
             Searcher = (document, text) => DataSearch.Find(document, text),
             SaveRefusal = () => BeforeSaving(file, editor.Session),
+            SaveAction = () => SaveOwnedFile(file, editor.Session),
+            ManagedSaveAs = Project.Recursive ? path => SaveNestedCopy(file, path) : null,
             CopyObject = id =>
             {
                 if (!ReferenceEquals(file.Session, editor.Session) || editor.Outline.Label(editor.Session.Current,id) is null)

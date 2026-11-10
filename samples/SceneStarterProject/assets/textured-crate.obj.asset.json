@@ -1,0 +1,22 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "c8a7e000000000000000000000000001",
+  "source": "textured-crate.obj",
+  "sourceHash": "ab8e9f389e5f00162859f1ab8d5a123cfd1989ab9ebc17e78acbdb0dadb2860a",
+  "importer": {
+    "id": "obj",
+    "version": 1
+  },
+  "settings": {
+    "scale": 1,
+    "upAxis": "Y"
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/SceneStarterProject/generate_textured_crate.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

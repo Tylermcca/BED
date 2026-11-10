@@ -121,7 +121,7 @@ public sealed class FolderProjectA365Tests : IDisposable
         Assert.Same(selected, launcher.Using);
         Assert.Equal(At("data"), launcher.Current!.Data);
         Assert.Equal(At("schemas"), launcher.Current.Schemas);
-        Assert.Null(launcher.Current.Folder);
+        Assert.Null(launcher.Current.Folder); // Standard folders keep their existing recent-project representation.
         Assert.Equal(1, selected.Finds); Assert.Equal(0, unused.Finds);
     }
     [Fact] public void Invalid_selected_answer_does_not_fall_back_to_available_standard_layout()

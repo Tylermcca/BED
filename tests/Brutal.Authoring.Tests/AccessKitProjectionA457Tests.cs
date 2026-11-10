@@ -82,6 +82,7 @@ public sealed class AccessKitProjectionA457Tests
     [InlineData(UiRole.Tab, AccessKitProjectedRole.Tab)]
     [InlineData(UiRole.Dialog, AccessKitProjectedRole.Dialog)]
     [InlineData(UiRole.Status, AccessKitProjectedRole.Status)]
+    [InlineData(UiRole.Canvas, AccessKitProjectedRole.Canvas)]
     public void Every_existing_role_has_its_AccessKit_name(UiRole source, AccessKitProjectedRole expected)
         => Assert.Equal(expected, AccessKitProjection.RoleOf(source));
 

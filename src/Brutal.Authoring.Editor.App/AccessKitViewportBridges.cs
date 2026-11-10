@@ -26,10 +26,14 @@ public sealed class AccessKitViewportBridges(Func<nint, string, AccessKitWindowB
         Check(); _ = Find(viewport, hwnd); show();
     }
 
-    /// <summary>Publishes only this viewport's complete nodes, including an empty frame when its last node disappears.</summary>
+    /// <summary>Publishes only this viewport's complete nodes, including an empty frame when its last node disappears.
+    /// A window that has no size or scale yet (a new or minimised secondary window's first frames) is skipped for this
+    /// frame and returns false; it publishes once it has both. It used to throw and close BED.</summary>
     public bool Publish(uint viewport, nint hwnd, UiSnapshot snapshot, string title, UiBounds bounds, float scaleX, float scaleY)
     {
-        Check(); return Find(viewport, hwnd).Publish(snapshot.ForViewport(viewport), title, bounds, scaleX, scaleY);
+        Check(); var bridge = Find(viewport, hwnd);
+        if (bounds.IsEmpty || !float.IsFinite(scaleX) || !float.IsFinite(scaleY) || scaleX <= 0 || scaleY <= 0) return false;
+        return bridge.Publish(snapshot.ForViewport(viewport), title, bounds, scaleX, scaleY);
     }
 
     /// <summary>Transfers queued native requests to the existing next-frame wrapper dispatcher.</summary>

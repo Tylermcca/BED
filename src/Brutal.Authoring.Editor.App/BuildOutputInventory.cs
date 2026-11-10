@@ -6,7 +6,7 @@ public static class BuildOutputInventory
 {
     /// <summary>Requires the exact declared file set with no links or unrelated directories, then pins and stages captured bytes.</summary>
     public static (GameContentManifest Manifest,ExportStaging Staging) Capture(string output,BuildOutputDeclaration declaration,
-        Guid attempt,string? priorGoodManifestHash=null,CancellationToken cancellationToken=default)
+        Guid attempt,string? priorGoodManifestHash=null,CancellationToken cancellationToken=default,IReadOnlyDictionary<string,string>? expectedHashes=null)
     {
         ArgumentNullException.ThrowIfNull(declaration);
         var allowed=declaration.Paths.ToHashSet(StringComparer.Ordinal);
@@ -31,10 +31,16 @@ public static class BuildOutputInventory
                 if(!allowed.Contains(relative))throw new IOException("Build output is outside the allowlist: "+relative);
                 using var file=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
                 if(file.Length>64L*1024*1024||(bytes+=file.Length)>320L*1024*1024)throw new IOException("Build output budget exceeded: "+relative);
-                var payload=new byte[checked((int)file.Length)];file.ReadExactly(payload);captured.Add(relative,payload);
+                var payload=new byte[checked((int)file.Length)];
+                for(var at=0;at<payload.Length;)
+                {cancellationToken.ThrowIfCancellationRequested();var read=file.Read(payload,at,Math.Min(65536,payload.Length-at));if(read==0)throw new EndOfStreamException();at+=read;}
+                captured.Add(relative,payload);
             }
         }
         cancellationToken.ThrowIfCancellationRequested();
+        if(expectedHashes is not null)foreach(var expected in expectedHashes)
+            if(!captured.TryGetValue(expected.Key,out var payload)||Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(payload))!=expected.Value)
+                throw new IOException("Build output differs from the admitted Saved payload: "+expected.Key);
         return declaration.Pin(attempt,captured,priorGoodManifestHash);
     }
 }

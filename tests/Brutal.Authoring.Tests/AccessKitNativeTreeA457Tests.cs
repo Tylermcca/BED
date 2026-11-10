@@ -141,6 +141,7 @@ public sealed class AccessKitNativeTreeA457Tests
     [InlineData(AccessKitProjectedRole.Tab, 120)]
     [InlineData(AccessKitProjectedRole.Dialog, 66)]
     [InlineData(AccessKitProjectedRole.Status, 116)]
+    [InlineData(AccessKitProjectedRole.Canvas, 51)]
     public void Role_ordinals_match_the_pinned_header(AccessKitProjectedRole role, byte ordinal) =>
         Assert.Equal(ordinal, AccessKitTreeEncoder.NativeRole(role));
 

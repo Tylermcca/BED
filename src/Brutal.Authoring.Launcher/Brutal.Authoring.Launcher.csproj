@@ -24,7 +24,7 @@
   </ItemGroup>
   <Target Name="CopySceneStarterLinkedSample" AfterTargets="Build">
     <ItemGroup>
-      <SceneStarterRuntime Include="../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.exe;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.deps.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.runtimeconfig.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Brutal.Authoring.dll" />
+      <SceneStarterRuntime Include="../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.exe;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.deps.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.runtimeconfig.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Brutal.Authoring.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/LICENSE.txt;../../samples/SceneStarter/bin/$(Configuration)/net10.0/NOTICE.txt" />
     </ItemGroup>
     <Copy SourceFiles="@(SceneStarterRuntime)" DestinationFolder="$(OutDir)samples/SceneStarter" SkipUnchangedFiles="true" />
     <Copy SourceFiles="../../samples/SceneStarterAdapter/bin/$(Configuration)/net10.0/SceneStarterAdapter.dll" DestinationFolder="$(OutDir)adapters" SkipUnchangedFiles="true" />

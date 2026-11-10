@@ -123,6 +123,7 @@ public sealed class SceneToolTests : IDisposable
     {
         var all = Run("commands");
         Assert.Contains("scene.set_reference", all.Out);
+        Assert.Contains("scene.rename", all.Out);
         var some = Run("commands", "parent");
         Assert.Contains("scene.set_parent", some.Out);
         Assert.DoesNotContain("scene.move", some.Out);

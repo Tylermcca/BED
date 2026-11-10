@@ -159,6 +159,96 @@ public static class DataEditing
                 .Concat(objects.SelectMany(o => o.EnumerateObject().Select(p => p.Name)))
                 .Distinct(StringComparer.Ordinal);
 
+        // Schema descriptions repeat across thousands of alike rows. Cache only immutable schema
+        // identities, never values or active-branch decisions; discovery still runs for each object.
+        private sealed record RowShape(PropertyKind Kind,IReadOnlyList<string> Choices,bool DeclaredKind,
+            bool List,bool Map,JsonElement? Default,string? Title,string Help,NumberRange? Range);
+        private sealed class SchemaSequence : IEqualityComparer<IReadOnlyList<JsonElement>>
+        {
+            public bool Equals(IReadOnlyList<JsonElement>? x,IReadOnlyList<JsonElement>? y)=>ReferenceEquals(x,y)||x is not null&&y is not null&&x.SequenceEqual(y);
+            public int GetHashCode(IReadOnlyList<JsonElement> value)
+            {var hash=new HashCode();foreach(var schema in value)hash.Add(schema);return hash.ToHashCode();}
+        }
+        private readonly Dictionary<IReadOnlyList<JsonElement>,RowShape> rowShapes=new(new SchemaSequence());
+        private long shapesGeneration=-1;
+        private RowShape Describe(IReadOnlyList<JsonElement> fieldSchemas)
+        {
+            if(shapesGeneration!=schemas.Generation){rowShapes.Clear();shapesGeneration=schemas.Generation;}
+            if(rowShapes.TryGetValue(fieldSchemas,out var shape))return shape;
+            if(rowShapes.Count>=1024)rowShapes.Clear();
+            var (kind,choices)=KindOf(fieldSchemas);
+            shape=new(kind,choices,Pick(fieldSchemas,"enum") is not null||Pick(fieldSchemas,"type") is not null,
+                IsList(fieldSchemas),IsMap(fieldSchemas),Pick(fieldSchemas,"default"),Pick(fieldSchemas,"title")?.GetString(),
+                Pick(fieldSchemas,"description")?.GetString()??"",RangeOf(fieldSchemas,PropertyKind.Number));
+            rowShapes[fieldSchemas]=shape;return shape;
+        }
+        private static PropertyKind KindFor(RowShape shape,JsonElement? value)=>shape.DeclaredKind?shape.Kind:value?.ValueKind switch
+        {JsonValueKind.True or JsonValueKind.False=>PropertyKind.Toggle,JsonValueKind.Number=>PropertyKind.Number,_=>shape.Kind};
+
+        private sealed record FieldShape(string Field, string RowId, RowShape Shape, bool Fixed);
+        private sealed record ObjectShape(string[] Members, FieldShape[] Fields, bool Entries);
+        private readonly Dictionary<IReadOnlyList<JsonElement>, List<ObjectShape>> objectShapes = new(new SchemaSequence());
+        private long objectsGeneration = -1;
+        private int objectShapeCount;
+
+        // A resolved field containing a conditional/alternative can depend on its own value, including
+        // whether it is missing. Such fields always take normal discovery; never reuse another item's branch.
+        private static bool StaticFields(JsonElement value) => value.ValueKind switch
+        {
+            JsonValueKind.Object => value.EnumerateObject().All(p => p.Name is not ("if" or "anyOf" or "oneOf") && StaticFields(p.Value)),
+            JsonValueKind.Array => value.EnumerateArray().All(StaticFields),
+            _ => true,
+        };
+
+        private IReadOnlyList<InspectorRow> SingleRows(DataDocument d, string id, JsonElement value, IReadOnlyList<JsonElement> here)
+        {
+            if (objectsGeneration != schemas.Generation)
+            {
+                objectShapes.Clear(); objectShapeCount = 0; objectsGeneration = schemas.Generation;
+            }
+            bool SameMembers(ObjectShape candidate)
+            {
+                var index = 0;
+                foreach (var property in value.EnumerateObject())
+                    if (index >= candidate.Members.Length || property.Name != candidate.Members[index++]) return false;
+                return index == candidate.Members.Length;
+            }
+            var plan = objectShapes.TryGetValue(here, out var plans) ? plans.FirstOrDefault(SameMembers) : null;
+            if (plan is null)
+            {
+                var fields = Fields(here, [value]).ToList();
+                var fixedFields = here.Where(s => s.ValueKind == JsonValueKind.Object && s.TryGetProperty("properties"u8, out _))
+                    .SelectMany(s => s.GetProperty("properties"u8).EnumerateObject().Select(p => p.Name)).ToHashSet(StringComparer.Ordinal);
+                var bySchema = schemas.Children(d.Root, schema, id, fields);
+                plan = new(value.EnumerateObject().Select(p => p.Name).ToArray(),
+                    fields.Select(field => new FieldShape(field, field.StartsWith(NestedMark) ? NestedMark + Pointer.Join([field]) : field,
+                        Describe(bySchema[field]), fixedFields.Contains(field))).ToArray(), IsMap(here));
+                if (bySchema.Values.All(field => field.All(StaticFields)))
+                {
+                    if (objectShapeCount >= 128) { objectShapes.Clear(); objectShapeCount = 0; }
+                    if (!objectShapes.TryGetValue(here, out plans)) objectShapes[here] = plans = [];
+                    plans.Add(plan); objectShapeCount++;
+                }
+            }
+            var rows = new List<InspectorRow>(plan.Fields.Length);
+            foreach (var field in plan.Fields)
+            {
+                var shape = field.Shape;
+                JsonElement? actual = value.TryGetProperty(field.Field, out var found) ? found : null;
+                var kind = KindFor(shape, actual);
+                var unsetList = shape.List && actual is null;
+                var scalar = !unsetList && actual is not { ValueKind: JsonValueKind.Object or JsonValueKind.Array or JsonValueKind.Null };
+                rows.Add(new InspectorRow(field.RowId, shape.Title is { Length: > 0 } ? shape.Title : field.Field, kind,
+                    Show(actual, kind), false, scalar,
+                    shape.Default is { } dflt && actual is { } present && !JsonSchemas.Same(present, dflt), shape.Default is not null,
+                    shape.Choices, shape.Help, kind is PropertyKind.Number or PropertyKind.Integer ? shape.Range : null,
+                    CanAdd: unsetList || actual is { ValueKind: JsonValueKind.Array },
+                    CanRemove: plan.Entries && !field.Fixed && actual is not null,
+                    NamedEntries: shape.Map && actual is null or { ValueKind: JsonValueKind.Object }));
+            }
+            return rows;
+        }
+
         public IReadOnlyList<InspectorRow> Rows(DataDocument d, IReadOnlyList<string> ids)
         {
             var objects = ids.Select(d.At).ToList();
@@ -167,6 +257,7 @@ public static class DataEditing
                 return ItemRows(d, ids[0], "", list);
             if (objects.Count == 0 || objects.Any(o => o is not { ValueKind: JsonValueKind.Object })) return [];
             var here = schemas.At(d.Root, schema, ids[0]);
+            if (objects.Count == 1) return SingleRows(d, ids[0], objects[0]!.Value, here);
             var rows = new List<InspectorRow>();
             var fields = Fields(here, objects.Select(o => o!.Value)).ToList();
             var fixedFields = here.Where(s => s.ValueKind == JsonValueKind.Object && s.TryGetProperty("properties"u8, out _))
