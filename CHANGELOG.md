@@ -4,6 +4,18 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.0-rc.5]
+
+Fifth release candidate for 0.3: the samples are on the start screen, and the first steps explain the Windows unknown-publisher box.
+
+### Added
+
+- The start screen lists the samples that come with BED under **Samples**: the 2D garden game, the 3D crate island, a 3D level to build on and checkers. One click opens one; you no longer have to find the samples folder.
+
+### Fixed
+
+- The first steps now say what to do when Windows shows a blue "Windows protected your PC" box naming an unknown publisher: click **More info**, then **Run anyway**.
+
 ## [0.3.0-rc.4]
 
 Fourth release candidate for 0.3: the 2D and physics samples are now small games you can play, and the 3D view no longer flickers.

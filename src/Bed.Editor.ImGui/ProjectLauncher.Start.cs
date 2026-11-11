@@ -228,9 +228,36 @@ public sealed partial class ProjectLauncher
         Ui.FieldCaption("Open a folder you already work on."u8);
         if (Ui.Button("Try the example"u8, size)) TryExample();
         Ui.TextWrapped("Make a copy you can change safely."u8);
+        var samples = InstalledSamples();
+        if (samples.Count > 0)
+        {
+            ImGui.SeparatorText("Samples"u8);
+            foreach (var sample in samples)
+            {
+                if (Ui.Button(sample.Title, size)) OpenFolder(sample.Folder);
+                Ui.TextWrapped(sample.About);
+            }
+        }
         ImGui.PopStyleVar();
         Ui.EndTable();
     }
+
+    /// <summary>A sample that comes with BED, shown on the start screen so it opens with one click.</summary>
+    public sealed record InstalledSample(string Title, string About, string Folder);
+
+    // The download's samples folder, in the order a newcomer should try them. A sample whose folder isn't there (a source build) isn't shown.
+    private static readonly (string Folder, string Title, string About)[] SampleList =
+    [
+        ("sprite-2d", "2D garden game", "A cartoon garden level. Play walks the round friend to the coins and the flag."),
+        ("prefab-physics", "3D crate island", "Crates and a paddle on an island. Play drops the crates with physics."),
+        ("scene-starter", "3D level to build on", "A small 3D level to add models to, move them, play and export."),
+        ("checkers", "Checkers rules", "A board game's data with its own rule checks."),
+    ];
+
+    /// <summary>The samples found beside BED, in the order shown on the start screen.</summary>
+    public IReadOnlyList<InstalledSample> InstalledSamples() => SampleList
+        .Select(s => new InstalledSample(s.Title, s.About, Path.Combine(SamplesFolder, s.Folder)))
+        .Where(s => Directory.Exists(s.Folder)).ToArray();
 
     // Prefer path separators as line boundaries so a component is not broken just because the prefix filled the line.
     // Every character remains visible, including separators; unusually long individual components still wrap normally.

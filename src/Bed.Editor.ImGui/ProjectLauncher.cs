@@ -131,6 +131,9 @@ public sealed partial class ProjectLauncher : IDisposable
         KeysPanel.LoadPreferences(shortcuts,Path.Combine(Path.GetDirectoryName(SettingsFile)!,"shortcuts.json"));
     }
 
+    /// <summary>The folder holding the samples that come with BED; the start screen lists the ones it finds there.</summary>
+    public string SamplesFolder { get; set; } = Path.Combine(AppContext.BaseDirectory, "samples");
+
     /// <summary>The settings file beside the recent list: the person's text size and app theme.</summary>
     public string SettingsFile => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(Recent.File))!, "settings.json");
 

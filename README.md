@@ -20,7 +20,7 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 - **A first-run tour** you can skip and reopen later from **Help > Take the tour**.
 - **Help > Report a problem** shows exactly what a report contains before you share it.
 
-The current download is **0.3.0-rc.4**, a release candidate for 0.3. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
+The current download is **0.3.0-rc.5**, a release candidate for 0.3. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
 
 ## Try it (Windows, 2 minutes)
 
@@ -35,7 +35,7 @@ The current download is **0.3.0-rc.4**, a release candidate for 0.3. Get it from
 
 ### Try the samples
 
-Choose **File > Open project...** and open a folder from the download's **samples** folder:
+The start screen lists them under **Samples**: click one to open it. (From an open project, choose **File > Open project...** and open a folder from the download's **samples** folder.)
 
 - **samples\sprite-2d** is a cartoon garden in 2D: seventeen pictures in four layers, with a flag placed twice as a prefab. Drag things around, then revert the copy whose size was changed.
 - **samples\prefab-physics** is a small 3D island with a stack of three crates, one prefab placed three times. Click a crate to see its body, mass and friction.

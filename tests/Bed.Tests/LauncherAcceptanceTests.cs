@@ -473,7 +473,7 @@ public sealed class LauncherAcceptanceTests
             Draw=draw;
             patterns=new[]{"Remove from list","Folder not found","Try the example","Rules folder (schema)","Open project...","Open the sample project","Data folder","Schema folder","Link map (optional)","Close project",
                 "Don't Save","Cancel","Save","Remove","(folder gone)","None yet.",
-                "Choose this folder","Cancel","[Bridge]","[data]","[schemas]","reference_map.json","Beacon workshop"}
+                "Choose this folder","Cancel","[Bridge]","[data]","[schemas]","reference_map.json","Beacon workshop","Samples","Checkers rules","2D garden game"}
                 .Distinct(StringComparer.Ordinal).ToDictionary(x=>x,CaptionFor,StringComparer.Ordinal);
             Host=new HeadlessHost(1600,900){Drawing=false};EditorWindow<DataDocument>.Configure(ImGui.GetIO());
             Host.MoveMouse(Draw,-100,-100);Host.Frames(Draw,5);
@@ -567,6 +567,16 @@ public sealed class LauncherAcceptanceTests
         Assert.Null(l.Workspace);Assert.Null(l.Current);Assert.NotNull(ui.Find("None yet."));
         var before=r.Bytes(p);ui.Click("Try the example");Assert.NotNull(l.Workspace);Assert.Equal(Path.Combine(r.Root,"created","Example","data"),l.Current!.Data);Assert.Equal(before,r.Bytes(p));Assert.Single(l.Recent.Items);
         Assert.NotNull(ui.Find("Close project","Files###panel.project.files"));
+    }
+    [Fact]
+    public void StartScreen_ListsTheSamplesThatCameWithBed_AndOneClickOpensOne()
+    {
+        using var r=new Sandbox();var checkers=r.Project(Path.Combine("samples","checkers"));var l=r.Launcher();l.SamplesFolder=Path.Combine(r.Root,"samples");
+        using var ui=new Screen(l.Draw);
+        Assert.Equal(["Checkers rules"],l.InstalledSamples().Select(s=>s.Title)); // only the samples whose folders are there
+        Assert.NotNull(ui.Find("Samples"));Assert.Null(ui.Find("2D garden game"));
+        var before=r.Bytes(checkers);ui.Click("Checkers rules");
+        Assert.NotNull(l.Workspace);Assert.Equal(checkers.Data,l.Current!.Data);Assert.Equal(before,r.Bytes(checkers));
     }
     [Fact]
     public void StartScreen_TypedSeparatePathsIncludingOptionalMap_OpenByKeyboard()
