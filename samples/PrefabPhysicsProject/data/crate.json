@@ -1,0 +1,35 @@
+{
+  "guid": "ba5e0000000000000000000000000ab1",
+  "kind": "prefab-definition",
+  "nodes": [
+    {
+      "asset": "ba5e0000000000000000000000000c01",
+      "body": {
+        "friction": 0.6,
+        "massKg": 1,
+        "motion": "dynamic",
+        "shape": {
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "halfExtents": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "kind": "box"
+        }
+      },
+      "key": "ba5e00000000000000000000000000b0",
+      "label": "Crate",
+      "properties": {},
+      "references": {}
+    }
+  ],
+  "root": "ba5e00000000000000000000000000b0",
+  "slots": [],
+  "space": "3d",
+  "version": 1
+}

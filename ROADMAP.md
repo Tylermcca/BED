@@ -18,9 +18,9 @@ There are no dates. A release ships when everything in it works from start to fi
 ## Done so far
 
 - **0.2 (0.2.1-rc.1):** a data editor that works like a normal Windows program; 3D levels with handles, snapping and undo; model and texture assets with licence records; Play from saved files; tested Windows builds and Export build.
-- **0.3 (0.3.0-rc.1, out now):** prefabs, 2D levels, physics, levels in games and builds, and a big usability pass. Details below.
+- **0.3 (0.3.0-rc.2, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
 
-## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.1)
+## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.2)
 
 The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and play and export it.
 
@@ -67,10 +67,12 @@ The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and 
 - Text was cut off in places at larger sizes. It now wraps or stays visible.
 - The full list is in the [changelog](CHANGELOG.md).
 
-## Next: 0.3.0-rc.2
+### Samples and fixes in 0.3.0-rc.2: done
+- **Samples for the new features.** Two small original samples ship in the download: a flat sprite level with a prefab placed twice, and a 3D level with a crate prefab, a floor and a paddle, all with physics bodies. The Start here guide walks through both. Their games report as text and have no window yet.
+- **Small fixes from the first real-window checks.** The welcome and tour boxes no longer cover the Files panel or **Used by** when a level opens.
 
-- **Samples for the new features.** One small original sample project with a 3D level built from prefabs with physics bodies, and a 2D sprite level, so you can try everything 0.3 adds straight from the download. The Start here guide will walk through it.
-- **Small fixes from the first real-window checks.** For example, the welcome box no longer covers the Files panel when a level opens.
+## Next: the 0.3 release
+
 - **Fixes from testers.** Anything reported with **Help > Report a problem** or on GitHub.
 - Then the 0.3 release.
 

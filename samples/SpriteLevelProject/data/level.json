@@ -1,0 +1,391 @@
+{
+  "kind": "scene",
+  "version": 2,
+  "space": "2d-xy",
+  "objects": [
+    {
+      "id": "sky",
+      "asset": "2d000000000000000000000000000005",
+      "position": [
+        0,
+        -3.25,
+        0
+      ],
+      "sprite": {
+        "size": [
+          14,
+          6.5
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": -20,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "hills",
+      "asset": "2d000000000000000000000000000006",
+      "position": [
+        0,
+        -1.25,
+        0
+      ],
+      "sprite": {
+        "size": [
+          14,
+          4.5
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": -10,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "ground",
+      "asset": "2d000000000000000000000000000001",
+      "position": [
+        0,
+        -3,
+        0
+      ],
+      "sprite": {
+        "size": [
+          14,
+          2.25
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 0,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "step_left",
+      "asset": "2d000000000000000000000000000002",
+      "position": [
+        0,
+        -1,
+        0
+      ],
+      "sprite": {
+        "size": [
+          1,
+          1
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 0,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "step_mid",
+      "asset": "2d000000000000000000000000000002",
+      "position": [
+        1,
+        -1,
+        0
+      ],
+      "sprite": {
+        "size": [
+          1,
+          1
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 0,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "step_right",
+      "asset": "2d000000000000000000000000000002",
+      "position": [
+        1,
+        0,
+        0
+      ],
+      "sprite": {
+        "size": [
+          1,
+          1
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 0,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "ledge",
+      "asset": "2d000000000000000000000000000002",
+      "position": [
+        3,
+        1,
+        0
+      ],
+      "sprite": {
+        "size": [
+          1,
+          1
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 0,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "round_friend",
+      "asset": "2d000000000000000000000000000003",
+      "position": [
+        -5,
+        -1,
+        0
+      ],
+      "sprite": {
+        "size": [
+          1,
+          1
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 10,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "coin_1",
+      "asset": "2d000000000000000000000000000007",
+      "position": [
+        0,
+        0.25,
+        0
+      ],
+      "sprite": {
+        "size": [
+          0.5,
+          0.5
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 10,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "coin_2",
+      "asset": "2d000000000000000000000000000007",
+      "position": [
+        1,
+        1.25,
+        0
+      ],
+      "sprite": {
+        "size": [
+          0.5,
+          0.5
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 10,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "coin_3",
+      "asset": "2d000000000000000000000000000007",
+      "position": [
+        3,
+        2.25,
+        0
+      ],
+      "sprite": {
+        "size": [
+          0.5,
+          0.5
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 10,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "flower_left",
+      "asset": "2d000000000000000000000000000008",
+      "position": [
+        -6,
+        -1,
+        0
+      ],
+      "sprite": {
+        "size": [
+          0.5,
+          0.5
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 10,
+        "filter": "linear"
+      }
+    },
+    {
+      "id": "flower_right",
+      "asset": "2d000000000000000000000000000008",
+      "position": [
+        -1.5,
+        -1,
+        0
+      ],
+      "sprite": {
+        "size": [
+          0.5,
+          0.5
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 10,
+        "filter": "linear"
+      }
+    }
+  ],
+  "bases": [
+    {
+      "id": "flag_post",
+      "revision": "sha256:3ab66477beae96e4eacbd46736d4cecbd99a20aba0247e2f9cacf48ff2f17795",
+      "definition": {
+        "kind": "prefab-definition",
+        "version": 1,
+        "guid": "2d000000000000000000000000000100",
+        "space": "2d-xy",
+        "root": "2d000000000000000000000000000101",
+        "nodes": [
+          {
+            "asset": "2d000000000000000000000000000002",
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "sprite": {
+              "size": [
+                1,
+                1
+              ],
+              "pivot": [
+                0.5,
+                0
+              ],
+              "order": 0,
+              "filter": "linear"
+            },
+            "key": "2d000000000000000000000000000101",
+            "label": "Block"
+          },
+          {
+            "asset": "2d000000000000000000000000000004",
+            "position": [
+              0,
+              1,
+              0
+            ],
+            "sprite": {
+              "size": [
+                1.5,
+                2
+              ],
+              "pivot": [
+                0.25,
+                0
+              ],
+              "order": 10,
+              "filter": "linear"
+            },
+            "key": "2d000000000000000000000000000102",
+            "label": "Flag",
+            "parentKey": "2d000000000000000000000000000101"
+          }
+        ],
+        "slots": []
+      }
+    }
+  ],
+  "instances": [
+    {
+      "key": "2d000000000000000000000000000201",
+      "source": "2d000000000000000000000000000100",
+      "base": "flag_post",
+      "placement": {
+        "id": "post_1",
+        "position": [
+          -3,
+          -1,
+          0
+        ]
+      },
+      "nodeIds": {
+        "2d000000000000000000000000000101": "post_1_block",
+        "2d000000000000000000000000000102": "post_1_flag"
+      },
+      "bindings": {},
+      "overrides": []
+    },
+    {
+      "key": "2d000000000000000000000000000202",
+      "source": "2d000000000000000000000000000100",
+      "base": "flag_post",
+      "placement": {
+        "id": "post_2",
+        "position": [
+          5,
+          -1,
+          0
+        ]
+      },
+      "nodeIds": {
+        "2d000000000000000000000000000101": "post_2_block",
+        "2d000000000000000000000000000102": "post_2_flag"
+      },
+      "bindings": {},
+      "overrides": [
+        {
+          "node": "2d000000000000000000000000000102",
+          "field": "/sprite/size",
+          "op": "set",
+          "value": [
+            1.875,
+            2.5
+          ]
+        }
+      ]
+    }
+  ]
+}

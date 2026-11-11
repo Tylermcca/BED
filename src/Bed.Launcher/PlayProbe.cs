@@ -39,7 +39,7 @@ internal static class PlayProbe
                     if(scenes.Length != 1) throw new InvalidOperationException("The Play probe requires exactly one admitted scene document.");
                     name = scenes[0].Name;
                     if(!workspace.Show(name)) throw new InvalidOperationException(workspace.Said);
-                    if(workspace.SceneWindow is null) throw new InvalidOperationException("The scene did not open.");
+                    if(workspace.SceneWindow is null && workspace.Scene2Window is null) throw new InvalidOperationException("The scene did not open.");
                 }
                 else
                 {

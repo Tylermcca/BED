@@ -1,0 +1,22 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "ba5e0000000000000000000000000e02",
+  "source": "fence.obj",
+  "sourceHash": "5538755809fbd5d80039fa4b8ef12024f5a88b30e47900035d30cf0e8c1688c4",
+  "importer": {
+    "id": "obj",
+    "version": 1
+  },
+  "settings": {
+    "scale": 1,
+    "upAxis": "Y"
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/PrefabPhysicsProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

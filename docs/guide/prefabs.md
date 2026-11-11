@@ -4,6 +4,8 @@ A prefab is an original piece you can place more than once. Each placed instance
 
 You need a writable version-two level and a saved prefab supplied by your project. Opening an older level does not convert it. A prefab must be available for the same kind of level: flat or 3D. For ordinary 3D level controls, see [Edit a level](levels.md); for sprites, see [Flat levels](flat_levels.md).
 
+**Try it:** the download's **samples/prefab-physics** project places one crate prefab three times, with one copy changed, and gives the pieces physics bodies. The flat **samples/sprite-2d** project places a flag-and-block prefab twice. [Start here](start_here.md#5-try-the-2d-and-physics-samples) walks through both.
+
 ## Quick steps
 
 1. Open the level from **Files**, and find the **Prefab and images** panel.
@@ -87,5 +89,7 @@ Select ordinary objects or inherited prefab nodes, then choose **Add body**. The
 Child fields inherit from this instance's accepted snapshot. Revert beside Motion also returns its coupled local mass change. Editing an existing whole-body local value keeps that whole-body ownership; its field Revert restores the complete accepted body. **Revert body changes** clears all selected body overrides together, including a removed body. Incompatible whole/child override requests refuse rather than discarding another local value. Save, source review, undo, checked CLI edits and reopening use the same scene owner.
 
 In **Physics**, **Bounds** shows collision bounds in the 3D or XY view. This personal setting lasts for the open view, never enters the level and starts no simulation. Spheres and capsules show enclosing boxes. A selected body shows its local center and half extents. **mesh-bounds** previews only a current admitted model and names its content revision; missing, stale, image or degenerate content shows a reason. It does not import, approve or publish anything. Runtime build must capture and verify the model again. **Use preview as explicit box** copies that exact current local center and half extents in one checked edit. A changed catalog, model revision or edit policy refuses the conversion. Choosing box from the Inspector shape list instead starts with the displayed primitive defaults.
+
+To see a finished example, open the download's **samples/prefab-physics** project ([its README](../../samples/PrefabPhysicsProject/README.md)). It has a static floor, a kinematic paddle and three dynamic crates, and its Play prints what the simulation did as text; it has no game window yet.
 
 The separate [saved physics sample](../../samples/PhysicsStarter/README.md) runs these bodies in a game, through Play and in an exported build. It opts in to physics in its project settings and uses a Windows-only native physics library. A game that hasn't opted in refuses a level with physics rather than ignoring the bodies. Reading a level never starts a simulation, and the simulation never changes the saved level.

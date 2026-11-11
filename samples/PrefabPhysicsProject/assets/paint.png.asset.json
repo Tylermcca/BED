@@ -1,0 +1,19 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "ba5e0000000000000000000000000a05",
+  "source": "paint.png",
+  "sourceHash": "9c24a9b0199601998eb396d852e7f19fb4be905f4cb179ad2a757801142acac8",
+  "importer": {
+    "id": "png",
+    "version": 1
+  },
+  "settings": {},
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/PrefabPhysicsProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

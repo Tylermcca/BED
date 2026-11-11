@@ -31,6 +31,8 @@ On the start screen, open **Preferences**, then **UI scale** and choose **100%**
 
 BED's default text is larger than in earlier versions, and it follows the text size you set in Windows' accessibility settings and your display scaling. The UI scale you choose here applies on top. BED reads the Windows setting; it never changes it.
 
+BED draws its text in Windows' own interface font, Segoe UI, so it stays sharp at every text size and display scale. If that font can't be found, BED falls back to a small built-in font.
+
 Scale is saved in your per-user settings and restored when BED reopens. It changes editor text and controls without editing project files. At a larger size, use the panel's scroll controls or enlarge the panel if its contents extend beyond the visible area. Built-in data and scene panels have automated checks at all three sizes; custom panels may need their own adjustments.
 
 ## High contrast

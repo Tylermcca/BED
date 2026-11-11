@@ -1,0 +1,10 @@
+# Self-authored materials
+newmtl leaves
+Kd 0.0612 0.3515 0.0844
+map_Kd paint.png
+newmtl leaves_light
+Kd 0.15 0.5149 0.1022
+map_Kd paint.png
+newmtl trunk
+Kd 0.2462 0.0976 0.0369
+map_Kd frame.png

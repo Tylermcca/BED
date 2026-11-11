@@ -1,0 +1,19 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "ba5e0000000000000000000000000a03",
+  "source": "grass.png",
+  "sourceHash": "ac8a97072ea035ce8971f15727588760fea1844a6a28384a645d7cf14ad3cdb5",
+  "importer": {
+    "id": "png",
+    "version": 1
+  },
+  "settings": {},
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/PrefabPhysicsProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

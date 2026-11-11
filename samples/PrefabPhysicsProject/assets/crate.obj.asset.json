@@ -1,0 +1,22 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "ba5e0000000000000000000000000c01",
+  "source": "crate.obj",
+  "sourceHash": "be82389a04865b042b63db34c0e50733fc41e573204c8d5a27386888509ff420",
+  "importer": {
+    "id": "obj",
+    "version": 1
+  },
+  "settings": {
+    "scale": 1,
+    "upAxis": "Y"
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/PrefabPhysicsProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

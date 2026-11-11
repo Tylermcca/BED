@@ -17,6 +17,11 @@ internal sealed class PhysicsWorld:IDisposable
     private readonly SceneSpace space;
     internal float StepSeconds{get;}
     internal int Count=>owned.Count;
+    private readonly Dictionary<string,(Vector3 Position,Quaternion Rotation)> saved=new(StringComparer.Ordinal);
+    /// <summary>Body names with this motion, in saved order.</summary>
+    internal IReadOnlyList<string> Named(SceneBodyMotion motion)=>owned.Where(p=>p.Value.Motion==motion).Select(p=>p.Key).ToArray();
+    /// <summary>The saved world pose a body started from.</summary>
+    internal (Vector3 Position,Quaternion Rotation) Saved(string name)=>saved[name];
     internal PhysicsWorld(Scene2 scene)
     {
         scene=new Scene2Format().Read(new Scene2Format().Write(scene));
@@ -40,7 +45,7 @@ internal sealed class PhysicsWorld:IDisposable
             foreach(var item in scene.Objects.Where(o=>o.Body is not null))
             {
                 if(!Matrix4x4.Decompose(World(item.Object.Id),out var scale,out var rotation,out var position))throw new InvalidDataException("Cannot decompose body world pose.");
-                Add(item.Object.Id,item.Body!,scale.X,position,rotation);
+                saved.Add(item.Object.Id,(position,rotation));Add(item.Object.Id,item.Body!,scale.X,position,rotation);
             }
         }
         catch{try{Dispose();}catch{/* Every resource is attempted by Dispose; preserve the creation refusal. */}throw;}

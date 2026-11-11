@@ -1,0 +1,29 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "2d000000000000000000000000000001",
+  "source": "ground.png",
+  "sourceHash": "73c82e9fa58d811030c6ec3a01ae97f37e3364994f08862cff5c66e2fbf7179f",
+  "importer": {
+    "id": "png",
+    "version": 1
+  },
+  "settings": {
+    "spriteDefaults": {
+      "version": 1,
+      "pixelsPerMetre": 64,
+      "pivot": [
+        0.5,
+        0
+      ],
+      "filter": "linear"
+    }
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/SpriteLevelProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

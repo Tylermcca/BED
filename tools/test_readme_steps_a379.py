@@ -137,7 +137,7 @@ class ReadmeStepsTests(unittest.TestCase):
         # The build must supply the adapter; the reader need not learn its assembly name.
         self.assertIn("SceneStarterAdapter/SceneStarterAdapter.csproj", launcher)
         self.assertIn("samples/SceneStarterProject", launcher)
-        self.assertIn("0.3.0-rc.1", text)
+        self.assertIn("0.3.0-rc.2", text)
         self.assertIn("The download includes a level sample", text)
         self.assertIn("samples\scene-starter", text)
         self.assertIn("#build-from-source", text)

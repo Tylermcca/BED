@@ -23,7 +23,7 @@ public static class Program
           a project folder holds data/ and schemas/ (and reference_map.json, if it has links).
           --adapter loads a game's adapter (its rules and panels); adapters in the adapters folder beside the program
           load anyway. Both are optional: plain data with schemas opens without one.
-          --settings keeps the recent-projects list in that folder instead of your own settings (for tests and trials).
+          --settings keeps the recent-projects list and window layout in that folder instead of your own settings (for tests and trials).
           --shot draws the screen into a PNG instead of opening a window.
           --probe-play <folder> [--probe-args "<args>"] [--timeout 30] checks saved-files Play headlessly through normal exit; JSON on success.
           --probe-export <folder> --destination <empty folder> [--timeout 60] builds, verifies and copies saved files headlessly; JSON on success.
@@ -147,7 +147,7 @@ public static class Program
 
         var runtime = RuntimeCheckWindows.Check(errors);
         if (runtime != 0) return runtime;
-        return Open(folder, data, schemas, map, shot, adapterDlls, output, errors, settings);
+        return Open(folder, data, schemas, map, shot, adapterDlls, output, errors, settings, LayoutPathFor(args, settings));
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
@@ -158,10 +158,15 @@ public static class Program
     private static int ProbeExport(string folder,string destination,int seconds,TextWriter output,TextWriter errors)
         => ExportProbe.Run(folder,destination,TimeSpan.FromSeconds(seconds),output,errors);
 
+    /// <summary>An explicit --settings folder also keeps the window layout, so a trial never reads or changes the person's own
+    /// layout; without it the layout stays in local app data.</summary>
+    internal static string? LayoutPathFor(IReadOnlyList<string> args, string settings)
+        => args.Contains("--settings", StringComparer.Ordinal) && settings.Length > 0 ? Path.Combine(settings, "layout.ini") : null;
+
     // Keep native-bearing locals and adapter calls beyond the prerequisite decision's JIT boundary.
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
     private static int Open(string? folder, string? data, string? schemas, string? map, string? shot,
-        List<string> adapterDlls, TextWriter output, TextWriter errors, string settings)
+        List<string> adapterDlls, TextWriter output, TextWriter errors, string settings, string? layoutPath)
     {
         using var reportLog=ProblemReportLog.Configure(shot is null?settings:null);
         if(shot is null)ProblemReportLog.Record(ReportEvent.Started);
@@ -202,7 +207,7 @@ public static class Program
         }
         launcher.EnableOnboarding=true; // Native interactive host only; CLI and --shot leave it disabled.
         launcher.Splash = new BrutalSplash();   // the BRUTAL logo before the start screen (BRUTAL License v1.0, 2.2)
-        EditorApp.Run(new("BED"), io => EditorWindow<DataDocument>.Configure(io), launcher.Draw, dialogs => launcher.FileDialogs = dialogs,
+        EditorApp.Run(new("BED", LayoutPath: layoutPath), io => EditorWindow<DataDocument>.Configure(io), launcher.Draw, dialogs => launcher.FileDialogs = dialogs,
             close: launcher.RequestWindowClose, title: () => WindowTitle.For(launcher), drop: (drop, frame) => launcher.DispatchDrop(drop.Paths, frame, drop.TargetWindow(frame)));
         launcher.Dispose();   // a game still playing when the window closes is stopped, never left to the garbage collector
         return 0;

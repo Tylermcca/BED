@@ -195,6 +195,7 @@ public static class EditorApp
                     io.IniFilename = default;
                     io.LogFilename = default;
                     Bed.Editor.ImGui.EditorStyle.Apply();
+                    EditorFonts.Load(io.Fonts);   // Windows' interface font, or ImGui's built-in one
                     using var platform = new GlfwBackend(window, GlfwBackend.ClientApi.OpenGL);
                     var renderer = new OpenGlBackend();
                     using var drops = new WindowDropQueue();
@@ -281,6 +282,7 @@ public static class EditorApp
             io.IniFilename = default;   // no imgui.ini written wherever the program runs
             io.LogFilename = default;
             Bed.Editor.ImGui.EditorStyle.Apply();
+            EditorFonts.Load(io.Fonts);   // Windows' interface font, or ImGui's built-in one
             using var platform = new GlfwBackend(window, GlfwBackend.ClientApi.Vulkan);
             using var vulkan = renderer.CreateImGuiRenderer();
             using var drops = new WindowDropQueue();

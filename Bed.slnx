@@ -36,6 +36,13 @@
     <Project Path="samples/RuntimeInspect/RuntimeInspect.csproj" />
     <Project Path="samples/SceneStarterAdapter/SceneStarterAdapter.csproj" />
   </Folder>
+  <Folder Name="/samples/SpriteLevelProject/">
+    <File Path="samples/SpriteLevelProject/README.md" />
+    <File Path="samples/SpriteLevelProject/generate_assets.py" />
+    <File Path="samples/SpriteLevelProject/data/level.json" />
+    <File Path="samples/SpriteLevelProject/data/flag-post.json" />
+    <File Path="samples/SpriteLevelProject/.bed/project.json" />
+  </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/SceneShaderCompiler/SceneShaderCompiler.csproj" />
   </Folder>

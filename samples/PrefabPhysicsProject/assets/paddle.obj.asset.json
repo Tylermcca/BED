@@ -1,0 +1,22 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "ba5e0000000000000000000000000d01",
+  "source": "paddle.obj",
+  "sourceHash": "1fdfd792571d7edf39580cf1212a75530809cc8c40d2140beeaedb1c754a7c07",
+  "importer": {
+    "id": "obj",
+    "version": 1
+  },
+  "settings": {
+    "scale": 1,
+    "upAxis": "Y"
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/PrefabPhysicsProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

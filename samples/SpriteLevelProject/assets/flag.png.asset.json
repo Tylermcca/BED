@@ -1,0 +1,29 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "2d000000000000000000000000000004",
+  "source": "flag.png",
+  "sourceHash": "c8347bcf1198b4561b0d6493a9b58f3f76e9f62e483c85b284c726b9bfe3f77e",
+  "importer": {
+    "id": "png",
+    "version": 1
+  },
+  "settings": {
+    "spriteDefaults": {
+      "version": 1,
+      "pixelsPerMetre": 128,
+      "pivot": [
+        0.25,
+        0
+      ],
+      "filter": "linear"
+    }
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/SpriteLevelProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

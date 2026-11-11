@@ -1,0 +1,22 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "ba5e0000000000000000000000000f01",
+  "source": "floor.obj",
+  "sourceHash": "385e9990c99174e0fabddfabb75f15c9cd92ee1426dbc8acd94eb5b3a47233f1",
+  "importer": {
+    "id": "obj",
+    "version": 1
+  },
+  "settings": {
+    "scale": 1,
+    "upAxis": "Y"
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/PrefabPhysicsProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

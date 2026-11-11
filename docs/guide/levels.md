@@ -2,7 +2,7 @@
 
 A level contains objects you can move, rotate, resize and group. A game's adapter connects its level files to BED's level editor. Stop Play before changing the level.
 
-For newer levels with prefabs, sprites or physics, see [Reusable pieces](prefabs.md) and [Flat levels](flat_levels.md). Their controls differ a little from the steps below.
+For newer levels with prefabs, sprites or physics, see [Reusable pieces](prefabs.md) and [Flat levels](flat_levels.md). Their controls differ a little from the steps below. To try them, open the download's **samples/sprite-2d** (a flat sprite level with a prefab) or **samples/prefab-physics** (a 3D level with prefabs and physics bodies); [Start here](start_here.md#5-try-the-2d-and-physics-samples) walks through both.
 
 ## Quick steps
 

@@ -1,0 +1,7 @@
+# Self-authored materials
+newmtl crate_frame
+Kd 0.3325 0.107 0.0273
+map_Kd frame.png
+newmtl crate_planks
+Kd 0.8388 0.4342 0.1329
+map_Kd planks.png

@@ -48,7 +48,29 @@ If Windows says **VCRUNTIME140.dll** is missing, install Microsoft's Visual C++ 
 
 Play always uses what you saved, so save before you press Play.
 
-## 5. Close up
+## 5. Try the 2D and physics samples
+
+The download has two more samples in its **samples** folder. They show what 0.3 adds: reusable pieces (prefabs), flat 2D levels made of pictures (sprites), and physics. Neither sample game opens a window yet. When you press Play, the game runs and writes what it did as text in **Play console**, at the bottom of BED.
+
+### A flat sprite level
+
+1. Choose **File > Open project...**, open **samples**, choose **sprite-2d** and click **Open**. The level opens in the flat **Flat XY** view instead of the 3D one.
+2. The level is a small cartoon garden of seventeen pictures in four layers: sky, hills, ground, crates, coins, flowers, flags and a round friend. A flag on a block is a reusable piece placed twice.
+3. Click the round friend in the Outliner and drag it in the view. Press **Ctrl+Z** to put it back.
+4. Click the right-hand flag. Its size has been changed on this copy only, so the Inspector marks that field and shows a **Revert** button. Revert makes it match the left flag; **Ctrl+Z** brings the change back.
+5. Press **Ctrl+S** to save, then choose **Tools > Build and Play**. If BED shows a build command and asks to allow it, allow it. The game loads the saved level, checks it and reports in **Play console**. Click **Stop** when you're done.
+
+### Prefabs with physics
+
+1. Choose **File > Open project...**, open **samples**, choose **prefab-physics** and click **Open**. The 3D level opens.
+2. You'll see a floor, a blue paddle and a stack of three crates. The crates are one reusable piece placed three times. The floor doesn't move, the crates fall under gravity, and the game slides the paddle from side to side.
+3. Click a crate. The Inspector shows its body: how it moves, its mass, its friction and its shape. The top crate weighs more than the others; its mass is marked as changed on that copy only.
+4. Choose **View > Physics** to see the level's gravity and time step.
+5. Choose **Tools > Build and Play**, and allow the build command if BED asks. The game drops the stack, slides the paddle and then prints a short summary in **Play console**: how many bodies and steps it ran, where the top crate came to rest and how far the paddle travelled. You won't see the crates fall on screen; this sample game has no window yet.
+
+Your saved level never changes when the game runs. Both samples can also be copied as a standalone game with **File > Export build**; see [Export a game build](exporting.md).
+
+## 6. Close up
 
 1. Choose **File > Close project**. If anything is unsaved, BED asks whether to **Save**, **Don't Save** or **Cancel**.
 2. Next time, your projects are listed under **Open recent** on the start screen.

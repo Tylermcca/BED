@@ -4,6 +4,38 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.0-rc.2]
+
+Second release candidate for 0.3: samples for the new features, and fixes to boxes and panels covering the level view.
+
+### Added
+
+- **A flat sprite sample.** The download's `samples/sprite-2d` is a small, original cartoon 2D level: a sky with clouds, rolling hills, grassy ground, wooden crates, coins, flowers, pennant flags and a round lilac friend, in seventeen sprites on four drawing layers. A flag-and-block prefab is placed twice with one copy's size changed. Open it, move things, revert the changed copy, then Play it and export a build.
+- **A prefab and physics sample.** The download's `samples/prefab-physics` is a small cartoon island in 3D: a grass floor, a striped paddle the game slides from side to side, a fence, trees and a beach ball, and a wooden crate prefab placed three times as a stack, each crate with a dynamic body and the top one heavier. Play builds the saved level, runs the simulation and reports what happened. Export build copies a game that runs the same physics without BED.
+- The [Start here](docs/guide/start_here.md) guide walks through both samples, and the prefab, flat level and level guides point to them.
+- Starting BED with `--settings <folder>` now keeps the window layout in that folder too, so a trial run doesn't change your own layout.
+
+### Changed
+
+- The physics sample game now moves kinematic bodies: the paddle slides 1.5 m each way along X every 4 seconds. When it ends it reports the simulated time, where the top crate came to rest and how far each kinematic body travelled.
+
+### Fixed
+
+- When a level opened, the welcome box and the guided tour's box could cover the Outliner, the Files panel and **Used by**. They now stay in a corner of the level view, sized to fit it, and move only when the view changes size.
+- When a level opened after another file, the **Prefab and images** panel floated over the Inspector and the level view. It now docks beside the Files panel, and a layout saved by an earlier version with that panel floating is corrected once.
+- Text was drawn with a small pixel font stretched to size, which looked blurry. BED now uses Windows' own interface font, so text stays sharp at every size.
+- A very long message cut short in a data panel ended in a run of garbled characters. It now ends in an ellipsis.
+
+### Known issues
+
+- Neither new sample's game opens a window yet. Play shows their results as text in **Play console**; the physics sample reports where things ended up rather than showing them move.
+- The 3D view doesn't light models yet, and each placed prefab copy also draws a grey marker cube, which the physics sample's crates are sized to hide.
+- Physics runs only through the physics sample game, which uses a Windows-only native library. A game must opt in to physics.
+- Builds and the download are Windows only.
+- The download's original 3D level sample, `samples/scene-starter`, is still an older-format level, and BED doesn't convert it.
+- The OpenGL fallback view shows sprite outlines, not images.
+- This is a release candidate. A full walkthrough with a real screen reader has not been done for this release.
+
 ## [0.3.0-rc.1]
 
 Release candidate for 0.3: everything since 0.2.1-rc.1.

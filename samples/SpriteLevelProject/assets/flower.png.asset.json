@@ -1,0 +1,29 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "2d000000000000000000000000000008",
+  "source": "flower.png",
+  "sourceHash": "dc882d1a994236de88b4a87531e43a37cc2f5d2fe770a6d971674c283f8aa500",
+  "importer": {
+    "id": "png",
+    "version": 1
+  },
+  "settings": {
+    "spriteDefaults": {
+      "version": 1,
+      "pixelsPerMetre": 128,
+      "pivot": [
+        0.5,
+        0
+      ],
+      "filter": "linear"
+    }
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/SpriteLevelProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

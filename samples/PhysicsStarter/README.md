@@ -12,7 +12,13 @@ Install this profile's runtime inventory under the project's `game` folder. Decl
 
 The sample adapter then supplies `game/PhysicsStarter.exe` for ordinary saved-file Play and Build and Play. Existing explicitly saved Play settings remain authoritative; replace an older game's command deliberately. Physics build inputs include the saved level, project settings, published cache pointer and this exact installed runtime/notice inventory. Changed contents invalidate the stamp even with preserved timestamps. Build requires a complete published asset generation.
 
-Run `game/PhysicsStarter.exe --compile-scene2 .` from the project to prepare saved content, then `game/PhysicsStarter.exe --project . --seconds 1`. The duration is bounded to 0..60 seconds. It reports body/tick counts and dropped catch-up time; there is no live authoring or stdout command protocol.
+Run `game/PhysicsStarter.exe --compile-scene2 .` from the project to prepare saved content, then `game/PhysicsStarter.exe --project . --seconds 1`. The duration is bounded to 0..60 seconds. `--frames N` (0..100000) instead runs exactly N fixed steps without waiting on the clock, for repeatable checks; use one or the other. There is no live authoring or stdout command protocol.
+
+The game has no window yet; it reports what happened as text. On exit it prints the body count, fixed ticks and dropped catch-up time, the simulated seconds, where the highest dynamic body (the top of a stack) started and came to rest, and how far each kinematic body travelled.
+
+## Kinematic motion
+
+The saved format has no motion field, so the game applies one fixed rule: every kinematic body slides back and forth along world X around its saved position, `X = saved X + 1.5 * sin(2 * pi * t / 4)` metres at simulated time `t` seconds, keeping its saved Y, Z and rotation. Each fixed step sets the next target through scalar MoveKinematic, so dynamic bodies it touches are pushed by the simulation.
 
 The compiler expands accepted prefabs, fits mesh-bounds from that exact published model snapshot, retains local dimensions/center and emits only primitive bodies. A separate game-owned `scene2-runtime.v2` descriptor declares `jolt-2026.10.2-v1`. The generated scene, descriptor and exact asset generation are checked again before the content stamp is written last. Missing capability, unsupported profiles, stale inputs, corrupt assets, image-as-model and degenerate fits refuse. The old runtime refuses physics instead of ignoring bodies.
 

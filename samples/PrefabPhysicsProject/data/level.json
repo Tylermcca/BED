@@ -1,0 +1,318 @@
+{
+  "kind": "scene",
+  "version": 2,
+  "space": "3d",
+  "objects": [
+    {
+      "id": "floor",
+      "position": [
+        0,
+        -0.25,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "asset": "ba5e0000000000000000000000000f01",
+      "properties": {},
+      "references": {},
+      "body": {
+        "motion": "static",
+        "shape": {
+          "kind": "box",
+          "halfExtents": [
+            4,
+            0.25,
+            4
+          ],
+          "center": [
+            0,
+            0,
+            0
+          ]
+        },
+        "friction": 0.8
+      }
+    },
+    {
+      "id": "paddle",
+      "position": [
+        2.5,
+        0.75,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "asset": "ba5e0000000000000000000000000d01",
+      "properties": {},
+      "references": {},
+      "body": {
+        "motion": "kinematic",
+        "shape": {
+          "kind": "box",
+          "halfExtents": [
+            1,
+            0.125,
+            0.25
+          ],
+          "center": [
+            0,
+            0,
+            0
+          ]
+        },
+        "friction": 0.5
+      }
+    },
+    {
+      "id": "fence",
+      "position": [
+        0,
+        0,
+        3.55
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "asset": "ba5e0000000000000000000000000e02",
+      "properties": {},
+      "references": {}
+    },
+    {
+      "id": "tree",
+      "position": [
+        -2.7,
+        0,
+        2.4
+      ],
+      "rotation": [
+        0,
+        0.173648,
+        0,
+        0.984808
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "asset": "ba5e0000000000000000000000000e01",
+      "properties": {},
+      "references": {}
+    },
+    {
+      "id": "tree_small",
+      "position": [
+        3,
+        0,
+        -2.7
+      ],
+      "rotation": [
+        0,
+        0.573576,
+        0,
+        0.819152
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ],
+      "asset": "ba5e0000000000000000000000000e01",
+      "properties": {},
+      "references": {}
+    },
+    {
+      "id": "ball",
+      "position": [
+        -2.6,
+        0.3,
+        -1.1
+      ],
+      "rotation": [
+        0,
+        0.258819,
+        0,
+        0.965926
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "asset": "ba5e0000000000000000000000000e03",
+      "properties": {},
+      "references": {}
+    }
+  ],
+  "physics": {
+    "gravity": [
+      0,
+      -9.8,
+      0
+    ],
+    "fixedStepSeconds": 0.01
+  },
+  "bases": [
+    {
+      "id": "crate_v1",
+      "revision": "sha256:6b20c83edb2a9d329ba8b6985adf5597a2c1948720e4772d77b24ebf07a40305",
+      "definition": {
+        "guid": "ba5e0000000000000000000000000ab1",
+        "kind": "prefab-definition",
+        "nodes": [
+          {
+            "asset": "ba5e0000000000000000000000000c01",
+            "body": {
+              "friction": 0.6,
+              "massKg": 1,
+              "motion": "dynamic",
+              "shape": {
+                "center": [
+                  0,
+                  0,
+                  0
+                ],
+                "halfExtents": [
+                  0.5,
+                  0.5,
+                  0.5
+                ],
+                "kind": "box"
+              }
+            },
+            "key": "ba5e00000000000000000000000000b0",
+            "label": "Crate",
+            "properties": {},
+            "references": {}
+          }
+        ],
+        "root": "ba5e00000000000000000000000000b0",
+        "slots": [],
+        "space": "3d",
+        "version": 1
+      }
+    }
+  ],
+  "instances": [
+    {
+      "key": "ba5e000000000000000000000000001a",
+      "source": "ba5e0000000000000000000000000ab1",
+      "base": "crate_v1",
+      "placement": {
+        "id": "crate_1",
+        "position": [
+          0,
+          0.6,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "nodeIds": {
+        "ba5e00000000000000000000000000b0": "crate_1_box"
+      },
+      "bindings": {},
+      "overrides": []
+    },
+    {
+      "key": "ba5e000000000000000000000000001b",
+      "source": "ba5e0000000000000000000000000ab1",
+      "base": "crate_v1",
+      "placement": {
+        "id": "crate_2",
+        "position": [
+          0.15,
+          1.8,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "nodeIds": {
+        "ba5e00000000000000000000000000b0": "crate_2_box"
+      },
+      "bindings": {},
+      "overrides": []
+    },
+    {
+      "key": "ba5e000000000000000000000000001c",
+      "source": "ba5e0000000000000000000000000ab1",
+      "base": "crate_v1",
+      "placement": {
+        "id": "crate_3",
+        "position": [
+          0.3,
+          3,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "nodeIds": {
+        "ba5e00000000000000000000000000b0": "crate_3_box"
+      },
+      "bindings": {},
+      "overrides": [
+        {
+          "node": "ba5e00000000000000000000000000b0",
+          "field": "/body/massKg",
+          "op": "set",
+          "value": 5
+        }
+      ]
+    }
+  ]
+}

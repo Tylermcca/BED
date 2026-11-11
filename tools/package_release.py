@@ -172,10 +172,195 @@ def copy_scene_sample(stage: Path, runtime: Path, export_runtime: Path | None = 
             shutil.copy2(export_runtime / name, destination / "export" / name)
 
 
+# --- Prefab and physics sample (samples/prefab-physics) -------------------------------------------------------------
+# The saved project ships with the PhysicsStarter game installed under its game folder: the exact framework-dependent
+# runtime inventory the SceneStarter adapter declares (samples/SceneStarter/PhysicsRuntimeInventory.cs).
+PREFAB_PHYSICS_SOURCE = "PrefabPhysicsProject"
+PREFAB_PHYSICS_SAVED = ("data/level.json", "data/crate.json", "schemas/crate.schema.json", "reference_map.json", ".bed/project.json",
+                        "README.md", "assets/crate.obj", "assets/crate.obj.asset.json", "assets/crate.mtl",
+                        "assets/floor.obj", "assets/floor.obj.asset.json", "assets/floor.mtl",
+                        "assets/paddle.obj", "assets/paddle.obj.asset.json", "assets/paddle.mtl",
+                        "assets/tree.obj", "assets/tree.obj.asset.json", "assets/tree.mtl",
+                        "assets/fence.obj", "assets/fence.obj.asset.json", "assets/fence.mtl",
+                        "assets/ball.obj", "assets/ball.obj.asset.json", "assets/ball.mtl",
+                        *(f"assets/{name}.png{suffix}" for name in ("planks", "frame", "grass", "soil", "paint")
+                          for suffix in ("", ".asset.json")))
+
+
+def physics_runtime_inventory() -> list[str]:
+    """The game-owned physics runtime files, read from the one list the adapter and the game check."""
+    import re
+    text = (ROOT / "samples" / "SceneStarter" / "PhysicsRuntimeInventory.cs").read_text(encoding="utf-8")
+    block = re.search(r"Files=\[(.*?)\];", text, re.S)
+    if block is None:
+        raise RuntimeError("PhysicsRuntimeInventory.Files was not found")
+    return re.findall(r'"([^"]+)"', block.group(1))
+
+
+REQUIRED += tuple("samples/prefab-physics/" + name for name in PREFAB_PHYSICS_SAVED)
+REQUIRED += tuple("samples/prefab-physics/game/" + name for name in physics_runtime_inventory())
+
+
+def copy_prefab_physics_sample(stage: Path, runtime: Path) -> None:
+    """Copy the saved sample and install the physics game; never a prior local cache, generated scene or game."""
+    inventory = physics_runtime_inventory()
+    for name in inventory:
+        if not (runtime / name).is_file():
+            raise RuntimeError("PhysicsStarter build is missing " + name)
+    source = ROOT / "samples" / PREFAB_PHYSICS_SOURCE
+    def skip_generated(folder: str, names: list[str]) -> list[str]:
+        if Path(folder) == source:
+            return [n for n in ("game",) if n in names]
+        return [n for n in ("cache", "generated") if n in names] if Path(folder) == source / ".bed" else []
+    target = stage / "samples" / "prefab-physics"
+    shutil.copytree(source, target, ignore=skip_generated)
+    for name in inventory:
+        (target / "game" / name).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(runtime / name, target / "game" / name)
+
+
+def build_physics_runtime() -> Path:
+    """Build PhysicsStarter framework-dependent, as BED's own build bundles it, and return its output folder."""
+    run(["dotnet", "build", "samples/PhysicsStarter/PhysicsStarter.csproj", "-c", "Release", "--nologo", "-v:q"])
+    return ROOT / "samples" / "PhysicsStarter" / "bin" / "Release" / "net10.0"
+
+
+def verify_prefab_physics(unpacked: Path, settings: Path, shot: Path) -> str:
+    """Open the packaged sample, run its build step, probe Play (exit 0) and probe export, then run the copied game."""
+    import hashlib
+    project = unpacked / "samples" / "prefab-physics"
+    def saved_hashes():
+        return {name: hashlib.sha256((project / name).read_bytes()).hexdigest() for name in PREFAB_PHYSICS_SAVED}
+    before = saved_hashes()
+    try:
+        opened = subprocess.run([str(unpacked / "BED.exe"), str(project), "--settings", str(settings), "--shot", str(shot)],
+                                capture_output=True, text=True, timeout=120)
+        if opened.returncode != 0 or "SceneStarter" not in opened.stdout:
+            raise ValueError(f"BED didn't open it with the SceneStarter adapter (exit {opened.returncode}): {opened.stdout[-1000:]} {opened.stderr[-1000:]}")
+        # The build step Build and Play asks the person to allow once, run as the same exact command.
+        compiled = subprocess.run([str(project / "game" / "PhysicsStarter.exe"), "--compile-scene2", "."], cwd=project,
+                                  capture_output=True, text=True, encoding="utf-8", timeout=60)
+        if compiled.returncode != 0:
+            raise ValueError(f"the build step failed (exit {compiled.returncode}): {compiled.stdout[-1000:]} {compiled.stderr[-1000:]}")
+        play = subprocess.run([str(unpacked / "BED.exe"), "--probe-play", str(project), "--probe-args", "--seconds 0", "--timeout", "60"],
+                              cwd=unpacked, capture_output=True, text=True, encoding="utf-8", timeout=75)
+        if play.returncode != 0:
+            raise ValueError(f"Play probe failed (exit {play.returncode}): {play.stderr[-2000:]}")
+        reply = json.loads(play.stdout)
+        if (reply.get("status") != "passed" or reply.get("exitCode") != 0 or reply.get("document") != "level.json"
+                or not any(isinstance(line, dict) and line.get("error") is False and isinstance(line.get("text"), str)
+                           and line["text"].startswith("PhysicsStarter loaded saved physics: 5 bodies") for line in reply.get("output", []))):
+            raise ValueError("Play probe returned no five-body physics evidence")
+        with tempfile.TemporaryDirectory(prefix="bed-release-physics-export-") as temporary:
+            destination = Path(temporary) / "exported game"
+            result = subprocess.run([str(unpacked / "BED.exe"), "--probe-export", str(project), "--destination", str(destination), "--timeout", "90"],
+                                    cwd=unpacked, capture_output=True, text=True, encoding="utf-8", timeout=105)
+            if result.returncode != 0:
+                raise ValueError(f"export probe failed (exit {result.returncode}): {result.stderr[-2000:]}")
+            reply = json.loads(result.stdout)
+            if (reply.get("status") != "passed" or reply.get("verified") is not True or reply.get("copied") is not True
+                    or reply.get("document") != "level.json" or Path(reply.get("destination", "")).resolve() != destination.resolve()):
+                raise ValueError("missing verified-copy evidence")
+            actual = {p.relative_to(destination).as_posix(): p for p in destination.rglob("*") if p.is_file()}
+            files = reply.get("files")
+            if not isinstance(files, list) or reply.get("fileCount") != len(files) or len(actual) != len(files):
+                raise ValueError("copied file inventory count differs")
+            for item in files:
+                data = actual[item["path"]].read_bytes()
+                if item["length"] != len(data) or item["sha256"] != hashlib.sha256(data).hexdigest():
+                    raise ValueError("copied file inventory hashes differ")
+            if any(name.startswith(("data/", "assets/")) for name in actual):
+                raise ValueError("the export carries authoring sources")
+            game = subprocess.run([str(destination / "PhysicsStarter.exe"), "--project", ".", "--seconds", "0"],
+                                  cwd=destination, capture_output=True, text=True, encoding="utf-8", timeout=30)
+            if game.returncode != 0 or "PhysicsStarter loaded saved physics: 5 bodies" not in game.stdout:
+                raise ValueError(f"exported game failed (exit {game.returncode}): {game.stdout[-1000:]} {game.stderr[-1000:]}")
+            count = len(files)
+        if saved_hashes() != before:
+            raise ValueError("the checks changed the saved sample files")
+        return f"Prefab physics sample opens, Plays 5 bodies with code 0 and exports {count} files whose copied game exits with code 0."
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, subprocess.TimeoutExpired) as error:
+        raise RuntimeError("Packaged prefab physics journey failed: " + str(error)) from error
+# --- End of the prefab and physics sample ---------------------------------------------------------------------------
+
+
+# Original XY sprite sample (independent of the 3D sample's packaging block).
+SPRITE_SAMPLE_FILES = (
+    "README.md", "generate_assets.py", "reference_map.json", ".bed/project.json",
+    "data/level.json", "data/flag-post.json", "schemas/level.schema.json", "schemas/flag-post.schema.json",
+) + tuple("assets/" + name + suffix for name in ("ground", "block", "round", "flag", "sky", "hills", "coin", "flower") for suffix in (".png", ".png.asset.json"))
+REQUIRED += ["samples/sprite-2d/" + name for name in SPRITE_SAMPLE_FILES]
+REQUIRED += ["samples/sprite-2d/game/" + name for name in ("SceneStarter.exe", "LICENSE.txt", "NOTICE.txt")]
+REQUIRED += ["samples/sprite-2d/game/export/" + name for name in SCENE_EXPORT_RUNTIME]
+
+
+def copy_sprite_sample(stage: Path, runtime: Path, export_runtime: Path) -> None:
+    """Stage only original source inputs plus the same saved-v2 runtime used by SceneStarter."""
+    source = ROOT / "samples/SpriteLevelProject"
+    destination = stage / "samples/sprite-2d"
+    for name in SPRITE_SAMPLE_FILES:
+        target = destination / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source / name, target)
+    for folder, origin, names in (("game", runtime, ("SceneStarter.exe", "LICENSE.txt", "NOTICE.txt")),
+                                  ("game/export", export_runtime, SCENE_EXPORT_RUNTIME)):
+        target = destination / folder
+        target.mkdir(parents=True, exist_ok=True)
+        for name in names:
+            shutil.copy2(origin / name, target / name)
+
+
+def verify_sprite_sample(unpacked: Path) -> str:
+    """Open, compile, probe Play, export and execute the copied original sprite sample; no visible window."""
+    project = unpacked / "samples/sprite-2d"
+    def execute(argv, cwd, timeout=60):
+        result = subprocess.run(list(map(str, argv)), cwd=cwd, capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+        if result.returncode != 0:
+            raise RuntimeError("Packaged sprite sample failed: " + result.stdout[-1500:] + result.stderr[-1500:])
+        return result.stdout
+    with tempfile.TemporaryDirectory(prefix="bed-sprite-check-") as scratch:
+        scratch = Path(scratch)
+        shot = scratch / "sprites.png"
+        execute([unpacked / "BED.exe", project, "--settings", scratch / "settings", "--shot", shot], unpacked, 120)
+        if not shot.is_file() or shot.stat().st_size < 1000:
+            raise RuntimeError("Packaged sprite sample did not produce its opening picture")
+        execute([project / "game/SceneStarter.exe", "--compile-scene2", project], project)
+        proof = json.loads(execute([unpacked / "BED.exe", "--probe-play", project, "--probe-args", "--seconds 0", "--timeout", "30"], unpacked, 40))
+        if proof.get("status") != "passed" or proof.get("completed") is not True or type(proof.get("exitCode")) is not int or proof["exitCode"] != 0:
+            raise RuntimeError("Packaged sprite Play lacks completed code-0 proof")
+        if not any(line.get("error") is False and "loaded saved level-v2: 19 objects, 0 meshes, 8 textures." in line.get("text", "") for line in proof.get("output", [])):
+            raise RuntimeError("Packaged sprite Play did not load the original level")
+        destination = scratch / "exported"
+        export = json.loads(execute([unpacked / "BED.exe", "--probe-export", project, "--destination", destination, "--timeout", "60"], unpacked, 90))
+        if export.get("status") != "passed" or export.get("verified") is not True or export.get("copied") is not True:
+            raise RuntimeError("Packaged sprite export did not verify and copy")
+        generated = ".bed/generated/scenes/level.json"
+        level = json.loads((destination / generated).read_text(encoding="utf-8"))
+        sprites = [item for item in level["objects"] if "sprite" in item]
+        if level.get("version") != 2 or level.get("space") != "2d-xy" or level.get("bases") or level.get("instances") or len(sprites) != 17 or {item["sprite"]["order"] for item in sprites} != {-20, -10, 0, 10}:
+            raise RuntimeError("Packaged sprite export differs from its flat runtime contract")
+        if next(item for item in sprites if item["id"] == "post_2_flag")["sprite"]["size"] != [1.875, 2.5]:
+            raise RuntimeError("Packaged sprite export lost the prefab override")
+        for path in (destination / ".bed").rglob("*"):
+            if path.is_file() and path.read_bytes() != (project / path.relative_to(destination)).read_bytes():
+                raise RuntimeError("Packaged sprite export changed saved runtime bytes")
+        if (destination / "data").exists() or (destination / "assets").exists():
+            raise RuntimeError("Packaged sprite export depends on original authoring assets")
+        text = execute([destination / "SceneStarter.exe", "--project", ".", "--seconds", "0"], destination)
+        if "loaded saved level-v2: 19 objects, 0 meshes, 8 textures." not in text:
+            raise RuntimeError("Copied sprite runtime did not load its saved scene")
+    return "Packaged XY sample opens, Plays and exports seventeen original sprites; copied game exits 0."
+
+
 def build(stage: Path, rid: str) -> None:
     if rid != "win-x64":
         raise RuntimeError("AccessKit C 0.23.2 is vendored only for win-x64")
     with tempfile.TemporaryDirectory(prefix="bed-publish-") as tmp:
+        # BED's own build copies these sample games from their Release folders; build them first so a stale or
+        # missing folder can't break the publish.
+        for sample in ("samples/SceneStarter/SceneStarter.csproj", "samples/SceneStarterAdapter/SceneStarterAdapter.csproj",
+                       "samples/PhysicsStarter/PhysicsStarter.csproj"):
+            run(["dotnet", "build", sample, "-c", "Release", "--nologo", "-v:q"])
         app = publish("src/Bed.Launcher/Bed.Launcher.csproj", rid, Path(tmp) / "app")
         cli = publish("src/Bed.Agent.Cli/Bed.Agent.Cli.csproj", rid, Path(tmp) / "cli")
         game = publish("samples/Checkers.Game/Checkers.Game.csproj", rid, Path(tmp) / "game")   # play-checkers, the game itself
@@ -194,6 +379,8 @@ def build(stage: Path, rid: str) -> None:
         shutil.copytree(ROOT / "samples" / "CheckersProject", stage / "samples" / "checkers")
         shutil.copy2(game / "play-checkers.exe", stage / "samples" / "checkers" / "play-checkers.exe")
         copy_scene_sample(stage, scene, export_runtime)
+        copy_prefab_physics_sample(stage, build_physics_runtime())
+        copy_sprite_sample(stage, scene, export_runtime)
     # Adapters keep only what BED.exe doesn't already carry: it holds BRUTAL and these tools' own libraries, which
     # adapters share; the checkers rules are the checkers adapter's own.
     for name, folder, project, own in [("starter", "StarterAdapter", "StarterAdapter", ["StarterAdapter."]),
@@ -507,9 +694,11 @@ def verify(zip_path: Path) -> str:
             raise RuntimeError(f"the unpacked app didn't open the first-task sample with its adapter:\n{first.stdout}\n{first.stderr}")
         scene = verify_scene_play(unpacked)
         exported = verify_scene_export(unpacked)
+        physics = verify_prefab_physics(unpacked, settings, Path(tmp) / "prefab-physics.png")
+        sprites = verify_sprite_sample(unpacked)
         mcp = verify_mcp(unpacked)
         ai_setup = verify_ai_setup(unpacked, guide)
-        return f"{said} {checkers.stdout.strip().splitlines()[0]} {first.stdout.strip().splitlines()[0]} play-checkers starts. {scene} {exported} {mcp} {ai_setup}"
+        return f"{said} {checkers.stdout.strip().splitlines()[0]} {first.stdout.strip().splitlines()[0]} play-checkers starts. {scene} {exported} {physics} {sprites} {mcp} {ai_setup}"
 
 
 def main(argv: list[str] | None = None) -> int:

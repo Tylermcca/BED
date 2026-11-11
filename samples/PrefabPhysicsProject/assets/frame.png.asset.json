@@ -1,0 +1,19 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "ba5e0000000000000000000000000a02",
+  "source": "frame.png",
+  "sourceHash": "92af1bdfdecd8ee403a0d98d052eafb5892a988559a56cf17a388eeacd5b0aaf",
+  "importer": {
+    "id": "png",
+    "version": 1
+  },
+  "settings": {},
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/PrefabPhysicsProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

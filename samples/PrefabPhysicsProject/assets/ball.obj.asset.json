@@ -1,0 +1,22 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "ba5e0000000000000000000000000e03",
+  "source": "ball.obj",
+  "sourceHash": "86220be12e4ff064e4afd67550ab2bb658efd41989a68825cd61167fd086b94a",
+  "importer": {
+    "id": "obj",
+    "version": 1
+  },
+  "settings": {
+    "scale": 1,
+    "upAxis": "Y"
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/PrefabPhysicsProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

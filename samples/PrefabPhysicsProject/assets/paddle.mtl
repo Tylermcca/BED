@@ -1,0 +1,7 @@
+# Self-authored materials
+newmtl paddle_red
+Kd 0.807 0.0545 0.0482
+map_Kd paint.png
+newmtl paddle_white
+Kd 0.956 0.9216 0.8388
+map_Kd paint.png

@@ -1,0 +1,29 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "2d000000000000000000000000000006",
+  "source": "hills.png",
+  "sourceHash": "b87831023c185ad30acb502998521b9ce7d2c86d98c819380df21cd03d8244c5",
+  "importer": {
+    "id": "png",
+    "version": 1
+  },
+  "settings": {
+    "spriteDefaults": {
+      "version": 1,
+      "pixelsPerMetre": 32,
+      "pivot": [
+        0.5,
+        0
+      ],
+      "filter": "linear"
+    }
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/SpriteLevelProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

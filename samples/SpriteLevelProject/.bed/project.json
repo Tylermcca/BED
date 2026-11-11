@@ -1,0 +1,11 @@
+{
+  "sceneBuild": {
+    "version": 1,
+    "sceneVersion": 2,
+    "source": "data/level.json",
+    "generated": ".bed/generated/scenes/level.json",
+    "spaces": [
+      "2d-xy"
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+# Self-authored materials
+newmtl fence_paint
+Kd 0.9216 0.855 0.7305
+map_Kd paint.png

@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "required": [
+    "kind",
+    "version",
+    "guid",
+    "root",
+    "nodes",
+    "slots"
+  ],
+  "properties": {
+    "kind": {
+      "const": "prefab-definition"
+    },
+    "version": {
+      "const": 1
+    }
+  }
+}

@@ -472,3 +472,35 @@ def test_renamed_managed_program_keeps_the_public_apphost_name(monkeypatch, tmp_
     assert not (tmp_path / (Path(project).stem + suffix)).exists()
     assert seen[0][2] == project
     assert not any("AssemblyName=" in arg for arg in seen[0])
+
+
+# --- Prefab and physics sample ---
+def test_prefab_physics_sample_ships_its_saved_files_and_the_exact_physics_runtime() -> None:
+    inventory = pr.physics_runtime_inventory()
+    assert "PhysicsStarter.exe" in inventory and "runtimes/win-x64/native/jolt.dll" in inventory
+    for name in pr.PREFAB_PHYSICS_SAVED:
+        assert (pr.ROOT / "samples" / pr.PREFAB_PHYSICS_SOURCE / name).is_file(), name
+        assert "samples/prefab-physics/" + name in pr.REQUIRED
+    assert all("samples/prefab-physics/game/" + name in pr.REQUIRED for name in inventory)
+
+
+def test_prefab_physics_staging_installs_the_game_but_no_local_cache_or_build(tmp_path: Path, monkeypatch) -> None:
+    import shutil
+    source = tmp_path / "repo" / "samples" / pr.PREFAB_PHYSICS_SOURCE
+    shutil.copytree(pr.ROOT / "samples" / pr.PREFAB_PHYSICS_SOURCE, source)
+    for leftover in (".bed/cache/current.json", ".bed/generated/scenes/level.json", "game/old.txt"):
+        (source / leftover).parent.mkdir(parents=True, exist_ok=True)
+        (source / leftover).write_text("local")
+    runtime = tmp_path / "runtime"
+    for name in pr.physics_runtime_inventory():
+        (runtime / name).parent.mkdir(parents=True, exist_ok=True)
+        (runtime / name).write_text(name)
+    inventory = pr.physics_runtime_inventory()
+    monkeypatch.setattr(pr, "physics_runtime_inventory", lambda: inventory)
+    monkeypatch.setattr(pr, "ROOT", tmp_path / "repo")
+    pr.copy_prefab_physics_sample(tmp_path / "stage", runtime)
+    staged = tmp_path / "stage" / "samples" / "prefab-physics"
+    assert (staged / ".bed" / "project.json").is_file()
+    assert not (staged / ".bed" / "cache").exists() and not (staged / ".bed" / "generated").exists()
+    assert not (staged / "game" / "old.txt").exists()
+    assert (staged / "game" / "PhysicsStarter.exe").read_text() == "PhysicsStarter.exe"

@@ -9,7 +9,11 @@ public sealed class EditorLayoutStore(string? path = null)
 {
     /// <summary>Maximum encoded settings payload, excluding the small integrity header.</summary>
     public const int MaxBytes = 256 * 1024;
-    private const string Prefix = "; BED layout v1 ";
+    private const string Prefix = "; BED layout v2 ";
+    // v1 files were written while a level's panels could never dock into a layout another document had built, so a
+    // floating level panel saved in one is an accident of that, not a choice: those entries are dropped once on load.
+    private const string PrefixV1 = "; BED layout v1 ";
+    private static readonly string[] V1StrayPanels = ["###panel.scene2.prefabs]", "###panel.scene2.assets]", "###panel.scene2.physics]"];
     private static readonly UTF8Encoding Utf8 = new(false, true);
     /// <summary>App-local default; never relative to the launched project or executable.</summary>
     public static string DefaultPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BED", "layout.ini");
@@ -25,10 +29,11 @@ public sealed class EditorLayoutStore(string? path = null)
             if (stream.Length <= Prefix.Length + 65 || stream.Length > MaxBytes + Prefix.Length + 65) return false;
             var bytes = new byte[(int)stream.Length]; stream.ReadExactly(bytes);
             var text = Utf8.GetString(bytes); var newline = text.IndexOf('\n');
-            if (newline != Prefix.Length + 64 || !text.StartsWith(Prefix, StringComparison.Ordinal)) return false;
+            var v1 = text.StartsWith(PrefixV1, StringComparison.Ordinal);
+            if (newline != Prefix.Length + 64 || !v1 && !text.StartsWith(Prefix, StringComparison.Ordinal)) return false;
             var body = text[(newline+1)..];
             if (!Valid(body) || !string.Equals(text.Substring(Prefix.Length,64), Convert.ToHexStringLower(SHA256.HashData(Utf8.GetBytes(body))), StringComparison.Ordinal)) return false;
-            ini = body; return true;
+            ini = v1 ? DropV1StrayPanels(body) : body; return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException) { return false; }
     }
@@ -64,6 +69,18 @@ public sealed class EditorLayoutStore(string? path = null)
     {
         var ini = ImGui.SaveIniSettingsToMemory();
         return ini.Length <= MaxBytes && TryWrite(ini.ToString() ?? "");
+    }
+    /// <summary>Removes the floating (undocked) level panel entries a v1 layout saved; docked ones are kept.</summary>
+    internal static string DropV1StrayPanels(string ini)
+    {
+        var sections = System.Text.RegularExpressions.Regex.Split(ini, @"(?=^\[)", System.Text.RegularExpressions.RegexOptions.Multiline);
+        bool Stray(string section)
+        {
+            var line = section.Split('\n', 2)[0].TrimEnd('\r');
+            return line.StartsWith("[Window][", StringComparison.Ordinal) && V1StrayPanels.Any(name => line.EndsWith(name, StringComparison.Ordinal))
+                && !section.Contains("\nDockId=", StringComparison.Ordinal);
+        }
+        return string.Concat(sections.Where(section => !Stray(section)));
     }
     private static bool Valid(string text) => !string.IsNullOrWhiteSpace(text) && text.Length <= MaxBytes
         && !text.Contains('\0') && text.Contains('[',StringComparison.Ordinal) && Utf8.GetByteCount(text) <= MaxBytes;

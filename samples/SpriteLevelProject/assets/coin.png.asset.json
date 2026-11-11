@@ -1,0 +1,29 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "2d000000000000000000000000000007",
+  "source": "coin.png",
+  "sourceHash": "be0a6c842905acf861b489d3a786c0de741b80078601b83d79dddebca2e22b97",
+  "importer": {
+    "id": "png",
+    "version": 1
+  },
+  "settings": {
+    "spriteDefaults": {
+      "version": 1,
+      "pixelsPerMetre": 128,
+      "pivot": [
+        0.5,
+        0
+      ],
+      "filter": "linear"
+    }
+  },
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/SpriteLevelProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

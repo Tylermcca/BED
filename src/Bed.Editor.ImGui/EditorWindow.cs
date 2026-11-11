@@ -782,6 +782,7 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
             }   // beside the editor, stacked
             ImGui.SetNextWindowSize(new float2(panel.Width, panel.Height), ImGuiCond.FirstUseEver);
             below += panel.Height + 10;
+            var fresh = centre is not null && panel.Side != PanelSide.Centre && ImGui.Internal.FindWindowByName($"{panel.Title}###panel.{panel.Id}").IsNull();
             if (Ui.Begin($"{panel.Title}###panel.{panel.Id}", ref open))
                 try { panel.Draw(); }
                 catch (Exception e)
@@ -791,6 +792,12 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
                     Say(false, "", $"The {panel.Title} panel failed and was closed: {e.Message}");
                 }
             Ui.End();
+            // In the docked layout a panel's first showing must land in a dock. A layout built for another document (or
+            // restored from an older layout file) never placed it, so it would float over the inspector and the centre.
+            // A saved layout that floats it on purpose is kept (Reset layout docks everything again).
+            if (fresh && ImGui.Internal.FindWindowByName($"{panel.Title}###panel.{panel.Id}") is var shown && !shown.IsNull() && shown.DockId == default
+                && ImGui.Internal.FindWindowSettingsByWindow(shown).IsNull())
+                strays.Add(panel);
             if (!open){if(PanelCloseRequested is {} requested)requested(panel.Id);else Editor.SetOpen(panel.Id,false);}
         }
     }
@@ -944,7 +951,10 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
             if (restored is { } id) centre = id;
             else BuildLayout(space, vp.WorkSize);
         }
+        DockStrays(space);
         ImGui.DockSpaceOverViewport(space, vp, ImGuiDockNodeFlags.None, default);
+        if (RestoredCentre(ImGui.Internal.DockBuilderGetNode(space)) is { } central && ImGui.Internal.DockBuilderGetNode(central) is var centralNode && !centralNode.IsNull())
+            DockedCentre.Record(centralNode.Pos, centralNode.Size);   // floating help boxes keep inside it, clear of the docks
         if (saveAsOpen)   // in the docked layout, Save as is a small window under the toolbar
         {
             ImGui.SetNextWindowPos(new float2(vp.Pos.X + vp.Size.X / 2, vp.WorkPos.Y + 8), ImGuiCond.Always, new float2(0.5f, 0));
@@ -976,6 +986,42 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
         if (node.IsNull() || depth > 64) return null;
         if (Brutal.ImGuiApi.Internal.ImGuiDockNodeExtensions.IsCentralNode(node)) return node.ID;
         return RestoredCentre(node.ChildNodes[0], depth + 1) ?? RestoredCentre(node.ChildNodes[1], depth + 1);
+    }
+    private readonly List<Panel> strays = [];
+    private static ImGuiID DockOf(string window)
+    {
+        var found = ImGui.Internal.FindWindowByName(window);
+        return found.IsNull() ? default : found.DockId;
+    }
+    // Docks panels that first showed floating where the built layout would have put them: a bottom browser panel beside
+    // Files (Files keeps the left part), a right panel as a tab with the inspector or above it, a left one above the outliner.
+    private void DockStrays(ImGuiID space)
+    {
+        if (strays.Count == 0) return;
+        foreach (var panel in strays)
+        {
+            var name = $"{panel.Title}###panel.{panel.Id}";
+            ImGuiID target = default;
+            if (BottomPanel(panel))
+            {
+                foreach (var other in Editor.Panels)
+                    if (other.Id != panel.Id && other.Id != "project.files" && BottomPanel(other) && DockOf($"{other.Title}###panel.{other.Id}") is var id && id != default) { target = id; break; }
+                if (target == default && DockOf("Play console###project.play.console") is var console && console != default) target = console;
+                if (target == default && DockOf("Files###panel.project.files") is var files && files != default)
+                    ImGui.Internal.DockBuilderSplitNode(files, ImGuiDir.Right, .72f, out target, out _);
+            }
+            else if (panel.Side == PanelSide.Right && DockOf("Inspector###inspector") is var inspector && inspector != default)
+            {
+                if (RightTabPanel(panel)) target = inspector;
+                else ImGui.Internal.DockBuilderSplitNode(inspector, ImGuiDir.Up, .4f, out target, out _);
+            }
+            else if (panel.Side == PanelSide.Left && DockOf("Outliner###outliner") is var outliner && outliner != default)
+                ImGui.Internal.DockBuilderSplitNode(outliner, ImGuiDir.Up, .4f, out target, out _);
+            if (target == default && DockOf("Inspector###inspector") is var fallback && fallback != default) target = fallback;
+            if (target != default) ImGui.Internal.DockBuilderDockWindow(name, target);
+        }
+        strays.Clear();
+        ImGui.Internal.DockBuilderFinish(space);
     }
     private static bool RightTabPanel(Panel panel)=>panel.Id is "scene2.physics" or "project.references" or "project.proposals";
     private static bool BottomPanel(Panel panel)=>panel.Id is "project.files" or "project.checks" or "scene2.assets" or "scene2.prefabs" || panel.Title=="Assets";

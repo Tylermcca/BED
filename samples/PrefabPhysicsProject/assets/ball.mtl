@@ -1,0 +1,13 @@
+# Self-authored materials
+newmtl ball_blue
+Kd 0.0648 0.2705 0.807
+map_Kd paint.png
+newmtl ball_red
+Kd 0.8388 0.0762 0.0612
+map_Kd paint.png
+newmtl ball_white
+Kd 0.956 0.9387 0.8879
+map_Kd paint.png
+newmtl ball_yellow
+Kd 0.9734 0.6172 0.0648
+map_Kd paint.png

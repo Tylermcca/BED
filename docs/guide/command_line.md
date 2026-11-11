@@ -23,7 +23,7 @@ With no project, BED opens the start screen. Choose either a project folder or t
 | `--schemas` | Schema folder paired with --data. |
 | `--map` | Reference-map file; overrides the discovered map even with a project folder. |
 | `--adapter` | Adapter DLL to load; repeat for multiple DLLs. Adapters beside BED in its adapters folder load automatically. |
-| `--settings` | Folder for local settings such as recent projects, useful for an isolated trial. |
+| `--settings` | Folder for local settings such as recent projects and the window layout, useful for an isolated trial. |
 | `--shot` | Output PNG filename, not the project path. Draws the screen without opening a window. It can also draw the start screen. |
 | `--version` | Print the build version and exit; must be used alone. |
 | `-h` | Print usage and exit. |

@@ -26,6 +26,20 @@ public sealed partial class ProjectLauncher
     private IProjectPlaySession? tourPlay;
     private Action<IReadOnlyList<DataFile>>? tourSaveWatcher;
     private string tourNotice="";
+    private (float2 Pos,float2 Size)? welcomeArea,tourArea;
+
+    /// <summary>Puts the next welcome or tour box in the bottom-right corner of the docked editor's centre view, so it
+    /// never covers Files, Used by or the other docks. It moves again only when that area changes, so a box the
+    /// person drags stays where they put it. False when no docked editor is showing (the start page).</summary>
+    private static bool PlaceInCentre(ref (float2 Pos,float2 Size)? last,float minWidth)
+    {
+        if(!DockedCentre.TryGet(out var pos,out var size)){last=null;return false;}
+        var margin=ImGui.GetFontSize();var moved=last!=(pos,size);last=(pos,size);
+        var room=new float2(MathF.Max(1,size.X-2*margin),MathF.Max(1,size.Y-2*margin));
+        ImGui.SetNextWindowPos(pos+size-new float2(margin,margin),moved?ImGuiCond.Always:ImGuiCond.Appearing,new float2(1,1));
+        ImGui.SetNextWindowSizeConstraints(new float2(MathF.Min(minWidth,room.X),0),room);
+        return true;
+    }
 
     private void ReadTourPreference()
     {
@@ -153,7 +167,7 @@ public sealed partial class ProjectLauncher
         {
             if(Workspace is not null&&!tourDismissed)
             {
-                var welcome=true;
+                var welcome=true;PlaceInCentre(ref welcomeArea,0);
                 if(Ui.Begin("Welcome to BED###bed.tour.offer"u8,ref welcome,ImGuiWindowFlags.AlwaysAutoResize|ImGuiWindowFlags.NoDocking))DrawTourOffer();
                 Ui.End();if(!welcome)SkipTour();
             }
@@ -166,9 +180,12 @@ public sealed partial class ProjectLauncher
             var draw=ImGui.GetForegroundDrawList(viewport);var colour=ImGui.GetColorU32(ImGuiCol.NavCursor);
             draw.AddRect(new(bounds.X-3,bounds.Y-3),new(bounds.X+bounds.Width+3,bounds.Y+bounds.Height+3),colour,3,0,3);
         }
-        var vp=ImGui.GetMainViewport();
-        ImGui.SetNextWindowPos(vp.Pos+vp.Size-new float2(16,48),ImGuiCond.Appearing,new float2(1,1));
-        ImGui.SetNextWindowSizeConstraints(new float2(MathF.Min(440,vp.Size.X-32),0),new float2(vp.Size.X-32,vp.Size.Y-32));
+        if(!PlaceInCentre(ref tourArea,440))
+        {
+            var vp=ImGui.GetMainViewport();
+            ImGui.SetNextWindowPos(vp.Pos+vp.Size-new float2(16,48),ImGuiCond.Appearing,new float2(1,1));
+            ImGui.SetNextWindowSizeConstraints(new float2(MathF.Min(440,vp.Size.X-32),0),new float2(vp.Size.X-32,vp.Size.Y-32));
+        }
         var open=true;
         if(Ui.Begin("Take the tour###bed.tour"u8,ref open,ImGuiWindowFlags.AlwaysAutoResize|ImGuiWindowFlags.NoSavedSettings|ImGuiWindowFlags.NoDocking|ImGuiWindowFlags.NoFocusOnAppearing))
         {

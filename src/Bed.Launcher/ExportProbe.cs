@@ -62,7 +62,7 @@ internal static class ExportProbe
                     if(request.Outcome!=UiActionOutcome.Applied)throw new InvalidOperationException("Export control did not accept the action: "+label);
                 }
                 Frame(3);
-                var open=workspace.SceneWindow?.ExportBuildAction??throw new InvalidOperationException("This project does not provide Export build.");
+                var open=workspace.SceneWindow?.ExportBuildAction??workspace.Scene2Window?.ExportBuildAction??throw new InvalidOperationException("This project does not provide Export build.");
                 open();Frame(3);Act(UiRole.Button,"Build saved files",UiActions.Invoke);
                 while(!Control(UiRole.Button,"Copy build to folder...").Enabled)
                 {

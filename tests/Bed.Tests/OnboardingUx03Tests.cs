@@ -101,6 +101,29 @@ public sealed class OnboardingUx03Tests
         foreach(var label in new[]{"Focus next action","Skip tour"}){var button=r.Node(label);Assert.True(button.Enabled);Assert.False(button.TextEvidence!.Value.Truncated);Assert.True(button.Bounds.Y+button.Bounds.Height<=1000);}
         r.Capture("tour-scale-"+scale);r.Act("Skip tour");Assert.Equal("Closed",r.Launcher.TourStage);
     }
+    private static UiNode Window(string title)=>Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Window&&n.Label==title);
+    private static bool Overlaps(UiBounds a,UiBounds b)=>a.X<b.X+b.Width&&b.X<a.X+a.Width&&a.Y<b.Y+b.Height&&b.Y<a.Y+a.Height;
+    // The box sits inside the centre view, so no docked panel (Files, a tabbed Used by, Prefab and images, the outliner or inspector) is under it.
+    private static void AssertClearOfDocks(string title)
+    {
+        var box=Window(title).Bounds;var centre=Window("Viewport").Bounds;Assert.False(box.IsEmpty);
+        Assert.True(box.X>=centre.X&&box.Y>=centre.Y&&box.X+box.Width<=centre.X+centre.Width&&box.Y+box.Height<=centre.Y+centre.Height,$"{title} {box} leaves the centre view {centre}");
+        foreach(var dock in Ui.Snapshot().Nodes.Where(n=>n.Role==UiRole.Window&&n.Label is "Files" or "Used by" or "Outliner" or "Inspector" or "Prefab and images"&&!n.Bounds.IsEmpty))
+            Assert.False(Overlaps(box,dock.Bounds),$"{title} {box} covers {dock.Label} {dock.Bounds}");
+        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Window&&n.Label=="Files"&&!n.Bounds.IsEmpty);
+    }
+    [Theory][InlineData(1f)][InlineData(2f)]
+    public void Welcome_and_tour_boxes_stay_in_the_centre_view_clear_of_Files_and_Used_by(float scale)
+    {
+        using(var offered=new Rig())
+        {
+            offered.Act("Try the example");new DpiScale().Apply(scale);offered.Frames(6);
+            Assert.NotNull(offered.Launcher.Workspace?.SceneWindow);AssertClearOfDocks("Welcome to BED");
+            offered.Act("Skip tour");
+        }
+        using var r=new Rig();r.Start();new DpiScale().Apply(scale);r.Frames(6);AssertClearOfDocks("Take the tour");
+        r.Act("Skip tour");Assert.Equal("Closed",r.Launcher.TourStage);new DpiScale().Apply(1f);
+    }
     [Fact]
     public void Owner_change_stops_the_tour_without_dismissing_or_mutating_the_replacement()
     {

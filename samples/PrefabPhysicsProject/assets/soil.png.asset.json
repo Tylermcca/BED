@@ -1,0 +1,19 @@
+{
+  "kind": "asset",
+  "version": 1,
+  "guid": "ba5e0000000000000000000000000a04",
+  "source": "soil.png",
+  "sourceHash": "9d78a230111d2cb9698ce169fc80564fc070608058d6beca8e12a8f9e66be9af",
+  "importer": {
+    "id": "png",
+    "version": 1
+  },
+  "settings": {},
+  "provenance": {
+    "author": "BED sample contributors",
+    "licence": "self-authored",
+    "origin": "samples/PrefabPhysicsProject/generate_assets.py",
+    "declared": "ours"
+  },
+  "aiUse": "allowed"
+}

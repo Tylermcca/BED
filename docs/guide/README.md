@@ -4,7 +4,7 @@ New to BED? Begin with **[Start here](start_here.md)**: ten minutes, no programm
 
 ## Open and edit
 
-1. [Start here](start_here.md) - Open BED, change data, move an object in a level, play it and save, in about ten minutes.
+1. [Start here](start_here.md) - Open BED, change data, move an object in a level, play it and save, in about ten minutes. Then try the 2D and physics samples.
 2. [Edit project data](data_workflow.md) - Use tables and forms, follow references, preview bulk edits and replace values.
 3. [Build a data editor](editing_data.md) - Connect schemas, tables and forms to your own document format.
 4. [Your first settings change](first_task.md) - Change a setting, see a mistake caught, run the game's check, then save and undo.
