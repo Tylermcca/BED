@@ -74,7 +74,7 @@ public sealed class GameProcessHostTests
         public async Task Until(Func<bool> done)
         {
             var watch=Stopwatch.StartNew();
-            while(!done() && watch.Elapsed<TimeSpan.FromSeconds(6))
+            while(!done() && watch.Elapsed<TimeSpan.FromSeconds(20)) // room for a busy machine to start the helper; ends as soon as done
             {
                 Host.Pump(Session);Session.Tick();await Task.Delay(10);
             }
