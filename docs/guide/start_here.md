@@ -8,6 +8,7 @@
 
 1. Unzip the download into a folder you can write to, such as your Documents folder.
 2. Double-click **BED.exe**.
+3. If Windows shows a blue "Windows protected your PC" box that names an unknown publisher, click **More info**, then **Run anyway**. Windows shows it because BED isn't signed by a paid certificate yet. It only asks once for each download.
 
 BED opens on its start screen. The first time you open a project, BED offers a short guided tour. You can take it now, or skip it and reopen it later from **Help > Take the tour**. This page covers the same ground in more detail.
 

@@ -26,6 +26,8 @@ The current download is **0.3.0-rc.4**, a release candidate for 0.3. Get it from
 
 1. Download **BED-win-x64.zip** from the [Releases page](../../releases).
 2. Unzip it anywhere and double-click **BED.exe**. BED needs the Microsoft Visual C++ Redistributable (x64). If it is missing, install it from [Microsoft](https://aka.ms/vs/17/release/vc_redist.x64.exe), then open BED again.
+
+   Windows may show a blue "Windows protected your PC" box that names an unknown publisher, because BED isn't signed by a paid certificate yet. Click **More info**, then **Run anyway**. It only asks once for each download.
 3. Click **Try the example**. The first time, BED offers a short guided tour. Take it, or skip it.
 4. Click a cell in the table, type a new value and press Enter.
 5. Now type **-5** in the "minutes" column. BED refuses it and shows why next to the field.
