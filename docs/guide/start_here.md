@@ -31,7 +31,7 @@ If Windows says **VCRUNTIME140.dll** is missing, install Microsoft's Visual C++ 
 
 ## 3. Move an object in a level
 
-1. On the start screen, under **Samples**, click **3D level to build on**. (From an open project, choose **File > Open project...**, go to the folder you unzipped, open **samples**, choose **scene-starter** and click **Open**.)
+1. On the start screen, double-click **scene-starter** in the project list. (From an open project, choose **File > Open project...**, go to the folder you unzipped, open **samples**, choose **scene-starter** and click **Open**.)
 2. BED opens the level. You'll see the **Outliner** on the left (every object in the level), the 3D **Viewport** in the middle and the **Inspector** on the right.
 
    ![The scene-starter level: Outliner, Viewport, Inspector and Files](../images/guide/level.png)
@@ -55,7 +55,7 @@ The download has two more samples in its **samples** folder. They show what 0.3 
 
 ### A flat sprite level
 
-1. On the start screen, click **2D garden game** under **Samples** (or choose **File > Open project...**, open **samples**, choose **sprite-2d** and click **Open**). The level opens in the flat **Flat XY** view instead of the 3D one.
+1. On the start screen, double-click **sprite-2d** in the project list (or choose **File > Open project...**, open **samples**, choose **sprite-2d** and click **Open**). The level opens in the flat **Flat XY** view instead of the 3D one.
 2. The level is a small cartoon garden of seventeen pictures in four layers: sky, hills, ground, crates, coins, flowers, flags and a round friend. A flag on a block is a reusable piece placed twice.
 3. Click the round friend in the Outliner and drag it in the view. Press **Ctrl+Z** to put it back.
 4. Click the right-hand flag. Its size has been changed on this copy only, so the Inspector marks that field and shows a **Revert** button. Revert makes it match the left flag; **Ctrl+Z** brings the change back.
@@ -65,7 +65,7 @@ The download has two more samples in its **samples** folder. They show what 0.3 
 
 ### Prefabs with physics
 
-1. On the start screen, click **3D crate island** under **Samples** (or choose **File > Open project...**, open **samples**, choose **prefab-physics** and click **Open**). The 3D level opens.
+1. On the start screen, double-click **prefab-physics** in the project list (or choose **File > Open project...**, open **samples**, choose **prefab-physics** and click **Open**). The 3D level opens.
 2. You'll see a grassy island, a red and white paddle and a stack of three crates. The crates are one reusable piece placed three times. The floor doesn't move, the crates fall under gravity, and the game slides the paddle from side to side.
 3. Click a crate. The Inspector shows its body: how it moves, its mass, its friction and its shape. The top crate weighs more than the others; its mass is marked as changed on that copy only.
 4. Choose **View > Physics** to see the level's gravity and time step.

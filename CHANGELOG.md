@@ -4,6 +4,18 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.0-rc.7]
+
+Seventh release candidate for 0.3: the samples are in the start screen's project list.
+
+### Changed
+
+- The start screen's project list shows every folder in BED's **samples** folder, marked **Sample**, so you no longer have to find the folder. Anything you put in that folder shows up too, and an empty folder shows none. **Remove from list** hides a sample for good; its files stay.
+
+### Fixed
+
+- The samples were in a separate list beside the projects, with fixed names, so a folder you added to **samples** never showed and a sample couldn't be removed. They're now ordinary rows in the project list, read from the **samples** folder next to BED.
+
 ## [0.3.0-rc.6]
 
 Sixth release candidate for 0.3: files another program changes, such as an AI assistant, load in BED by themselves.

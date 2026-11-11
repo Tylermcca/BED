@@ -132,7 +132,10 @@ public sealed partial class ProjectLauncher : IDisposable
     }
 
     /// <summary>The folder holding the samples that come with BED; the start screen lists the ones it finds there.</summary>
-    public string SamplesFolder { get; set; } = Path.Combine(AppContext.BaseDirectory, "samples");
+    public string SamplesFolder { get; set; } = DefaultSamplesFolder;
+
+    /// <summary>Where new launchers look for samples: the <c>samples</c> folder beside BED. Tests point it elsewhere.</summary>
+    internal static string DefaultSamplesFolder { get; set; } = Path.Combine(AppContext.BaseDirectory, "samples");
 
     /// <summary>The settings file beside the recent list: the person's text size and app theme.</summary>
     public string SettingsFile => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(Recent.File))!, "settings.json");

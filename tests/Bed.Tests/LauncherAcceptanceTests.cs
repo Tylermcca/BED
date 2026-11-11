@@ -52,7 +52,7 @@ public sealed class LauncherAcceptanceTests
             return new(data,schemas,map?m:null);
         }
         public RecentProjects Recent(int limit=10)=>new(RecentFile,limit);
-        public ProjectLauncher Launcher(ProjectPaths? sample=null)=>new(Recent(),sample,StartWindowTestProjects.Creator(Root),Path.Combine(Root,"created"));
+        public ProjectLauncher Launcher(ProjectPaths? sample=null)=>new(Recent(),sample,StartWindowTestProjects.Creator(Root),Path.Combine(Root,"created")){SamplesFolder=Path.Combine(Root,"samples")};
         public byte[] Bytes(ProjectPaths p)=>File.ReadAllBytes(Path.Combine(p.Data,"nodes.json"));
         public void Dispose()
         {
@@ -473,7 +473,7 @@ public sealed class LauncherAcceptanceTests
             Draw=draw;
             patterns=new[]{"Remove from list","Folder not found","Try the example","Rules folder (schema)","Open project...","Open the sample project","Data folder","Schema folder","Link map (optional)","Close project",
                 "Don't Save","Cancel","Save","Remove","(folder gone)","None yet.",
-                "Choose this folder","Cancel","[Bridge]","[data]","[schemas]","reference_map.json","Beacon workshop","Samples","Checkers rules","2D garden game"}
+                "Choose this folder","Cancel","[Bridge]","[data]","[schemas]","reference_map.json","Beacon workshop"}
                 .Distinct(StringComparer.Ordinal).ToDictionary(x=>x,CaptionFor,StringComparer.Ordinal);
             Host=new HeadlessHost(1600,900){Drawing=false};EditorWindow<DataDocument>.Configure(ImGui.GetIO());
             Host.MoveMouse(Draw,-100,-100);Host.Frames(Draw,5);
@@ -569,14 +569,20 @@ public sealed class LauncherAcceptanceTests
         Assert.NotNull(ui.Find("Close project","Files###panel.project.files"));
     }
     [Fact]
-    public void StartScreen_ListsTheSamplesThatCameWithBed_AndOneClickOpensOne()
+    public void StartScreen_ListsEveryFolderInBedsSamplesFolder_InTheProjectList_AndRemovedOnesStayOff()
     {
-        using var r=new Sandbox();var checkers=r.Project(Path.Combine("samples","checkers"));var l=r.Launcher();l.SamplesFolder=Path.Combine(r.Root,"samples");
-        using var ui=new Screen(l.Draw);
-        Assert.Equal(["Checkers rules"],l.InstalledSamples().Select(s=>s.Title)); // only the samples whose folders are there
-        Assert.NotNull(ui.Find("Samples"));Assert.Null(ui.Find("2D garden game"));
-        var before=r.Bytes(checkers);ui.Click("Checkers rules");
+        using var r=new Sandbox();var l=r.Launcher();
+        Assert.Empty(l.SearchRecent("")); // no samples folder, no samples
+        var checkers=r.Project(Path.Combine("samples","checkers"));var mine=r.Project(Path.Combine("samples","my-own-game"));
+        Assert.Equal(["checkers","my-own-game"],l.SearchRecent("").Select(ProjectLauncher.Name)); // whatever is in the folder, nothing hard-coded
+        Assert.Equal(2,l.SearchRecent("Sample").Count); // the Kind column says Sample
+        using var ui=new Screen(l.Draw);Assert.Null(ui.Find("None yet.")); // the samples fill the project list
+        var before=r.Bytes(checkers);Assert.True(l.OpenRow(l.SearchRecent("checkers")[0]));
         Assert.NotNull(l.Workspace);Assert.Equal(checkers.Data,l.Current!.Data);Assert.Equal(before,r.Bytes(checkers));
+        Assert.True(l.Close());Assert.Equal(2,l.SearchRecent("").Count); // opened once: now a recent project, not listed twice
+        l.RemoveFromList(l.SearchRecent("my-own-game")[0]);l.RemoveFromList(l.SearchRecent("checkers")[0]);
+        Assert.Empty(r.Launcher().SearchRecent("")); // removed samples stay off, files kept
+        Assert.True(Directory.Exists(mine.Data));
     }
     [Fact]
     public void StartScreen_TypedSeparatePathsIncludingOptionalMap_OpenByKeyboard()

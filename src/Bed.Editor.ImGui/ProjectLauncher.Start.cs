@@ -23,10 +23,10 @@ public sealed partial class ProjectLauncher
     private bool rootPicker, locationPicker, focusNewName, focusGuideOpener, focusOpenFolder;
 
     /// <summary>The matching recent rows, pinned first and newest first within each group.</summary>
-    public IReadOnlyList<ProjectPaths> SearchRecent(string text) => Recent.Items.Where(p =>
+    public IReadOnlyList<ProjectPaths> SearchRecent(string text) => Recent.Items.Concat(InstalledSamples()).Where(p =>
         text.Length == 0 || Name(p).Contains(text, StringComparison.OrdinalIgnoreCase)
         || (p.Folder ?? p.Data).Contains(text, StringComparison.OrdinalIgnoreCase)
-        || Recent.Metadata(p).Kind.Contains(text, StringComparison.OrdinalIgnoreCase)).ToArray();
+        || RowKind(p).Contains(text, StringComparison.OrdinalIgnoreCase)).ToArray();
 
     /// <summary>Creates and opens a personal example; the installed sample stays unchanged.</summary>
     public bool TryExample()
@@ -196,24 +196,24 @@ public sealed partial class ProjectLauncher
                 var rowNode = Ui.Tree.Count - 1;
                 Ui.Tree.Update(rowNode, Ui.Tree.At(rowNode) with { Selected = selectedRecent == p });
                 if (keyboardMenu || pointerMenu) ImGui.OpenPopup("##recent-menu"u8);
-                if (openReason is null && (enter || (activated && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left)))) OpenRecent(p);
+                if (openReason is null && (enter || (activated && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left)))) OpenRow(p);
                 if (Ui.BeginPopup("##recent-menu"u8))
                 {
                     selectedRecent = p;
-                    if (Ui.MenuItem("Open"u8, ""u8, false, openReason is null, openReason)) OpenRecent(p);
+                    if (Ui.MenuItem("Open"u8, ""u8, false, openReason is null, openReason)) OpenRow(p);
                     var shellFolder = p.Folder ?? Path.GetDirectoryName(p.Data) ?? p.Data;
                     var canShow = Directory.Exists(shellFolder);
                     if (Ui.MenuItem("Show in Explorer"u8, ""u8, false, canShow, canShow ? null : "That project folder was not found.")) ShowRecentFolder(p);
                     var pinned = Recent.IsPinned(p);
-                    if (pinned ? Ui.MenuItem("Unpin"u8) : Ui.MenuItem("Pin"u8))
+                    if (!IsListedSample(p) && (pinned ? Ui.MenuItem("Unpin"u8) : Ui.MenuItem("Pin"u8)))
                     { Recent.SetPinned(p, !pinned); Say(true, pinned ? "Unpinned the recent project." : "Pinned the recent project."); }
-                    if (Ui.MenuItem("Remove from list"u8)) { Recent.Remove(p); selectedRecent = null; Say(true, "Removed from the list; files aren't deleted."); }
+                    if (Ui.MenuItem("Remove from list"u8)) { RemoveFromList(p); selectedRecent = null; Say(true, "Removed from the list; files aren't deleted."); }
                     Ui.EndPopup();
                 }
                 var after = ImGui.GetCursorScreenPos(); ImGui.SetCursorScreenPos(at); Ui.TextWrapped(Name(p)); if (Recent.IsPinned(p)) Ui.TextWrapped("Pinned"u8); if (openReason is not null) Ui.TextWrapped("Folder not found"u8); ImGui.SetCursorScreenPos(after); ImGui.Dummy(new float2(0, 0));
                 Ui.TableNextColumn(); Ui.TextWrapped(WrapFolder(folder, Math.Max(50, ImGui.GetContentRegionAvail().X)));
-                Ui.TableNextColumn(); Ui.TextWrapped(metadata.LastOpenedUtc?.ToLocalTime().ToString("g") ?? "Not recorded");
-                Ui.TableNextColumn(); Ui.TextWrapped(metadata.Kind);
+                Ui.TableNextColumn(); Ui.TextWrapped(metadata.LastOpenedUtc?.ToLocalTime().ToString("g") ?? (IsListedSample(p) ? "Not opened yet" : "Not recorded"));
+                Ui.TableNextColumn(); Ui.TextWrapped(RowKind(p));
                 ImGui.PopID();
             }
             Ui.EndTable();
@@ -228,36 +228,61 @@ public sealed partial class ProjectLauncher
         Ui.FieldCaption("Open a folder you already work on."u8);
         if (Ui.Button("Try the example"u8, size)) TryExample();
         Ui.TextWrapped("Make a copy you can change safely."u8);
-        var samples = InstalledSamples();
-        if (samples.Count > 0)
-        {
-            ImGui.SeparatorText("Samples"u8);
-            foreach (var sample in samples)
-            {
-                if (Ui.Button(sample.Title, size)) OpenFolder(sample.Folder);
-                Ui.TextWrapped(sample.About);
-            }
-        }
         ImGui.PopStyleVar();
         Ui.EndTable();
     }
 
-    /// <summary>A sample that comes with BED, shown on the start screen so it opens with one click.</summary>
-    public sealed record InstalledSample(string Title, string About, string Folder);
+    /// <summary>Every folder in BED's own <c>samples</c> folder (<see cref="SamplesFolder"/>) that isn't already a recent project
+    /// and hasn't been removed from the list, by name. Nothing is hard-coded: an empty or missing samples folder lists none.</summary>
+    public IReadOnlyList<ProjectPaths> InstalledSamples()
+    {
+        string[] folders;
+        try { folders = Directory.Exists(SamplesFolder) ? Directory.GetDirectories(SamplesFolder) : []; }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return []; }
+        var removed = RemovedSamples();
+        var recent = Recent.Items.Select(ProjectFolder).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return folders.Select(Path.GetFullPath).Where(f => !removed.Contains(f) && !recent.Contains(f))
+            .Order(StringComparer.OrdinalIgnoreCase).Select(f => new ProjectPaths("", "") { Folder = f }).ToArray();
+    }
 
-    // The download's samples folder, in the order a newcomer should try them. A sample whose folder isn't there (a source build) isn't shown.
-    private static readonly (string Folder, string Title, string About)[] SampleList =
-    [
-        ("sprite-2d", "2D garden game", "A cartoon garden level. Play walks the round friend to the coins and the flag."),
-        ("prefab-physics", "3D crate island", "Crates and a paddle on an island. Play drops the crates with physics."),
-        ("scene-starter", "3D level to build on", "A small 3D level to add models to, move them, play and export."),
-        ("checkers", "Checkers rules", "A board game's data with its own rule checks."),
-    ];
+    private string SamplesRoot => Path.GetFullPath(SamplesFolder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-    /// <summary>The samples found beside BED, in the order shown on the start screen.</summary>
-    public IReadOnlyList<InstalledSample> InstalledSamples() => SampleList
-        .Select(s => new InstalledSample(s.Title, s.About, Path.Combine(SamplesFolder, s.Folder)))
-        .Where(s => Directory.Exists(s.Folder)).ToArray();
+    /// <summary>True for a row that is one of BED's samples not yet opened (so not in the recent list).</summary>
+    public bool IsListedSample(ProjectPaths p) => p.Folder is { } && !Recent.Items.Contains(p)
+        && string.Equals(Path.GetDirectoryName(ProjectFolder(p)), SamplesRoot, StringComparison.OrdinalIgnoreCase);
+
+    private static string ProjectFolder(ProjectPaths p)
+    {
+        try { return Path.GetFullPath(p.Folder ?? p.Root ?? Path.GetDirectoryName(Path.GetFullPath(p.Data)) ?? p.Data).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar); }
+        catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { return ""; }
+    }
+
+    private HashSet<string>? removedSamples;
+    private string RemovedSamplesFile => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(Recent.File))!, "removed-samples.json");
+
+    private HashSet<string> RemovedSamples()
+    {
+        if (removedSamples is not null) return removedSamples;
+        removedSamples = new(StringComparer.OrdinalIgnoreCase);
+        try { if (File.Exists(RemovedSamplesFile)) removedSamples.UnionWith(System.Text.Json.JsonSerializer.Deserialize<string[]>(File.ReadAllText(RemovedSamplesFile)) ?? []); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { }
+        return removedSamples;
+    }
+
+    /// <summary>Takes a row off the start screen's list; a sample stays off even though its folder is still there. No files are deleted.</summary>
+    public void RemoveFromList(ProjectPaths p)
+    {
+        var folder = ProjectFolder(p);
+        Recent.Remove(p);
+        if (folder.Length == 0 || !string.Equals(Path.GetDirectoryName(folder), SamplesRoot, StringComparison.OrdinalIgnoreCase)) return;
+        if (!RemovedSamples().Add(folder)) return;
+        try { Directory.CreateDirectory(Path.GetDirectoryName(RemovedSamplesFile)!); File.WriteAllText(RemovedSamplesFile, System.Text.Json.JsonSerializer.Serialize(removedSamples!.Order().ToArray())); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { Say(false, "The list change could not be saved: " + e.Message); }
+    }
+
+    internal bool OpenRow(ProjectPaths p) => IsListedSample(p) ? OpenFolder(p.Folder!) : OpenRecent(p);
+
+    private string RowKind(ProjectPaths p) => IsListedSample(p) ? "Sample" : Recent.Metadata(p).Kind;
 
     // Prefer path separators as line boundaries so a component is not broken just because the prefix filled the line.
     // Every character remains visible, including separators; unusually long individual components still wrap normally.
