@@ -15,52 +15,12 @@ There are no dates. A release ships when everything in it works from start to fi
 - **Works with AI.** An AI assistant uses the same checked commands you do, and only makes changes you approve.
 - **Open source.** MIT licensed, with original samples and a record of every third-party licence.
 
-## 0.2: the first release (release candidate: 0.2.1-rc.1)
+## Done so far
 
-The goal: someone new to BED can open the sample level, add a model, position it, press Play to run the game, and export a Windows build that runs without BED.
+- **0.2 (0.2.1-rc.1):** a data editor that works like a normal Windows program; 3D levels with handles, snapping and undo; model and texture assets with licence records; Play from saved files; tested Windows builds and Export build.
+- **0.3 (0.3.0-rc.1, out now):** prefabs, 2D levels, physics, levels in games and builds, and a big usability pass. Details below.
 
-### A data editor that works like a normal Windows program: done
-- Start window with recent projects, New project, Open project and Try the example.
-- File, Edit, View, Tools and Help menus, Alt keys and shortcuts, and a command search (Ctrl+Shift+P).
-- Save / Don't Save / Cancel when closing with unsaved changes.
-- Right-click menus, and tooltips that show shortcuts and explain why a command is unavailable.
-- Light and dark themes that follow Windows, and sharp text at any display scaling.
-- Panels you can move into their own windows; the layout is remembered and can be reset.
-- Screen readers can read the whole editor in real windows.
-- Tables, forms, links between files, checks, and undo for every edit.
-- AI assistants can read, check and edit data through the command line and MCP.
-
-### Levels: done
-- Open a level and see its objects in a list and in a 3D view.
-- Add, move, rotate, scale and parent objects with handles or the keyboard, with snapping and X/Y/Z constraints.
-- Frame the selection, orbit, pan and zoom.
-- Undo any change, and save, close and reopen a level with nothing lost.
-- If a change can't be saved exactly (for example, skewing an object), BED explains why instead of quietly changing it.
-
-### Assets: done
-- Browse the project's models and drop them into a level by dragging or with the keyboard.
-- OBJ and glTF models, with import settings (scale, which way is up) and reimport that keeps placed objects intact.
-- Every asset records where it came from and its licence, and BED won't include an asset in a build if its licence doesn't allow it.
-- Textured models in the 3D view, in Play and in builds.
-- A project's models are ready when it opens.
-
-### Play: done
-- Press Play and the game starts in its own window, from your saved files. If you have unsaved edits, BED asks first.
-- The game's messages appear in BED's console. Stop closes it cleanly.
-- If the game crashes, BED keeps running and your unsaved edits are safe.
-
-### Build: done
-- BED runs the game's own build, checks every file it produces and the licences of everything included, and test-runs the result.
-- A failed or cancelled build never touches your last good one.
-- Export build copies a tested build to a new or empty folder you choose.
-
-### Before release
-- Done: an automated test of the whole workflow on the sample level, from opening it to exporting a build.
-- Done: using BED for real work on one of my own games. All of that game's design data is now edited in BED.
-- Done: hands-on testing in real windows, including the 3D view.
-- Done: the 0.2.1-rc.1 release candidate for testers. The 0.3.0-rc.1 candidate builds on it.
-
-## 0.3: prefabs, 2D and physics (release candidate: 0.3.0-rc.1)
+## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.1)
 
 The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and play and export it.
 
@@ -94,14 +54,32 @@ The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and 
 - **Help > Report a problem**, which shows exactly what a report contains and sends nothing by itself.
 - Pinned recent projects.
 
-### Before release
-- Now: the 0.3.0-rc.1 release candidate for testers, then the release.
+### Fixed in 0.3.0-rc.1
+- The 3D and 2D views couldn't be closed. They now close from their tab, their own window, the menu or the keyboard, and ask to save a changed level first.
+- **Save all** and **Close project** refused in level projects. They now save or close levels and data files together.
+- Levels were listed as files BED can't open. They now open.
+- Leftover "not connected yet" messages on level Play and Save as are gone.
+- Saving data and level files together needed extra clicks. It now finishes in one click.
+- Jumping to a search result or a new item in a long list didn't scroll to it. It now does.
+- The keyboard couldn't reach every control in the asset picker. It now can.
+- Undoing back to the saved state left a file marked as changed. It's now marked as saved.
+- A game that was slow to start could miss the Pause and Step connection. BED now waits for it.
+- Text was cut off in places at larger sizes. It now wraps or stays visible.
+- The full list is in the [changelog](CHANGELOG.md).
 
-## 0.4: next, working with the running game
+## Next: 0.3.0-rc.2
+
+- **Samples for the new features.** One small original sample project with a 3D level built from prefabs with physics bodies, and a 2D sprite level, so you can try everything 0.3 adds straight from the download. The Start here guide will walk through it.
+- **Small fixes from the first real-window checks.** For example, the welcome box no longer covers the Files panel when a level opens.
+- **Fixes from testers.** Anything reported with **Help > Report a problem** or on GitHub.
+- Then the 0.3 release.
+
+## 0.4: after that, working with the running game
 
 - **Inspect the running game.** See an object's current values while the game runs.
 - **Live tweaks.** Try a change in the running game without changing your saved files.
 - **Fixes from real use.** Fix what turns up when BED is used on real games and by testers.
+- **Using BED on a second real game,** so the editor is shaped by more than one project.
 
 ## Later
 
