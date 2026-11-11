@@ -126,11 +126,15 @@ class ReadmeStepsTests(unittest.TestCase):
     def test_level_walkthrough_names_existing_controls_and_separates_download_from_development(self):
         root = repository()
         text = (root/"README.md").read_text(encoding="utf-8-sig")
+        # The step-by-step level walkthrough lives in the levels guide; the README links to it.
+        guide = (root/"docs/guide/levels.md").read_text(encoding="utf-8-sig")
         for word in ("SceneStarterProject", "level.json", "Add selected object", "Position X", "**Play**", "**Stop**"):
-            self.assertIn(word, text)
-        for page in ("levels", "assets", "playing", "exporting"):
+            self.assertIn(word, guide)
+        for page in ("levels", "playing", "exporting"):
             self.assertIn(f"docs/guide/{page}.md", text)
             self.assertTrue((root/f"docs/guide/{page}.md").is_file())
+        for page in ("assets", "playing", "exporting"):
+            self.assertIn(f"({page}.md)", guide)
         placement = (root/"src/Bed.Editor.ImGui/DataWorkspace.SceneAssets.cs").read_text(encoding="utf-8-sig")
         self.assertIn("Add selected object", placement)
         launcher = (root/"src/Bed.Launcher/Bed.Launcher.csproj").read_text(encoding="utf-8-sig")
@@ -147,7 +151,7 @@ class ReadmeStepsTests(unittest.TestCase):
     def test_export_steps_name_landed_menu_controls_and_keep_copy_gate_and_empty_folder_rule(self):
         root = repository()
         text = (root/"docs/guide/exporting.md").read_text(encoding="utf-8-sig")
-        readme = (root/"README.md").read_text(encoding="utf-8-sig")
+        readme = (root/"docs/guide/levels.md").read_text(encoding="utf-8-sig")
         window = (root/"src/Bed.Editor.ImGui/EditorWindow.cs").read_text(encoding="utf-8-sig")
         dialog = (root/"src/Bed.Editor.ImGui/ExportBuildDialog.cs").read_text(encoding="utf-8-sig")
         self.assertIn('Choice("Export build..."', window)

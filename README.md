@@ -2,80 +2,76 @@
 
 BED edits a game's data and its 2D and 3D levels (prefabs, sprites, physics), checks every change, plays the game and exports a copy, by hand or with an AI assistant.
 
-[Start with the AI guide](docs/guide/using_bed_with_ai.md) for a sample walkthrough, connection examples and when to approve writes. With a project data file open in BED, choose **Help > Use with an AI assistant** for setup examples with your project's paths filled in.
+It's made for games written in C# on the [BRUTAL framework](https://github.com/ahwootech/BRUTAL), but the data editor works on any folder of JSON files. New to BED? Begin with **[Start here](docs/guide/start_here.md)**: ten minutes, no programming.
 
-New to BED? Begin with **[Start here](docs/guide/start_here.md)**: ten minutes, no programming.
+![BED editing a flat 2D level: a cartoon garden of sprites, with the Outliner, the level view and the Inspector](docs/images/bed-sprite-level.png)
 
-BED edits the data your game reads: lists of items, enemies, recipes, levels and settings, kept as JSON files. Every edit is checked as you make it, so a typo or an impossible value is caught before it's saved, not when the game crashes.
+## What's new in 0.3
 
-It's made for games written in C# on the [BRUTAL framework](https://github.com/ahwootech/BRUTAL), but the data editor works on any folder of JSON files.
+- **Prefabs.** Make a reusable piece, place it many times, and change one copy without touching the others.
+- **2D levels with sprites.** Lay out pictures on a flat level, with size, pivot and drawing order.
+- **Physics.** Give objects bodies with mass, friction and a shape, and set the level's gravity.
+- **Two samples to try:** a cartoon garden in 2D and a 3D island with a stack of crates that have physics.
+- **Plain words.** The editor says "prefab copy" and "changed in this copy" instead of programming terms, and the Outliner marks prefab copies with a colour, a box icon and a dot on changed parts.
+- **Sharper text** in Windows' own interface font, at every size.
+- **Engine-style layout and camera:** Outliner on the left, Inspector on the right, Play in the middle of the toolbar.
+- **A first-run tour** you can skip and reopen later from **Help > Take the tour**.
+- **Help > Report a problem** shows exactly what a report contains before you share it.
 
-![BED editing the example project's recipes, with the File, Edit, View, Tools and Help menus](docs/images/bed-data-editor.png)
+The current download is **0.3.0-rc.3**, a release candidate for 0.3. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
 
 ## Try it (Windows, 2 minutes)
 
-1. Download **BED-win-x64.zip** from the [Releases page](../../releases). The current download is **0.3.0-rc.3**, a release candidate for 0.3.
+1. Download **BED-win-x64.zip** from the [Releases page](../../releases).
 2. Unzip it anywhere and double-click **BED.exe**. BED needs the Microsoft Visual C++ Redistributable (x64). If it is missing, install it from [Microsoft](https://aka.ms/vs/17/release/vc_redist.x64.exe), then open BED again.
-3. Click **Try the example**. The first time, BED offers a short guided tour. Take it, or skip it and reopen it later from **Help > Take the tour**.
+3. Click **Try the example**. The first time, BED offers a short guided tour. Take it, or skip it.
 4. Click a cell in the table, type a new value and press Enter.
 5. Now type **-5** in the "minutes" column. BED refuses it and shows why next to the field.
 6. Press **Ctrl+Z** to undo and **Ctrl+S** to save.
 
-The zip also has a small checkers game made with BED. `START_HERE.txt` in the zip covers both.
+### Try the samples
 
-### Try a 3D level
+Choose **File > Open project...** and open a folder from the download's **samples** folder:
 
-The download includes a level sample. **Try the example** opens recipes; open the level sample separately.
+- **samples\sprite-2d** is a cartoon garden in 2D: seventeen pictures in four layers, with a flag placed twice as a prefab. Drag things around, then revert the copy whose size was changed.
+- **samples\prefab-physics** is a small 3D island with a stack of three crates, one prefab placed three times. Click a crate to see its body, mass and friction.
 
-1. Choose **Open project** and select `samples\scene-starter` in the unzipped folder (or `samples/SceneStarterProject` if you [build from source](#build-from-source)). The level opens straight away. If it doesn't, open **level.json** from **Files**.
-2. Press **Insert** outside a text field to open **Add object**, select the sample cube, pillar or textured crate, then choose **Add selected object**. Clear the selection first to place it on its own, or select an object to place it inside that group.
-3. Select the new object and change **Position X** in the Inspector, or drag a move handle. Press **Ctrl+Z** to undo and **Ctrl+S** to save.
-4. To look around, hold **Alt** and drag with the left button to orbit, drag with the middle button to pan, and press **F** to frame the selection.
-5. Choose **Play** in the middle of the toolbar to run the saved files. If asked, choose **Save**, **Don't Save** (keep your edits and run the saved version), or **Cancel**. Configure **Tools > Play settings...** if needed; choose **Build and Play** when the program needs building, and approve the displayed command if asked. Choose **Stop** to end the run. See the [Play guide](docs/guide/playing.md).
-6. Save, then choose **File > Export build** and **Build saved files**. When the build checks finish, enter a new or empty **Destination folder** and choose **Copy build to folder...**. See the [Export guide](docs/guide/exporting.md).
+Choose **Tools > Build and Play** to run either one. These sample games have no window yet; they report what they did as text in **Play console**. [Start here](docs/guide/start_here.md#5-try-the-2d-and-physics-samples) walks through both.
 
-See [levels](docs/guide/levels.md), [assets](docs/guide/assets.md), [Play](docs/guide/playing.md) and [troubleshooting Play and Export](docs/guide/troubleshooting.md) for help. Play and Export build both work from your saved files.
+The download includes a level sample too: **samples\scene-starter**, a 3D level to add models to, move them, play it and export a copy. [Edit a level](docs/guide/levels.md) has the step-by-step, and the zip's small checkers game shows an adapter at work. If you [build from source](#build-from-source), the same samples are in the `samples` folder.
 
-The download also has two samples for what 0.3 adds: `samples\sprite-2d`, a flat sprite level with a prefab, and `samples\prefab-physics`, a 3D level with prefabs and physics bodies. Their games report what they did as text in **Play console** and have no window yet. [Start here](docs/guide/start_here.md#5-try-the-2d-and-physics-samples) walks through both.
-
-Browse the [guide index](docs/guide/README.md) for everyday editing, levels, Play, Export and extension tutorials.
+The [guide index](docs/guide/README.md) covers everyday editing, levels, [Play](docs/guide/playing.md), [Export](docs/guide/exporting.md), [troubleshooting](docs/guide/troubleshooting.md) and [working with an AI assistant](docs/guide/using_bed_with_ai.md).
 
 ## Use it on your own data
 
 On the start screen, under **Open a project**, choose:
 
 - **Data folder:** your JSON files.
-- **Schema folder:** a [JSON Schema](https://json-schema.org/) for each file. `wares.json` is checked by `wares.schema.json`.
+- **Rules folder:** one rules file ([JSON Schema](https://json-schema.org/)) per data file. `wares.json` is checked by `wares.schema.json`.
 
-Then click **Open**. If a file doesn't match its schema, BED still opens it and helps you fix it one edit at a time. It won't save over a file that another program changed after you opened it.
+Then click **Open**. If a file breaks its rules, BED still opens it and helps you fix it one edit at a time. It won't save over a file that another program changed after you opened it.
 
 ## What it does
 
-- **3D levels.** Add models, move, rotate and resize them, group them, and undo or save your changes. The camera works like other game editors: Alt and the left button orbit, the middle button pans, and right button with W, A, S, D, Q and E flies.
-- **Prefabs.** Place a reusable piece more than once, change one copy, and review an updated original before you accept it. Your local changes are kept.
-- **2D levels.** Arrange sprites on a flat XY level, with size, pivot, drawing order and image sampling.
-- **Physics.** Set a level's gravity and time step, and give objects static, dynamic or kinematic bodies with box, sphere, capsule or fitted-bounds shapes, mass and friction. A game that supports physics simulates them when it runs; BED never changes your level while it runs.
-- **Assets.** Browse OBJ and glTF models, inspect their part counts, preview texture thumbnails and play WAV and Ogg sounds. Add models to a level; BED explains any problems that block placement.
-- **Tables and forms** for your data, with undo and redo for every change, and errors shown next to the field.
+- **Levels in 3D and 2D.** Add models or sprites, move, rotate and resize them, group them, and undo anything. The camera works like other game editors.
+- **Prefabs.** Place a reusable piece many times, change one copy, and choose whether to take updates to the original.
+- **Physics.** Static, dynamic or moved-by-the-game bodies, with box, sphere, capsule or fitted shapes. The game simulates them when it runs; BED never changes your level while it runs.
+- **Assets.** Browse models, preview textures and play sounds, and see why a model can't be placed.
+- **Tables and forms** for your data, with errors shown next to the field.
 - **Links between files.** Click a name to jump to the item it refers to, and see everything that refers to an item.
-- **Play and Export.** Run the game from your saved files, pause it and step it one tick at a time if the game supports it, and export a copy that runs without BED.
-- **Your game's own rules.** A small C# adapter adds checks, panels or a playable preview for your game. See [Writing an adapter](docs/guide/writing_an_adapter.md).
+- **Play and Export.** Run the game from your saved files, pause it and step it if the game supports it, and export a copy that runs without BED.
+- **Your game's own rules.** A small C# adapter adds checks, panels or a playable preview. See [Writing an adapter](docs/guide/writing_an_adapter.md).
 - **A command line** (`bed-cli.exe`) that makes the same checked edits, for scripts, AI assistants and screen readers.
-- **Keyboard controls and assistive tools.** Text follows Windows' text size, with larger sizes and high contrast in Preferences. See the [keyboard guide](docs/guide/keyboard.md), [accessibility](docs/guide/accessibility.md) and the [screen-reader command-line walkthrough](docs/guide/using_a_screen_reader.md).
-- **Problem reports.** **Help > Report a problem** shows exactly what a report contains. You can copy it, save it or open a new issue page; nothing is sent for you. See [reporting a problem](docs/guide/reporting_a_problem.md).
+- **Keyboard and accessibility.** Text follows Windows' text size, with larger sizes and high contrast in Preferences. See the [keyboard guide](docs/guide/keyboard.md) and [accessibility](docs/guide/accessibility.md).
 
 ## What BED looks like
 
-BED opens a game's data folder and shows each file as a table you can sort, filter and fill. Pick a row to edit it in the inspector, follow a link to the item it points at, and undo anything. With a game's adapter loaded, BED also checks every edit against that game's own rules and can start the game using your saved data.
-
 | | |
 |---|---|
-| ![BED's start window](docs/images/bed-start-window.png) | ![BED's File menu open over the recipes table](docs/images/bed-file-menu.png) |
-| The start window: open a recent project, start a new one, or try the example. | Standard Windows menus, with Alt keys and shortcuts. |
-| ![BED showing the recipes sample as a table, in the dark theme](docs/images/bed-dark-theme.png) | ![BED editing a level: the object list, a 3D view with move handles, and the inspector](docs/images/bed-level-editor.png) |
-| The recipes sample in the dark theme: a table of linked items, where the arrows jump to the ware each recipe uses. BED follows your Windows light or dark setting. | Editing a level: pick an object in the list or the 3D view, then move, rotate or scale it with the handles or the keyboard. |
-| ![BED's asset picker listing the level sample's two models, with the cube's details](docs/images/bed-asset-picker.png) | ![BED showing the checkers sample's board](docs/images/sample-checkers.png) |
-| Adding a model to a level: pick it from the project's assets, see where it came from and its licence, then place it. | The checkers sample: an adapter adds a board you edit by clicking, and a Play button. |
+| ![BED editing a 3D island level with a stack of crates](docs/images/bed-physics-level.png) | ![BED showing a recipes table in the dark theme](docs/images/bed-data-dark.png) |
+| A 3D level with prefabs and physics. | A data table in the dark theme. |
+| ![BED showing the checkers sample's board](docs/images/sample-checkers.png) | |
+| A board game's adapter: edit the board by clicking. | |
 
 ## Made with BED
 
@@ -92,7 +88,7 @@ I'm using BED on three or four games of my own at the moment, each a different k
 
 ## Roadmap
 
-0.2 added 3D levels, assets, Play and Windows builds to the data editor. 0.3 adds prefabs, 2D levels with sprites and physics; the current download, 0.3.0-rc.3, is its release candidate. Next, 0.4 works with the running game. See [the roadmap](ROADMAP.md) for what's done and what's left.
+0.2 added 3D levels, assets, Play and Windows builds. 0.3 adds prefabs, 2D levels with sprites and physics. Next, 0.4 works with the running game. See [the roadmap](ROADMAP.md) for what's done and what's left.
 
 ## Build from source
 
@@ -112,8 +108,4 @@ BED was written with the help of Claude Code and Codex. There's no AI inside the
 
 ## Licence
 
-MIT, see [LICENSE.txt](LICENSE.txt). BRUTAL has its own licence; the notices for everything BRUTAL and BED use are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
-
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-See [CHANGELOG.md](CHANGELOG.md) for release notes and unreleased changes.
+MIT, see [LICENSE.txt](LICENSE.txt). BRUTAL has its own licence; the notices for everything BRUTAL and BED use are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).

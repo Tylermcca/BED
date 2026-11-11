@@ -6,10 +6,10 @@ For newer levels with prefabs, sprites or physics, see [Reusable pieces](prefabs
 
 ## Quick steps
 
-1. Choose **File > Open project...** and open your project folder (to try it, use **samples/scene-starter** from the download).
+1. Choose **File > Open project...** and open your project folder. To try it, use **samples/scene-starter** from the download, or `samples/SceneStarterProject` if you [build from source](../../README.md#build-from-source).
 2. If the level isn't showing, click **level.json** in **Files** at the bottom.
 3. Click an object in the **Viewport**, or its name in the **Outliner** on the left. The **Inspector** on the right shows its position, rotation and scale.
-4. Press **G**, **R** or **S** (or click **Move**, **Rotate** or **Scale**) and drag a handle. You can also type exact numbers in the Inspector.
+4. Press **G**, **R** or **S** (or click **Move**, **Rotate** or **Scale**) and drag a handle. You can also type exact numbers in the Inspector, such as **Position X**.
 5. To look around: **Alt** + left drag orbits, middle drag pans, **Alt** + right drag zooms, and **F** frames the selection. Hold the right button and press **W**, **A**, **S**, **D**, **Q** or **E** to fly.
 6. Press **Ctrl+Z** to undo a step, and **Ctrl+S** to save.
 
@@ -109,5 +109,12 @@ Choose **Cancel** (or Escape) to keep everything. **Delete anyway** removes the 
 If another program changed or removed the saved file, BED keeps your draft and asks you to resolve the conflict. Stop Play before saving. Use **Save** for a level. **Save as** is unavailable for levels and says why: a level keeps its place in the project. Play and export use saved files and retain the undo history.
 
 **Save all** and **Close project** handle levels and data files together. Closing the 3D view's tab or window, or the level with **Ctrl+W** or **Ctrl+F4**, asks **Save**, **Don't Save** or **Cancel** if the level has unsaved changes.
+
+## Play and export the level
+
+1. Save, then choose **Play** in the middle of the toolbar to run the saved files. If asked, choose **Save**, **Don't Save** (keep your edits and run the saved version), or **Cancel**. Set up **Tools > Play settings...** if needed; choose **Build and Play** when the program needs building, and approve the displayed command if asked. Choose **Stop** to end the run. See [Play](playing.md).
+2. To copy the game, choose **File > Export build** and **Build saved files**. When the build checks finish, enter a new or empty **Destination folder** and choose **Copy build to folder...**. See [Export a game build](exporting.md).
+
+Play and Export build both work from your saved files. If either one stops, see [troubleshooting Play and Export](troubleshooting.md).
 
 Next: [browse assets](assets.md), [run Play](playing.md), [export a build](exporting.md), or [see all keyboard controls](keyboard.md).
