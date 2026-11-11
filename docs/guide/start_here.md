@@ -12,7 +12,7 @@
 
 BED opens on its start screen. The first time you open a project, BED offers a short guided tour. You can take it now, or skip it and reopen it later from **Help > Take the tour**. This page covers the same ground in more detail.
 
-![The start screen, with Open recent on the left and Get started on the right](../images/guide/start.png)
+![The start screen: your projects and the samples on the left, Get started on the right](../images/guide/start.png)
 
 If Windows says **VCRUNTIME140.dll** is missing, install Microsoft's Visual C++ Redistributable (x64) from <https://aka.ms/vs/17/release/vc_redist.x64.exe> and try again. Most PCs already have it.
 
