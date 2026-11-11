@@ -14,13 +14,13 @@
 - **Checked before use (2026-11-04):** no file, network, process or native-interop code in the two projects (only
   `ImCode.Workspace`, not vendored, touches files); no telemetry. Its own `Directory.Build.props` keeps its build
   settings apart from this repo's.
-- **Used by:** `Brutal.Authoring.Editor.Text`, the Text panel (`JsonTextPane`), and recorded in `THIRD-PARTY-NOTICES.md`.
-  The core editor, `Brutal.Authoring.Editor.ImGui`, doesn't reference it (a test checks). A release carries this licence
+- **Used by:** `Bed.Editor.Text`, the Text panel (`JsonTextPane`), and recorded in `THIRD-PARTY-NOTICES.md`.
+  The core editor, `Bed.Editor.ImGui`, doesn't reference it (a test checks). A release carries this licence
   as `licenses/ImCode-LICENSE.txt` (`tools/package_release.py`).
 
 ## ImCode packaging
 
-- **It ships inside `Brutal.Authoring.Editor.Text`, not on its own.** ImCode isn't on NuGet, so that package's project
+- **It ships inside `Bed.Editor.Text`, not on its own.** ImCode isn't on NuGet, so that package's project
   references it with `PrivateAssets="all"` and packs `ImCode.dll` and `ImCode.Text.dll` into its own `lib/net10.0/`,
   with this licence as `licenses/ImCode-LICENSE.txt` and a `THIRD-PARTY-NOTICES.txt` naming it. No ImCode package is
   made or published from here.

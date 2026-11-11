@@ -38,7 +38,9 @@ public sealed class SpeedChangeAttackTests : IDisposable
             [probe.Definition, CheckSnapshot.SignatureOf(p), capture, null], null)!;
         typeof(CheckRun).GetMethod("Run", Hidden)!.Invoke(run, [probe]); return run;
     }
-    private static void Expire(CheckRun run, bool stale) => typeof(CheckRun).GetField("lastAsked", Hidden)!.SetValue(run, ((long)0, stale));
+    private static void Expire(CheckRun run, bool stale) => typeof(CheckRun).GetField("lastAsked", Hidden)!.SetValue(run,
+        // Two hours back, not 0: the clock counts from the machine's start, so on a machine started under an hour ago 0 isn't old enough.
+        (System.Diagnostics.Stopwatch.GetTimestamp() - 2 * 3600 * System.Diagnostics.Stopwatch.Frequency, stale));
     private static void Pending(CheckRun run, Task<bool> task) => typeof(CheckRun).GetField("refreshing", Hidden)!.SetValue(run, task);
     private static Task<bool>? Pending(CheckRun run) => (Task<bool>?)typeof(CheckRun).GetField("refreshing", Hidden)!.GetValue(run);
     private static TaskCompletionSource<bool> Reply() => new(TaskCreationOptions.RunContinuationsAsynchronously);

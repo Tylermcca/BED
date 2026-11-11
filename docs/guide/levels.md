@@ -6,7 +6,7 @@ For newer levels with prefabs, sprites or physics, see [Reusable pieces](prefabs
 
 ## Quick steps
 
-1. Choose **File > Open project...** and open your project folder. To try it, use **samples/scene-starter** from the download, or `samples/SceneStarterProject` if you [build from source](../../README.md#build-from-source).
+1. Choose **File > Open project...** and open your project folder. To try it, use **samples/scene-starter** from the download.
 2. If the level isn't showing, click **level.json** in **Files** at the bottom.
 3. Click an object in the **Viewport**, or its name in the **Outliner** on the left. The **Inspector** on the right shows its position, rotation and scale.
 4. Press **G**, **R** or **S** (or click **Move**, **Rotate** or **Scale**) and drag a handle. You can also type exact numbers in the Inspector, such as **Position X**.

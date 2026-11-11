@@ -48,7 +48,7 @@ A release carries the same text beside the programs as `licenses/ImCode-LICENSE.
 
 ## BRUTAL
 
-The editor window, the general app (`brutal-authoring`), the command line (`authoring`) and the checkers game are built with **BRUTAL**, a game development framework by Ahwoo Limited, used under the **BRUTAL License v1.0** (https://github.com/ahwootech/BRUTAL, `LICENSE.txt`). Packages: `Ahwoo.Brutal.Core`, `Ahwoo.Brutal.ImGui`, `Ahwoo.Brutal.ImGui.Backends`, `Ahwoo.Brutal.Glfw`, `Ahwoo.Brutal.Vulkan`, `Ahwoo.Brutal.Vulkan.Abstractions` (versions in `Directory.Packages.props`).
+The editor window (`BED.exe`), the command line (`bed-cli.exe`) and the checkers game are built with **BRUTAL**, a game development framework by Ahwoo Limited, used under the **BRUTAL License v1.0** (https://github.com/ahwootech/BRUTAL, `LICENSE.txt`). Packages: `Ahwoo.Brutal.Core`, `Ahwoo.Brutal.ImGui`, `Ahwoo.Brutal.ImGui.Backends`, `Ahwoo.Brutal.Glfw`, `Ahwoo.Brutal.Vulkan`, `Ahwoo.Brutal.Vulkan.Abstractions` (versions in `Directory.Packages.props`).
 
 BRUTAL game development framework is Copyright (c) 2024 Ahwoo Limited.
 

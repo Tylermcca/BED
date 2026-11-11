@@ -101,6 +101,11 @@ public sealed class PrefabPhysicsSampleTests(Xunit.Abstractions.ITestOutputHelpe
         var slid=System.Text.RegularExpressions.Regex.Match(said,@"Kinematic body paddle slid along X and travelled ([\d.]+) m\.");
         // Three quarters of a 4-second, 1.5 m sine: out 1.5, back 1.5, out 1.5 the other way.
         Assert.True(slid.Success,said);Assert.InRange(double.Parse(slid.Groups[1].Value,System.Globalization.CultureInfo.InvariantCulture),4.4,4.6);
+        // The toy's crate drop, headless: two copies of the prefab crate fall in and the saved bodies are still five.
+        var drop=new System.Diagnostics.ProcessStartInfo(Path.Combine(project,"game","PhysicsStarter.exe")){WorkingDirectory=project,UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
+        foreach(var arg in new[]{"--project",".","--frames","200","--drops","2"})drop.ArgumentList.Add(arg);
+        using(var game=System.Diagnostics.Process.Start(drop)!){said=game.StandardOutput.ReadToEnd();var why=game.StandardError.ReadToEnd();Assert.True(game.WaitForExit(30000));Assert.True(game.ExitCode==0,said+why);}
+        Assert.Contains("PhysicsStarter loaded saved physics: 5 bodies, 200 fixed ticks",said);Assert.Contains("2 dropped crate(s) are on the island.",said);
         Assert.Equal(before,Saved(project));
     }
 }

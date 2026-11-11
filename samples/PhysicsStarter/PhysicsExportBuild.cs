@@ -9,7 +9,7 @@ internal static class PhysicsExportBuild
         if(!Path.IsPathFullyQualified(input)||!Path.IsPathFullyQualified(output)||!Path.IsPathFullyQualified(runtime))throw new IOException("Use absolute physics build folders.");
         if(!Directory.Exists(output)||Directory.EnumerateFileSystemEntries(output).Any())throw new IOException("Use a fresh empty physics output folder.");
         var saved=SavedProjectManifest.Read(input,true);_=Scene2RuntimeInput.Open(input,true);var files=PhysicsRuntimeInventory.Read(runtime);
-        files.Add("README.txt",Encoding.UTF8.GetBytes("Saved physics build for Windows x64. Requires .NET 10. Run PhysicsStarter.exe --project . --seconds 1. Keep every file and notice together. BED and original authoring files are not required.\n"));
+        files.Add("README.txt",Encoding.UTF8.GetBytes("Saved physics build for Windows x64. Requires .NET 10. Run PhysicsStarter.exe --project . to play in a window: left click drops a crate, right-drag or A/D orbits, the mouse wheel zooms, R resets and Esc quits. Add --seconds 1 to run without a window and print a summary. Keep every file and notice together. BED and original authoring files are not required.\n"));
         foreach(var file in saved)if(!files.TryAdd(file.Key,file.Value))throw new IOException("Saved input collides with physics runtime.");
         foreach(var (relative,bytes) in files)
         {

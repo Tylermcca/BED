@@ -1,5 +1,7 @@
 # BED: a game editor for BRUTAL games
 
+[![Tests](https://github.com/Tylermcca/BED/actions/workflows/tests.yml/badge.svg)](https://github.com/Tylermcca/BED/actions/workflows/tests.yml)
+
 BED edits a game's data and its 2D and 3D levels (prefabs, sprites, physics), checks every change, plays the game and exports a copy, by hand or with an AI assistant.
 
 It's made for games written in C# on the [BRUTAL framework](https://github.com/ahwootech/BRUTAL), but the data editor works on any folder of JSON files. New to BED? Begin with **[Start here](docs/guide/start_here.md)**: ten minutes, no programming.
@@ -18,7 +20,7 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 - **A first-run tour** you can skip and reopen later from **Help > Take the tour**.
 - **Help > Report a problem** shows exactly what a report contains before you share it.
 
-The current download is **0.3.0-rc.3**, a release candidate for 0.3. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
+The current download is **0.3.0-rc.4**, a release candidate for 0.3. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
 
 ## Try it (Windows, 2 minutes)
 
@@ -36,9 +38,14 @@ Choose **File > Open project...** and open a folder from the download's **sample
 - **samples\sprite-2d** is a cartoon garden in 2D: seventeen pictures in four layers, with a flag placed twice as a prefab. Drag things around, then revert the copy whose size was changed.
 - **samples\prefab-physics** is a small 3D island with a stack of three crates, one prefab placed three times. Click a crate to see its body, mass and friction.
 
-Choose **Tools > Build and Play** to run either one. These sample games have no window yet; they report what they did as text in **Play console**. [Start here](docs/guide/start_here.md#5-try-the-2d-and-physics-samples) walks through both.
+Choose **Tools > Build and Play** to run either one; each opens a small game in its own window.
 
-The download includes a level sample too: **samples\scene-starter**, a 3D level to add models to, move them, play it and export a copy. [Edit a level](docs/guide/levels.md) has the step-by-step, and the zip's small checkers game shows an adapter at work. If you [build from source](#build-from-source), the same samples are in the `samples` folder.
+- **The garden:** the round friend walks with the arrow keys or A and D, jumps with Space, collects the coins and finishes at a flag. R starts again and Esc quits.
+- **The island:** the crates fall and the paddle sweeps them. Left-click to drop more crates, right-drag or press A and D to turn the camera, scroll to zoom, R to start again and Esc to quit.
+
+Move things in BED, save and play again, and the games change with them. [Start here](docs/guide/start_here.md#5-try-the-2d-and-physics-samples) walks through both.
+
+The download includes a level sample too: **samples\scene-starter**, a 3D level to add models to, move them, play it and export a copy. [Edit a level](docs/guide/levels.md) has the step-by-step, and the zip's small checkers game shows an adapter at work. If you [build from source](#build-from-source), this sample is `samples/SceneStarterProject` and the others are beside it in the `samples` folder.
 
 The [guide index](docs/guide/README.md) covers everyday editing, levels, [Play](docs/guide/playing.md), [Export](docs/guide/exporting.md), [troubleshooting](docs/guide/troubleshooting.md) and [working with an AI assistant](docs/guide/using_bed_with_ai.md).
 

@@ -18,9 +18,9 @@ There are no dates. A release ships when everything in it works from start to fi
 ## Done so far
 
 - **0.2 (0.2.1-rc.1):** a data editor that works like a normal Windows program; 3D levels with handles, snapping and undo; model and texture assets with licence records; Play from saved files; tested Windows builds and Export build.
-- **0.3 (0.3.0-rc.3, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
+- **0.3 (0.3.0-rc.4, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
 
-## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.3)
+## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.4)
 
 The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and play and export it.
 
@@ -68,20 +68,26 @@ The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and 
 - The full list is in the [changelog](CHANGELOG.md).
 
 ### Samples and fixes in 0.3.0-rc.2: done
-- **Samples for the new features.** Two small original samples ship in the download: a flat sprite level with a prefab placed twice, and a 3D level with a crate prefab, a floor and a paddle, all with physics bodies. The Start here guide walks through both. Their games report as text and have no window yet.
+- **Samples for the new features.** Two small original samples ship in the download: a flat sprite level with a prefab placed twice, and a 3D level with a crate prefab, a floor and a paddle, all with physics bodies. The Start here guide walks through both. Both are small games that play in their own window: a garden to run and jump through, and an island to drop crates on.
 - **Small fixes from the first real-window checks.** The welcome and tour boxes no longer cover the Files panel or **Used by** when a level opens.
 
 ## Next: the 0.3 release
 
-- **Fixes from testers.** Anything reported with **Help > Report a problem** or on GitHub.
-- Then the 0.3 release.
+No new features until 0.3 is out. The work is testing and fixing.
 
-## 0.4: after that, working with the running game
+- **Testers.** People other than the author try the download: open a project, change data and a level, save, play and export. Anything they get stuck on is reported with **Help > Report a problem** or on GitHub, and anything that stops them or comes up more than once is fixed first.
+- **A real game, start to finish.** BED is used on a real game that isn't one of the samples, from setup to an exported build. Whatever is missing, awkward or needs a workaround is written down and fixed or listed.
+- **A clean PC.** The download is checked on a Windows PC that has never had BED or the developer tools on it.
 
-- **Inspect the running game.** See an object's current values while the game runs.
-- **Live tweaks.** Try a change in the running game without changing your saved files.
-- **Fixes from real use.** Fix what turns up when BED is used on real games and by testers.
-- **Using BED on a second real game,** so the editor is shaped by more than one project.
+0.3 is released when all three are done and the last release candidate has had no stopping problems reported for a week.
+
+## 0.4: one thing done well: the running game
+
+0.4 starts small, with one game and a handful of values, and grows only once that works every time.
+
+- **See and try values in the running game.** While the game runs, see a few of an object's values as they change, try a different value, and see the game respond. Your saved files don't change unless you choose to keep the new value.
+- **Open your game's code.** Open the game's code in your own code editor from BED, and see build errors in BED in plain words, with a click that takes you to the right line.
+- **Fixes from real use.**
 
 ## Later
 

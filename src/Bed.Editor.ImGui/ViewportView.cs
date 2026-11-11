@@ -220,6 +220,10 @@ public sealed partial class ViewportView<TDoc> where TDoc : class
         var focused = ImGui.IsItemFocused();
         var wasFocused=canvasHadFocus;canvasHadFocus=focused;
         if(!focused)tabLeavesCanvas=false;
+        // Camera input (mouse here, keys below) runs before the scene request is captured: a camera changed after it makes
+        // the host skip drawing the image it already accepted (SceneTarget.Record), so each moving frame showed an empty target.
+        cameraNavigating=false;
+        var navigated=Editor.Playing is null&&NavigateCamera(hovered,size);
         if (Editor.Playing is null) DropTarget?.Invoke();
         if (gesture is not null && !gesture.ValidateInput(ImGui.IsWindowFocused(),
             ImGui.IsMouseDown(ImGuiMouseButton.Left), ImGui.IsMouseReleased(ImGuiMouseButton.Left))) CancelDrag();
@@ -229,6 +233,7 @@ public sealed partial class ViewportView<TDoc> where TDoc : class
             ImGui.IsMouseDown(ImGuiMouseButton.Left),ImGui.IsMouseReleased(ImGuiMouseButton.Left))) CancelRotation();
         if(scaleGesture is not null && !scaleGesture.ValidateInput(ImGui.IsWindowFocused(),
             ImGui.IsMouseDown(ImGuiMouseButton.Left),ImGui.IsMouseReleased(ImGuiMouseButton.Left))) CancelScale();
+        if (focused) Keyboard(wasFocused);   // before the capture too: its zoom, orbit, framing and nudges change the frame
         var draw = ImGui.GetWindowDrawList();
         draw.PushClipRect(ToF(origin), ToF(origin + size), true);
         draw.AddRectFilled(ToF(origin), ToF(origin + size), (EditorTheme.HighContrastActive ? new ImColor8(0,0,0,255) : new ImColor8(38, 40, 44, 255)), 0, ImDrawFlags.None);
@@ -298,8 +303,7 @@ public sealed partial class ViewportView<TDoc> where TDoc : class
         DrawNavigationStatus(draw, origin, size, treeCanvas);
         DrawSelectionStatus(draw,origin,size,treeCanvas,selectionSummary);
         draw.PopClipRect();
-        Input(hovered, origin, size);
-        if (focused) Keyboard(wasFocused);
+        Input(hovered, origin, size, navigated);
         var after=ImGui.GetCursorScreenPos();
         ImGui.SetCursorScreenPos(ToF(toolbar));
         Ui.BeginDisabled(Editor.Playing is not null,"a game is playing");
@@ -451,15 +455,14 @@ public sealed partial class ViewportView<TDoc> where TDoc : class
             : string.Join(" ", (Editor.Refused.Count > 0 ? Editor.Refused : Editor.Session.LastIssues).Select(i => i.Message));
     }
 
-    private void Input(bool hovered, Vector2 origin, Vector2 size)
+    private void Input(bool hovered, Vector2 origin, Vector2 size, bool navigated)
     {
-        cameraNavigating=false;
         if (Editor.Playing is not null)   // it steps aside while a game plays: no picking, moving, orbiting or zooming
         {
             CancelInput();
             return;
         }
-        if (NavigateCamera(hovered,size))return;
+        if (navigated)return;
         if (ScaleInput(hovered,origin,size)) return;
         if (RotationInput(hovered,origin,size)) return;
         if (MoveInput(hovered, origin, size)) return;

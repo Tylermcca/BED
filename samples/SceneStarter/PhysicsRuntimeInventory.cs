@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 namespace SceneStarter;
 
-// Separate exact Windows-x64 inventory; the pure sample inventory is unchanged.
+// Separate exact Windows-x64 inventory; the pure sample inventory is unchanged. GLFW and OpenGL draw the physics game's window.
 internal static class PhysicsRuntimeInventory
 {
     internal const string NativeHash="dd3cca563c9ffb7f9f3af76dd133547f777353e015ece98d255795d278cf8595";
@@ -12,11 +12,13 @@ internal static class PhysicsRuntimeInventory
         "Bed.dll",
         "Brutal.Collections.dll",
         "Brutal.Core.dll",
+        "Brutal.Glfw.dll",
         "Brutal.Interop.dll",
         "Brutal.Jolt.dll",
         "Brutal.Logging.dll",
         "Brutal.Memory.dll",
         "Brutal.Numerics.dll",
+        "Brutal.OpenGl.dll",
         "Brutal.Strings.dll",
         "CommunityToolkit.HighPerformance.dll",
         "LICENSE.txt",
@@ -38,18 +40,24 @@ internal static class PhysicsRuntimeInventory
         "PhysicsStarter.dll",
         "PhysicsStarter.exe",
         "PhysicsStarter.runtimeconfig.json",
+        "licenses/BRUTAL-GLFW-THIRD-PARTY-NOTICES.txt",
         "licenses/BRUTAL-JOLT-THIRD-PARTY-NOTICES.txt",
+        "licenses/BRUTAL-OPENGL-THIRD-PARTY-NOTICES.txt",
         "licenses/NVorbis-LICENSE.txt",
+        "runtimes/win-x64/native/glad.dll",
+        "runtimes/win-x64/native/glfw3.dll",
         "runtimes/win-x64/native/jolt.dll"
     ];
     private static readonly string[] Packages=[
         "Ahwoo.BRUTAL.Collections/2026.10.1",
         "Ahwoo.BRUTAL.Core/2026.10.1",
+        "Ahwoo.BRUTAL.Glfw/2026.10.4",
         "Ahwoo.BRUTAL.Interop/2026.10.1",
         "Ahwoo.BRUTAL.Jolt/2026.10.2",
         "Ahwoo.BRUTAL.Logging/2026.10.2",
         "Ahwoo.BRUTAL.Memory/2026.10.1",
         "Ahwoo.BRUTAL.Numerics/2026.10.1",
+        "Ahwoo.BRUTAL.OpenGl/2026.10.1",
         "Ahwoo.BRUTAL.Strings/2026.10.1",
         "CommunityToolkit.HighPerformance/8.4.2",
         "Microsoft.Extensions.Configuration.Abstractions/10.0.0",

@@ -105,6 +105,9 @@ def validate(root, text):
         images.append(refs[key])
     for image in images:
         value = image.split()[0].strip("<>")
+        if value == "https://github.com/Tylermcca/BED/actions/workflows/tests.yml/badge.svg":
+            continue   # the live test-status badge from GitHub, not a screenshot
+        need(not value.startswith("https://github.com/"), f"README: only the tests badge may load from GitHub: {value}")
         target = path(root, value, "image")
         need(target.is_file() and target.is_relative_to((root/"docs/images").resolve()),
              f"README: image must be a file under docs/images: {value}")
@@ -128,8 +131,9 @@ class ReadmeStepsTests(unittest.TestCase):
         text = (root/"README.md").read_text(encoding="utf-8-sig")
         # The step-by-step level walkthrough lives in the levels guide; the README links to it.
         guide = (root/"docs/guide/levels.md").read_text(encoding="utf-8-sig")
-        for word in ("SceneStarterProject", "level.json", "Add selected object", "Position X", "**Play**", "**Stop**"):
+        for word in ("level.json", "Add selected object", "Position X", "**Play**", "**Stop**"):
             self.assertIn(word, guide)
+        self.assertIn("samples/SceneStarterProject", text)  # the source-build path stays in the README
         for page in ("levels", "playing", "exporting"):
             self.assertIn(f"docs/guide/{page}.md", text)
             self.assertTrue((root/f"docs/guide/{page}.md").is_file())
@@ -141,7 +145,7 @@ class ReadmeStepsTests(unittest.TestCase):
         # The build must supply the adapter; the reader need not learn its assembly name.
         self.assertIn("SceneStarterAdapter/SceneStarterAdapter.csproj", launcher)
         self.assertIn("samples/SceneStarterProject", launcher)
-        self.assertIn("0.3.0-rc.3", text)
+        self.assertIn("0.3.0-rc.4", text)
         self.assertIn("The download includes a level sample", text)
         self.assertIn("samples\scene-starter", text)
         self.assertIn("#build-from-source", text)

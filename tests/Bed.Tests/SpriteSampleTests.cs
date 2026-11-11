@@ -46,6 +46,25 @@ public sealed class SpriteSampleTests
         Assert.Equal(0,Bed.Launcher.Program.Run(["--probe-play",copy.Root,"--probe-args","--seconds 0","--timeout","15"],output,errors,copy.Settings));Assert.Empty(errors.ToString());
         using var proof=JsonDocument.Parse(output.ToString());Assert.Equal("passed",proof.RootElement.GetProperty("status").GetString());Assert.True(proof.RootElement.GetProperty("completed").GetBoolean());Assert.Equal(0,proof.RootElement.GetProperty("exitCode").GetInt32());Assert.Contains(proof.RootElement.GetProperty("output").EnumerateArray(),line=>line.GetProperty("text").GetString()!.Contains("loaded saved level-v2: 19 objects, 0 meshes, 8 textures."));
     }
+    // Collects all three coins and reaches the right flag in the shipped layout (also in the sample README).
+    internal const string WinningRun="right*25,right+jump*20,right*30,jump+right*14,jump*10,none*20,jump*12,jump+right*22,none*30,jump+right*26,none*30,right*30,none*20";
+    [Fact]
+    public void Saved_flat_sample_plays_headless_to_a_win_and_draws_the_frame()
+    {
+        using var copy=new Copy();copy.OpenAndCompile();using var output=new StringWriter();using var errors=new StringWriter();var shot=Path.Combine(copy.Settings,"won.png");
+        Assert.Equal(0,SceneStarter.Program.Run(["--project",copy.Root,"--frames","299","--input",WinningRun,"--shot",shot],output,errors));Assert.Empty(errors.ToString());
+        Assert.Contains("loaded saved level-v2: 19 objects, 0 meshes, 8 textures.",output.ToString());
+        Assert.Contains("Garden after 299 frames: coins 3/3,",output.ToString());Assert.Contains(", won.",output.ToString());
+        var png=File.ReadAllBytes(shot);Assert.True(png.Length>10000);Assert.Equal(new byte[]{0x89,(byte)'P',(byte)'N',(byte)'G'},png[..4]);
+        output.GetStringBuilder().Clear();
+        Assert.Equal(0,SceneStarter.Program.Run(["--project",copy.Root,"--frames","120","--input","left*120"],output,errors));Assert.Contains("coins 0/3,",output.ToString());Assert.Contains(", playing.",output.ToString());
+        if(OperatingSystem.IsWindows())
+        {   // The real window code, created hidden (never shown, never focused).
+            output.GetStringBuilder().Clear();
+            Assert.Equal(0,SceneStarter.Program.Run(["--project",copy.Root,"--window-check","90","--input",WinningRun],output,errors));Assert.Empty(errors.ToString());
+            Assert.Contains("hidden window check: Garden after 90 frames",output.ToString());
+        }
+    }
     [Fact]
     public void Saved_flat_sample_exports_through_the_real_launcher_menu_and_copied_runtime()
     {
@@ -54,5 +73,6 @@ public sealed class SpriteSampleTests
         using var proof=JsonDocument.Parse(output.ToString());Assert.Equal("passed",proof.RootElement.GetProperty("status").GetString());Assert.True(proof.RootElement.GetProperty("copied").GetBoolean());
         var exported=SceneStarter.SavedScene.Open(destination);Assert.Equal(17,exported.Level2!.Scene.Objects.Count(o=>o.Sprite is not null));Assert.Equal(8,exported.Textures.Count);Assert.False(Directory.Exists(Path.Combine(destination,"assets")));Assert.False(Directory.Exists(Path.Combine(destination,"data")));
         output.GetStringBuilder().Clear();Assert.Equal(0,SceneStarter.Program.Run(["--project",destination,"--seconds","0"],output,errors));Assert.Empty(errors.ToString());Assert.Contains("loaded saved level-v2",output.ToString());
+        output.GetStringBuilder().Clear();Assert.Equal(0,SceneStarter.Program.Run(["--project",destination,"--frames","299","--input",WinningRun],output,errors));Assert.Contains(", won.",output.ToString());   // the copied game plays
     }
 }

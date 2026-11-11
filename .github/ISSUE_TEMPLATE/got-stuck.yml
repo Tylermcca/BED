@@ -1,0 +1,53 @@
+name: I got stuck or something went wrong
+description: Tell us where BED stopped you, broke, or didn't do what you expected.
+labels: ["tester report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying BED. Short answers are fine. If BED is open, **Help > Report a problem** also builds a report for you and shows you everything in it first.
+  - type: input
+    id: version
+    attributes:
+      label: Which BED?
+      description: The version in Help > About, or the name of the download.
+      placeholder: 0.3.0-rc.4
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: What were you doing?
+      options:
+        - Downloading or first opening BED
+        - Opening a project
+        - Changing data in a table or form
+        - Changing a level (3D or 2D)
+        - Saving
+        - Playing the game
+        - Exporting a build
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What did you do, and what happened?
+      description: The steps you took, what you expected, and what you saw instead. A screenshot helps.
+    validations:
+      required: true
+  - type: dropdown
+    id: blocked
+    attributes:
+      label: Could you carry on?
+      options:
+        - No, it stopped me
+        - Yes, with a workaround
+        - Yes, it was just confusing or annoying
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version (optional)
+      placeholder: Windows 11

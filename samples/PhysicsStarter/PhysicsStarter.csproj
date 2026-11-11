@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><AssemblyName>PhysicsStarter</AssemblyName><AllowUnsafeBlocks>true</AllowUnsafeBlocks><DebugType>none</DebugType></PropertyGroup>
-  <ItemGroup><ProjectReference Include="../../src/Bed/Bed.csproj" /><ProjectReference Include="../../src/Bed.Runtime/Bed.Runtime.csproj" /><PackageReference Include="Ahwoo.Brutal.Jolt" /></ItemGroup>
+  <!-- Jolt runs the saved bodies; GLFW and OpenGL draw the window (the same pinned packages BED's own window uses). -->
+  <ItemGroup><ProjectReference Include="../../src/Bed/Bed.csproj" /><ProjectReference Include="../../src/Bed.Runtime/Bed.Runtime.csproj" /><PackageReference Include="Ahwoo.Brutal.Jolt" /><PackageReference Include="Ahwoo.Brutal.Glfw" /><PackageReference Include="Ahwoo.Brutal.OpenGl" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../SceneStarter/PhysicsRuntimeInventory.cs" Link="PhysicsRuntimeInventory.cs" />
     <Compile Include="../SceneStarter/SavedProjectManifest.cs" Link="SavedProjectManifest.cs" />

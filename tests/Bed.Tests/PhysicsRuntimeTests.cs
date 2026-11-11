@@ -6,6 +6,7 @@ using PhysicsStarter;
 using Xunit;
 namespace Bed.Tests;
 
+[Collection(PhysicsWorldCollection.Name)]
 public sealed class PhysicsRuntimeTests
 {
     private static Scene2Object Object(string id,Vector3 p,SceneBodyMotion motion,SceneShape shape,float friction=.5f,float mass=3,float scale=1)=>new(SceneObject.At(id,null,p) with{Scale=new(scale)},null){Body=new(motion,shape,friction,motion==SceneBodyMotion.Dynamic?mass:null)};

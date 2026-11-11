@@ -107,6 +107,11 @@ internal sealed class PhysicsWorld:IDisposable
         }
     }
     private static bool Finite(Vector3 v)=>float.IsFinite(v.X)&&float.IsFinite(v.Y)&&float.IsFinite(v.Z);
+    /// <summary>Adds a body after creation, for a game that spawns copies; its saved pose is where it appeared.</summary>
+    internal void Spawn(string name,SceneBody body,Vector3 position,Quaternion rotation,float scale)
+    {Check();if(owned.ContainsKey(name))throw new ArgumentException("A body with this name already exists.");Add(name,body,scale,position,rotation);saved.Add(name,(position,rotation));}
+    /// <summary>Removes and destroys one owned body.</summary>
+    internal void Remove(string name){Check();var entry=owned[name];bodies.RemoveBody(entry.Id);bodies.DestroyBody(entry.Id);owned.Remove(name);saved.Remove(name);}
     internal float Mass(string name){Check();var entry=owned[name];if(entry.Motion!=SceneBodyMotion.Dynamic)throw new InvalidOperationException("Only dynamic bodies own authored mass.");var body=system.GetBodyLockInterfaceNoLock().TryGetBody(entry.Id);var mass=1/body.GetMotionProperties().GetInverseMass();if(!float.IsFinite(mass)||mass<=0)throw new InvalidOperationException("Native mass is invalid.");return mass;}
     internal (Vector3 Position,Quaternion Rotation) Pose(string name){Check();bodies.GetPositionAndRotation(owned[name].Id,out var p,out var q);return(new(p.X,p.Y,p.Z),new(q.X,q.Y,q.Z,q.W));}
     internal void Velocity(string name,Vector3 linear,Vector3 angular)

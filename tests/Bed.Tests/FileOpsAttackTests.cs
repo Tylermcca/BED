@@ -103,8 +103,10 @@ public sealed class FileOpsAttackTests(ITestOutputHelper output)
             if(!OperatingSystem.IsWindows())return;
             var restore=new DirectorySecurity();restore.SetSecurityDescriptorBinaryForm(original,AccessControlSections.Access);
             folder.SetAccessControl(restore);
-            Assert.Equal(restore.GetSecurityDescriptorSddlForm(AccessControlSections.Access),folder.GetAccessControl(AccessControlSections.Access).GetSecurityDescriptorSddlForm(AccessControlSections.Access));
+            Assert.Equal(Rules(restore.GetSecurityDescriptorSddlForm(AccessControlSections.Access)),Rules(folder.GetAccessControl(AccessControlSections.Access).GetSecurityDescriptorSddlForm(AccessControlSections.Access)));
         }
+        // The permission entries only: some drives (GitHub's runners) add an "auto-inherited" flag ("D:AI(...)") when permissions are set back.
+        static string Rules(string sddl)=>System.Text.RegularExpressions.Regex.Replace(sddl,"^D:[A-Z]*","D:");
         public void Dispose()=>Restore();
     }
     public static IEnumerable<object[]> Cases()

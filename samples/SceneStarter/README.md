@@ -1,12 +1,26 @@
 # SceneStarter saved files and export review
 
-A small self-authored console sample using `Bed` and `Bed.Runtime` with .NET 10. It has no Editor, ImGui or BRUTAL dependency and opens no window. This is a framework-dependent Windows sample; the destination needs the .NET 10 runtime.
+A small self-authored sample using `Bed` and `Bed.Runtime` with .NET 10. It has no Editor, ImGui or BRUTAL dependency. This is a framework-dependent Windows sample; the destination needs the .NET 10 runtime.
 
 ## Play saved project files
 
 `SceneStarter.exe --project PROJECT_ROOT` reads `data/level.json` and the published generation in `.bed/cache`. With no arguments it also accepts the root supplied in `BED_PROJECT`. Open the project in BED once to prepare its saved assets. The game derives nothing and never reads an editor draft, takes a cache owner lock or saves the project.
 
 The same `SavedScene.Open` consumer can read a copied project layout. It checks the level's identities, links and local transforms through the core scene reader, then obtains each exact asset GUID from the hash-verified generation and decodes it through the Runtime mesh reader. Missing, changed or unsupported inputs refuse with exit 3; success prints a plain loaded-level message. With no lifetime option it keeps running until closed. `--seconds N` keeps it running for 0 to 60 seconds after the real load and then exits; `--exit-code N` returns that code after the load (or after the chosen duration). Use `--seconds 0` for a bounded owner smoke. There is no game-readiness handshake.
+
+## The garden game window
+
+A flat (2D) level that has a sprite named `round_friend` plays as a small platform game (the sprite sample's README has the controls and the convention for solid things, coins and flags). Ordinary Play (`--project` with no lifetime option) opens the game window; 3D levels and flat levels without a player keep the plain loaded-level behaviour.
+
+The window is a plain Windows window drawn with the game's own software renderer (`Garden/`), so the runtime files stay exactly `Bed.dll`, `Bed.Runtime.dll` and the SceneStarter files: export, the runtime inventory and copied games are unchanged and exported copies play too. Rules (`GardenGame`) are pure code; the window only shows the renderer's pixels.
+
+Headless options never open a window, which is what BED's Play/Export probes and the tests use:
+
+- `--seconds N` or `--exit-code N`: load, then exit as before (`--seconds 0` is the smoke).
+- `--headless`: load and keep running without a window until closed.
+- `--frames N [--input SCRIPT] [--shot PNG]`: run N fixed 1/60 s steps with scripted keys (`right*40,right+jump*12,none*20`; keys `left`, `right`, `jump`, `restart`, `none`) and print a one-line summary; `--shot` saves the last frame, the same pixels the window would show.
+- `--window-check N [--input SCRIPT]`: create the real window hidden (never shown or focused), run N steps through it and close; a check that the window code works.
+- Setting `BED_GAME_HEADLESS=1` also keeps ordinary Play windowless.
 
 ## Fixed export-review fixture
 

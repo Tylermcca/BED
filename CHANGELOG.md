@@ -4,6 +4,21 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.0-rc.4]
+
+Fourth release candidate for 0.3: the 2D and physics samples are now small games you can play, and the 3D view no longer flickers.
+
+### Added
+
+- The 2D garden sample is now a small game you play in a window. The round friend walks with the arrow keys or A and D, jumps with Space, collects the coins and finishes at a flag; R starts again and Esc quits. It plays the saved level, so moving things in BED changes the game, and exported copies play too.
+- The 3D physics sample now plays in a window. Build and Play shows the island with its models, colours and textures, lit by the sun with soft shadows over a calm sea. The crates fall and settle, the paddle pushes them, and you can click to drop more crates, turn and zoom the camera, and press R to start again from the saved level. Headless runs with `--seconds` or `--frames` still print the same summary.
+- Every change to BED now builds and runs all its tests on a clean Windows machine on GitHub, and the README shows whether they pass.
+
+### Fixed
+
+- The 3D view no longer flickers while you move the camera. Holding the right mouse button to look around, flying with W A S D, panning and zooming used to make the objects blink out on every frame the mouse moved; zooming with + and -, turning with Ctrl and the arrow keys, and framing with F or Enter each made them blink once. They now stay on screen.
+- The third-party notices in the download name BED.exe and bed-cli.exe, the programs you actually run, instead of older program names.
+
 ## [0.3.0-rc.3]
 
 Third release candidate for 0.3: plain words throughout the editor.

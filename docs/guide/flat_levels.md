@@ -4,7 +4,7 @@ A flat level uses the XY plane: X goes right, Y goes up, and rotation turns arou
 
 **Current preview:** the Vulkan flat view draws admitted sprite images with transparent overlap and the saved nearest/linear sampling choice, with selection bounds and markers. A missing or stale image reports a reason and shows its bounds. Hosts without sprite image presentation, including the OpenGL fallback, show bounds. A game that opts in to version-two levels can run the saved sprites, and Export build carries their images.
 
-**Try it:** open the download's **samples/sprite-2d** project ([its README](../../samples/SpriteLevelProject/README.md)). It is a small flat cartoon level with seventeen sprites in four layers and a prefab placed twice, one copy changed. Play and Export build work with it; its game reports in **Play console** and has no window yet. [Start here](start_here.md#5-try-the-2d-and-physics-samples) walks through it.
+**Try it:** open the download's **samples/sprite-2d** project ([its README](../../samples/SpriteLevelProject/README.md)). It is a small flat cartoon level with seventeen sprites in four layers and a prefab placed twice, one copy changed. Play and Export build work with it; its game is a small platform game in its own window (arrow keys or A/D, Space to jump). [Start here](start_here.md#5-try-the-2d-and-physics-samples) walks through it.
 
 ## Quick steps
 
