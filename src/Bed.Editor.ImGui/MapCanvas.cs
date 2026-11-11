@@ -165,7 +165,7 @@ public sealed class MapCanvas<TDoc> where TDoc : class
         if (known.Count > 0 && (!double.IsFinite(known.Max(p => p.X) - known.Min(p => p.X)) || !double.IsFinite(known.Max(p => p.Y) - known.Min(p => p.Y))))
             return "The positions are too far apart to show.";
         if (Options.Grid is { } grid && !(double.IsFinite(grid.Step.X) && double.IsFinite(grid.Step.Y) && grid.Step.X >= 0 && grid.Step.Y >= 0 && grid.Origin.IsFinite))
-            return "The grid's step must be a number, 0 or more, and its origin a number, so nothing can be moved.";
+            return "The grid's step must be a number, 0 or more, and its starting point a number, so nothing can be moved.";
         return null;
     }
 

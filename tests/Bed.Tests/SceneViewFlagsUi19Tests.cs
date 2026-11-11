@@ -28,7 +28,7 @@ public sealed class SceneViewFlagsUi19Tests
         public void Show(string name){Assert.True(Workspace.Show(name),Workspace.Said);Frames(3);}
         public UiNode Row(string id)
         {
-            var tree=Ui.Snapshot();return Assert.Single(tree.Nodes,n=>n.Role==UiRole.ListItem&&(n.Label==id||n.Label=="> "+id||n.Label.StartsWith(id+" [",StringComparison.Ordinal)||n.Label.StartsWith("> "+id+" [",StringComparison.Ordinal))&&Inside(tree,n,"Outliner"));
+            var tree=Ui.Snapshot();return Assert.Single(tree.Nodes,n=>n.Role==UiRole.ListItem&&(n.Label==id||n.Label=="> "+id||n.Label.StartsWith(id+" (",StringComparison.Ordinal)||n.Label.StartsWith("> "+id+" (",StringComparison.Ordinal))&&Inside(tree,n,"Outliner"));
         }
         private static bool Inside(UiSnapshot tree,UiNode node,string title)
         {for(var i=node.Parent;i>=0;i=tree.Nodes[i].Parent)if(tree.Nodes[i].Role==UiRole.Window&&tree.Nodes[i].Label==title)return true;return false;}
@@ -63,14 +63,14 @@ public sealed class SceneViewFlagsUi19Tests
         Assert.Equal(new[]{"parent","child","free"},r.Rendered());var old=r.View.RenderRequest!;
         var point=r.View.Camera.Project(Vector3.Zero,r.View.LastRect.Size)!.Value.Screen+r.View.LastRect.Origin;
         var stale=old.Pick(point);Assert.Equal("parent",stale.ItemId);
-        r.Native("parent",ImGuiKey.H);Assert.Equal(new[]{"free"},r.Rendered());Assert.Contains("[hidden]",r.Row("parent").Label);Assert.Contains("[hidden]",r.Row("child").Label);
+        r.Native("parent",ImGuiKey.H);Assert.Equal(new[]{"free"},r.Rendered());Assert.Contains("(hidden)",r.Row("parent").Label);Assert.Contains("(hidden)",r.Row("child").Label);
         Assert.Null(r.View.RenderRequest!.Pick(point).ItemId);Assert.False(r.View.TrySelectRenderResult(stale));Assert.Equal(new[]{"parent"},r.Window.Editor.Selection);
         Assert.DoesNotContain(Ui.Snapshot().Nodes,n=>n.Parent>=0&&Ui.Snapshot().Nodes[n.Parent].Role==UiRole.Canvas&&n.Label=="parent");r.Clean();
         r.Native("parent",ImGuiKey.H);Assert.Equal(new[]{"parent","child","free"},r.Rendered());Assert.DoesNotContain("hidden",r.Row("parent").Label);r.Clean();
     }
     [Fact] public void Locked_child_blocks_parent_moves_single_batch_guarded_and_Inspector_transforms_and_native_arrows()
     {
-        using var files=new CapturedExportTests.Owned();using var r=new Rig(files.Root);r.Native("child",ImGuiKey.L);Assert.Contains("[locked]",r.Row("child").Label);
+        using var files=new CapturedExportTests.Owned();using var r=new Rig(files.Root);r.Native("child",ImGuiKey.L);Assert.Contains("(locked)",r.Row("child").Label);
         var editor=r.Window.Editor;var original=editor.Session.Current;
         Assert.True(editor.Execute(new MoveObject("free",new(-5,0,0)),"free"));Assert.True(editor.Session.Undo());
         Assert.Same(original,editor.Session.Current);r.Select("parent");
@@ -86,7 +86,7 @@ public sealed class SceneViewFlagsUi19Tests
         Assert.Empty(r.View.MoveTargets);Assert.Empty(r.View.RotationTargets);Assert.Empty(r.View.ScaleTargets);
         Assert.Same(original,editor.Session.Current);Assert.False(editor.Session.Dirty);Assert.Equal(0,editor.Session.History.UndoCount);r.Native("child",ImGuiKey.L);Assert.DoesNotContain("locked",r.Row("child").Label);
         Assert.True(editor.Execute(new MoveObject("parent",Vector3.UnitZ),"parent"));Assert.Equal(1,editor.Session.History.UndoCount);
-        r.Native("parent",ImGuiKey.L);Assert.Contains("[locked]",r.Row("child").Label);Assert.True(editor.Session.Undo());Assert.Same(original,editor.Session.Current);Assert.True(editor.Session.Redo());
+        r.Native("parent",ImGuiKey.L);Assert.Contains("(locked)",r.Row("child").Label);Assert.True(editor.Session.Undo());Assert.Same(original,editor.Session.Current);Assert.True(editor.Session.Redo());
     }
     [Fact] public void View_choices_persist_per_level_and_user_without_changing_either_saved_level_or_history()
     {
@@ -96,12 +96,12 @@ public sealed class SceneViewFlagsUi19Tests
             project=r.Project;first=File.ReadAllText(Path.Combine(project,"data","a.json"));second=File.ReadAllText(Path.Combine(project,"data","b.json"));
             r.Native("parent",ImGuiKey.H);r.Native("child",ImGuiKey.L);r.Clean();
             Assert.Single(Directory.GetFiles(r.Local,"*.json",SearchOption.AllDirectories));Assert.False(Directory.Exists(Path.Combine(project,".bed")));
-            r.Show("b.json");Assert.Equal(3,r.Rendered().Length);Assert.DoesNotContain("[hidden]",r.Row("parent").Label);r.Clean();
+            r.Show("b.json");Assert.Equal(3,r.Rendered().Length);Assert.DoesNotContain("(hidden)",r.Row("parent").Label);r.Clean();
         }
         using(var reopened=new Rig(files.Root))
-        {Assert.Equal(new[]{"free"},reopened.Rendered());Assert.Contains("[hidden]",reopened.Row("child").Label);Assert.Contains("[locked]",reopened.Row("child").Label);reopened.Clean();}
+        {Assert.Equal(new[]{"free"},reopened.Rendered());Assert.Contains("(hidden)",reopened.Row("child").Label);Assert.Contains("(locked)",reopened.Row("child").Label);reopened.Clean();}
         using(var otherUser=new Rig(files.Root,"other-user"))
-        {Assert.Equal(3,otherUser.Rendered().Length);Assert.DoesNotContain("[locked]",otherUser.Row("child").Label);Assert.DoesNotContain("[hidden]",otherUser.Row("parent").Label);otherUser.Clean();}
+        {Assert.Equal(3,otherUser.Rendered().Length);Assert.DoesNotContain("(locked)",otherUser.Row("child").Label);Assert.DoesNotContain("(hidden)",otherUser.Row("parent").Label);otherUser.Clean();}
         Assert.Equal(first,File.ReadAllText(Path.Combine(project,"data","a.json")));Assert.Equal(second,File.ReadAllText(Path.Combine(project,"data","b.json")));
     }
     [Fact] public void Native_typing_keeps_H_and_L_in_the_field_and_Play_or_closed_windows_refuse_view_changes()

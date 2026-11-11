@@ -13,9 +13,9 @@ public sealed partial class DataWorkspace
         if(status.StartsWith("Running",StringComparison.Ordinal))projectPlayWasBuilding=false;
         if(session.HasCompleted)
         {
-            if(projectPlayStopRequested){detail=status;status="Stopped."+(session.ExitCode is {} stoppedCode?$" Exit code {stoppedCode}.":"");}
+            if(projectPlayStopRequested){detail=status;status="Stopped"+(session.ExitCode is {} stoppedCode&&stoppedCode!=0?$" (code {stoppedCode})":"")+".";}
             else if(session.ExitCode is {} code)
-            {detail=status;status=projectPlayWasBuilding&&code!=0?$"Build failed (exit code {code}).":$"Exited with code {code}.";}
+            {detail=status;status=projectPlayWasBuilding&&code!=0?$"Build failed (error code {code}).":code==0?"Finished normally.":$"Stopped with error code {code}.";}
         }
         else if(!projectPlayStopRequested && !projectPlayWasBuilding && session is IProjectFrameControlSession control)
         {

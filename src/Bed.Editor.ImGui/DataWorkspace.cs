@@ -287,7 +287,7 @@ public sealed partial class DataWorkspace : IDisposable
     public bool GoTo(ReferenceTarget target)
     {
         if (Documents.IsScene(target.File))
-        {if(Documents.OpenScene2(target.File,out _,out _))return GoToScene2(target);Said = "Data-table navigation is unavailable for a scene document."; return false;}
+        {if(Documents.OpenScene2(target.File,out _,out _))return GoToScene2(target);Said = "Tables can't be shown for a level file."; return false;}
         var from = NavigationHere();
         if (!Show(target.File)) return false;
         if (from is not null) history.Push(from);
@@ -672,7 +672,7 @@ public sealed partial class DataWorkspace : IDisposable
             new("open_file", "Open file...", OpenProjectFile),
             new("save_all", "Save all files", SaveAll, () => Project.ReadOnly ? "the project is open read-only" : TransitionDraftCount == 0 ? "nothing to save" : null),
             new("refresh", "Refresh files", () => { Refresh(); return true; }),
-            new("new_file", "New data file from a schema...", () => OpenForm(FileForm.New), () => Project.ReadOnly ? "the project is open read-only" : null),
+            new("new_file", "New data file from a rules file...", () => OpenForm(FileForm.New), () => Project.ReadOnly ? "the project is open read-only" : null),
             new("rename_file", "Rename the shown file...", () => OpenForm(FileForm.Rename),
                 () => Project.ReadOnly ? "the project is open read-only" : Active is null ? "no file is shown" : null),
             new("delete_file", "Delete the shown file...", () => OpenForm(FileForm.Delete),

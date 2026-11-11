@@ -61,6 +61,8 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
     internal Func<IProjectFrameControlSession?>? ProjectFrames;
     internal Func<(bool Ok,string Message)>? SceneHide,SceneLock;
     internal Func<string,string>? OutlineBadges;
+    /// <summary>Optional prefab marking per row: drawn as colour, icon or dot, and spoken in the row's accessible name.</summary>
+    internal Func<string,OutlineMark?>? OutlineMarks;
     private readonly SceneRenameUi? sceneRename;
     private bool paletteRequested;   // open it on the next frame
     private bool paletteShowing;     // open now (or about to be)
@@ -180,7 +182,7 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
         if(!linkedPlayPrompt) return Say(false,"","No linked Play decision is pending.");
         if(choice==SaveChangesChoice.Cancel) {linkedPlayPrompt=false;return Say(false,"","Play cancelled.");}
         if(Editor.Session.Revision!=linkedPlayRevision)
-        {linkedPlayPrompt=false;return Say(false,"","The document changed while choosing Play. Choose Play again.");}
+        {linkedPlayPrompt=false;return Say(false,"","The file changed while choosing Play. Choose Play again.");}
         if(choice==SaveChangesChoice.Save)
         {
             // A previous asynchronous authoritative Save may have completed since the button was pressed.
@@ -209,7 +211,7 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
             if(linkedPlayFocus) {ImGui.SetKeyboardFocusHere();linkedPlayFocus=false;}
             if(Ui.Button("Save"u8)) AnswerLinkedPlay(SaveChangesChoice.Save);
             ImGui.SameLine();
-            Ui.BeginDisabled(linkedPlaySaved is null,"This document has no saved version.");
+            Ui.BeginDisabled(linkedPlaySaved is null,"This file hasn't been saved yet.");
             if(Ui.Button("Don't Save"u8)) AnswerLinkedPlay(SaveChangesChoice.DontSave);
             Ui.EndDisabled();ImGui.SameLine();
             if(Ui.Button("Cancel"u8)) AnswerLinkedPlay(SaveChangesChoice.Cancel);
@@ -261,7 +263,7 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
     public bool GoTo(Issue issue)
     {
         if (issue.ObjectId is not { } id) return Say(false, "", "That problem isn't about one object.");
-        if (Editor.Outline.Label(Editor.Session.Current, id) is null) return Say(false, "", $"'{id}' isn't in the document any more.");
+        if (Editor.Outline.Label(Editor.Session.Current, id) is null) return Say(false, "", $"'{id}' isn't in the file any more.");
         if (Editor.HolderOf(id) is not { } holder) return Say(false, "", $"Nothing here holds '{id}'.");
         id = holder;   // a file's own plain field is held by the file's entry (A141)
         while (!Editor.InFocus(id) && Editor.FocusOut()) { }
@@ -428,7 +430,7 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
         if (Editor.Session.FilePath is null)
         {
             OpenSaveAs();
-            return Say(false, "", "This document has no file yet; choose where to save it.");
+            return Say(false, "", "This hasn't been saved to a file yet; choose where to save it.");
         }
         // Never write over a change someone else made to the file since it was opened or last saved (found by A031).
         if (Editor.Session.CheckDisk() == DiskState.Missing)   // never silently put back a file deleted outside (found by A049)
@@ -1130,7 +1132,7 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
             ImGui.Separator();
             Item("Close", "editor.close");
             Item("Close project", PanelCommandAction + "project.files/close_project");
-            Missing("Exit", "Use Close project to resolve unsaved changes, then close the application window.");
+            Missing("Exit", "Use Close project to save or discard unsaved changes, then close the window.");
             End();
         }
         if (Begin("Edit", true))
@@ -1458,8 +1460,18 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
             {
                 var (id,depth,place)=rows[r];if(depth>0)ImGui.Indent(depth*14);
                 if(sceneRename?.DrawRow(id)==true){if(depth>0)ImGui.Unindent(depth*14);continue;}
-                var rowLabel=$"{(place?"> ":"")}{Label(id)}{OutlineBadges?.Invoke(id)??""}##obj{id}";
-                var activated=wrapOutline?Ui.SelectableWrapped(rowLabel,Editor.Selection.Contains(id),ImGuiSelectableFlags.AllowDoubleClick,rowHeight):Ui.Selectable(rowLabel,Editor.Selection.Contains(id),ImGuiSelectableFlags.AllowDoubleClick);
+                var (shown,spoken,mark)=OutlineText(id,place);var rowLabel=shown+"##obj"+id;
+                if(mark is not null)Ui.NameNextItem(rowLabel,spoken);
+                var textAt=ImGui.GetCursorScreenPos();textAt.Y+=ImGui.Internal.GetCurrentWindow().DC.CurrLineTextBaseOffset;
+                if(mark is {} colour)ImGui.PushStyleColor(ImGuiCol.Text,colour.TextColour);
+                bool activated;
+                try{activated=wrapOutline?Ui.SelectableWrapped(rowLabel,Editor.Selection.Contains(id),ImGuiSelectableFlags.AllowDoubleClick,rowHeight):Ui.Selectable(rowLabel,Editor.Selection.Contains(id),ImGuiSelectableFlags.AllowDoubleClick);}
+                finally{if(mark is not null)ImGui.PopStyleColor();}
+                if(mark is {} m)
+                {
+                    var node=Ui.Tree.Count-1;Ui.Tree.Update(node,Ui.Tree.At(node) with{Tooltip=m.Tooltip});Tooltips.Show(m.Tooltip);
+                    m.Draw(textAt,textAt.X+(place?ImGui.CalcTextSize("> "u8).X:0),textAt.X+ImGui.CalcTextSize(shown).X);
+                }
                 if(scene&&(outlineMoveTo==id||sceneRename?.TakeFocusRow(id)==true))
                 {
                     ImGui.Internal.SetFocusID(ImGui.GetItemID(),ImGui.Internal.GetCurrentWindow());ImGui.SetNavCursorVisible(true);
@@ -1490,8 +1502,16 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
         var width=ImGui.GetContentRegionAvail().X;var font=ImGui.GetFontSize();
         if(ReferenceEquals(readableOutline,rows)&&readableOutlineWidth==width&&readableOutlineFont==font)return readableOutlineHeight;
         readableOutline=rows;readableOutlineWidth=width;readableOutlineFont=font;readableOutlineHeight=24*ImGui.GetStyle().FontScaleDpi;
-        foreach(var (id,depth,place) in rows)readableOutlineHeight=MathF.Max(readableOutlineHeight,Ui.WrappedSelectableHeight($"{(place?"> ":"")}{Label(id)}{OutlineBadges?.Invoke(id)??""}",width-depth*14));
+        foreach(var (id,depth,place) in rows)readableOutlineHeight=MathF.Max(readableOutlineHeight,Ui.WrappedSelectableHeight(OutlineText(id,place).Shown,width-depth*14));
         return readableOutlineHeight;
+    }
+    // Visible row text, the accessible name and any prefab marking. A marked row's name is spoken with plain words
+    // ("crate_1, copy of crate"); the drawn text stays the name alone, with room left for the copy icon.
+    private (string Shown,string Spoken,OutlineMark? Mark) OutlineText(string id,bool place)
+    {
+        var prefix=place?"> ":"";var name=Label(id)+(OutlineBadges?.Invoke(id)??"");var mark=OutlineMarks?.Invoke(id);
+        if(mark is not {} m)return(prefix+name,prefix+name,null);
+        return(prefix+(m.Kind==OutlineMarkKind.PrefabCopy?OutlineMark.IconRoom():"")+name,prefix+name+", "+m.Spoken,m);
     }
     private IReadOnlyList<(string Id, int Depth, bool Place)> OutlineRows()
     {

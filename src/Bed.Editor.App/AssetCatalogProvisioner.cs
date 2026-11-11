@@ -43,7 +43,7 @@ public sealed class AssetCatalogProvisioner : IAssetCatalogProvisioner
         byte[] Read(string path)
         {
             path = Path.GetFullPath(path);
-            if (!files.Contains(path)) throw new InvalidOperationException("Resource is outside the admitted assets read set.");
+            if (!files.Contains(path)) throw new InvalidOperationException("That file is outside this project's assets.");
             if (new FileInfo(path).Length > 64 * 1024 * 1024) throw new InvalidOperationException("Asset exceeds the 64 MiB startup bound.");
             var bytes = File.ReadAllBytes(path); pins[path] = Hash(bytes); return bytes;
         }
@@ -68,7 +68,7 @@ public sealed class AssetCatalogProvisioner : IAssetCatalogProvisioner
                     {
                         record = AssetRecord.Read(System.Text.Encoding.UTF8.GetString(Read(sidecar)));
                         var path = sidecar[..^AssetRecord.Suffix.Length];
-                        if (record.Source != Path.GetFileName(path)) throw new InvalidOperationException("Sidecar source name does not match its file.");
+                        if (record.Source != Path.GetFileName(path)) throw new InvalidOperationException("The asset's import file names a different source file.");
                         var source = pinnedSource = Read(path);
                         if (Hash(source) != record.SourceHash) throw new InvalidOperationException("Source changed since import; reimport it first.");
                         var frame = ProjectFrame.Gltf;
@@ -76,13 +76,13 @@ public sealed class AssetCatalogProvisioner : IAssetCatalogProvisioner
                         if(extension is ".wav" or ".ogg")
                         {
                             if(record.Importer != extension[1..]) throw new InvalidOperationException("Sound importer must match WAV or OGG.");
-                            if(record.PrepareReimport(path,record.ImporterVersion).Write()!=record.Write())throw new InvalidOperationException("Sound origin observations changed; reimport it first.");
+                            if(record.PrepareReimport(path,record.ImporterVersion).Write()!=record.Write())throw new InvalidOperationException("The sound file changed since it was imported; reimport it first.");
                             if(source.Length>WavePreviewDecoder.MaxEncodedBytes)throw new InvalidOperationException("Sound exceeds the 32 MiB preview limit.");
                             inputs.Add(new(record,source,source,[],true,"sound-preview-v1",record.Write()));continue;
                         }
                         if(extension is ".png" or ".jpg" or ".jpeg" or ".tga")
                         {
-                            if(record.PrepareReimport(path,record.ImporterVersion).Write()!=record.Write())throw new InvalidOperationException("Texture origin observations changed; reimport it first.");
+                            if(record.PrepareReimport(path,record.ImporterVersion).Write()!=record.Write())throw new InvalidOperationException("The texture file changed since it was imported; reimport it first.");
                             if(!TextureAssetGeneration.TryCreateSavedInput(record,source,extension,[],true,"BEDTEX1",record.Write(),out var texture,out var textureWhy))
                                 throw new InvalidOperationException(textureWhy);
                             inputs.Add(texture!);continue;
@@ -168,12 +168,12 @@ public sealed class AssetCatalogProvisioner : IAssetCatalogProvisioner
         var pending = new Stack<string>(); pending.Push(root); var count = 0;
         while (pending.TryPop(out var folder))
         {
-            if ((File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked asset folders are not admitted.");
+            if ((File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked folders (shortcuts to elsewhere) can't hold assets.");
             foreach (var path in Directory.EnumerateFileSystemEntries(folder))
             {
                 if (++count > 4096) throw new InvalidOperationException("Assets exceed the 4096-entry startup bound.");
                 var attributes = File.GetAttributes(path);
-                if ((attributes & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked assets are not admitted.");
+                if ((attributes & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked files (shortcuts to elsewhere) can't be assets.");
                 if ((attributes & FileAttributes.Directory) != 0) pending.Push(path); else files.Add(Path.GetFullPath(path));
             }
         }

@@ -45,7 +45,7 @@ With a scene’s Outliner focused, press **Ctrl+F** to focus **Search objects**.
 
 ## Hide and lock scene objects
 
-**H** toggles hidden objects and **L** toggles locked objects. Their Outliner rows show `[hidden]` and `[locked]`. A parent's choices also apply to its children; select that parent to show or unlock them. Hidden objects leave the viewport and its picking. Locked objects keep their transforms, including when an ancestor moves. These choices belong to your local preferences for each project and level; they do not edit the saved level or add an undo step. Undo and redo still use the document's existing history.
+**H** toggles hidden objects and **L** toggles locked objects. Their Outliner rows end with `(hidden)` or `(locked)`. A parent's choices also apply to its children; select that parent to show or unlock them. Hidden objects leave the viewport and its picking. Locked objects keep their transforms, including when an ancestor moves. These choices belong to your local preferences for each project and level; they do not edit the saved level or add an undo step. Undo and redo still use the document's existing history.
 
 ## Start screen
 

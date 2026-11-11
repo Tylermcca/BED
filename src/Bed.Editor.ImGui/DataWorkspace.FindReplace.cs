@@ -33,10 +33,10 @@ public sealed partial class DataWorkspace
         {
             using var parsed=JsonDocument.Parse(text,new(){MaxDepth=8});
             if(parsed.RootElement.ValueKind is JsonValueKind.Array or JsonValueKind.Object)
-            {why="Use quoted text, a number, true, false or null.";return false;}
+            {why="Use text in quotes, a number, true, false or null (for empty).";return false;}
             value=parsed.RootElement.Clone();return true;
         }
-        catch(JsonException){why="Use quoted text, a number, true, false or null.";return false;}
+        catch(JsonException){why="Use text in quotes, a number, true, false or null (for empty).";return false;}
     }
     private static IEnumerable<(string Pointer,JsonElement Value)> ReplaceValues(JsonElement value,string pointer="")
     {
@@ -84,9 +84,9 @@ public sealed partial class DataWorkspace
     {
         if(!ReferenceEquals(Project.Find(source.File.Name),source.File)||!ReferenceEquals(source.File.Session,source.Session)
             ||!ReferenceEquals(source.Session.Current,source.Document)||source.Session.Revision!=source.Revision||source.Session.ExpectedOnDisk!=source.Saved)
-            return source.File.Name+": the document changed. Preview the matches again.";
+            return source.File.Name+": the file changed. Preview the matches again.";
         if(source.File.ReadOnlyReason is {} reason)return source.File.Name+": "+reason;
-        if(source.Session.CheckDisk()!=DiskState.Unchanged)return source.File.Name+": the saved file changed outside BED. Resolve it, then preview again.";
+        if(source.Session.CheckDisk()!=DiskState.Unchanged)return source.File.Name+": the saved file was changed outside BED. Choose which version to keep, then preview again.";
         return null;
     }
     private void ApplyReplace()

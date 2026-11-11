@@ -42,7 +42,7 @@ public sealed class GameBuildHost : IDisposable
         ArgumentNullException.ThrowIfNull(spec);ArgumentNullException.ThrowIfNull(declaration);
         if(hasUnsavedChanges)throw new InvalidOperationException("Save changes before building.");
         if(!Path.IsPathFullyQualified(projectRoot)||string.IsNullOrWhiteSpace(savedRevision)||savedRevision.Length>256)throw new ArgumentException("Declare an absolute project root and saved revision.");
-        if(savedRevision!=declaration.Source.InventoryRevision)throw new ArgumentException("Saved revision differs from the admitted source inventory.");
+        if(savedRevision!=declaration.Source.InventoryRevision)throw new ArgumentException("The saved files changed after the build started; build again.");
         if(maxLineCharacters<=0||maxPendingLines<=0||timeout<=TimeSpan.Zero||timeout>TimeSpan.FromDays(1))throw new ArgumentOutOfRangeException(nameof(timeout));
         if(priorGoodManifestHash is not null && (priorGoodManifestHash.Length!=64||!priorGoodManifestHash.All(c=>c is >= '0' and <= '9' or >= 'a' and <= 'f')))throw new ArgumentException("Invalid prior-good manifest hash.");
         this.spec=spec;root=Path.GetFullPath(projectRoot);revision=savedRevision;this.declaration=declaration;
@@ -92,7 +92,7 @@ public sealed class GameBuildHost : IDisposable
             {
                 if(canceled)throw new OperationCanceledException();
                 if(fault is not null)throw new InvalidOperationException(fault);
-                if(code!=0)throw new InvalidOperationException("Build exited with code "+code+".");
+                if(code!=0)throw new InvalidOperationException("The build stopped with error code "+code+".");
             }
             if(exportPlan is not null)BuildInputStaging.Verify(input!,exportPlan.Admission);
             var outputs=Inspect(output);

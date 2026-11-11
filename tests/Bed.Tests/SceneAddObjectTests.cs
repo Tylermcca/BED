@@ -80,7 +80,7 @@ public sealed class SceneAddObjectTests
     {
         using var r=new Rig(bind:false);
         var action=Assert.Single(r.Window.PaletteEntries("Add object."),e=>e.Id=="editor.panel_do.scene.assets/add");
-        Assert.Equal("No asset catalog for this project",action.Unavailable);
+        Assert.Equal("No assets for this project",action.Unavailable);
         Assert.False(r.Window.HandleKey(Chord.Parse("Insert")));
         Assert.False(r.Window.Editor.IsOpen("scene.assets"));
         Assert.Empty(r.Window.Editor.Session.Current.Objects);
@@ -137,7 +137,7 @@ public sealed class SceneAddObjectTests
     public void Listed_browser_asset_without_catalog_admission_cannot_be_placed()
     {
         using var r=new Rig(admit:false);r.OpenPicker();r.Click("item.bin",UiRole.ListItem);r.Click("Add selected object",UiRole.Button);
-        Assert.Contains("not available",r.Workspace.Said);
+        Assert.Contains("isn't in this project's assets",r.Workspace.Said);
         Assert.Empty(r.Window.Editor.Session.Current.Objects);Assert.False(r.Window.Editor.Session.History.CanUndo);
     }
 

@@ -107,7 +107,7 @@ public sealed partial class ProjectLauncher
         TourStep.OpenTable=>"Choose wares in Files to open its table.",
         TourStep.EditPrice=>"Change Bread's price in the table and press Enter.",
         TourStep.RejectPrice=>"Try a negative price and press Enter to see the explanation beside the field.",
-        TourStep.CorrectAndSave=>"Enter a new nonnegative price, press Enter, then Ctrl+S to save.",
+        TourStep.CorrectAndSave=>"Enter a new price of 0 or more, press Enter, then Ctrl+S to save.",
         TourStep.Play=>"Press Play to run your saved example.",
         _=>"Press Stop to return to editing."
     };

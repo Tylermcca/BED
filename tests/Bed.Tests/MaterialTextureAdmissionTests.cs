@@ -52,7 +52,7 @@ public sealed class MaterialTextureAdmissionTests : IDisposable
     {
         Record(); File.Delete(AssetRecord.SidecarFor(Image)); var before = Directory.GetFiles(root);
         var error = Assert.Throws<InvalidOperationException>(() => MaterialTextureAdmission.Prepare(Model, Asset(new ImportedMaterial(0, "material", Vector4.One, "colour.tga"))));
-        Assert.Contains("no asset sidecar", error.Message); Assert.False(File.Exists(AssetRecord.SidecarFor(Image))); Assert.Equal(before, Directory.GetFiles(root));
+        Assert.Contains("hasn't been imported yet", error.Message); Assert.False(File.Exists(AssetRecord.SidecarFor(Image))); Assert.Equal(before, Directory.GetFiles(root));
     }
 
     [Fact]

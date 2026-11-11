@@ -68,7 +68,7 @@ public sealed class InspectorNudgeUi09Tests
         using var r=new Rig();r.Focus("amount");r.Hold(ImGuiKey.UpArrow,25);
         Assert.True(r.Editor.Session.Execute(new SetValue("/amount",System.Text.Json.JsonSerializer.SerializeToElement(20))));
         r.Release(ImGuiKey.UpArrow);Assert.Equal(20,r.Value("amount"));Assert.Equal(1,r.Editor.Session.History.UndoCount);
-        Assert.Contains("document changed",r.Window.Status,StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("file changed",r.Window.Status,StringComparison.OrdinalIgnoreCase);
         r.Key(ImGuiKey.Tab);Assert.Equal(20,r.Value("amount"));Assert.Equal(1,r.Editor.Session.History.UndoCount);
     }
     [Theory][InlineData("Position X",1)][InlineData("Yaw",1)][InlineData("Scale X",2)]

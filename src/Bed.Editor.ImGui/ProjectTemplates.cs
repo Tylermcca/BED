@@ -14,7 +14,7 @@ public static class ProjectTemplates
     // Kept in source so the installed/single-file app needs no additional content-copy rule.
     private const string Manifest = """
         { "version": 1, "templates": [
-          { "id": "empty", "name": "Empty project", "description": "An editable starter file and its documented schema.",
+          { "id": "empty", "name": "Empty project", "description": "An editable starter file and its rules file, with notes.",
             "files": ["README.md", "data/settings.json", "schemas/settings.schema.json"] },
           { "id": "recipes", "name": "Recipes example", "description": "Linked wares and recipes, copied to your own folder.",
             "files": ["README.md", "reference_map.json", "data/recipes.json", "data/wares.json", "schemas/recipes.schema.json", "schemas/wares.schema.json"] }
@@ -75,6 +75,6 @@ public static class ProjectTemplates
             The matching schemas/settings.schema.json describes those fields and their allowed values.
             Add your own data and matching schemas as the project grows. No game connection is required.
             """ + "\n",
-        _ => throw new InvalidOperationException("The starter manifest names an unknown file.")
+        _ => throw new InvalidOperationException("The starter template names a file that doesn't exist.")
     };
 }

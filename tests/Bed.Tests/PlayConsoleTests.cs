@@ -136,7 +136,7 @@ public sealed class PlayConsoleTests
     {
         using var r=new Rig();
         var button=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button && n.Label=="Open source");
-        Assert.False(button.Enabled); Assert.Contains("No available source-navigation action",button.DisabledReason);
+        Assert.False(button.Enabled); Assert.Contains("no way to jump to the source",button.DisabledReason);
         r.ClickSource(); Assert.Equal("",r.Panel.Said);
     }
 

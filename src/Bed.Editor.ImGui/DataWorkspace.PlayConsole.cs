@@ -31,7 +31,7 @@ public sealed partial class DataWorkspace
         ConsoleSameLineIfFits("Copy all", button:true);
         if(Ui.Button("Copy all"u8))
         {
-            var all=projectOutput.Select(line=>(line.Error?"stderr: ":"stdout: ")+line.Text);
+            var all=projectOutput.Select(line=>(line.Error?"error: ":"output: ")+line.Text);
             if(projectLinesDropped>0)all=all.Prepend(ProjectDropNote);
             ImGui.SetClipboardText(string.Join(Environment.NewLine,all));
         }
@@ -49,8 +49,8 @@ public sealed partial class DataWorkspace
                 Ui.EndDisabled();
             }
         }
-        Ui.Checkbox("Show stdout"u8,ref showProjectStdout);
-        ConsoleSameLineIfFits("Show stderr", button:false);Ui.Checkbox("Show stderr"u8,ref showProjectStderr);
+        Ui.Checkbox("Show game output"u8,ref showProjectStdout);
+        ConsoleSameLineIfFits("Show game errors", button:false);Ui.Checkbox("Show game errors"u8,ref showProjectStderr);
         if(projectPlay is {} current)DrawProjectPlayStatus(current);
         if(projectLinesDropped>0)Ui.TextWrapped(ProjectDropNote,semanticId:"project.play.dropped");
         foreach(var line in projectOutput)
@@ -59,11 +59,11 @@ public sealed partial class DataWorkspace
             {
                 if(line.Diagnostic is {} diagnostic)
                 {
-                    Ui.TextWrapped((line.Error?"stderr: ":"")+diagnostic.Message,semanticId:"project.play.output."+line.Key);
+                    Ui.TextWrapped((line.Error?"error: ":"")+diagnostic.Message,semanticId:"project.play.output."+line.Key);
                     var label=("Open "+diagnostic.File+" "+diagnostic.Pointer).Replace("##","# #",StringComparison.Ordinal).Replace('\r',' ').Replace('\n',' ');
                     if(Ui.TextLinkWrapped(label,"diagnostic."+line.Key))RevealPlayDiagnostic(diagnostic);
                 }
-                else Ui.TextWrapped((line.Error?"stderr: ":"")+line.Text,semanticId:"project.play.output."+line.Key);
+                else Ui.TextWrapped((line.Error?"error: ":"")+line.Text,semanticId:"project.play.output."+line.Key);
             }
         }
         if(projectDiagnosticNote.Length>0)Ui.StatusWrapped(projectDiagnosticNote,"project.play.diagnostic.status");

@@ -103,7 +103,7 @@ public sealed class ProjectPlayBridgeTests
     {
         using var r=new Rig(false);Assert.False(r.Workspace.RequestProjectPlay());Assert.True(r.Workspace.PlaySettings!.Open);Assert.Empty(r.Factory.Sessions);
         PlaySettingsStore.Save(r.ProjectRoot,new("game.exe"));File.AppendAllText(r.SceneFile," ");
-        Assert.False(r.Workspace.RequestProjectPlay());Assert.Contains("Resolve the saved version",r.Workspace.Said);Assert.Empty(r.Factory.Sessions);
+        Assert.False(r.Workspace.RequestProjectPlay());Assert.Contains("choose which version to keep before Play",r.Workspace.Said);Assert.Empty(r.Factory.Sessions);
     }
     [Fact]
     public void App_facade_constructs_without_execution_and_delegates_dirty_refusal()

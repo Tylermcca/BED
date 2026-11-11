@@ -597,7 +597,7 @@ public sealed class Checks
         lock (historyGate) found = history.FirstOrDefault(x => x.Run.RunId == runId).Run;
         if (found is null) { why = "That run is unavailable in this session (unknown or evicted)."; return null; }
         if (found.Check.Id != id) { why = "That run belongs to a different check."; return null; }
-        if (found.IsStale(project)) { why = "That run is stale; run the check again for current findings."; return null; }
+        if (found.IsStale(project)) { why = "Those results are out of date; run the check again."; return null; }
         why = "Found the requested run.";
         return found;
     }

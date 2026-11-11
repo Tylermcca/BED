@@ -44,7 +44,7 @@ internal sealed class Scene2CollisionPreview
             if(points.All(Finite))
             {
                 var status=$"{id}: local center [{center.X:g}, {center.Y:g}, {center.Z:g}], half extents [{half.X:g}, {half.Y:g}, {half.Z:g}] m.";
-                if(mesh)status+=" Admitted model revision "+selection!.ContentRevision+". Preview only; build captures and checks again.";
+                if(mesh)status+=" Model version "+selection!.ContentRevision+". Preview only; the build checks it again.";
                 bounds=new(center,half,Array.AsReadOnly(points),status);why="";
             }
             else why="Collision bounds exceed the finite preview range.";

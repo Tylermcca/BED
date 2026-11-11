@@ -23,9 +23,9 @@ public sealed partial class DataWorkspace
         var resolved=Scene2Resolver.Resolve(entry!.Session.Current);
         bool Holds(string pointer)=>target.Pointer==pointer||target.Pointer.StartsWith(pointer+"/",StringComparison.Ordinal);
         var candidates=resolved.Origins.Select(p=>(Id:p.Key,Length:p.Value.FieldOwners.Values.Append(p.Value.SourcePointer).Where(Holds).Select(s=>s.Length).DefaultIfEmpty(-1).Max())).Where(p=>p.Length>=0).ToArray();
-        if(candidates.Length==0){Said="The finding does not identify an effective scene-v2 object.";return false;}
+        if(candidates.Length==0){Said="This problem doesn't point at an object in the level.";return false;}
         var best=candidates.Max(p=>p.Length);var ids=candidates.Where(p=>p.Length==best).Select(p=>p.Id).Distinct(StringComparer.Ordinal).ToArray();
-        if(ids.Length!=1){Said="That accepted prefab field belongs to several instances; choose an instance in the Outliner.";return false;}
+        if(ids.Length!=1){Said="That prefab setting is shared by several prefab copies; choose one in the Outliner.";return false;}
         if(!entry.Editor.InFocus(ids[0])){Said="Step out of focus before opening that object.";return false;}
         var from=NavigationHere();if(!Show(target.File))return false;if(from is not null)history.Push(from);
         entry.Editor.Select(ids[0]);Said=$"Went to {entry.Editor.Outline.Label(entry.Session.Current,ids[0])} in {target.File}.";return true;
@@ -68,7 +68,7 @@ public sealed partial class DataWorkspace
                 },
                 SaveRefusal=()=>Owner.Project.ReadOnlyReason(Name)??"Scene files keep their project binding. Use Save to update this level; create another level through your game's project tools.",
                 SaveAsUnavailable=()=>Owner.Project.ReadOnlyReason(Name)??"Scene files keep their project binding. Use Save to update this level; create another level through your game's project tools.",
-                OutlineBadges=id=>Badge(id),
+                OutlineMarks=id=>OutlineMark.ForScene2(Entry.Session.Current,id),
             };
             owner.BindProblemReport(Window);
             var previous=entry.Editor.EditRefusal;entry.Editor.EditRefusal=(doc,commands,touches)=>
@@ -80,7 +80,7 @@ public sealed partial class DataWorkspace
                 return AssetRefusal(doc,candidate);
             };
             entry.Editor.Add(owner.FilesPanel with{Draw=()=>Owner.DrawFiles()});
-            entry.Editor.Add(new Panel("scene2.assets","Assets",()=>{if(Owner.sceneAssetPicker is {} picker)picker.Draw();else Ui.TextWrapped("No available asset catalog."u8);},OpenAtStart:false,Width:420,Height:450));
+            entry.Editor.Add(new Panel("scene2.assets","Assets",()=>{if(Owner.sceneAssetPicker is {} picker)picker.Draw();else Ui.TextWrapped("No assets are available for this project."u8);},OpenAtStart:false,Width:420,Height:450));
             entry.Editor.Add(new Panel("scene2.prefabs","Prefab and images",DrawActions,Width:420,Height:450,Side:PanelSide.Right));
             if(entry.Session.Current.Space==SceneSpace.ThreeD)entry.Editor.Add(viewport.AsPanel());
             else {flatView=new Scene2FlatView(entry.Editor,Guard,()=>Owner.SceneAssets){DropTarget=at=>Owner.scenePlacement?.DrawTargetAt(at),BoundsOverlay=DrawBodyBounds,IsCurrent=()=>!Owner.scene2WorkspaceClosed&&Owner.Scene2OwnerCurrent?.Invoke(Owner)!=false&&ReferenceEquals(Owner.Scene2Window,Window)};entry.Editor.Add(new Panel("scene2.flat","Flat XY",flatView.Draw,Width:640,Height:450));}
@@ -99,7 +99,7 @@ public sealed partial class DataWorkspace
             if(Entry.Editor.Playing is not null||Owner.ProjectPlay is {HasCompleted:false})return "Stop Play before editing.";
             if(Owner.Project.FileAccessRefusal(Name) is {} admission)return admission;
             if(Owner.Project.ReadOnlyReason(Name) is {} readOnly)return readOnly;
-            if(Entry.Session.CheckDisk()!=DiskState.Unchanged)return "The saved scene changed; resolve the disk conflict.";
+            if(Entry.Session.CheckDisk()!=DiskState.Unchanged)return "The saved level was changed outside BED; choose which version to keep.";
             return null;
         }
         internal void Draw()
@@ -117,11 +117,6 @@ public sealed partial class DataWorkspace
                 if(resolution.State is not(AssetCatalog.State.Valid or AssetCatalog.State.Missing))return item.Object.Id+": "+resolution.Reason;
             }
             return null;
-        }
-        private string Badge(string id)
-        {
-            var projection=Scene2ViewProjection.For(Entry.Session.Current);var r=projection.Resolved;if(!r.Origins.TryGetValue(id,out var o))return "";
-            return o.Kind switch{Scene2OriginKind.Placement=>" [instance]",Scene2OriginKind.PrefabNode=>projection.Instances[o.InstanceKey!].Overrides.Any(e=>e.Node==o.NodeKey)?" [local changes]":" [inherited]",_=>""};
         }
         private bool Edit(string action,object args)
         {
@@ -147,7 +142,7 @@ public sealed partial class DataWorkspace
         {
             update=null;
             if(Guard() is {} refusal){said=refusal;return;}
-            if(Entry.Editor.FocusedOn is not null){said="Step out of focus before reviewing a whole instance.";return;}
+            if(Entry.Editor.FocusedOn is not null){said="Step out of focus before reviewing a whole prefab copy.";return;}
             if(!Owner.Documents.CaptureScene2Edit(Name,"update",Scene2InspectorType.J(new{instance}),out update,out said))return;
             var before=Scene2Resolver.Resolve(Entry.Session.Current).Objects.ToDictionary(o=>o.Object.Id,StringComparer.Ordinal);
             var after=Scene2Resolver.Resolve(update!.Candidate).Objects.ToDictionary(o=>o.Object.Id,StringComparer.Ordinal);
@@ -167,7 +162,7 @@ public sealed partial class DataWorkspace
                 }
             }
             updateChanges=changes.ToArray();updatePage=0;updateTextPages.Clear();focusUpdate=true;
-            said=updateChanges.Length==0?"No effective object changes; accepting records this source revision.":$"Review {updateChanges.Length} change{(updateChanges.Length==1?"":"s")}. Your local changes stay.";
+            said=updateChanges.Length==0?"Nothing in the level changes; accepting marks this prefab version as seen.":$"Review {updateChanges.Length} change{(updateChanges.Length==1?"":"s")}. Your local changes stay.";
         }
         private static bool Choose(string label,ref int selected,string[] names)
         {
@@ -201,7 +196,7 @@ public sealed partial class DataWorkspace
             if(focusUpdate)ImGui.SetNextWindowFocus();
             if(Ui.Begin("Review prefab update###scene2.update"u8,ImGuiWindowFlags.NoSavedSettings|ImGuiWindowFlags.NoDocking|ImGuiWindowFlags.NoCollapse))
             {
-                Ui.TextWrapped("Review the saved source changes. Your local overrides remain."u8);
+                Ui.TextWrapped("Review the changes saved in the prefab. Changes you made to this copy stay."u8);
                 var height=MathF.Max(80,ImGui.GetContentRegionAvail().Y-3*ImGui.GetFrameHeightWithSpacing());
                 ImGui.BeginChild("##update.changes"u8,new Brutal.Numerics.float2(0,height));
                 const int pageSize=32,textSize=1500;
@@ -244,13 +239,13 @@ public sealed partial class DataWorkspace
                 var why=Guard()??AssetRefusal(Entry.Session.Current,candidate.Candidate);
                 if(focusUpdate){ImGui.SetKeyboardFocusHere();focusUpdate=false;}
                 Ui.BeginDisabled(why is not null,why);
-                if(Ui.Button("Accept update"u8)){if(Owner.Documents.CommitScene2Edit(Name,candidate,out said)){update=null;focusReview=true;said="Accepted source update.";}}
+                if(Ui.Button("Accept update"u8)){if(Owner.Documents.CommitScene2Edit(Name,candidate,out said)){update=null;focusReview=true;said="Accepted the prefab update.";}}
                 Ui.EndDisabled();
                 var width=ImGui.CalcTextSize("Accept update"u8).X+ImGui.CalcTextSize("Cancel update"u8).X+4*ImGui.GetStyle().FramePadding.X+ImGui.GetStyle().ItemSpacing.X;
                 if(ImGui.GetContentRegionAvail().X>width)ImGui.SameLine();
-                if(Ui.Button("Cancel update"u8)){update=null;focusReview=true;said="Source update cancelled; level unchanged.";}
+                if(Ui.Button("Cancel update"u8)){update=null;focusReview=true;said="Prefab update cancelled; level unchanged.";}
                 if(why is not null)Ui.TextWrapped(why);
-                if(ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)&&ImGui.IsKeyPressed(ImGuiKey.Escape,false)){update=null;focusReview=true;said="Source update cancelled; level unchanged.";}
+                if(ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)&&ImGui.IsKeyPressed(ImGuiKey.Escape,false)){update=null;focusReview=true;said="Prefab update cancelled; level unchanged.";}
             }
             Ui.End();
         }
@@ -269,15 +264,15 @@ public sealed partial class DataWorkspace
                     rowWidth+=width;
                 }
                 NextAction("Review update");
-                Ui.NameNextItem("Review update"u8,"Review source update");
+                Ui.NameNextItem("Review update"u8,"Review prefab update");
                 if(Ui.Button("Review update"u8))Review(key);
                 if(focusReview){ImGui.SetKeyboardFocusHere(-1);ImGui.SetScrollHereY(.2f);focusReview=false;}
                 NextAction("Break Link");
                 if(Ui.Button("Break Link"u8))Edit("break_link",new{instance=key});
-                NextAction("Delete instance");
-                if(Ui.Button("Delete instance"u8))Edit("remove_instance",new{instance=key});
+                NextAction("Delete prefab copy");
+                if(Ui.Button("Delete prefab copy"u8))Edit("remove_instance",new{instance=key});
                 NextAction("Duplicate");
-                Ui.NameNextItem("Duplicate##instance"u8,"Duplicate instance");
+                Ui.NameNextItem("Duplicate##instance"u8,"Duplicate prefab copy");
                 if(Ui.Button("Duplicate##instance"u8))
                 {
                     var ids=resolved.Origins.Where(p=>p.Value.InstanceKey==key).Select(p=>p.Key).ToDictionary(id=>id,_=>"copy_"+Guid.NewGuid().ToString("N"));
@@ -302,7 +297,7 @@ public sealed partial class DataWorkspace
                 else {ImGui.SameLine();Ui.TextWrapped("Add a PNG image to assets."u8);}
             }
             Ui.EndDisabled();
-            Ui.TextWrapped(origin is null?"Select an object to inspect its ownership.":origin.Kind switch{Scene2OriginKind.PrefabNode=>"Inherited prefab node. Inspector edits create local overrides; Revert returns to the accepted snapshot.",Scene2OriginKind.Placement=>"Instance placement. Transform changes move the whole piece.",_=>"Ordinary object; edits belong to this level."});
+            Ui.TextWrapped(origin is null?"Select an object to see its prefab.":origin.Kind switch{Scene2OriginKind.PrefabNode=>"Part of a prefab copy. Changes you make in the Inspector apply only to this copy; Revert puts back the prefab's value.",Scene2OriginKind.Placement=>"Prefab copy. Moving, turning or resizing it moves the whole piece.",_=>"Ordinary object; changes belong to this level."});
             if(Owner.history.Count>0&&Ui.Button("Back"u8))Owner.Back();
             if(selected is not null)
             {
@@ -317,8 +312,8 @@ public sealed partial class DataWorkspace
                 }
             }
             var refusal=Guard();Ui.BeginDisabled(refusal is not null,refusal);
-            Ui.NameNextItem("Add empty"u8,"Add empty object");
-            if(Ui.Button("Add empty"u8))Edit("object.add",new{@object=new{id="object_"+Guid.NewGuid().ToString("N")}});
+            Ui.NameNextItem("Add empty object"u8,"Add empty object");
+            if(Ui.Button("Add empty object"u8))Edit("object.add",new{@object=new{id="object_"+Guid.NewGuid().ToString("N")}});
             if(Entry.Editor.Selection.Count>0)
             {
                 if(Ui.Button("Group selection"u8))Edit("group",new{ids=Entry.Editor.Selection.ToArray()});

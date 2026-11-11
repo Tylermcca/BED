@@ -35,7 +35,7 @@ internal static class FolderProjects
                     var data = Full(paths.Data);
                     var schemas = Full(paths.Schemas);
                     if (!Directory.Exists(data) || !Directory.Exists(schemas))
-                    { why = $"{ProjectLoader.NameOf(provider)} returned a data or schema folder that doesn't exist."; return null; }
+                    { why = $"{ProjectLoader.NameOf(provider)} returned a data or rules folder that doesn't exist."; return null; }
                     string? root = null;
                     if (paths.Root is not null)
                     {
@@ -53,7 +53,7 @@ internal static class FolderProjects
                     return new(new ProjectPaths(data, schemas, map) { Folder = folder, Root = root }, provider);
                 }
             }
-            why = $"{folder} doesn't hold a data folder and a schemas folder, and no adapter recognises it. Choose the two folders separately.";
+            why = $"{folder} doesn't hold a data folder and a rules folder (schemas), and no game adapter recognises it. Choose the two folders separately.";
             return null;
         }
         catch (Exception e) when (e is ArgumentException or NotSupportedException or IOException or UnauthorizedAccessException)

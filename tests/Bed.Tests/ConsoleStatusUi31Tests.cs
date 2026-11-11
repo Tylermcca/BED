@@ -33,7 +33,7 @@ public sealed class ConsoleStatusUi31Tests
             void Frame(int count=1){host.Frames(launcher.Draw,count);projection.Submit(Ui.Snapshot(),"Own status fixture",new(0,0,1200,950),1,1,sink);}
             UiNode Status(){var nodes=Ui.Snapshot().Nodes;return Assert.Single(nodes,n=>n.Role==UiRole.Status&&n.Parent>=0&&nodes[n.Parent].Label=="Play console");}
             Frame(3);var id=Status().Id;Assert.Equal("Running.",Status().Label);
-            var snapshot=Ui.Snapshot();var filters=snapshot.Nodes.Where(n=>n.Role==UiRole.Checkbox&&n.Label is "Show stdout" or "Show stderr").ToArray();Assert.Equal(2,filters.Length);
+            var snapshot=Ui.Snapshot();var filters=snapshot.Nodes.Where(n=>n.Role==UiRole.Checkbox&&n.Label is "Show game output" or "Show game errors").ToArray();Assert.Equal(2,filters.Length);
             Assert.True(Status().Bounds.Y>=filters.Max(n=>n.Bounds.Y+n.Bounds.Height));Assert.True(Status().Bounds.Y<Assert.Single(snapshot.Nodes,n=>n.Label=="Own log line").Bounds.Y);
             int Changes()=>sink.Updates.SelectMany(u=>u.ChangedNodes).Count(n=>n.Role==AccessKitProjectedRole.Status&&n.SourceId==id);
             var initial=Changes();Assert.Equal(1,initial);Frame(5);Assert.Equal(initial,Changes());
@@ -43,7 +43,7 @@ public sealed class ConsoleStatusUi31Tests
             State(new(false,false,false,13,"Frame control disconnected; simulation state is unknown."),"Frame control unknown.");
             Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label==session.FrameControl.Status);
             Assert.True(workspace.StopProjectPlay());session.ExitCode=143;session.HasCompleted=true;Frame();
-            Assert.Equal(id,Status().Id);Assert.Equal("Stopped. Exit code 143.",Status().Label);
+            Assert.Equal(id,Status().Id);Assert.Equal("Stopped (code 143).",Status().Label);
             var terminal=Changes();Frame(5);Assert.Equal(terminal,Changes());
             Assert.Contains(sink.Updates.SelectMany(u=>u.ChangedNodes),n=>n.SourceId==id&&n.Role==AccessKitProjectedRole.Status&&n.StableIdentity);
             Assert.Equal("{}",File.ReadAllText(Path.Combine(root,"data/item.json")));Assert.Empty(workspace.Project.Dirty);

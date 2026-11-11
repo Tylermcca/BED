@@ -143,7 +143,7 @@ public sealed class EditorWindowTests : IDisposable
     {
         var w = Window(withFile: false);
         Assert.False(w.Run("editor.save"));
-        Assert.Contains("no file yet", w.Status);
+        Assert.Contains("saved to a file yet", w.Status);
         Assert.Equal("Untitled", w.Title);
 
         w.Editor.Select("lamp");
@@ -162,7 +162,7 @@ public sealed class EditorWindowTests : IDisposable
         Assert.Equal(["lamp"], w.Editor.Selection);
         Assert.Equal("Showing Lamp ($.items[0].label).", w.Status);
         Assert.False(w.GoTo(Issue.Error("gone", "ghost")));
-        Assert.Equal("'ghost' isn't in the document any more.", w.Status);
+        Assert.Equal("'ghost' isn't in the file any more.", w.Status);
         Assert.False(w.GoTo(Issue.Error("whole file")));
     }
 

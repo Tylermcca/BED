@@ -20,7 +20,7 @@ public sealed class PrefabReadabilityUx02Tests
             UiNode Node(string label,UiRole role)=>Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==role&&n.Label==label);
             void Focus(string label,UiRole role=UiRole.Button){var focus=Ui.RequestAction(Node(label,role).Id,UiActions.Focus);host.Frames(workspace.Draw,8);Assert.Equal(UiActionOutcome.Applied,focus.Outcome);}
             void Invoke(string label){Focus(label);var request=Ui.RequestAction(Node(label,UiRole.Button).Id,UiActions.Invoke);host.Frames(workspace.Draw,6);Assert.Equal(UiActionOutcome.Applied,request.Outcome);}
-            if(mode=="review"){r.ChangeSource();host.Frames(workspace.Draw,4);Invoke("Review source update");Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label=="Accept update");}
+            if(mode=="review"){r.ChangeSource();host.Frames(workspace.Draw,4);Invoke("Review prefab update");Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label=="Accept update");}
             else
             {
                 editor.SetOpen("scene2.prefabs",true);host.Frames(workspace.Draw,6);Invoke("Refresh prefab sources");

@@ -51,7 +51,7 @@ public sealed class BulkEditPreviewA343Tests
         var ui = r.Ui();
         Assert.Contains("Would change 1 cell; 1 unchanged; 2 refused.", ui);
         Assert.Contains("2 cells: enter true or false.", ui);
-        Assert.Contains("Whole-document checks still run at Apply.", ui);
+        Assert.Contains("Checks on the whole file still run at Apply.", ui);
         r.Untouched(before);
         r.CancelPreview(applyEnabled: false); // disabled Apply is skipped; Cancel is the next enabled action
         Assert.Null(r.Table.Pending);
@@ -175,7 +175,7 @@ public sealed class BulkEditPreviewA343Tests
         Assert.True(plan.Ok); // the preview is not a replacement for the session validator
         var counts = Assert.IsType<DataTableView.BatchCellCounts>(plan.Counts);
         Assert.Equal((3, 0, 0), (counts.Changed, counts.Unchanged, counts.Refused));
-        Assert.Contains("Whole-document checks still run at Apply.", r.Ui());
+        Assert.Contains("Checks on the whole file still run at Apply.", r.Ui());
         r.ApplyPreview();
         Assert.Null(r.Table.Pending);
         Assert.Contains("at least", r.Table.Said);

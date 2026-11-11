@@ -36,7 +36,7 @@ internal static class PlayProbe
                 string name;
                 if(scenes.Length > 0)
                 {
-                    if(scenes.Length != 1) throw new InvalidOperationException("The Play probe requires exactly one admitted scene document.");
+                    if(scenes.Length != 1) throw new InvalidOperationException("The Play check needs exactly one level file the project can open.");
                     name = scenes[0].Name;
                     if(!workspace.Show(name)) throw new InvalidOperationException(workspace.Said);
                     if(workspace.SceneWindow is null && workspace.Scene2Window is null) throw new InvalidOperationException("The scene did not open.");
@@ -47,7 +47,7 @@ internal static class PlayProbe
                     // Open through normal admission; never repair or synthesize a document.
                     var opened = workspace.Project.Files.OrderBy(f => f.Name, StringComparer.Ordinal)
                         .FirstOrDefault(f => workspace.Show(f.Name));
-                    if(opened is null) throw new InvalidOperationException("No admitted data document could be opened. " + workspace.Said);
+                    if(opened is null) throw new InvalidOperationException("No data file in the project could be opened. " + workspace.Said);
                     name = opened.Name;
                 }
                 if(!workspace.RequestProjectPlay()) throw new InvalidOperationException(workspace.Said);

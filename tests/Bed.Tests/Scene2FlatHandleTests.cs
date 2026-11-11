@@ -32,7 +32,7 @@ public sealed class Scene2FlatHandleTests
         using var r=new Rig();r.Editor.Select(["parent","child"]);r.Ui.Frames(r.Draw,2);var before=r.Editor.Session.Current;var at=Rig.Centre(r.Node(label));r.Start(at,at+new Vector2(dx,dy));Assert.Same(before,r.Editor.Session.Current);Assert.Empty(r.Editor.Session.Journal);r.Release();
         var resolved=Scene2Resolver.Resolve(r.Editor.Session.Current);Assert.Equal(new Vector3(x,y,0),resolved.Objects.Single(o=>o.Object.Id=="parent").Object.Position);Assert.Equal(new Vector3(1,0,0),resolved.Objects.Single(o=>o.Object.Id=="child").Object.Position);Assert.Single(r.Editor.Session.Journal);Assert.Equal(1,r.Editor.Session.History.UndoCount);Assert.True(r.Editor.Session.Undo());Assert.Same(before,r.Editor.Session.Current);
     }
-    [Theory][InlineData("Scale local X axis",3f,-3f)][InlineData("Scale local Y axis",2f,-4.5f)][InlineData("Scale XY handle",3f,-4.5f)]
+    [Theory][InlineData("Scale local X axis",3f,-3f)][InlineData("Scale local Y axis",2f,-4.5f)][InlineData("Scale width and height handle",3f,-4.5f)]
     public void Scale_handles_follow_the_selected_local_axes_preserve_other_components_and_reflected_signs(string label,float x,float y)
     {
         using var r=new Rig(new(2,-3,1),Quaternion.CreateFromAxisAngle(Vector3.UnitZ,MathF.PI/6));r.Tool("Scale");var anchor=Rig.Centre(r.Node("Flat XY"));var at=Rig.Centre(r.Node(label));r.Start(at,anchor+(at-anchor)*1.5f);Assert.Empty(r.Editor.Session.Journal);r.Release();

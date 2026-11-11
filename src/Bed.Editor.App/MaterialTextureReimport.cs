@@ -28,9 +28,9 @@ public sealed class MaterialTextureReimport : IDisposable
                     throw new InvalidOperationException("A texture needs its own same-folder source file.");
                 var path = Path.GetFullPath(Path.Combine(folder, source));
                 if (!string.Equals(Path.GetDirectoryName(path), folder, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Texture origin may only be inherited in the model's declared source folder.");
+                    throw new InvalidOperationException("A texture can share the model's declared origin only when it's in the model's own source folder.");
                 for (var p = path; p is not null; p = Path.GetDirectoryName(p))
-                    if ((File.GetAttributes(p) & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked texture sources are not admitted.");
+                    if ((File.GetAttributes(p) & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked texture files (shortcuts to elsewhere) can't be used.");
                 if (File.Exists(AssetRecord.SidecarFor(path))) continue;
                 var extension = Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
                 if (extension is not ("png" or "jpg" or "jpeg" or "tga")) throw new InvalidOperationException("Texture format is not supported by the bounded decoder.");

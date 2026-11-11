@@ -52,7 +52,7 @@ public sealed partial class DataWorkspace
         string? parent = null;
         string? Unavailable()
         {
-            if (sceneAssets is null) return "No asset catalog for this project";
+            if (sceneAssets is null) return "No assets for this project";
             if (SceneWindow?.Editor != entry.Editor) return "Open this scene before adding an object";
             if (entry.Editor.Primary is null && entry.Editor.FocusedOn is not null) return "Step out of focus before placing a root object";
             return Project.ReadOnlyReason(name);
@@ -70,7 +70,7 @@ public sealed partial class DataWorkspace
         }
         void Draw()
         {
-            if (sceneAssetPicker is null) { Ui.TextWrapped("No asset catalog for this project"u8); return; }
+            if (sceneAssetPicker is null) { Ui.TextWrapped("No assets for this project"u8); return; }
             var browserHeight=MathF.Max(ImGui.GetFrameHeight()*3,ImGui.GetContentRegionAvail().Y-ImGui.GetFrameHeightWithSpacing()*2-ImGui.GetTextLineHeightWithSpacing()*2);
             if(Ui.BeginChild("Scene asset browser###scene.assets.browser"u8,new Brutal.Numerics.float2(0,browserHeight),ImGuiChildFlags.NavFlattened))sceneAssetPicker.Draw();
             Ui.EndChild();
@@ -92,7 +92,7 @@ public sealed partial class DataWorkspace
             Ui.BeginDisabled(why is not null, why);
             if (Ui.Button("Add selected object"u8))
             {
-                if (selected is null) Said = "The selected asset is not available in this project's catalog.";
+                if (selected is null) Said = "The selected asset isn't in this project's assets.";
                 else
                 {
                     if (scenePlacement!.Commit())

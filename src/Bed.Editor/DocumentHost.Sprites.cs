@@ -23,11 +23,11 @@ public sealed partial class DocumentHost
     public bool CaptureSpritePlacement(string name,AssetCatalog.Selection selection,out SceneSpritePlacement? placement,out string why,string? parent=null)
     {
         placement=null;
-        if(assets is null){why="No admitted asset catalog is connected.";return false;}
-        if(!scene2.TryGetValue(name,out var entry)){why="Open the admitted scene-v2 file first.";return false;}
+        if(assets is null){why="No assets are available for this project.";return false;}
+        if(!scene2.TryGetValue(name,out var entry)){why="Open the level first.";return false;}
         if(Scene2Refusal(name,entry) is {} refusal){why=refusal;return false;}
         if(entry.Session.Current.Space!=SceneSpace.TwoDXY){why="Sprites require a planar XY scene; mixed 2D/3D rendering is unsupported.";return false;}
-        if(entry.Session.CheckDisk()!=DiskState.Unchanged){why="The saved scene changed; resolve its disk conflict.";return false;}
+        if(entry.Session.CheckDisk()!=DiskState.Unchanged){why="The saved level was changed outside BED; choose which version to keep.";return false;}
         if(SpriteFocusRefusal(entry,parent) is {} focus){why=focus;return false;}
         try
         {
@@ -47,7 +47,7 @@ public sealed partial class DocumentHost
         {why="The sprite target changed; start placement again.";return false;}
         if(Scene2Refusal(placement.DocumentName,entry) is {} refusal){why=refusal;return false;}
         if(SpriteFocusRefusal(entry,placement.Parent) is {} focus){why=focus;return false;}
-        if(assets is null){why="No admitted image catalog is connected.";return false;}
+        if(assets is null){why="No images are available for this project.";return false;}
         if(!assets.TryResolve(placement.Selection,out var lease,out why))return false;
         try
         {

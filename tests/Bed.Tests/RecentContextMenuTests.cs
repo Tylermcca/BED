@@ -112,7 +112,7 @@ public sealed class RecentContextMenuTests : IDisposable
         var folder = Path.Combine(root, "no-schema"); Directory.CreateDirectory(Path.Combine(folder, "data"));
         launcher.Recent.Add(new(Path.Combine(folder, "data"), Path.Combine(folder, "schemas")));
         host.Frames(launcher.Draw, 2); KeyboardMenu("no-schema", true);
-        Assert.False(Menu("Open").Enabled); Assert.Contains("schema folder", Menu("Open").DisabledReason);
+        Assert.False(Menu("Open").Enabled); Assert.Contains("rules folder (schemas)", Menu("Open").DisabledReason);
         Assert.True(Menu("Show in Explorer").Enabled); Assert.Null(Menu("Show in Explorer").DisabledReason);
         Assert.Null(launcher.Workspace); // Explorer is inspected only: no OS process/window is invoked.
     }

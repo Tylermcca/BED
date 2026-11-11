@@ -51,15 +51,15 @@ public sealed class LauncherTests : IDisposable
         Assert.NotNull(l.Workspace!.Map);
         Assert.Null(ProjectPaths.In(root));
         Assert.False(Launcher().OpenFolder(root));
-        Assert.Contains("doesn't hold a data folder and a schemas folder", Launcher() is var x && !x.OpenFolder(root) ? x.Said : "");
+        Assert.Contains("doesn't hold a data folder and a rules folder (schemas)", Launcher() is var x && !x.OpenFolder(root) ? x.Said : "");
     }
 
     [Theory]
     [InlineData("", "schemas", "Choose the data folder")]
     [InlineData("nowhere", "schemas", "There's no data folder at")]
-    [InlineData("data", "", "Choose the schema folder")]
-    [InlineData("data", "nowhere", "There's no schema folder at")]
-    [InlineData("data", "empty", "holds no schemas")]
+    [InlineData("data", "", "Choose the rules folder")]
+    [InlineData("data", "nowhere", "There's no rules folder at")]
+    [InlineData("data", "empty", "holds no rules files")]
     public void Each_wrong_folder_is_refused_saying_what_to_do(string data, string schemas, string said)
     {
         var l = Launcher();

@@ -13,9 +13,9 @@ def read(path):
 
 @pytest.mark.parametrize("native,accessible", [
     ("Refresh prefabs", "Refresh prefab sources"),
-    ("Review update", "Review source update"),
-    ("Duplicate##instance", "Duplicate instance"),
-    ("Add empty", "Add empty object"),
+    ("Review update", "Review prefab update"),
+    ("Duplicate##instance", "Duplicate prefab copy"),
+    ("Add empty object", "Add empty object"),
 ])
 def test_short_visible_labels_and_full_accessible_names_match_the_guide(native, accessible):
     source = read(UI / "DataWorkspace.Scene2.cs")
@@ -27,7 +27,7 @@ def test_short_visible_labels_and_full_accessible_names_match_the_guide(native, 
     assert f"**{accessible}**" in guide
 
 
-@pytest.mark.parametrize("label", ["Place prefab", "Break Link", "Delete instance", "Group selection", "Duplicate objects", "Rename object", "Delete object", "Accept update", "Cancel update", "Back"])
+@pytest.mark.parametrize("label", ["Place prefab", "Break Link", "Delete prefab copy", "Group selection", "Duplicate objects", "Rename object", "Delete object", "Accept update", "Cancel update", "Back"])
 def test_prefab_actions_are_still_real_native_buttons(label):
     assert f'Ui.Button("{label}"u8)' in read(UI / "DataWorkspace.Scene2.cs")
     assert f"**{label}**" in read(ROOT / "docs/guide/prefabs.md")
@@ -97,7 +97,7 @@ def test_flat_handles_and_personal_camera_match_the_native_editor():
     flat = read(UI / "Scene2FlatView.cs")
     native = read(UI / "DataWorkspace.Scene2.cs")
     guide = read(ROOT / "docs/guide/flat_levels.md")
-    for label in ("Move X axis", "Move Y axis", "Scale local X axis", "Scale local Y axis", "Scale XY handle", "Rotate Z ring"):
+    for label in ("Move X axis", "Move Y axis", "Scale local X axis", "Scale local Y axis", "Scale width and height handle", "Rotate Z ring"):
         assert label in flat
     assert "world XY" in guide and "local axes" in guide and "Z ring" in guide
     assert "cameraPreferences?.Remember" in flat and "BindFlatCamera" in native

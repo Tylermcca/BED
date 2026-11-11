@@ -472,7 +472,7 @@ public sealed partial class DataTableView
             }
             else
                 Ui.TextDisabled(plan.Ok ? $"Would change {plan.Commands.Count} of {plan.Cells} cells, as one undo step." : "Can't: " + string.Join(" ", plan.Problems.Take(3)));
-            Ui.TextDisabled("Whole-document checks still run at Apply."u8);
+            Ui.TextDisabled("Checks on the whole file still run at Apply."u8);
             ImGui.SameLine();
             Ui.BeginDisabled(!plan.Ok || plan.Commands.Count == 0);
             if (Ui.SmallButton("Apply"u8))

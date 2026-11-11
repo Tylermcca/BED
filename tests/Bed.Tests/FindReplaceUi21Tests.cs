@@ -114,7 +114,7 @@ public sealed class FindReplaceUi21Tests
         using var r=new Rig();r.Preview();var session=r.Session("a.json");
         Assert.True(session.Execute(new SetValue("/note",JsonSerializer.SerializeToElement("later"))));var current=session.Current;var count=session.Journal.Count;
         r.Invoke("Replace chosen");Assert.Same(current,session.Current);Assert.Equal(count,session.Journal.Count);Assert.False(r.Session("b.json").Dirty);
-        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains("document changed",StringComparison.Ordinal));r.Disk();
+        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains("file changed",StringComparison.Ordinal));r.Disk();
     }
     [Fact]
     public void Outside_file_change_refuses_the_whole_preflight_and_query_edits_disable_old_choices()
@@ -122,7 +122,7 @@ public sealed class FindReplaceUi21Tests
         using var r=new Rig();r.Preview();
         System.IO.File.AppendAllText(r.PathOf("b.json")," ");
         r.Invoke("Replace chosen");Assert.Empty(r.Workspace.Project.Dirty);
-        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains("saved file changed outside BED",StringComparison.Ordinal));r.Disk("b.json");
+        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains("saved file was changed outside BED",StringComparison.Ordinal));r.Disk("b.json");
         r.Values("\"different\"","\"new\"");Assert.False(r.Node(UiRole.Button,"Replace chosen").Enabled);Assert.Empty(r.Matches());
     }
     [Theory][InlineData("{")][InlineData("[1]")][InlineData("{}")]
@@ -130,7 +130,7 @@ public sealed class FindReplaceUi21Tests
     {
         using var r=new Rig();r.Preview(find,"\"new\"");
         Assert.Empty(r.Matches());Assert.False(r.Node(UiRole.Button,"Replace chosen").Enabled);
-        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label=="Use quoted text, a number, true, false or null.");r.Unchanged();
+        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label=="Use text in quotes, a number, true, false or null (for empty).");r.Unchanged();
     }
     [Fact]
     public void Unreadable_and_scene_documents_are_reported_instead_of_silently_counted_and_Escape_closes_the_panel()

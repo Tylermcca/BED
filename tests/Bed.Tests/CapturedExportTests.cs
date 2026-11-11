@@ -88,7 +88,7 @@ public sealed class CapturedExportTests
         var error=Assert.Throws<InvalidOperationException>(()=>new ExportBuildHost(1024,16,TimeSpan.FromSeconds(5)).Start(new(@"C:\fixture\builder.exe",owned.Root,["{output}"]),owned.Root,false,plan));
         Assert.Contains("does not take BED's saved level",error.Message);Assert.Empty(Directory.EnumerateFileSystemEntries(owned.Root));
     }
-    [Theory][InlineData("alter-captured","differs from the admitted Saved payload")][InlineData("tamper-captured","Captured Saved input changed")]
+    [Theory][InlineData("alter-captured","doesn't match the saved files")][InlineData("tamper-captured","Captured Saved input changed")]
     public async Task Changed_build_output_or_transport_never_acquires_a_verified_manifest(string mode,string reason)
     {
         using var owned=new Owned();var plan=Plan(Input(),false);var helper=Path.Combine(AppContext.BaseDirectory,"LinkedBuildTestGame","LinkedBuildTestGame.exe");

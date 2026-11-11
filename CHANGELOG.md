@@ -4,6 +4,28 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.0-rc.3]
+
+Third release candidate for 0.3: plain words throughout the editor.
+
+### Changed
+
+- Editor text uses plain words instead of programming terms: the prefab, physics, assets, Play and problem messages now say "prefab copy", "changed in this copy", "rules folder" and "file" instead of words like instance, override, schema and document. The Motion field explains static, dynamic and kinematic, a finished game says "Finished normally" instead of "exit code 0", and hidden or locked objects show "(hidden)" or "(locked)" in the Outliner.
+- The Outliner no longer adds bracketed words such as "[instance]" to prefab rows. A prefab copy shows its name in a prefab colour with a small box icon, parts that still match the prefab are slightly dimmer, and a part changed in that copy gets a small dot after its name. Hovering a row says what it is in plain words, and screen readers hear the same, such as "crate_1, copy of crate". The high contrast theme has its own prefab colour.
+
+### Fixed
+
+- The level Outliner labelled prefab rows with programming words: "[instance]", "[inherited]" and "[local changes]". It now shows a box icon, a prefab colour and a dot on changed parts, with plain-words explanations on hover.
+- About 150 messages, buttons and hints used programming terms such as "admitted", "override", "node", "schema" and "document". They now say what they mean in plain words.
+- A game that ended normally was reported with "exit code 0". It now says "Finished normally", and a crash says "Stopped with error code" and the number.
+- "Add empty" didn't say what it adds. It now reads "Add empty object".
+- Status messages from saving, checking and Play used words like "stale" and "resolve the disk conflict". They now say, for example, "Those results are out of date; run the check again" and "choose which version to keep".
+
+### Known issues
+
+- Messages about a broken data file can still use technical terms.
+- Everything listed under 0.3.0-rc.2's known issues still applies.
+
 ## [0.3.0-rc.2]
 
 Second release candidate for 0.3: samples for the new features, and fixes to boxes and panels covering the level view.
@@ -29,7 +51,7 @@ Second release candidate for 0.3: samples for the new features, and fixes to box
 ### Known issues
 
 - Neither new sample's game opens a window yet. Play shows their results as text in **Play console**; the physics sample reports where things ended up rather than showing them move.
-- The 3D view doesn't light models yet, and each placed prefab copy also draws a grey marker cube, which the physics sample's crates are sized to hide.
+- The 3D view doesn't light models yet, and each prefab copy copy also draws a grey marker cube, which the physics sample's crates are sized to hide.
 - Physics runs only through the physics sample game, which uses a Windows-only native library. A game must opt in to physics.
 - Builds and the download are Windows only.
 - The download's original 3D level sample, `samples/scene-starter`, is still an older-format level, and BED doesn't convert it.

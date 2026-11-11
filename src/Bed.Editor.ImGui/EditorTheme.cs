@@ -147,6 +147,9 @@ public static class EditorTheme
         var pressed = Rgb(high ? 0x254555 : light ? 0xB7CEE2 : 0x304E6A);
         var boundary = Rgb(high ? 0xFFFFFF : light ? 0x747E88 : 0x7D8A96);
         var accent = Rgb(high ? 0xFFFF00 : light ? 0x1F6FB2 : 0x5AA2E0);
+        // Prefab copies in the Outliner: cyan family, apart from the blue accent; parts that still match the prefab are a little dimmer.
+        PrefabText = Rgb(high ? 0x00FFFF : light ? 0x0B6E8F : 0x6CC7E8);
+        PrefabPartText = Rgb(high ? 0x00FFFF : light ? 0x3F6F80 : 0x8FB0BD);
 
         style.Colors[(int)ImGuiCol.Text] = text;
         style.Colors[(int)ImGuiCol.TextDisabled] = muted;
@@ -210,6 +213,11 @@ public static class EditorTheme
         style.Colors[(int)ImGuiCol.ModalWindowDimBg] = new float4(0, 0, 0, high ? 0.75f : light ? 0.3f : 0.55f);
 
     }
+
+    /// <summary>Outliner text colour for a placed prefab copy and a changed part, set with the theme.</summary>
+    internal static float4 PrefabText { get; private set; } = Rgb(0x6CC7E8);
+    /// <summary>Outliner text colour for a prefab part that still matches the prefab.</summary>
+    internal static float4 PrefabPartText { get; private set; } = Rgb(0x8FB0BD);
 
     private static float4 Rgb(int colour) => new(((colour >> 16) & 255) / 255f, ((colour >> 8) & 255) / 255f, (colour & 255) / 255f, 1);
 }

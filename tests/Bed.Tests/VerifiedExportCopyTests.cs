@@ -50,14 +50,14 @@ public sealed class VerifiedExportCopyTests
     {
         using var owned=new CapturedExportTests.Owned();var build=await Build(owned.Root);File.AppendAllText(Path.Combine(build.Receipt.OutputDirectory,"data","level.json")," ");
         var verified=await VerifiedGameBuild.SmokeAsync(build.Plan,build.Receipt,build.Manifest,Smoke(build.Receipt),TimeSpan.FromSeconds(8));
-        Assert.Null(verified.Build);Assert.Empty(verified.Logs);Assert.Contains("Saved payload",verified.Reason);
+        Assert.Null(verified.Build);Assert.Empty(verified.Logs);Assert.Contains("doesn't match the saved files",verified.Reason);
     }
     [Fact] public async Task Changed_output_after_successful_smoke_refuses_copy_before_destination_creation()
     {
         using var owned=new CapturedExportTests.Owned();var build=await Build(owned.Root);
         var verified=await VerifiedGameBuild.SmokeAsync(build.Plan,build.Receipt,build.Manifest,Smoke(build.Receipt),TimeSpan.FromSeconds(8));Assert.NotNull(verified.Build);
         File.AppendAllText(Path.Combine(build.Receipt.OutputDirectory,"data","level.json")," ");var target=Path.Combine(owned.Root,"must-not-exist");
-        Assert.False(verified.Build.CopyTo(target,out var why));Assert.Contains("Saved payload",why);Assert.False(Path.Exists(target));
+        Assert.False(verified.Build.CopyTo(target,out var why));Assert.Contains("doesn't match the saved files",why);Assert.False(Path.Exists(target));
     }
     [Fact] public async Task Actual_nonzero_smoke_and_pre_canceled_smoke_do_not_enable_copy()
     {

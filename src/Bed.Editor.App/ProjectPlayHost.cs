@@ -143,7 +143,7 @@ public sealed class ProjectPlayHost : IDisposable
             {
                 ExitCode=child.Completion.GetAwaiter().GetResult();
                 if(forced){State=ProjectPlayState.Stopped;return;}
-                if(ExitCode!=0){string? framework;lock(gate)framework=requiredFramework;Fail(DotNetLaunchFailure.Describe(ExitCode.Value,framework)??$"The process exited with code {ExitCode}.");return;}
+                if(ExitCode!=0){string? framework;lock(gate)framework=requiredFramework;Fail(DotNetLaunchFailure.Describe(ExitCode.Value,framework)??$"The game stopped with error code {ExitCode}.");return;}
                 if(State==ProjectPlayState.Building)
                 {
                     var program=run.Executable;

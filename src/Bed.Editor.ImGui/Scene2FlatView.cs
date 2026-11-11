@@ -64,7 +64,7 @@ internal sealed class Scene2FlatView(EditorModel<Scene2> editor,Func<string?> re
         if(x==Vector2.Zero||y==Vector2.Zero)return [];
         if(tool==ViewportTool.Move)return [new(HandleKind.MoveX,"Move X axis",anchor,Tip(x),x,0),new(HandleKind.MoveY,"Move Y axis",anchor,Tip(y),y,0)];
         var diagonal=x+y;if(diagonal.LengthSquared()<.000001f)diagonal=new(1,1);diagonal=Vector2.Normalize(diagonal);
-        return [new(HandleKind.ScaleX,"Scale local X axis",anchor,Tip(x),x,0),new(HandleKind.ScaleY,"Scale local Y axis",anchor,Tip(y),y,0),new(HandleKind.ScaleXY,"Scale XY handle",anchor,Tip(diagonal)*.7f+anchor*.3f,diagonal,0)];
+        return [new(HandleKind.ScaleX,"Scale local X axis",anchor,Tip(x),x,0),new(HandleKind.ScaleY,"Scale local Y axis",anchor,Tip(y),y,0),new(HandleKind.ScaleXY,"Scale width and height handle",anchor,Tip(diagonal)*.7f+anchor*.3f,diagonal,0)];
     }
     private static bool Hit(Handle handle,Vector2 mouse,float tolerance)
     {
@@ -220,7 +220,7 @@ internal sealed class Scene2FlatView(EditorModel<Scene2> editor,Func<string?> re
             if(o.Sprite is {} sprite)
             {
                 var selection=images?.Select(o.Object.Asset!);
-                var status=selection is null?images?.Resolve(o.Object.Asset!).Reason??"No available image catalog.":"Image preview unavailable; showing sprite bounds.";
+                var status=selection is null?images?.Resolve(o.Object.Asset!).Reason??"No images are available for this project.":"Image preview unavailable; showing sprite bounds.";
                 if(selection is not null&&ScenePresentation.Current is {} presentation&&presentation.TrySpriteImage(viewId,images!,selection,sprite.Filter,out var texture,out status))
                     draw.AddImageQuad(texture,F(q[0]),F(q[1]),F(q[2]),F(q[3]),new(0,0),new(1,0),new(1,1),new(0,1),0xffffffff);
                 if(status.Length>0&&imageStatus.Length==0)imageStatus=o.Object.Id+": "+status;

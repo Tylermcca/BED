@@ -22,12 +22,12 @@ public sealed class Scene2NativeEditorTests
         using var ui=new HeadlessHost(1400,1000){Drawing=false};EditorWindow<Scene2>.Configure(ImGui.GetIO());
         var window=W(workspace)!;Assert.NotNull(window);Assert.Same(r.Entry.Editor,window.Editor);Assert.Null(workspace.SceneWindow);Assert.Null(r.Project.Find("level.json")!.Session);
         Assert.True(window.Editor.Select("frame_a_root"));ui.Frames(workspace.Draw,5);
-        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains("Inherited prefab node"));
-        var inspector=window.Inspector!;var row=inspector.Rows().Single(x=>x.Id=="position.0");Assert.False(row.Overridden);Assert.Contains("Inherited",row.Help);
+        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains("Part of a prefab copy"));
+        var inspector=window.Inspector!;var row=inspector.Rows().Single(x=>x.Id=="position.0");Assert.False(row.Overridden);Assert.Contains("Comes from the prefab",row.Help);
         Assert.True(inspector.Set("position.0",2d));Assert.Equal(2,r.Entry.Session.Current.Instances[0].Overrides.Length);Assert.Equal(1,r.Entry.Session.History.UndoCount);
         Assert.Equal(2,Scene2Resolver.Resolve(r.Entry.Session.Current).Objects.Single(o=>o.Object.Id=="frame_a_root").Object.Position.X);
         Assert.True(inspector.Rows().Single(x=>x.Id=="position.0").Overridden);ui.Frames(workspace.Draw,2);
-        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.ListItem&&n.Label.Contains("local changes"));
+        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.ListItem&&n.Label.Contains("changed in this copy"));
         Assert.True(inspector.Reset("position.0"));Assert.Single(r.Entry.Session.Current.Instances[0].Overrides);Assert.Equal("/properties/locked",r.Entry.Session.Current.Instances[0].Overrides[0].Field);Assert.True(r.Entry.Session.Undo());Assert.Equal(2,r.Entry.Session.Current.Instances[0].Overrides.Length);
         Assert.True(window.Run("editor.save"),window.Status);var saved=File.ReadAllText(r.Disk);Assert.False(r.Entry.Session.Dirty);
         Assert.True(r.Host.CloseScene2("level.json",SceneCloseDecision.Discard,out _));Assert.True(workspace.Show("level.json"),workspace.Said);Assert.NotSame(window,W(workspace));
@@ -38,10 +38,10 @@ public sealed class Scene2NativeEditorTests
     {
         using var r=new Scene2HostCommandTests.Rig();using var workspace=new DataWorkspace(r.Project);Assert.True(workspace.Show("level.json"));
         using var ui=new HeadlessHost(width,1000){Drawing=false};EditorWindow<Scene2>.Configure(ImGui.GetIO());ImGui.GetStyle().FontScaleMain=scale;W(workspace)!.Editor.Select("frame_a_root");ui.Frames(workspace.Draw,5);
-        r.ChangeSource();var original=r.Entry.Session.Current;Click(ui,workspace.Draw,"Review source update");Assert.Same(original,r.Entry.Session.Current);Assert.Empty(r.Entry.Session.Journal);
+        r.ChangeSource();var original=r.Entry.Session.Current;Click(ui,workspace.Draw,"Review prefab update");Assert.Same(original,r.Entry.Session.Current);Assert.Empty(r.Entry.Session.Journal);
         Click(ui,workspace.Draw,"Cancel update");Assert.Same(original,r.Entry.Session.Current);
-        Click(ui,workspace.Draw,"Review source update");r.ChangeSource();File.AppendAllText(r.Source," ");Click(ui,workspace.Draw,"Accept update");Assert.Same(original,r.Entry.Session.Current);Assert.Empty(r.Entry.Session.Journal);
-        Click(ui,workspace.Draw,"Cancel update");Click(ui,workspace.Draw,"Review source update");Click(ui,workspace.Draw,"Accept update");Assert.Single(r.Entry.Session.Journal);
+        Click(ui,workspace.Draw,"Review prefab update");r.ChangeSource();File.AppendAllText(r.Source," ");Click(ui,workspace.Draw,"Accept update");Assert.Same(original,r.Entry.Session.Current);Assert.Empty(r.Entry.Session.Journal);
+        Click(ui,workspace.Draw,"Cancel update");Click(ui,workspace.Draw,"Review prefab update");Click(ui,workspace.Draw,"Accept update");Assert.Single(r.Entry.Session.Journal);
         var linked=Scene2Resolver.Resolve(r.Entry.Session.Current);Click(ui,workspace.Draw,"Break Link");Assert.Empty(r.Entry.Session.Current.Instances);Assert.Equal(linked.Objects.Select(o=>o.Object.Id),Scene2Resolver.Resolve(r.Entry.Session.Current).Objects.Select(o=>o.Object.Id));
         Assert.True(r.Entry.Session.Undo());Assert.Single(r.Entry.Session.Current.Instances);
     }
@@ -105,7 +105,7 @@ public sealed class Scene2NativeEditorTests
         Assert.Equal("prefab.json",first.Name);Assert.Equal(Guid.ParseExact(r.Guid,"N"),first.Guid);Assert.Equal(SceneSpace.ThreeD,first.Space);
         var copy=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(r.Source))!;copy["guid"]="44444444444444444444444444444444";File.WriteAllText(Path.Combine(r.Data,"aaa.json"),copy.ToJsonString());
         Assert.True(r.Host.ListPrefabSources(out sources,out why),why);Assert.Equal(new[]{"aaa.json","prefab.json"},sources.Select(s=>s.Name));
-        copy["guid"]=r.Guid;File.WriteAllText(Path.Combine(r.Data,"aaa.json"),copy.ToJsonString());Assert.False(r.Host.ListPrefabSources(out sources,out why));Assert.Empty(sources);Assert.Contains("Duplicate",why);
+        copy["guid"]=r.Guid;File.WriteAllText(Path.Combine(r.Data,"aaa.json"),copy.ToJsonString());Assert.False(r.Host.ListPrefabSources(out sources,out why));Assert.Empty(sources);Assert.Contains("Two prefabs share the ID",why);
         File.Delete(Path.Combine(r.Data,"aaa.json"));r.Project.Refresh();var source=r.Project.Find("prefab.json")!;Assert.True(source.Open());Assert.True(source.Session!.Execute(new SetValue("/nodes/0/label",System.Text.Json.JsonSerializer.SerializeToElement("draft label"))));
         Assert.False(r.Host.ListPrefabSources(out sources,out why));Assert.Empty(sources);Assert.Contains("unsaved",why);
     }
@@ -117,8 +117,8 @@ public sealed class Scene2NativeEditorTests
         using var ui=new HeadlessHost(1600,1200){Drawing=false};EditorWindow<Scene2>.Configure(ImGui.GetIO());ui.Frames(workspace.Draw,5);
         Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Combo&&n.Label=="Prefab"&&n.Value=="prefab.json");
         var before=r.Entry.Session.Current.Instances.Length;Click(ui,workspace.Draw,"Place prefab");Assert.Equal(before+1,r.Entry.Session.Current.Instances.Length);Assert.Single(r.Entry.Session.Journal);
-        var placed=r.Entry.Session.Current.Instances.Last();window.Editor.Select(placed.Placement.Id);ui.Frames(workspace.Draw,2);Click(ui,workspace.Draw,"Duplicate instance");Assert.Equal(before+2,r.Entry.Session.Current.Instances.Length);
-        Click(ui,workspace.Draw,"Delete instance");Assert.Equal(before+1,r.Entry.Session.Current.Instances.Length);Assert.True(r.Entry.Session.Undo());Assert.Equal(before+2,r.Entry.Session.Current.Instances.Length);
+        var placed=r.Entry.Session.Current.Instances.Last();window.Editor.Select(placed.Placement.Id);ui.Frames(workspace.Draw,2);Click(ui,workspace.Draw,"Duplicate prefab copy");Assert.Equal(before+2,r.Entry.Session.Current.Instances.Length);
+        Click(ui,workspace.Draw,"Delete prefab copy");Assert.Equal(before+1,r.Entry.Session.Current.Instances.Length);Assert.True(r.Entry.Session.Undo());Assert.Equal(before+2,r.Entry.Session.Current.Instances.Length);
     }
     [Fact]
     public void Native_image_picker_uses_admitted_defaults_once_and_stale_selection_requires_explicit_refresh()

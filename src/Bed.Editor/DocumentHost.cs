@@ -61,8 +61,8 @@ public sealed partial class DocumentHost
     public bool CaptureAssetPlacement(string name, AssetCatalog.Selection selection, out SceneAssetPlacement? placement, out string why, string? parent = null)
     {
         placement = null;
-        if (assets is null) { why = "No admitted asset catalog is connected."; return false; }
-        if (!scenes.TryGetValue(name, out var entry)) { why = "Open the admitted scene first."; return false; }
+        if (assets is null) { why = "No assets are available for this project."; return false; }
+        if (!scenes.TryGetValue(name, out var entry)) { why = "Open the level first."; return false; }
         if (parent is not null && entry.Session.Current.Find(parent) is null) { why = "The selected parent no longer exists."; return false; }
         if (!assets.TryResolve(selection, out _, out why)) return false;
         placement = new(this, name, entry, entry.Session.Revision, selection, parent);
@@ -81,7 +81,7 @@ public sealed partial class DocumentHost
         if (project.ReadOnlyReason(placement.Name) is { } readOnly) { why = readOnly; return false; }
         if (placement.Parent is null && entry.Editor.FocusedOn is not null) { why = "Step out of focus before placing a root object."; return false; }
         if (entry.Session.Revision != placement.Revision) { why = "The scene changed; start placement again."; return false; }
-        if (assets is null) { why = "No admitted asset catalog is connected."; return false; }
+        if (assets is null) { why = "No assets are available for this project."; return false; }
         if (!assets.TryResolve(placement.Selection, out var lease, out why)) return false;
         var ancestors = new HashSet<string>(StringComparer.Ordinal);
         for (var parent = placement.Parent; parent is not null;)
@@ -135,7 +135,7 @@ public sealed partial class DocumentHost
             if (project.SaveCheck is not null && SceneSaveCheck is null)
             { why = "An explicit scene save policy is required."; return false; }
             if (session.CheckDisk() != DiskState.Unchanged)
-            { why = "The scene was changed or removed outside the editor; nothing was saved. Keep the draft and resolve the conflict."; return false; }
+            { why = "The level was changed or removed outside BED; nothing was saved. Your unsaved changes are kept; choose which version to keep."; return false; }
             if (!session.Dirty) { why = "Nothing to save."; return true; }
             var text = session.TextToSave;
             var result = FileGroup.Write([new GroupFile(session.FilePath!, session.ExpectedOnDisk, text)]);
@@ -179,7 +179,7 @@ public sealed partial class DocumentHost
         if(scene2.TryGetValue(name,out _)){why=$"{name} already has a scene-v2 authority; use OpenScene2.";return false;}
         if (!bindings.TryGetValue(name, out var kind)) { why = $"{name} has no explicit scene binding."; return false; }
         if (scenes.TryGetValue(name, out entry)) { why = ""; return true; }
-        if (project.Find(name) is not { } file) { why = $"There's no admitted file called {name}."; return false; }
+        if (project.Find(name) is not { } file) { why = $"There's no file called {name} in this project."; return false; }
         if (!opening.Add(name)) { why = $"{name} is already opening."; return false; }
         try
         {

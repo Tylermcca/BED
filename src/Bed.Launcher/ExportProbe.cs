@@ -30,7 +30,7 @@ internal static class ExportProbe
                 if(!launcher.OpenFolder(folder))throw new InvalidOperationException(launcher.Said);
                 var workspace=launcher.Workspace??throw new InvalidOperationException("The project did not open.");
                 var scenes=workspace.Project.Files.Where(f=>workspace.Documents.IsScene(f.Name)).ToArray();
-                if(scenes.Length!=1)throw new InvalidOperationException("The export probe requires exactly one admitted scene document.");
+                if(scenes.Length!=1)throw new InvalidOperationException("The export check needs exactly one level file the project can open.");
                 var name=scenes[0].Name;
                 if(!workspace.Show(name))throw new InvalidOperationException(workspace.Said);
                 void Frame(int count=1)

@@ -82,7 +82,7 @@ public sealed class DataPlayProbeTests
         using var f=new Fixture();File.WriteAllText(Path.Combine(f.Project,"data","values.json"),"not json");
         var before=f.Hashes();using var output=new StringWriter();using var errors=new StringWriter();
         Assert.Equal(1,Program.Run(["--probe-play",f.Project],output,errors,"unused-probe-settings"));
-        Assert.Equal("",output.ToString());Assert.Contains("No admitted data document could be opened",errors.ToString());
+        Assert.Equal("",output.ToString());Assert.Contains("No data file in the project could be opened",errors.ToString());
         Assert.Equal(before.OrderBy(p=>p.Key),f.Hashes().OrderBy(p=>p.Key));
     }
     [Fact]

@@ -56,10 +56,10 @@ internal static class SpriteAssetCapture
         input=null;
         if(!catalog.TryResolve(selection,out lease,out why))return false;
         if(lease!.Texture is not{Format:AssetCatalog.TextureEncoding.Rgba8Srgb} texture||texture.Width<1||texture.Height<1||texture.Width>8192||texture.Height>8192||16L+lease.Length>64L*1024*1024||4L*texture.Width*texture.Height!=lease.Length)
-        {why="Select an admitted image fitting the saved BEDTEX texture bound; models and opaque assets cannot be sprites.";return false;}
+        {why="Select an imported image that isn't too big; models and other assets can't be sprites.";return false;}
         input=catalog.CurrentInputs().SingleOrDefault(i=>i.Guid==selection.AssetGuid);
         if(input is null||!string.Equals(Path.GetExtension(input.ProducingRecord.Source),".png",StringComparison.OrdinalIgnoreCase))
-        {why="Sprite placement currently supports admitted PNG images only.";return false;}
+        {why="Sprites can only use imported PNG images for now.";return false;}
         if(input.ProducingRecord.SourceHash!=lease.SourceHash){why="Image generation changed; capture again.";return false;}
         return catalog.TryResolve(selection,out lease,out why);
     }

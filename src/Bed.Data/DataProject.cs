@@ -26,7 +26,7 @@ public sealed class DataProject
     public bool ReserveTypedDocument(string name, string kind, out string why)
     {
         if (string.IsNullOrWhiteSpace(kind)) { why = "A document kind is required."; return false; }
-        if (Find(name) is not { } file) { why = $"There's no admitted file called {name}."; return false; }
+        if (Find(name) is not { } file) { why = $"There's no file called {name} in this project."; return false; }
         if (file.Session is not null) { why = $"{name} already has a data session."; return false; }
         if (typedAdmissions.TryGetValue(name, out var prior))
         { why = prior == kind ? "" : $"{name} is already bound to {prior}."; return prior == kind; }

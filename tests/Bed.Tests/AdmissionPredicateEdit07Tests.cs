@@ -43,7 +43,7 @@ public sealed class AdmissionPredicateEdit07Tests : IDisposable
     public void File_operations_and_public_session_saves_cannot_write_excluded_names()
     {
         var project = Open(); var file = project.Find("game/one.json")!; Assert.True(file.Open());
-        Assert.False(project.CreateFromText("raw/no.json", "{}", out var why)); Assert.Contains("admitted file scope", why);
+        Assert.False(project.CreateFromText("raw/no.json", "{}", out var why)); Assert.Contains("outside this project's data folder", why);
         Assert.False(project.Create("raw/no.json", "data.schema.json", out _));
         Assert.False(project.Rename(file.Name, "raw/moved.json", out _));
         Assert.Throws<IOException>(() => file.Session!.Save(Path.Combine(Data, "raw/no.json")));

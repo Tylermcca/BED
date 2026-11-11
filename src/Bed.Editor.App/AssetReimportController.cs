@@ -54,7 +54,7 @@ public sealed class AssetReimportController:IDisposable
             }
             Check();if(followPreview&&selected?.AssetGuid==candidate.Guid)preview!.Invalidate("Reimporting...");
             var before=catalog.CurrentInputs();var original=before.SingleOrDefault(i=>i.Guid==candidate.Guid)
-                ??throw new InvalidOperationException("This asset is not in the admitted complete generation.");
+                ??throw new InvalidOperationException("This asset isn't in the project's current asset list; refresh and try again.");
             var source=File.ReadAllBytes(draft.Path);updated=candidate.PrepareReimport(draft.Path,importerVersion);
             if(Hash(source)!=updated.SourceHash)throw new InvalidOperationException("Source changed during preparation.");
             var extension=Path.GetExtension(draft.Path).ToLowerInvariant();
@@ -68,7 +68,7 @@ public sealed class AssetReimportController:IDisposable
             var sourceFiles=imported.ExternalReads.Select(r=>new AssetCatalog.SourceFile(r.RelativePath,r.SourceHash)).ToArray();
             var derived=ModelAssetGeneration.Encode(imported.Asset,options.Transform(frame),extension==".obj"?MeshUv0Origin.ObjBottomLeft:MeshUv0Origin.TopLeft,bindings);
             var textures=bindings.Select(b=>b.Texture).OfType<MaterialTextureAdmission.Texture>().Distinct().ToArray();
-            if(textures.GroupBy(t=>t.Input.Guid,StringComparer.Ordinal).Any(g=>g.Count()>1))throw new InvalidOperationException("Multiple texture files use the same asset GUID.");
+            if(textures.GroupBy(t=>t.Input.Guid,StringComparer.Ordinal).Any(g=>g.Count()>1))throw new InvalidOperationException("Several texture files share the same asset ID.");
             var textureIds=textures.Select(t=>t.Input.Guid).ToHashSet(StringComparer.Ordinal);
             var next=before.Where(i=>i.Guid!=candidate.Guid&&!textureIds.Contains(i.Guid)).Concat(textures.Select(t=>t.Input))
                 .Append(original.WithReimportedContent(updated,source,derived,derived.AsSpan(0,8).SequenceEqual("BEDMESH2"u8)?"BEDMESH2":"BEDMESH1",sourceFiles,textureIds)).ToArray();
@@ -89,7 +89,7 @@ public sealed class AssetReimportController:IDisposable
                 if(Hash(File.ReadAllBytes(resource))!=read.SourceHash)throw new InvalidOperationException("External resource changed during reimport: "+read.RelativePath);
             }
             if(Hash(File.ReadAllBytes(draft.Path))!=updated.SourceHash||!catalog.CurrentInputs().SequenceEqual(before))
-                throw new InvalidOperationException("Source or complete catalog generation changed during reimport.");
+                throw new InvalidOperationException("The source file or the project's assets changed during reimport; try again.");
             Check();
             foreach(var texture in textures)texture.Revalidate();
             if(!publisher.Publish(stage,out why))throw new InvalidOperationException(why);published=true;
@@ -116,9 +116,9 @@ public sealed class AssetReimportController:IDisposable
     {
         var full=Path.GetFullPath(path,root);var relative=Path.GetRelativePath(root,full);
         if(Path.IsPathRooted(relative)||relative==".."||relative.StartsWith(".."+Path.DirectorySeparatorChar,StringComparison.Ordinal))
-            throw new ArgumentException("Source must be inside this admitted project.",nameof(path));
+            throw new ArgumentException("The source file must be inside this project.",nameof(path));
         for(var p=full;p is not null&&p.Length>=root.Length;p=Path.GetDirectoryName(p))
-            if((File.GetAttributes(p)&FileAttributes.ReparsePoint)!=0)throw new InvalidOperationException("Linked source paths are not admitted here.");
+            if((File.GetAttributes(p)&FileAttributes.ReparsePoint)!=0)throw new InvalidOperationException("Linked files (shortcuts to elsewhere) can't be sources here.");
         return full;
     }
     private static string Hash(byte[] bytes)=>Convert.ToHexStringLower(SHA256.HashData(bytes));

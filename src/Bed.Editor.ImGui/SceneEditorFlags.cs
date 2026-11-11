@@ -26,7 +26,7 @@ internal sealed class SceneEditorFlags
     }
     internal bool Hidden(Scene scene,string id)=>Effective(scene,id,hidden);
     internal bool Locked(Scene scene,string id)=>Effective(scene,id,locked);
-    internal string Badge(Scene scene,string id)=>(Hidden(scene,id)?" [hidden]":"")+(Locked(scene,id)?" [locked]":"");
+    internal string Badge(Scene scene,string id)=>(Hidden(scene,id)?" (hidden)":"")+(Locked(scene,id)?" (locked)":"");
     internal void Bind(string project,string level,string preferences)
     {
         var key=Path.TrimEndingDirectorySeparator(Path.GetFullPath(project));if(OperatingSystem.IsWindows())key=key.ToUpperInvariant();

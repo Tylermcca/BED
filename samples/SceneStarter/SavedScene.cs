@@ -26,7 +26,7 @@ public sealed class SavedScene
         var capability=hasConfig?Scene2BuildSettings.ReadProject(new UTF8Encoding(false,true).GetString(Scene2RuntimeInput.Read(root,".bed/project.json",Scene2BuildSettings.MaxProjectBytes))):null;
         if(capability is not null||(!hasConfig&&File.Exists(descriptor)))
         {
-            if(!File.Exists(descriptor))throw new InvalidDataException("Build the saved scene-v2 before Play: its runtime descriptor is missing.");
+            if(!File.Exists(descriptor))throw new InvalidDataException("Build the saved level before Play: its built game data is missing.");
             var prepared=Scene2RuntimeInput.Open(root);
             var legacy=new SceneRuntimeReadResult(new Scene(prepared.Level.Scene.Objects.Select(o=>o.Object).ToImmutableArray()),true,[]);
             return new(legacy,prepared.Assets,prepared.Meshes,prepared.Level,prepared.Textures);

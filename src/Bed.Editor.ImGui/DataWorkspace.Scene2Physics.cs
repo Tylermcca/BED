@@ -55,7 +55,7 @@ public sealed partial class DataWorkspace
             else if(Ui.Button("Remove physics"u8))PhysicsEdit("set_physics",new{});
             var resolved=Scene2ViewProjection.For(scene).Resolved;var ids=Entry.Editor.Selection.ToArray();var selectedIds=ids.ToHashSet(StringComparer.Ordinal);
             var selected=resolved.Objects.Where(o=>selectedIds.Contains(o.Object.Id)).ToArray();
-            var bodyRefusal=scene.Physics is null?"Add world physics before adding a body.":selected.Length==0?"Select an ordinary object or prefab node.":selected.Any(o=>resolved.Origins[o.Object.Id].Kind==Scene2OriginKind.Placement)?"A placement owns only its transform; select a prefab node.":null;
+            var bodyRefusal=scene.Physics is null?"Add world physics before adding a body.":selected.Length==0?"Select an object, or a part of a prefab copy.":selected.Any(o=>resolved.Origins[o.Object.Id].Kind==Scene2OriginKind.Placement)?"A prefab copy as a whole can only be moved; select one of its parts to give it a body.":null;
             Ui.BeginDisabled(bodyRefusal is not null,bodyRefusal);
             if(selected.Length>0&&selected.All(o=>o.Body is null))
             {
@@ -105,9 +105,9 @@ public sealed partial class DataWorkspace
             }
             foreach(var item in selected.Where(o=>o.Body is not null))
             {if(collisionPreview.TryGet(scene,item.Object.Id,Owner.SceneAssets,out var bounds,out var why))Ui.TextWrapped(bounds!.Status);else Ui.TextWrapped(why);}
-            Ui.TextWrapped("Edit body fields in the Inspector. Edits to a whole-body local value remain whole-body changes; Revert restores its accepted body."u8);
+            Ui.TextWrapped("Edit body fields in the Inspector. On a part of a prefab copy, Revert puts back the prefab's body."u8);
             Ui.TextWrapped("Add physics starts with zero gravity and a 1/60 second step. Collision bounds are personal to this open view; spheres and capsules show enclosing boxes."u8);
-            Ui.TextWrapped("Add body explicitly creates a static box: 0.5 m half extents, center zero, friction 0.5. Shape changes start with 0.5 m dimensions; dynamic motion starts at 1 kg. Inspector fields remain editable."u8);
+            Ui.TextWrapped("Add body makes a static box (never moves): 1 m wide, centred on the object, friction 0.5. A new shape starts at 0.5 m; switching to dynamic (moved by physics) starts at 1 kg. You can change all of it in the Inspector."u8);
             Ui.EndDisabled();
             if(refusal is not null)Ui.TextWrapped(refusal);if(bodyRefusal is not null)Ui.TextWrapped(bodyRefusal);Ui.Status(said,"scene2.physics.status");
         }

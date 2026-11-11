@@ -17,7 +17,7 @@ internal sealed record Scene2RuntimeInput(string ScenePath,byte[] SceneBytes,byt
         var physics=supportsPhysics&&Text(header,"format")=="scene2-runtime.v2";
         Only(header,physics?["format","scene","sceneHash","assetsId","assetsRevision","physicsProfile"]:["format","scene","sceneHash","assetsId","assetsRevision"]);
         if(physics&&Text(header,"physicsProfile")!="jolt-2026.10.2-v1")throw new InvalidDataException("Unsupported physics integration profile.");
-        if(!physics&&Text(header,"format")!="scene2-runtime.v1")throw new InvalidDataException("Unsupported scene-v2 runtime descriptor; build the saved scene again.");
+        if(!physics&&Text(header,"format")!="scene2-runtime.v1")throw new InvalidDataException("The built level data is from another version; build the saved level again.");
         var scenePath=Text(header,"scene");
         if(!scenePath.StartsWith(".bed/generated/scenes/",StringComparison.Ordinal)||scenePath==Descriptor)throw new InvalidDataException("The runtime scene must be a separate private generated file.");
         var expected=Text(header,"sceneHash");Hex(expected,64);var assetId=Text(header,"assetsId");Hex(assetId,32);

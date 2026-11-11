@@ -79,11 +79,11 @@ public sealed partial class DataWorkspace
             var file=Active??throw new InvalidOperationException("Open a file before exporting.");
             PlaySnapshotResult result;
             if(Documents.TryGetOpenScene(file.Name,out var scene))
-            {if(scene!.Session.CheckDisk()!=DiskState.Unchanged)throw new InvalidOperationException("The saved file changed outside BED; resolve it before exporting.");result=PlaySnapshot.FromSession(scene.Session,file.Name,PlayInputChoice.Saved,declaration.ConvertSaved);}
+            {if(scene!.Session.CheckDisk()!=DiskState.Unchanged)throw new InvalidOperationException("The saved file was changed outside BED; choose which version to keep before exporting.");result=PlaySnapshot.FromSession(scene.Session,file.Name,PlayInputChoice.Saved,declaration.ConvertSaved);}
             else if(Documents.TryGetOpenScene2(file.Name,out var scene2))
-            {if(scene2!.Session.CheckDisk()!=DiskState.Unchanged)throw new InvalidOperationException("The saved file changed outside BED; resolve it before exporting.");result=PlaySnapshot.FromSession(scene2.Session,file.Name,PlayInputChoice.Saved,declaration.ConvertSaved);}
+            {if(scene2!.Session.CheckDisk()!=DiskState.Unchanged)throw new InvalidOperationException("The saved file was changed outside BED; choose which version to keep before exporting.");result=PlaySnapshot.FromSession(scene2.Session,file.Name,PlayInputChoice.Saved,declaration.ConvertSaved);}
             else if(file.Session is { } session)
-            {if(session.CheckDisk()!=DiskState.Unchanged)throw new InvalidOperationException("The saved file changed outside BED; resolve it before exporting.");result=PlaySnapshot.FromSession(session,file.Name,PlayInputChoice.Saved,declaration.ConvertSaved);}
+            {if(session.CheckDisk()!=DiskState.Unchanged)throw new InvalidOperationException("The saved file was changed outside BED; choose which version to keep before exporting.");result=PlaySnapshot.FromSession(session,file.Name,PlayInputChoice.Saved,declaration.ConvertSaved);}
             else throw new InvalidOperationException("Open the file before exporting.");
             return result.Snapshot??throw new InvalidOperationException(result.Error?.Message??"Saved input could not be captured.");
         }

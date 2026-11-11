@@ -120,7 +120,7 @@ public sealed class LauncherAcceptanceTests
     }
     [Theory]
     [InlineData("data-empty","Choose the data folder")]
-    [InlineData("schema-empty","Choose the schema folder")]
+    [InlineData("schema-empty","Choose the rules folder")]
     [InlineData("data-missing","Browse")]
     [InlineData("schema-missing","Browse")]
     [InlineData("no-schemas","right folder")]

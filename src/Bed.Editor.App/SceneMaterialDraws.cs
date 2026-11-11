@@ -44,7 +44,7 @@ public static class SceneMaterialDraws
     /// <summary>Re-resolves only the currently admitted GUID and exact declared source hash, with explicit decoded metadata.</summary>
     public static bool TryTexture(AssetCatalog? catalog,SceneMaterial material,out AssetCatalog.Selection? selection,out string why)
     {
-        selection=null;if(catalog is null){why="No admitted material catalog.";return false;}
+        selection=null;if(catalog is null){why="No materials are available.";return false;}
         if(material.TextureAssetGuid is not { } guid){why="This material has no texture.";return false;}
         selection=catalog.Select(guid);
         if(selection is null){why="The declared material texture is missing, stale or refused.";return false;}

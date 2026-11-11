@@ -33,11 +33,11 @@ public sealed class PlayEffectiveSettingsUi07Tests
         }
         public static void AssertCommand(PlayLaunch launch)
         {
-            Text("Effective program: "+launch.Run.Executable);
-            Text("Effective arguments: "+JsonSerializer.Serialize(launch.Run.Arguments));
-            Text("Effective working folder: "+launch.Run.WorkingDirectory);
-            Text(launch.Build is {} build?"Effective build command: "+build.CommandLine():"Effective build command: Not configured.");
-            if(launch.Build is {} command)Text("Effective build working folder: "+command.WorkingDirectory);
+            Text("Program BED runs: "+launch.Run.Executable);
+            Text("Arguments it gets: "+JsonSerializer.Serialize(launch.Run.Arguments));
+            Text("Runs in folder: "+launch.Run.WorkingDirectory);
+            Text(launch.Build is {} build?"Build command BED runs: "+build.CommandLine():"Build command BED runs: none set.");
+            if(launch.Build is {} command)Text("Build runs in folder: "+command.WorkingDirectory);
         }
         public void Dispose(){Host.Dispose();Assert.StartsWith(Path.GetFullPath(Path.GetTempPath()),Root,StringComparison.OrdinalIgnoreCase);Directory.Delete(Root,true);}
     }
@@ -59,7 +59,7 @@ public sealed class PlayEffectiveSettingsUi07Tests
         var form=rig.Form(rig.Defaults);Assert.True(form.TryLaunch(out var launch,out var why),why);Rig.AssertCommand(launch!);
         Assert.Equal(Path.Combine(rig.Project,"custom.exe"),launch!.Run.Executable);Assert.Equal(new[]{"--seconds","0"},launch.Run.Arguments);
         Assert.Equal(Path.Combine(rig.Project,"run"),launch.Run.WorkingDirectory);Assert.NotNull(launch.Build);
-        Assert.DoesNotContain(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label=="Effective program: "+Path.Combine(rig.Project,"bin","game.exe"));
+        Assert.DoesNotContain(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label=="Program BED runs: "+Path.Combine(rig.Project,"bin","game.exe"));
         Assert.Equal(json,File.ReadAllText(rig.Settings));Assert.False(Directory.Exists(rig.Local));
     }
     [Fact]
@@ -84,7 +84,7 @@ public sealed class PlayEffectiveSettingsUi07Tests
     {
         using var rig=new Rig();PlaySettingsStore.Save(rig.Project,new("bin/game.exe"));var form=rig.Form();Assert.True(form.TryLaunch(out var before,out _));
         const string invalid="""{"play":{"program":"custom.exe","arguments":"wrong type"}}""";File.WriteAllText(rig.Settings,invalid);
-        rig.Host.Frames(form.Draw,2);Assert.False(form.TryLaunch(out _,out var why));Rig.Text("Effective command unavailable: "+why);
+        rig.Host.Frames(form.Draw,2);Assert.False(form.TryLaunch(out _,out var why));Rig.Text("Can't work out the command: "+why);
         Assert.DoesNotContain(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.StartsWith("Effective program:",StringComparison.Ordinal));
         Assert.Equal(invalid,File.ReadAllText(rig.Settings));Assert.False(Directory.Exists(rig.Local));
     }

@@ -132,7 +132,7 @@ public sealed class FolderProjectA365Tests : IDisposable
         using var launcher = Launcher(unused); launcher.Adapter = selected;
         Assert.False(launcher.OpenFolder(root));
         Assert.Null(launcher.Workspace); Assert.Empty(launcher.Recent.Items);
-        Assert.Contains("returned a data or schema folder that doesn't exist", launcher.Said);
+        Assert.Contains("returned a data or rules folder that doesn't exist", launcher.Said);
         Assert.Equal(1, selected.Finds); Assert.Equal(0, unused.Finds);
     }
     [Fact] public void No_adapter_option_keeps_standard_layout_without_provider_calls()

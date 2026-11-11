@@ -87,7 +87,7 @@ public sealed partial class DocumentHost
                 if(Scene2Source.PathRefusal(file.Path) is {} unsafePath)return unsafePath;
                 if(project.ReadOnlyReason(file.Name) is {} readOnly)return readOnly;
                 if(project.SaveCheck is not null&&capturedPolicy is null)return "This game's data check requires its explicit scene save policy.";
-                if(session.CheckDisk()!=DiskState.Unchanged)return "The saved scene changed outside the editor; resolve the conflict.";
+                if(session.CheckDisk()!=DiskState.Unchanged)return "The saved level was changed outside BED; choose which version to keep.";
                 return null;
             }
             string? Check()

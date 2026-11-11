@@ -29,7 +29,7 @@ public sealed partial class SceneStarterAdapter : IProjectAdapter
         {
             var path=Path.GetFullPath(Path.Combine(ProjectRoot(project),scene.Source));
             name=Path.GetRelativePath(Path.GetFullPath(project.Data),path).Replace('\\','/');
-            if(name.StartsWith("../",StringComparison.Ordinal)||name==".."||Path.IsPathRooted(name))throw new InvalidOperationException("The declared scene source must be inside the admitted data folder.");
+            if(name.StartsWith("../",StringComparison.Ordinal)||name==".."||Path.IsPathRooted(name))throw new InvalidOperationException("The level file must be inside the project's data folder.");
         }
         if(!DocumentHost.For(data).BindScene(name,"scene",out var why)) throw new InvalidOperationException(why);
         return data;
@@ -86,13 +86,13 @@ public sealed partial class SceneStarterAdapter : IProjectAdapter
         if(ids.Length==0) return new(legacy,Encoding.UTF8.GetBytes(input.Text));
         if(ids.Length>256) return new(assetsFormat,null,"SceneStarter accepts at most 256 pinned assets.");
         var catalog=workspace?.SceneAssets;
-        if(catalog is null) return new(assetsFormat,null,"Open this project's admitted asset catalog before Play.");
+        if(catalog is null) return new(assetsFormat,null,"Open this project's assets before Play.");
         var selections=new List<AssetCatalog.Selection>();var pins=new List<Pin>();long total=0;
         foreach(var id in ids)
         {
             var selected=catalog.Select(id);
             if(selected is null || !catalog.TryResolve(selected,out var lease,out _))
-                return new(assetsFormat,null,$"Asset {id} is missing, stale or not admitted for Play.");
+                return new(assetsFormat,null,$"Asset {id} is missing, out of date or not allowed for Play.");
             total+=lease!.Length;
             if(total>64L*1024*1024) return new(assetsFormat,null,"SceneStarter accepts at most 64 MiB of derived asset bytes.");
             var bytes=new byte[lease.Length];lease.CopyTo(bytes);

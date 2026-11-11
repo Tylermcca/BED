@@ -284,7 +284,7 @@ public sealed partial class ViewportView<TDoc> where TDoc : class
             {
                 draw.AddImage(image,ToF(origin),ToF(origin+size));gpu=true;RenderStatus=why;
                 if(MaterialCatalog is null&&frame.Items.Any(i=>i.Payloads.Any(p=>p.Material.TextureAssetGuid is not null)))
-                    RenderStatus="Material texture placeholder: no available catalog.";
+                    RenderStatus="Showing a stand-in texture: this project's assets aren't available.";
             }
             else RenderStatus="CPU view: "+why;
         }
@@ -381,7 +381,7 @@ public sealed partial class ViewportView<TDoc> where TDoc : class
             .SelectMany(i=>i.Mesh.Positions.Select(p=>Vector3.Transform(p,i.World))).ToArray();
         if(points.Length==0) { Said="Select an object to frame."; return; }
         if(points.Any(p=>!float.IsFinite(p.X)||!float.IsFinite(p.Y)||!float.IsFinite(p.Z)))
-        { Said="The selection has invalid bounds."; return; }
+        { Said="The selection's size can't be worked out."; return; }
         var min=points.Aggregate(Vector3.Min);var max=points.Aggregate(Vector3.Max);
         var halfAngle=MathF.Min(Camera.FieldOfView/2,MathF.Atan(MathF.Tan(Camera.FieldOfView/2)*LastRect.Size.X/LastRect.Size.Y));
         var distance=MathF.Max(.5f,Vector3.Distance(min,max)/2/MathF.Sin(halfAngle)*1.2f);

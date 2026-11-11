@@ -556,7 +556,7 @@ internal sealed class InspectorController<TDoc> where TDoc : class
         {
             nudgeKey=null;
             if(Editor.Session.Revision!=nudgeRevision)
-            {ImGui.Internal.ClearActiveID();field.SetValue(shown.AsSpan());status="The document changed; nudge the current value again.";return;}
+            {ImGui.Internal.ClearActiveID();field.SetValue(shown.AsSpan());status="The file changed; nudge the current value again.";return;}
             finishedNudge=true;
         }
         if (ImGui.IsItemActive()) editing = (key, field, shown, commit);

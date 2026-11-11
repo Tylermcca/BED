@@ -18,14 +18,14 @@ internal static class ProjectLoader
         if(project.Root is {} root)
         {
             try{if(string.IsNullOrWhiteSpace(root)||!Directory.Exists(root))return Refuse("Choose an existing project root.",out refusal);project=project with{Root=Path.GetFullPath(root)};}
-            catch(Exception error)when(error is ArgumentException or NotSupportedException or PathTooLongException){return Refuse("The project root is invalid: "+error.Message,out refusal);}
+            catch(Exception error)when(error is ArgumentException or NotSupportedException or PathTooLongException){return Refuse("The project folder can't be used: "+error.Message,out refusal);}
         }
         if (project.Data.Trim().Length == 0 || !Directory.Exists(project.Data))
             return Refuse(project.Data.Trim().Length == 0 ? "Choose the data folder: the folder of your game's JSON files." : $"There's no data folder at {project.Data}. Check the path, or choose it with Browse.", out refusal);
         if (project.Schemas.Trim().Length == 0 || !Directory.Exists(project.Schemas))
-            return Refuse(project.Schemas.Trim().Length == 0 ? "Choose the schema folder: the folder of JSON Schemas that describe the data." : $"There's no schema folder at {project.Schemas}. Check the path, or choose it with Browse.", out refusal);
+            return Refuse(project.Schemas.Trim().Length == 0 ? "Choose the rules folder: the folder of rules files (schemas) that say what the data can hold." : $"There's no rules folder at {project.Schemas}. Check the path, or choose it with Browse.", out refusal);
         if (!Directory.EnumerateFiles(project.Schemas, "*.json").Any())
-            return Refuse($"{project.Schemas} holds no schemas (.json files). Is it the right folder? A schema is named after its data file: wares.json is checked by wares.schema.json.", out refusal);
+            return Refuse($"{project.Schemas} holds no rules files (.schema.json). Is it the right folder? A rules file is named after its data file: wares.json is checked by wares.schema.json.", out refusal);
         // Explicit and root maps are checked before calling any adapter, preserving refusal order.
         project = project with { Map = AdapterMap.Resolve(project.Map, project.Data, null, project.Root??project.Folder) };
         ReferenceMap? map = null;

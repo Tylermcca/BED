@@ -12,6 +12,8 @@ internal sealed partial class Scene2InspectorType:IObjectType<Scene2>
     internal static JsonElement J(object value)=>JsonSerializer.SerializeToElement(value);
     internal static ICommand<Scene2> Set(string id,string field,object? value)=>value is null?Scene2Kit.Command("set",J(new{id,field})):Scene2Kit.Command("set",J(new{id,field,value}));
     private static string Escape(string s)=>s.Replace("~","~0").Replace("/","~1");
+    /// <summary>Plain words for the three standard physics motion types, shown beside the Motion field.</summary>
+    internal const string MotionHelp="Static: never moves. Dynamic: moved by physics. Kinematic: moved by the game, pushes others. ";
     private sealed record Field(string Id,string Label,PropertyKind Kind,object? Value,string Pointer,IReadOnlyList<string>? Choices=null);
     private static IEnumerable<Field> Fields(Scene2 scene,Scene2Object item)
     {
@@ -57,7 +59,7 @@ internal sealed partial class Scene2InspectorType:IObjectType<Scene2>
             var origins=ids.Select(id=>resolved.Origins[id]).ToArray();var inherited=origins.All(o=>o.Kind==Scene2OriginKind.PrefabNode);
             var local=origins.Any(o=>o.Kind==Scene2OriginKind.PrefabNode&&scene.Instances.Single(i=>i.Key==o.InstanceKey).Overrides.Any(e=>e.Node==o.NodeKey&&(e.Field==field.Pointer||field.Pointer.StartsWith(e.Field+"/",StringComparison.Ordinal))));
             var editable=field.Id!="id"&&origins.All(o=>field.Id=="parent"?o.Kind!=Scene2OriginKind.PrefabNode:o.Kind!=Scene2OriginKind.Placement||field.Pointer is "/position" or "/rotation" or "/scale");
-            rows.Add(new(field.Id,field.Label,field.Kind,same?field.Value:null,!same,editable,local,inherited,field.Choices??[],inherited?(local?"Local override. Revert returns to the accepted prefab value.":"Inherited from the accepted prefab snapshot."):"Owned by this object."));
+            rows.Add(new(field.Id,field.Label,field.Kind,same?field.Value:null,!same,editable,local,inherited,field.Choices??[],(field.Id=="body.motion"?MotionHelp:"")+(inherited?(local?"Changed in this copy. Revert puts back the prefab's value.":"Comes from the prefab."):"Owned by this object.")));
         }
         return rows;
     }

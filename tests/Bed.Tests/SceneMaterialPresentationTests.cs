@@ -30,7 +30,7 @@ public sealed class SceneMaterialPresentationTests
         host.Frames(()=>Draw(view),3);Assert.All(seen,c=>Assert.Same(first,c));var old=view.RenderRequest!;editor.Select("crate");
         var miss=old.Pick(new(-1000));view.MaterialCatalog=second;Assert.False(view.TrySelectRenderResult(miss));Assert.Equal(new[]{"crate"},editor.Selection);
         host.Frame(()=>Draw(view));Assert.Same(second,seen[^1]);Assert.NotEqual(old.Identity.ViewGeneration,view.RenderRequest!.Identity.ViewGeneration);
-        view.MaterialCatalog=null;host.Frame(()=>Draw(view));Assert.Null(seen[^1]);Assert.Contains("placeholder",view.RenderStatus);Assert.Empty(editor.Session.Journal);
+        view.MaterialCatalog=null;host.Frame(()=>Draw(view));Assert.Null(seen[^1]);Assert.Contains("stand-in texture",view.RenderStatus);Assert.Empty(editor.Session.Journal);
     }
     [Fact]
     public void Missing_catalog_and_CPU_fallback_say_which_texture_feature_is_unavailable_without_changing_selection()

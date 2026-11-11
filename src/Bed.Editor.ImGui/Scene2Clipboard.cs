@@ -23,11 +23,11 @@ internal sealed class Scene2Clipboard
             if(resolved.Origins[id].InstanceKey is {} instance&&expandedInstances.Add(instance))foreach(var part in instances[instance])if(!chosen.Contains(part))queue.Enqueue(part);
             if(children.TryGetValue(id,out var descendants))foreach(var child in descendants)if(!chosen.Contains(child))queue.Enqueue(child);
         }
-        snapshot=source;included=resolved.Objects.Select(o=>o.Object.Id).Where(chosen.Contains).ToArray();return(true,$"Copied {included.Length} effective object(s), retaining whole linked pieces and descendants inside this project.");
+        snapshot=source;included=resolved.Objects.Select(o=>o.Object.Id).Where(chosen.Contains).ToArray();return(true,$"Copied {included.Length} object(s), keeping prefab copies whole along with everything inside them.");
     }
     internal (bool Ok,string Message) Paste(EditorModel<Scene2> editor)
     {
-        if(snapshot is not {} source||included.Length==0)return(false,"Copy scene-v2 objects in this project first.");
+        if(snapshot is not {} source||included.Length==0)return(false,"Copy objects from a level in this project first.");
         if(editor.FocusedOn is not null)return(false,"Step out of focus before pasting objects.");
         if(editor.Playing is not null)return(false,"Stop Play before pasting objects.");
         var destination=editor.Session.Current;var revision=editor.Session.Revision;
@@ -76,7 +76,7 @@ internal sealed class Scene2Clipboard
             paste=Scene2Kit.Command("paste",JsonSerializer.SerializeToElement(new{fragment}));
             if(!editor.ExecuteAt(revision,[paste]))return(false,string.Join(" ",(editor.Refused.Count>0?editor.Refused:editor.Session.LastIssues).Select(i=>i.Message)));
             editor.Select(copied);
-            return(true,$"Pasted {copied.Length} effective object(s), moved 1 metre along world X.");
+            return(true,$"Pasted {copied.Length} object(s), moved 1 metre along X.");
         }
         catch(Exception e)when(e is DocumentFormatException or JsonException or InvalidOperationException or ArgumentException or OverflowException)
         {return(false,"Paste refused: "+e.Message);}

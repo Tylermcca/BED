@@ -55,7 +55,7 @@ def test_fill_scope_includes_hidden_selection_and_preserves_preview_guards():
                    'hidden by the filter', 'Ctrl+click or Ctrl+Space', 'Shift+click',
                    'Editor.Session.Revision,Editor.Session.Current,Shown,[..selection]'):
         assert source in bulk
-    assert 'Whole-document checks still run at Apply.' in table
+    assert 'Checks on the whole file still run at Apply.' in table
     assert 'new SetValues(' in table and 'Editor.Execute(' in table
     text = guide()
     for phrase in ('Hidden selected rows remain targets', 'A refused batch changes no rows',

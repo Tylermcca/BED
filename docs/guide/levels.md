@@ -36,7 +36,7 @@ With the level open:
 
 An object added to a group starts at the selected object's position. An object placed on its own starts at the view centre. You can also drag a model from Assets into the level. **Ctrl+Z** undoes either kind of addition.
 
-If placement refuses, read its reason and start Add object again after fixing it. **No asset catalog for this project** means the asset setup is missing; check the project's instructions.
+If placement refuses, read its reason and start Add object again after fixing it. **No assets for this project** means the asset setup is missing; check the project's instructions.
 
 ## Move, rotate and scale
 

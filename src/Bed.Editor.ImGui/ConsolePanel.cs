@@ -46,7 +46,7 @@ public sealed class ConsolePanel
                     Ui.FieldCaption(source.DocumentId+(source.Line is { } line ? $":{line}" : "")
                         +(source.ObjectId is { } target ? $" ({target})" : ""));
                     var available=sources.TryGetValue(source.DocumentId,out var open);
-                    Ui.BeginDisabled(!available,"No available source-navigation action for this document.");
+                    Ui.BeginDisabled(!available,"There's no way to jump to the source from this file.");
                     if(Ui.Button("Open source"u8) && open is not null)
                     {
                         try { Said=open(source) ? "Opened source." : "Source is no longer available in this project."; }

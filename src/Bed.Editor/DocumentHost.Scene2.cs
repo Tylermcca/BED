@@ -89,7 +89,7 @@ public sealed partial class DocumentHost
         if(!bindings.TryGetValue(name,out var kind)||kind!="scene"){why=$"{name} has no explicit scene binding.";return false;}
         if(scenes.ContainsKey(name)){why=$"{name} already has a version-one authority; use OpenScene.";return false;}
         if(scene2.TryGetValue(name,out entry)){why="";return true;}
-        if(project.Find(name) is not {} file){why=$"There's no admitted file called {name}.";return false;}
+        if(project.Find(name) is not {} file){why=$"There's no file called {name} in this project.";return false;}
         if(!opening.Add(name)){why=$"{name} is already opening.";return false;}
         try
         {
@@ -105,15 +105,15 @@ public sealed partial class DocumentHost
     private string? Scene2Refusal(string name,Scene2DocumentEntry entry)
     {
         if(checking||project.Judging)return "A save check is in progress.";
-        if(!scene2.TryGetValue(name,out var current)||!ReferenceEquals(current,entry))return "The scene-v2 admission changed; reopen it.";
+        if(!scene2.TryGetValue(name,out var current)||!ReferenceEquals(current,entry))return "The level file changed; reopen it.";
         if(entry.Editor.Playing is not null)return "Stop Play before editing or saving.";
-        if(project.Find(name) is not {} file||!File.Exists(file.Path))return "The scene file is no longer safely admitted.";
+        if(project.Find(name) is not {} file||!File.Exists(file.Path))return "The level file can't be used any more; reopen it.";
         return project.FileAccessRefusal(name)??Scene2Source.PathRefusal(file.Path)??project.ReadOnlyReason(name);
     }
     /// <summary>Saves the typed draft after validation, policy, current admission/revision and exact saved-disk conflict checks.</summary>
     public bool SaveScene2(string name,out string why)
     {
-        if(!scene2.TryGetValue(name,out var entry)){why=$"{name} has no open scene-v2 session.";return false;}
+        if(!scene2.TryGetValue(name,out var entry)){why=$"{name} isn't open as a level.";return false;}
         if(Scene2Refusal(name,entry) is {} refusal){why=refusal;return false;}
         if(project.SaveCheck is not null&&Scene2SaveCheck is null){why="An explicit scene-v2 save policy is required.";return false;}
         var session=entry.Session;var revision=session.Revision;var policy=Scene2SaveCheck;checking=true;
@@ -132,14 +132,14 @@ public sealed partial class DocumentHost
             if(result.Failed is not null||result.States[0]!=GroupFileState.Written){why=result.Why??"Scene save failed; keep the draft.";return false;}
             why=$"Saved {name}.";return true;
         }
-        catch(Exception e)when(e is not OutOfMemoryException){why="The scene-v2 save failed: "+e.Message;return false;}
+        catch(Exception e)when(e is not OutOfMemoryException){why="Saving the level failed: "+e.Message;return false;}
         finally{checking=false;}
     }
     /// <summary>Closes only after Save or explicit Discard; cancellation or failed Save retains the exact draft and entry.</summary>
     public bool CloseScene2(string name,SceneCloseDecision decision,out string why)
     {
         if(checking||project.Judging){why="A save check is in progress; close is refused.";return false;}
-        if(!scene2.TryGetValue(name,out var entry)){why=$"{name} has no open scene-v2 session.";return false;}
+        if(!scene2.TryGetValue(name,out var entry)){why=$"{name} isn't open as a level.";return false;}
         if(decision is not(SceneCloseDecision.Save or SceneCloseDecision.Discard)){why="Close cancelled; choose Save or Discard.";return false;}
         if(decision==SceneCloseDecision.Save&&!SaveScene2(name,out why))return false;
         try{entry.Editor.Stop();}catch(Exception e){why="Play could not stop cleanly: "+e.Message;return false;}
@@ -150,9 +150,9 @@ public sealed partial class DocumentHost
     public bool CaptureScene2Edit(string name,string action,JsonElement args,out Scene2EditPlan? plan,out string why)
     {
         plan=null;
-        if(!scene2.TryGetValue(name,out var entry)){why="Open the admitted scene-v2 file first.";return false;}
+        if(!scene2.TryGetValue(name,out var entry)){why="Open the level first.";return false;}
         if(Scene2Refusal(name,entry) is {} refusal){why=refusal;return false;}
-        if(entry.Session.CheckDisk()!=DiskState.Unchanged){why="The saved scene changed; resolve its disk conflict.";return false;}
+        if(entry.Session.CheckDisk()!=DiskState.Unchanged){why="The saved level was changed outside BED; choose which version to keep.";return false;}
         try
         {
             Scene2Source? source=null;ICommand<Scene2> command;
@@ -200,7 +200,7 @@ public sealed partial class DocumentHost
         try
         {
             if(admission.Source is {} accepted)
-            {var current=Scene2Source.Find(project,accepted.Definition.Guid);if(current.Name!=accepted.Name||current.Hash!=accepted.Hash){why="The admitted source changed; preview again.";return false;}}
+            {var current=Scene2Source.Find(project,accepted.Definition.Guid);if(current.Name!=accepted.Name||current.Hash!=accepted.Hash){why="The prefab changed; review it again.";return false;}}
             return plan.Commit(entry.Session,out why);
         }
         catch(Exception e)when(Scene2Source.Expected(e)){why="Scene-v2 edit refused: "+e.Message;return false;}
@@ -238,7 +238,7 @@ internal sealed record Scene2Source(string Name,string Text,PrefabDefinition Def
     internal static Scene2Source Find(DataProject project,string guid)
     {
         if(guid.Length!=32||guid.Any(c=>c is not(>= '0' and <= '9' or >= 'a' and <= 'f')))throw new ArgumentException("Use a lowercase prefab source GUID, never a source path.");
-        return All(project).SingleOrDefault(s=>s.Definition.Guid==guid)??throw new IOException("No admitted saved prefab definition has GUID "+guid+".");
+        return All(project).SingleOrDefault(s=>s.Definition.Guid==guid)??throw new IOException("No saved prefab in this project has the ID "+guid+".");
     }
     internal static IReadOnlyList<Scene2Source> All(DataProject project)
     {
@@ -246,7 +246,7 @@ internal sealed record Scene2Source(string Name,string Text,PrefabDefinition Def
         project.Refresh();
         foreach(var file in project.Files.Where(f=>f.State!=DataFileState.Missing))
         {
-            if(++count>10000)throw new IOException("Prefab discovery exceeded 10,000 admitted files.");
+            if(++count>10000)throw new IOException("The project has too many files (over 10,000) to look for prefabs.");
             var text=Read(project,file,32*1024*1024,out var hash);bytes+=System.Text.Encoding.UTF8.GetByteCount(text);if(bytes>64*1024*1024)throw new IOException("Prefab discovery exceeded its 64 MiB read budget.");
             JsonDocument json;try{json=JsonDocument.Parse(text,new(){MaxDepth=64});}catch(JsonException){continue;}
             using(json)
@@ -254,7 +254,7 @@ internal sealed record Scene2Source(string Name,string Text,PrefabDefinition Def
                 if(json.RootElement.ValueKind!=JsonValueKind.Object||!json.RootElement.TryGetProperty("kind",out var kind)||kind.ValueKind!=JsonValueKind.String||kind.GetString()!="prefab-definition")continue;
                 if(file.Dirty)throw new IOException(file.Name+" has unsaved source edits; save it before accepting an update.");
                 var definition=new PrefabDefinitionFormat().Read(text);
-                if(!sources.TryAdd(definition.Guid,new(file.Name,text,definition,hash)))throw new IOException("Duplicate admitted prefab GUID "+definition.Guid+".");
+                if(!sources.TryAdd(definition.Guid,new(file.Name,text,definition,hash)))throw new IOException("Two prefabs share the ID "+definition.Guid+".");
             }
         }
         return sources.Values.ToArray();

@@ -41,7 +41,7 @@ public sealed class VerifiedGameBuild:Bed.Editor.ImGui.IVerifiedGameBuild
             if(code!=0)
             {
                 string? framework;lock(gate)framework=logs.Where(line=>line.Error).Select(line=>DotNetLaunchFailure.Framework(line.Text)).FirstOrDefault(line=>line is not null);
-                throw new InvalidOperationException(DotNetLaunchFailure.Describe(code,framework)??"Smoke exited with code "+code+".");
+                throw new InvalidOperationException(DotNetLaunchFailure.Describe(code,framework)??"The test launch of the exported game stopped with error code "+code+".");
             }
             Recheck(plan,receipt,cancellation);
             return new(new(plan,receipt),"Build and unpacked smoke verified; ready to copy.",logs.ToImmutableArray());

@@ -15,7 +15,7 @@ public static class MaterialTextureAdmission
         public void Revalidate()
         {
             if (File.ReadAllText(AssetRecord.SidecarFor(Path)) != SidecarText || AssetRecord.HashOf(Path) != Input.ProducingRecord.SourceHash)
-                throw new InvalidOperationException("Texture source or sidecar changed during material preparation.");
+                throw new InvalidOperationException("The texture or its import file changed while the material was loading; try again.");
         }
     }
 
@@ -49,32 +49,32 @@ public static class MaterialTextureAdmission
             if (material.BaseColorTexture is { } source)
             {
                 if (source == "embedded" || System.IO.Path.IsPathRooted(source) || Uri.TryCreate(source, UriKind.Absolute, out _))
-                    throw new InvalidOperationException("A base-colour texture needs its own same-folder source file and asset GUID.");
+                    throw new InvalidOperationException("A base-colour texture needs its own source file, in the same folder, and its own asset ID.");
                 var path = System.IO.Path.GetFullPath(System.IO.Path.Combine(folder, source));
                 if (!string.Equals(System.IO.Path.GetDirectoryName(path), folder, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("A texture outside the model's declared source folder is not admitted.");
+                    throw new InvalidOperationException("A texture outside the model's own source folder can't be used.");
                 for (var p = path; p is not null; p = System.IO.Path.GetDirectoryName(p))
-                    if ((File.GetAttributes(p) & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked texture sources are not admitted.");
+                    if ((File.GetAttributes(p) & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked texture files (shortcuts to elsewhere) can't be used.");
                 if (!textures.TryGetValue(path, out texture))
                 {
                     var sidecarPath = AssetRecord.SidecarFor(path);
                     if (!File.Exists(sidecarPath))
                     {
-                        if (missingRecord is null) throw new InvalidOperationException("Texture has no asset sidecar; import it first: " + source);
+                        if (missingRecord is null) throw new InvalidOperationException("The texture hasn't been imported yet; import it first: " + source);
                         missingRecord($"Texture {System.IO.Path.GetFileName(path)} has no asset record yet. Reimport the model to add it.");
                         result.Add(new(material.Ordinal, new(material.BaseColor), null));
                         continue;
                     }
-                    if ((File.GetAttributes(sidecarPath) & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked texture sidecars are not admitted.");
+                    if ((File.GetAttributes(sidecarPath) & FileAttributes.ReparsePoint) != 0) throw new InvalidOperationException("Linked texture import files (shortcuts to elsewhere) can't be used.");
                     var sidecar = File.ReadAllText(sidecarPath);
                     var record = AssetRecord.Read(sidecar);
-                    if (record.Source != System.IO.Path.GetFileName(path)) throw new InvalidOperationException("Texture sidecar names another source.");
+                    if (record.Source != System.IO.Path.GetFileName(path)) throw new InvalidOperationException("The texture's import file names a different source file.");
                     if (new FileInfo(path).Length > AssetImageDecoder.MaxEncodedBytes) throw new InvalidOperationException("Texture source exceeds its encoded-byte bound.");
                     var bytes = File.ReadAllBytes(path);
                     if (Convert.ToHexStringLower(SHA256.HashData(bytes)) != record.SourceHash) throw new InvalidOperationException("Texture changed since import; reimport it first.");
                     // Reuse the existing rights/provenance reimport judgement without saving or changing the record.
                     var checkedRecord = record.PrepareReimport(path, record.ImporterVersion);
-                    if (checkedRecord.Write() != record.Write()) throw new InvalidOperationException("Texture origin observations changed; reimport it first.");
+                    if (checkedRecord.Write() != record.Write()) throw new InvalidOperationException("The texture file changed since it was imported; reimport it first.");
                     if (!TextureAssetGeneration.TryCreateSavedInput(record, bytes, System.IO.Path.GetExtension(path), [], true,
                         "BEDTEX1", record.Write(), out var input, out var why)) throw new InvalidOperationException(why);
                     textures.Add(path, texture = new(path, sidecar, input!));

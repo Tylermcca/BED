@@ -25,7 +25,7 @@ internal sealed class SceneDeleteUi(EditorModel<Scene> editor,Action<string> say
         if(pending is not {} request)return false;
         if(Running){Report("Stop Play before deleting objects.");return false;}
         if(editor.Session.Revision!=request.Revision||!editor.Selection.SequenceEqual(request.Selection))
-        {pending=null;Report("The document or selection changed; choose Delete again.");return false;}
+        {pending=null;Report("The file or selection changed; choose Delete again.");return false;}
         var document=editor.Session.Current;
         var children=document.Objects.Where(o=>o.Parent==request.Id).Select(o=>o.Id).ToArray();
         var detach=SceneReparent.To(document,children,null,preserveWorld:true);

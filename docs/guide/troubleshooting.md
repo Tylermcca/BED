@@ -1,6 +1,6 @@
 # Troubleshoot Play and Export
 
-Start with the message in **Play console** or **Export status**. Show both **Show stdout** and **Show stderr** in Play console, then use **Copy all** if you need to send the output to your project maintainer. If a **lines dropped** note appears, only the most recent output remains in BED.
+Start with the message in **Play console** or **Export status**. Show both **Show game output** and **Show game errors** in Play console, then use **Copy all** if you need to send the output to your project maintainer. If a **lines dropped** note appears, only the most recent output remains in BED.
 
 The messages below come from BED's current Play and Export paths. Text in angle brackets stands for the actual field, filename, command or exit code. A message can appear after `Play failed:` or `Export status:`. Your game's tools can also print their own errors; read those alongside BED's message. For setup and the full workflow, see [Play](playing.md) and [Export](exporting.md).
 
@@ -23,7 +23,7 @@ The messages below come from BED's current Play and Export paths. Text in angle 
 |---|---|
 | `Play runs saved files. Save changes before Play?` | Choose **Save** for the current edits, **Don't Save** for the last saved files while retaining the edits, or **Cancel**. |
 | `A save check is still running; try Play after it finishes.` | Wait for the save check. Fix any reported problem, then choose Play again. |
-| `Resolve the saved version of <file> before Play.` | The saved copy changed or is unavailable. Resolve the file conflict in BED before starting the game; keep the draft until you have chosen which version to use. |
+| `<file> was changed outside BED; choose which version to keep before Play.` | The saved copy changed or is unavailable. Choose which version to keep in BED before starting the game; keep the draft until you have chosen which version to use. |
 | `Documents changed; choose Play again.` | Choose Play again to make a fresh save decision for the current documents. |
 | `The documents or Play command changed; choose Play again.` | Review the current settings and choose Play again. The earlier approval prompt no longer describes this request. |
 | `Changes are still waiting to be saved.` | Finish the pending save/check or fix its error. Keep your drafts; the game has not started from them. |
@@ -37,7 +37,7 @@ The messages below come from BED's current Play and Export paths. Text in angle 
 | `The program is missing. Set its program or build command in Play settings.` | Correct Program in Play settings, configure its build, or build it yourself before retrying. |
 | `Build succeeded but the program is still missing or stale.` | Check that the build produces the configured Program at that path. Check the build-input patterns and output modification times. |
 | `The build exceeded its declared deadline.` | Read the build output for a stalled tool or prompt. Fix it and retry; if a normal build needs longer, ask the project maintainer to review its deadline. |
-| `The process exited with code <number>.` | Read the game/build output in Play console. If it names a missing runtime or file, supply that requirement; otherwise give the command, code and output to the project maintainer. |
+| `The game stopped with error code <number>.` | Read the game/build output in Play console. If it names a missing runtime or file, supply that requirement; otherwise give the command, code and output to the project maintainer. |
 | `Play failed: <reason>` | Read the reason and console output, correct the named path, build or process problem, then retry. Your editor drafts remain available. |
 | `Requested polite close; waiting up to 5 seconds.` | Wait for completion. BED ends the owned process tree if the program does not close in that time. |
 | `The program has no window to close, so BED ended it.` | This is the result of Stop for a program with no window. Wait until it has ended before starting again. |
@@ -56,13 +56,13 @@ The messages below come from BED's current Play and Export paths. Text in angle 
 | Message | What to do |
 |---|---|
 | `Save changes before building.` | Save with **Ctrl+S**, resolve any save error, then start Export build again. |
-| `The saved file changed outside BED; resolve it before exporting.` | Resolve the file conflict in BED first. Export checks the saved version rather than choosing a version for you. |
+| `The saved file was changed outside BED; choose which version to keep before exporting.` | Resolve the file conflict in BED first. Export checks the saved version rather than choosing a version for you. |
 | `Open a file before exporting.` | Open the level or data file the adapter exports, then choose **File > Export build**. |
 | `The build failed. Check the build output below.` | Fix the first relevant error in the output, then choose **Build saved files** again. |
-| `Build exited with code <number>.` | Read the build output for the tool's explanation. Fix that problem before rebuilding. |
+| `The build stopped with error code <number>.` | Read the build output for the tool's explanation. Fix that problem before rebuilding. |
 | `Build exceeded its time limit.` | Check for a stalled build or a tool waiting for input. Ask the project maintainer to review the limit if a normal build needs longer. |
 | `Build did not produce every allowlisted output.` | The adapter expected files the build did not produce. Give the output and missing-file details to the project maintainer; rebuild after the build setup is corrected. |
-| `Smoke exited with code <number>.` | The exported game's test launch failed. Read its output below Export status; check its required files, arguments and runtime. Copy stays unavailable. |
+| `The test launch of the exported game stopped with error code <number>.` | The exported game's test launch failed. Read its output below Export status; check its required files, arguments and runtime. Copy stays unavailable. |
 | `Smoke exceeded its time limit.` | The test launch did not finish in time. Ask the project maintainer to check the launch command and how the game exits. |
 | `A successful unpacked check is required before copying.` | Choose **Build saved files** and wait for a successful check. Fix any build or test-launch failure first. |
 | `Export canceled. Your edits are unchanged.` | Return to editing, or choose **Build saved files** to begin another export attempt. |

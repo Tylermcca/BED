@@ -111,7 +111,7 @@ public sealed class PlaySnapshot
             return Refuse(PlayErrorCode.InvalidMessage,"Play needs a logical document identity, captured revision and explicit Saved or Draft choice.");
         var text=choice==PlayInputChoice.Saved ? source.SavedText : source.DraftText;
         if(text is null) return Refuse(PlayErrorCode.UnsupportedSnapshot,
-            choice==PlayInputChoice.Saved ? "This document has no admitted saved version. Choose Draft or save explicitly first."
+            choice==PlayInputChoice.Saved ? "This file hasn't been saved yet. Choose Draft, or save it first."
                 : "The captured draft text is unavailable.");
         if(converter is null) return Refuse(PlayErrorCode.UnsupportedSnapshot,"This game has no declared Play-input converter.");
         var input=new PlaySnapshotDocument(source.DocumentId,source.Revision,choice,text);

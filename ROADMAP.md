@@ -18,9 +18,9 @@ There are no dates. A release ships when everything in it works from start to fi
 ## Done so far
 
 - **0.2 (0.2.1-rc.1):** a data editor that works like a normal Windows program; 3D levels with handles, snapping and undo; model and texture assets with licence records; Play from saved files; tested Windows builds and Export build.
-- **0.3 (0.3.0-rc.2, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
+- **0.3 (0.3.0-rc.3, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
 
-## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.2)
+## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.3)
 
 The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and play and export it.
 
@@ -102,3 +102,7 @@ Version 1.0 comes once the adapter interface and the file formats are stable.
 ## Not planned
 
 To stay focused, BED won't include visual scripting, terrain tools, a shader graph, a full animation editor or built-in team collaboration. Use dedicated tools for those, and your usual version control (such as Git) for working as a team.
+
+### Plain words in 0.3.0-rc.3: done
+
+- Editor text says what it means instead of using programming terms, and the level Outliner marks prefab copies with an icon, a colour and a dot instead of bracketed words.

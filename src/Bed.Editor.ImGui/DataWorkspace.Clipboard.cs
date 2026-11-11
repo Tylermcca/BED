@@ -11,7 +11,7 @@ public sealed partial class DataWorkspace
         bool Current()=>!clipboardClosed&&Scene2OwnerCurrent?.Invoke(this)!=false&&ReferenceEquals(Scene2Window,window);
         window.SceneCopy=()=>Current()?scene2Clipboard.Copy(window.Editor):(false,"Open this level before copying objects.");
         window.ScenePaste=()=>!Current()?(false,"Open this level before pasting objects."):view.Guard() is {} why?(false,why):scene2Clipboard.Paste(window.Editor);
-        window.ScenePasteUnavailable=()=>!scene2Clipboard.HasObjects?"Copy scene-v2 objects in this project first.":window.Editor.FocusedOn is not null?"Step out of focus before pasting objects.":view.Guard();
+        window.ScenePasteUnavailable=()=>!scene2Clipboard.HasObjects?"Copy objects from a level in this project first.":window.Editor.FocusedOn is not null?"Step out of focus before pasting objects.":view.Guard();
         window.Shortcuts.Default("scene.copy","Ctrl+C").Default("scene.paste","Ctrl+V");
     }
     private void BindSceneClipboard(EditorWindow<Scene> window)

@@ -18,7 +18,7 @@ public sealed partial class DataWorkspace
         if(view.Guard() is {} refusal){Said=refusal;return false;}
         if(window.ProjectPlaying?.Invoke()==true){Said="Stop Play before placing an asset.";return false;}
         if(view.Entry.Session.Current.Space==SceneSpace.TwoDXY)return CaptureFlatSpriteDrop(view,selection,parent,out commit);
-        if(sceneAssets is not {} catalog){Said="No available asset catalog is connected.";return false;}
+        if(sceneAssets is not {} catalog){Said="No assets are available for this project.";return false;}
         bool Current()=>!scene2WorkspaceClosed&&Scene2OwnerCurrent?.Invoke(this)!=false&&ReferenceEquals(view.Owner,this)&&ReferenceEquals(Scene2Window,window)&&ReferenceEquals(sceneAssets,catalog);
         string? ParentRefusal()
         {
@@ -73,7 +73,7 @@ public sealed partial class DataWorkspace
         if(!Documents.CaptureSpritePlacement(name,selection,out var captured,out var why,parent)){Said=why;return false;}
         commit=position=>
         {
-            if(position.Z!=0||!float.IsFinite(position.X)||!float.IsFinite(position.Y)){Said="Sprite placement requires a finite XY position with Z zero.";return false;}
+            if(position.Z!=0||!float.IsFinite(position.X)||!float.IsFinite(position.Y)){Said="A sprite has to go on the flat level (Z at 0).";return false;}
             if(!ReferenceEquals(Scene2Window,window)){Said="The sprite target changed; start dragging again.";return false;}
             if(view.Guard() is {} blocked){Said=blocked;return false;}
             var ids=Scene2ViewProjection.For(view.Entry.Session.Current).ById;var number=1;while(ids.ContainsKey("object_"+number))number++;

@@ -90,16 +90,16 @@ public sealed class PlaySettingsForm
             if(Ui.Button("Save Play settings"u8))Save();
             if(TryLaunch(out var launch,out var why))
             {
-                Ui.TextWrapped("Effective program: "+launch!.Run.Executable,"play.settings.effective.program");
-                Ui.TextWrapped("Effective arguments: "+JsonSerializer.Serialize(launch.Run.Arguments),"play.settings.effective.arguments");
-                Ui.TextWrapped("Effective working folder: "+launch.Run.WorkingDirectory,"play.settings.effective.folder");
-                Ui.TextWrapped(launch.Build is {} command?"Effective build command: "+command.CommandLine():"Effective build command: Not configured.","play.settings.effective.build");
-                if(launch.Build is {} buildCommand)Ui.TextWrapped("Effective build working folder: "+buildCommand.WorkingDirectory,"play.settings.effective.build.folder");
+                Ui.TextWrapped("Program BED runs: "+launch!.Run.Executable,"play.settings.effective.program");
+                Ui.TextWrapped("Arguments it gets: "+JsonSerializer.Serialize(launch.Run.Arguments),"play.settings.effective.arguments");
+                Ui.TextWrapped("Runs in folder: "+launch.Run.WorkingDirectory,"play.settings.effective.folder");
+                Ui.TextWrapped(launch.Build is {} command?"Build command BED runs: "+command.CommandLine():"Build command BED runs: none set.","play.settings.effective.build");
+                if(launch.Build is {} buildCommand)Ui.TextWrapped("Build runs in folder: "+buildCommand.WorkingDirectory,"play.settings.effective.build.folder");
                 Ui.TextWrapped("These are the settings Play will use. Save Play settings to use your edits."u8);
                 if(ApprovalNeeded(launch,false) is {} question)
                 {Ui.TextWrapped(question);if(Ui.Button("Allow this exact saved command"u8)){Approve(launch,false);Status="This saved command is allowed. Press Play to run it.";}}
             }
-            else Ui.TextWrapped("Effective command unavailable: "+why,"play.settings.effective.problem");
+            else Ui.TextWrapped("Can't work out the command: "+why,"play.settings.effective.problem");
             if(Status.Length>0)Ui.TextWrapped(Status);
             if(Ui.Button("Close settings"u8))Open=false;
             if(Im.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)&&Im.IsKeyPressed(ImGuiKey.Escape,false))Open=false;

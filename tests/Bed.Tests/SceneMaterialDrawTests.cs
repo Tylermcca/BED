@@ -63,7 +63,7 @@ public sealed class SceneMaterialDrawTests
     [Fact]
     public void Catalog_selection_requires_current_exact_hash_metadata_and_refresh_policy_lifetime()
     {
-        var material=Mesh().Material!;Assert.False(SceneMaterialDraws.TryTexture(null,material,out _,out var why));Assert.Contains("admitted",why);
+        var material=Mesh().Material!;Assert.False(SceneMaterialDraws.TryTexture(null,material,out _,out var why));Assert.Contains("No materials are available",why);
         using var catalog=new AssetCatalog();Publish(catalog,Input());Assert.True(SceneMaterialDraws.TryTexture(catalog,material,out var first,out _));
         Assert.False(SceneMaterialDraws.TryTexture(catalog,new(new(1,1,1,1),Id,new string('f',64)),out _,out _));
         catalog.BeginRefresh();Assert.False(SceneMaterialDraws.TryTexture(catalog,material,out _,out _));

@@ -37,7 +37,7 @@ public sealed class ManagedSourceHooksDoc19Tests
     {
         using var r=new Rig();Assert.Equal(new[]{"entries/one.json","entries/sub/two.json","index.json"},r.Project.Files.Select(f=>f.Name).Order());
         Assert.Null(r.Project.Find("generated/keep.json"));Assert.Null(r.Project.Find("ignored.json"));
-        Assert.False(r.Project.CreateFromText("generated/new.json","{\"text\":\"valid\"}",out var why));Assert.Contains("admitted file scope",why);
+        Assert.False(r.Project.CreateFromText("generated/new.json","{\"text\":\"valid\"}",out var why));Assert.Contains("outside this project's data folder",why);
         Assert.Equal("not an authored document",File.ReadAllText(Path.Combine(r.Data,"generated","keep.json")));
     }
     [Fact]

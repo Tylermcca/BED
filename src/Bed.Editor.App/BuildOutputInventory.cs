@@ -40,7 +40,7 @@ public static class BuildOutputInventory
         cancellationToken.ThrowIfCancellationRequested();
         if(expectedHashes is not null)foreach(var expected in expectedHashes)
             if(!captured.TryGetValue(expected.Key,out var payload)||Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(payload))!=expected.Value)
-                throw new IOException("Build output differs from the admitted Saved payload: "+expected.Key);
+                throw new IOException("The built game doesn't match the saved files: "+expected.Key);
         return declaration.Pin(attempt,captured,priorGoodManifestHash);
     }
 }

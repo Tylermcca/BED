@@ -62,7 +62,7 @@ public sealed partial class ProjectLauncher
             if(choice.Draft.Dirty())return Say(false,$"{name} still has unsaved edits; choose again.");
         }
         choice.Choice=answer;focusSave=true;changedDraftChoices.Remove(name);
-        Said=changedDraftChoices.Count>0?$"{string.Join(", ",changedDraftChoices.Order(StringComparer.Ordinal))} changed; choose Save or Don't Save again.":answer==SaveChangesChoice.Save?$"Saved {name}.":$"Don't save {name}; its draft remains open until every file is resolved.";
+        Said=changedDraftChoices.Count>0?$"{string.Join(", ",changedDraftChoices.Order(StringComparer.Ordinal))} changed; choose Save or Don't Save again.":answer==SaveChangesChoice.Save?$"Saved {name}.":$"Don't save {name}; it stays open until you've chosen for every file.";
         return FinishDraftChoices();
     }
 

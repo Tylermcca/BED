@@ -14,7 +14,7 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 
 ## Try it (Windows, 2 minutes)
 
-1. Download **BED-win-x64.zip** from the [Releases page](../../releases). The current download is **0.3.0-rc.2**, a release candidate for 0.3.
+1. Download **BED-win-x64.zip** from the [Releases page](../../releases). The current download is **0.3.0-rc.3**, a release candidate for 0.3.
 2. Unzip it anywhere and double-click **BED.exe**. BED needs the Microsoft Visual C++ Redistributable (x64). If it is missing, install it from [Microsoft](https://aka.ms/vs/17/release/vc_redist.x64.exe), then open BED again.
 3. Click **Try the example**. The first time, BED offers a short guided tour. Take it, or skip it and reopen it later from **Help > Take the tour**.
 4. Click a cell in the table, type a new value and press Enter.
@@ -92,7 +92,7 @@ I'm using BED on three or four games of my own at the moment, each a different k
 
 ## Roadmap
 
-0.2 added 3D levels, assets, Play and Windows builds to the data editor. 0.3 adds prefabs, 2D levels with sprites and physics; the current download, 0.3.0-rc.2, is its release candidate. Next, 0.4 works with the running game. See [the roadmap](ROADMAP.md) for what's done and what's left.
+0.2 added 3D levels, assets, Play and Windows builds to the data editor. 0.3 adds prefabs, 2D levels with sprites and physics; the current download, 0.3.0-rc.3, is its release candidate. Next, 0.4 works with the running game. See [the roadmap](ROADMAP.md) for what's done and what's left.
 
 ## Build from source
 

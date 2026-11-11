@@ -198,7 +198,7 @@ public sealed class GameProcessHost : ILinkedPlayControl,IDisposable
         if(exit is not null) session.Exited(exit);
     }
     private async Task<int> Watch(Task<int> task)
-    {var code=await task.ConfigureAwait(false);lock(gate){rootExited=true;exitReason="Owned Play process exited with code "+code+".";exitPending=true;}return code;}
+    {var code=await task.ConfigureAwait(false);lock(gate){rootExited=true;exitReason=code==0?"The game finished normally.":"The game stopped with error code "+code+".";exitPending=true;}return code;}
     /// <summary>Terminates only the owned Job. Repetition is inert.</summary>
     public void AbortOwned(){lock(gate){if(aborted)return;aborted=true;}process?.AbortOwned();}
     /// <summary>Releases owned child resources.</summary>

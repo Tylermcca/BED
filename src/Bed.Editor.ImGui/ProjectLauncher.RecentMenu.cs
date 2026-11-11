@@ -8,7 +8,7 @@ public sealed partial class ProjectLauncher
     private static string? RecentOpenRefusal(ProjectPaths project) => project.Folder is { } root
         ? Directory.Exists(root) ? null : "That project folder was not found."
         : !Directory.Exists(project.Data) ? "The project's data folder was not found."
-        : !Directory.Exists(project.Schemas) ? "The project's schema folder was not found." : null;
+        : !Directory.Exists(project.Schemas) ? "The project's rules folder (schemas) was not found." : null;
 
     private void DrawRecentMenu()
     {

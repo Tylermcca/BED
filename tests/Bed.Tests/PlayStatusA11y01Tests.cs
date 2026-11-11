@@ -81,7 +81,7 @@ public sealed class PlayStatusA11y01Tests
         r.Frame(5);Assert.Equal(count,r.Sink.Updates.SelectMany(u=>u.ChangedNodes).Count(n=>n.Role==AccessKitProjectedRole.Status&&n.SourceId==r.Status.Id));
         r.Factory.Current.Status="Running.";r.Frame();Assert.Equal(id,r.Status.Id);Assert.Equal(nativeId,r.LastStatus.Id);Assert.Equal("Running.",r.Status.Label);
         r.Factory.Current.Status="The process exited normally (code 0).";r.Factory.Current.ExitCode=0;r.Factory.Current.HasCompleted=true;r.Frame();
-        Assert.StartsWith("Exited with code 0.",r.Status.Label);Assert.Equal(id,r.Status.Id);Assert.Equal(nativeId,r.LastStatus.Id);
+        Assert.StartsWith("Finished normally.",r.Status.Label);Assert.Equal(id,r.Status.Id);Assert.Equal(nativeId,r.LastStatus.Id);
         var terminal=r.Sink.Updates.SelectMany(u=>u.ChangedNodes).Count(n=>n.Role==AccessKitProjectedRole.Status&&n.SourceId==r.Status.Id);
         r.Frame(5);Assert.Equal(terminal,r.Sink.Updates.SelectMany(u=>u.ChangedNodes).Count(n=>n.Role==AccessKitProjectedRole.Status&&n.SourceId==r.Status.Id));
         Assert.Equal(3,terminal);
@@ -89,12 +89,12 @@ public sealed class PlayStatusA11y01Tests
     [Fact]
     public void Failed_build_exposes_its_code_and_explicit_stop_is_announced_as_stopped()
     {
-        using var build=new Rig(build:true);build.Factory.Current.Status="Play failed: The process exited with code 9.";
-        build.Factory.Current.ExitCode=9;build.Factory.Current.HasCompleted=true;build.Frame();Assert.StartsWith("Build failed (exit code 9).",build.Status.Label);
+        using var build=new Rig(build:true);build.Factory.Current.Status="Play failed: The game stopped with error code 9.";
+        build.Factory.Current.ExitCode=9;build.Factory.Current.HasCompleted=true;build.Frame();Assert.StartsWith("Build failed (error code 9).",build.Status.Label);
         Assert.True(build.Workspace.RequestProjectPlay(),build.Workspace.Said);build.Frame();
         Assert.True(build.Workspace.StopProjectPlay());build.Frame();Assert.Contains("Requested polite close",build.Status.Label);
         build.Factory.Current.Status="The program has no window to close, so BED ended it.";build.Factory.Current.ExitCode=1;build.Factory.Current.HasCompleted=true;build.Frame();
-        Assert.StartsWith("Stopped.",build.Status.Label);Assert.DoesNotContain("Build failed",build.Status.Label);
+        Assert.StartsWith("Stopped (code 1).",build.Status.Label);Assert.DoesNotContain("Build failed",build.Status.Label);
     }
     [Fact]
     public void Native_status_nodes_are_polite_atomic_live_regions_and_ordinary_text_is_not()

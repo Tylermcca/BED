@@ -7,7 +7,7 @@ internal sealed class DataPaths(string root, bool recursive, Func<string, bool>?
 
     internal string? AdmissionRefusal(string name)
     {
-        try { return admit?.Invoke(name) == false ? "The data path is outside this project's admitted file scope." : null; }
+        try { return admit?.Invoke(name) == false ? "That file is outside this project's data folder." : null; }
         catch (Exception e) when (e is not OutOfMemoryException) { return "The data admission policy failed: " + e.Message; }
     }
 

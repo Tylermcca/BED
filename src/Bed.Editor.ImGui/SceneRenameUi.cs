@@ -30,7 +30,7 @@ internal sealed class SceneRenameUi(EditorModel<Scene> editor,Action<string> say
     {
         if(pending is not {} request)return;
         if(editor.Session.Revision!=request.Revision||!editor.Selection.SequenceEqual(request.Selection))
-        {pending=null;say("The document or selection changed; choose Rename again.");Im.Internal.ClearActiveID();return;}
+        {pending=null;say("The file or selection changed; choose Rename again.");Im.Internal.ClearActiveID();return;}
         if(editor.Playing is not null||projectPlaying()){say("Stop Play before renaming an object.");focus=true;return;}
         text.EvaluateLength();var next=text.ToString();
         if(next==request.Id){pending=null;focusRow=request.Id;Im.Internal.ClearActiveID();say("The object ID is unchanged.");return;}
@@ -41,7 +41,7 @@ internal sealed class SceneRenameUi(EditorModel<Scene> editor,Action<string> say
     {
         if(pending is not {} request||request.Id!=id)return false;
         if(editor.Session.Revision!=request.Revision||!editor.Selection.SequenceEqual(request.Selection))
-        {pending=null;say("The document or selection changed; choose Rename again.");Im.Internal.ClearActiveID();return false;}
+        {pending=null;say("The file or selection changed; choose Rename again.");Im.Internal.ClearActiveID();return false;}
         Im.PushID(id);var pad=Im.GetStyle().FramePadding;Im.PushStyleVar(ImGuiStyleVar.FramePadding,new float2(pad.X,0));
         Im.SetNextItemWidth(-1);
         if(focus){Im.SetKeyboardFocusHere();focus=false;}

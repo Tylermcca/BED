@@ -54,7 +54,7 @@ public sealed class ProjectLauncherLoadingTests : IDisposable
         Assert.Equal("Choose the data folder: the folder of your game's JSON files.", launcher.Said);
         Assert.Empty(calls); Assert.Null(launcher.Workspace); Assert.False(File.Exists(History));
         Assert.False(launcher.Open(Paths with { Schemas = "" }));
-        Assert.Equal("Choose the schema folder: the folder of JSON Schemas that describe the data.", launcher.Said);
+        Assert.Equal("Choose the rules folder: the folder of rules files (schemas) that say what the data can hold.", launcher.Said);
         Assert.Empty(calls);
     }
 
