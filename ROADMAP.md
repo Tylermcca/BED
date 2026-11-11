@@ -18,9 +18,9 @@ There are no dates. A release ships when everything in it works from start to fi
 ## Done so far
 
 - **0.2 (0.2.1-rc.1):** a data editor that works like a normal Windows program; 3D levels with handles, snapping and undo; model and texture assets with licence records; Play from saved files; tested Windows builds and Export build.
-- **0.3 (0.3.0-rc.5, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
+- **0.3 (0.3.0-rc.6, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
 
-## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.5)
+## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.6)
 
 The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and play and export it.
 

@@ -16,7 +16,7 @@ MESSAGES = [
     ('src/Bed.Editor/PlaySettingsStore.cs', 'No build command is configured.', 'No build command is configured.'),
     ('src/Bed.Editor.ImGui/DataWorkspace.PlaySettings.cs', 'Play runs saved files. Save changes before Play?', 'Play runs saved files. Save changes before Play?'),
     ('src/Bed.Editor.ImGui/DataWorkspace.PlaySettings.cs', 'A save check is still running; try Play after it finishes.', 'A save check is still running; try Play after it finishes.'),
-    ('src/Bed.Editor.ImGui/DataWorkspace.PlaySettings.cs', '{file.Name} was changed outside BED; choose which version to keep before Play.', '<file> was changed outside BED; choose which version to keep before Play.'),
+    ('src/Bed.Editor.ImGui/DataWorkspace.PlaySettings.cs', '{file.Name} was changed outside BED and you have unsaved changes to it; choose which version to keep in the Changed outside BED box, then Play.', '<file> was changed outside BED and you have unsaved changes to it; choose which version to keep in the Changed outside BED box, then Play.'),
     ('src/Bed.Editor.ImGui/DataWorkspace.PlaySettings.cs', 'Documents changed; choose Play again.', 'Documents changed; choose Play again.'),
     ('src/Bed.Editor.ImGui/DataWorkspace.PlaySettings.cs', 'The documents or Play command changed; choose Play again.', 'The documents or Play command changed; choose Play again.'),
     ('src/Bed.Editor.ImGui/DataWorkspace.PlaySettings.cs', 'Changes are still waiting to be saved.', 'Changes are still waiting to be saved.'),

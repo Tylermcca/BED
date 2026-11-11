@@ -1414,7 +1414,7 @@ Save through DataFile or DataWorkspace so project policy and outside-change chec
 |---|---|
 | Project is read-only | Save and Save As are refused; the Save All palette action explains why. Request the intended writable project from your host. |
 | Host marks this file read-only | Read its reason, such as another tool owning the generated file. Change the authoritative input through that tool. |
-| File was changed outside the editor or deleted | Save is refused and your in-memory edits remain. Preserve/reconcile your work and the disk version before deciding which version to reopen. |
+| File was changed outside the editor or deleted | With no unsaved edits, BED loads the changed file by itself. With unsaved edits, the **Changed outside BED** box offers **Use the saved version** or **Keep my changes**; until you choose, Save is refused and your edits remain. A deleted file keeps your edits; use Save as to keep them. |
 | File is not open | Open and validate it first; there is no session to save. |
 
 An open, unchanged writable file's Save is a no-op: bytes and timestamp stay intact. Save All reports files it could not save; each refused file drops out before the remaining group is judged again. A valid reduced group can save. Use the [saving explanation above](#a-refused-save) to distinguish that result from a write failure and put-back.

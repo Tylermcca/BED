@@ -41,14 +41,15 @@ public sealed partial class DataWorkspace
     private bool SavedPlayInputs()
     {
         if(Project.Judging){Said="A save check is still running; try Play after it finishes.";return false;}
+        PickUpOutsideChanges();   // a level an AI assistant just changed, with no unsaved edits here, is loaded and played as saved
         foreach(var file in Project.Files)
         {
             if(Documents.TryGetOpenScene(file.Name,out var scene))
-            {if(scene!.Session.ExpectedOnDisk is null||scene.Session.CheckDisk()!=DiskState.Unchanged){Said=$"{file.Name} was changed outside BED; choose which version to keep before Play.";return false;}}
+            {if(scene!.Session.ExpectedOnDisk is null||scene.Session.CheckDisk()!=DiskState.Unchanged){Said=$"{file.Name} was changed outside BED and you have unsaved changes to it; choose which version to keep in the Changed outside BED box, then Play.";return false;}}
             else if(Documents.TryGetOpenScene2(file.Name,out var v2))
-            {if(v2!.Session.ExpectedOnDisk is null||v2.Session.CheckDisk()!=DiskState.Unchanged){Said=$"{file.Name} was changed outside BED; choose which version to keep before Play.";return false;}}
+            {if(v2!.Session.ExpectedOnDisk is null||v2.Session.CheckDisk()!=DiskState.Unchanged){Said=$"{file.Name} was changed outside BED and you have unsaved changes to it; choose which version to keep in the Changed outside BED box, then Play.";return false;}}
             else if(file.Session is {} session&&(session.ExpectedOnDisk is null||session.CheckDisk()!=DiskState.Unchanged))
-            {Said=$"{file.Name} was changed outside BED; choose which version to keep before Play.";return false;}
+            {Said=$"{file.Name} was changed outside BED and you have unsaved changes to it; choose which version to keep in the Changed outside BED box, then Play.";return false;}
         }
         return true;
     }

@@ -106,7 +106,7 @@ Choose **Cancel** (or Escape) to keep everything. **Delete anyway** removes the 
 
 **Ctrl+Z** undoes a document edit; **Ctrl+Y** redoes it. **Ctrl+S** saves the active level through its validation, save policy and file-conflict checks.
 
-If another program changed or removed the saved file, BED keeps your draft and asks you to resolve the conflict. Stop Play before saving. Use **Save** for a level. **Save as** is unavailable for levels and says why: a level keeps its place in the project. Play and export use saved files and retain the undo history.
+If another program changes an open level, such as an AI assistant adding to it, and you have no unsaved changes to it in BED, BED loads the new version by itself within a second and says so. If you do have unsaved changes, a **Changed outside BED** box asks which to keep: **Use the saved version** drops your changes, and **Keep my changes** lets your next save write over the other version. You never need to close and reopen the project. If the saved file was removed, BED keeps your draft and asks you to resolve it. Stop Play before saving. Use **Save** for a level. **Save as** is unavailable for levels and says why: a level keeps its place in the project. Play and export use saved files and retain the undo history.
 
 **Save all** and **Close project** handle levels and data files together. Closing the 3D view's tab or window, or the level with **Ctrl+W** or **Ctrl+F4**, asks **Save**, **Don't Save** or **Cancel** if the level has unsaved changes.
 

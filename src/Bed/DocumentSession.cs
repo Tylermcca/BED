@@ -311,6 +311,18 @@ public sealed class DocumentSession<TDoc> where TDoc : class
     private sealed record SaveSnapshot(TDoc Document, string Text);
     private SaveSnapshot? preparedSave;
 
+    /// <summary>Keeps this session's edits over a version another program saved: the file's text now is taken as what's on disk,
+    /// so the next <see cref="Save"/> writes over it on purpose instead of refusing. Edits, history and the dirty mark are kept.
+    /// False when the file is gone or can't be read.</summary>
+    public bool KeepMine()
+    {
+        if (FilePath is null || !File.Exists(FilePath)) return false;
+        try { diskText = File.ReadAllText(FilePath); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return false; }
+        if (!Dirty) { savedText = ""; savedDocument = null; }   // the file no longer matches this document: Save must write it
+        return true;
+    }
+
     /// <summary>The text this session last read from or wrote to its file: anything else there came from outside.</summary>
     public string? ExpectedOnDisk => FilePath is null ? null : diskText;
 

@@ -26,7 +26,7 @@ public sealed partial class DataWorkspace
     }
     private void DrawCloseChoices()
     {
-        DrawSceneClose();DrawScene2Close();
+        DrawSceneClose();DrawScene2Close();DrawOutsideChoices();
         if(projectCloseSaving&&pendingMixedSave is null)
         {
             projectCloseSaving=false;

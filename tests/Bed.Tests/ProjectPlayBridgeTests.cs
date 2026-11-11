@@ -99,11 +99,13 @@ public sealed class ProjectPlayBridgeTests
         Assert.True(File.Exists(Path.Combine(r.Local,"play-approvals.json")));Assert.DoesNotContain("approval",File.ReadAllText(Path.Combine(r.ProjectRoot,".bed","project.json")),StringComparison.OrdinalIgnoreCase);
     }
     [Fact]
-    public void Missing_settings_opens_form_without_factory_and_external_change_refuses_saved_input()
+    public void Missing_settings_opens_form_without_factory_and_an_outside_change_is_loaded_then_played()
     {
         using var r=new Rig(false);Assert.False(r.Workspace.RequestProjectPlay());Assert.True(r.Workspace.PlaySettings!.Open);Assert.Empty(r.Factory.Sessions);
-        PlaySettingsStore.Save(r.ProjectRoot,new("game.exe"));File.AppendAllText(r.SceneFile," ");
-        Assert.False(r.Workspace.RequestProjectPlay());Assert.Contains("choose which version to keep before Play",r.Workspace.Said);Assert.Empty(r.Factory.Sessions);
+        // Another program (a tester's AI assistant) moves the box while the level is open with no unsaved edits: Play loads and runs it.
+        PlaySettingsStore.Save(r.ProjectRoot,new("game.exe"));File.WriteAllText(r.SceneFile,new SceneFormat().Write(new Scene([SceneObject.At("box",null,Vector3.UnitY)])));
+        Assert.True(r.Workspace.RequestProjectPlay(),r.Workspace.Said);Assert.Single(r.Factory.Sessions);
+        var session=r.Workspace.SceneWindow!.Editor.Session;Assert.Equal(Vector3.UnitY,session.Current.Find("box")!.Position);Assert.False(session.Dirty);
     }
     [Fact]
     public void App_facade_constructs_without_execution_and_delegates_dirty_refusal()

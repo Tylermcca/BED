@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: tests-${{ github.ref }}
+  group: tests-${{ github.ref }}-${{ github.event_name }}   # a push to the private copy (skipped there) never cancels a run started by hand
   cancel-in-progress: true
 
 jobs:

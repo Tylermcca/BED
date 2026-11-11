@@ -4,6 +4,14 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.0-rc.6]
+
+Sixth release candidate for 0.3: files another program changes, such as an AI assistant, load in BED by themselves.
+
+### Fixed
+
+- When another program changed an open file, such as an AI assistant adding to a level, BED stopped Play and you had to close and reopen the project to see the change. Now a file with no unsaved changes in BED loads the new version by itself within a second, and Play runs it. If you have unsaved changes, a **Changed outside BED** box offers **Use the saved version** or **Keep my changes**. **Refresh** in the Files panel also picks up the change.
+
 ## [0.3.0-rc.5]
 
 Fifth release candidate for 0.3: the samples are on the start screen, and the first steps explain the Windows unknown-publisher box.

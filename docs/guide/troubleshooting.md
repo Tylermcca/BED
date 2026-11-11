@@ -23,7 +23,7 @@ The messages below come from BED's current Play and Export paths. Text in angle 
 |---|---|
 | `Play runs saved files. Save changes before Play?` | Choose **Save** for the current edits, **Don't Save** for the last saved files while retaining the edits, or **Cancel**. |
 | `A save check is still running; try Play after it finishes.` | Wait for the save check. Fix any reported problem, then choose Play again. |
-| `<file> was changed outside BED; choose which version to keep before Play.` | The saved copy changed or is unavailable. Choose which version to keep in BED before starting the game; keep the draft until you have chosen which version to use. |
+| `<file> was changed outside BED and you have unsaved changes to it; choose which version to keep in the Changed outside BED box, then Play.` | Another program changed the saved file while you had unsaved changes to it in BED. In the **Changed outside BED** box, choose **Use the saved version** or **Keep my changes** (then save), and Play again. A file with no unsaved changes loads the new version by itself. |
 | `Documents changed; choose Play again.` | Choose Play again to make a fresh save decision for the current documents. |
 | `The documents or Play command changed; choose Play again.` | Review the current settings and choose Play again. The earlier approval prompt no longer describes this request. |
 | `Changes are still waiting to be saved.` | Finish the pending save/check or fix its error. Keep your drafts; the game has not started from them. |

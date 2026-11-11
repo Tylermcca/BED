@@ -544,6 +544,7 @@ public sealed partial class DataWorkspace : IDisposable
     {
         Project.Refresh();
         Said = $"{Project.Files.Count} files.";
+        PickUpOutsideChanges();   // an open file another program changed loads here too, and says so
     }
 
     /// <summary>What refers to the selected item of the shown file, by the map's links, in every file (unsaved edits
@@ -785,6 +786,7 @@ public sealed partial class DataWorkspace : IDisposable
     public void Draw()
     {
         FinishSaves();
+        WatchOutside();
         PrepareRecentProjectsUi();
         PrepareExportUi();
         PreparePlaySettingsUi();
