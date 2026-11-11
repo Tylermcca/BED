@@ -43,6 +43,14 @@ The messages below come from BED's current Play and Export paths. Text in angle 
 | `The program has no window to close, so BED ended it.` | This is the result of Stop for a program with no window. Wait until it has ended before starting again. |
 | `Stopped the owned process tree after the 5-second grace period.` | The program did not close in time, so BED ended its processes. Check game output if that was unexpected. |
 
+## Pause and Step
+
+| Message | What to do |
+|---|---|
+| `This game hasn't enabled frame control yet.` | The game hasn't connected Pause and Step yet, or doesn't support them. Wait for it to finish starting. If the message stays, the game doesn't support Pause and Step; see [Add Pause and Step](pause_step.md). |
+| `Waiting for simulation acknowledgement.` | BED has asked the game to pause or step and is waiting for its next tick. Wait a moment. |
+| `Frame control acknowledgement timed out; simulation state is unknown.` | The game didn't answer within five seconds. Pause and Step turn off for this run; the game keeps running. Choose **Stop** and Play again to retry. |
+
 ## Export build and verification
 
 | Message | What to do |
@@ -78,3 +86,5 @@ The messages below come from BED's current Play and Export paths. Text in angle 
 **Running.** means the program has started; it may still be loading. **Building saved files...** and **Checking the unpacked build...** describe export progress. **Copying verified build...** means the checked files are being copied; **Cancel export** also works during this step. **Build and unpacked smoke verified; ready to copy.** means the exported game's test launch succeeded and copying is available. **Build copied to <folder>** identifies the completed destination. Keep the entire copied folder together.
 
 If Export build is unavailable, open the file you want to export and check that the project's adapter provides a build/export setup. Give the maintainer the exact message, the command and working folder shown by BED, and the relevant output. Keep your drafts until save problems are resolved.
+
+If you think BED itself is at fault, choose **Help > Report a problem**. See [Reporting a problem](reporting_a_problem.md).

@@ -5,7 +5,7 @@ import re
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-UI = ROOT / "src/Brutal.Authoring.Editor.ImGui"
+UI = ROOT / "src/Bed.Editor.ImGui"
 
 
 def read(path):
@@ -44,7 +44,14 @@ def test_every_named_edit_command_retains_its_actual_default_and_menu_label(acti
 ])
 def test_named_labels_are_still_actual_controls(file, label, wrapper):
     guide = read(ROOT / "docs/guide/levels.md")
-    assert f'Ui.{wrapper}("{label}"u8' in read(UI / file)
+    source = read(UI / file)
+    if label == "Search objects":
+        # The same named input now has a full-width field and its visible caption above it.
+        named = re.search(r'Ui.NameNextItem\("([^"\n]+)"u8,\s*"Search objects"\)', source)
+        assert named and f'Ui.InputText("{named[1]}"u8' in source
+        assert 'Ui.TextWrapped("Search objects"u8)' in source
+    else:
+        assert f'Ui.{wrapper}("{label}"u8' in source
     assert f"**{label}**" in guide
 
 
@@ -54,7 +61,7 @@ def test_rename_field_search_and_delete_decision_keep_their_real_names():
     assert "**Object ID**" in guide
     assert 'Ui.Begin("Delete referenced object?###scene.delete.decision"u8' in read(UI / "SceneDeleteUi.cs")
     assert "**Delete referenced object?**" in guide
-    assert "Ctrl+F searches IDs and asset names. Escape clears." in read(UI / "EditorWindow.cs")
+    assert "Ctrl+F searches names, assets and properties. Escape clears." in read(UI / "EditorWindow.cs")
     assert "**Ctrl+F**" in guide and "**Escape** clears the filter" in guide
     assert "Shift+Up/Down extends selection. Ctrl+Space toggles the focused object." in read(UI / "EditorWindow.cs")
     assert "**Shift+Up/Down**" in guide and "**Ctrl+Space**" in guide
@@ -75,7 +82,7 @@ def test_world_offset_and_project_clipboard_promises_keep_their_implementation()
     if "SceneObjectOperations.Duplicate(" in duplicate:
         # The CLI/editor planner refactor retains the same offset and selection promise.
         assert "=>SceneObjectOperations.Duplicate(editor,duplicate,out why);" in duplicate
-        duplicate = read(ROOT / "src/Brutal.Authoring.Editor/SceneObjectOperations.cs")
+        duplicate = read(ROOT / "src/Bed.Editor/SceneObjectOperations.cs")
     clipboard = read(UI / "SceneClipboard.cs")
     assert "Vector3.UnitX" in duplicate and "Vector3.UnitX" in clipboard
     assert "editor.Select(copies)" in duplicate and "editor.Select(ids)" in clipboard

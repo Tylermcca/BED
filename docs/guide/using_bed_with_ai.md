@@ -6,7 +6,7 @@ Edits are checked against the file's schema and any validation rules supplied by
 
 ## The quick way: from inside BED
 
-On BED's start screen, choose **Help: Use with an AI assistant**. This shows examples for the bundled recipes sample. With a project data file open, choose **Help > Use with an AI assistant**, or find **Use with an AI assistant** in the command palette, for examples with that project's paths filled in.
+Open a project and a data file first. To try it, click **Try the example** on the start screen. Then choose **Help > Use with an AI assistant**, or find **Use with an AI assistant** in the command palette. The examples have that project's paths filled in.
 
 The panel has three Copy buttons:
 

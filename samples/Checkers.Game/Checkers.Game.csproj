@@ -12,7 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Checkers\Checkers.csproj" />
-    <ProjectReference Include="..\..\src\Brutal.Authoring.Editor.App\Brutal.Authoring.Editor.App.csproj" />
+    <ProjectReference Include="..\..\src\Bed.Editor.App\Bed.Editor.App.csproj" />
   </ItemGroup>
   <Import Project="..\..\build\Notices.targets" />
 </Project>

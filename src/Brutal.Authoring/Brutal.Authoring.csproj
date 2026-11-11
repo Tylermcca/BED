@@ -1,4 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <!-- The shared authoring core: documents, undo, ids, serialization, validation (worksheet rows AT-010..AT-016).
-       No game types, no renderer, no BRUTAL package: the games adapt to it, it never references them. -->
-</Project>

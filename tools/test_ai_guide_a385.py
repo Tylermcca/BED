@@ -19,7 +19,7 @@ def validate(root, guide, packager, cli):
     assert "guides/using_bed_with_ai.md" in values["REQUIRED"]
     assert "guides" in values["TOP_LEVEL"]
     assert "adapters/starter/StarterAdapter.dll" in values["REQUIRED"]
-    checks = (root / "src/Brutal.Authoring.Data/Checks.cs").read_text(encoding="utf-8-sig")
+    checks = (root / "src/Bed.Data/Checks.cs").read_text(encoding="utf-8-sig")
     assert 'new("links.all", "Check every link"' in checks
     functions = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
     helper = ast.get_source_segment(packager, functions["copy_ai_guide"])
@@ -87,7 +87,7 @@ def validate(root, guide, packager, cli):
 
 def repository():
     for root in Path(__file__).resolve().parents:
-        if (root / "Brutal.Authoring.slnx").is_file(): return root
+        if (root / "Bed.slnx").is_file(): return root
     raise AssertionError("repository not found")
 
 
@@ -97,4 +97,4 @@ class AiGuideTests(unittest.TestCase):
         self.assertEqual(5, validate(root,
             (root / "docs/guide/using_bed_with_ai.md").read_text(encoding="utf-8"),
             (root / "tools/package_release.py").read_text(encoding="utf-8"),
-            (root / "src/Brutal.Authoring.Agent.Cli/Program.cs").read_text(encoding="utf-8")))
+            (root / "src/Bed.Agent.Cli/Program.cs").read_text(encoding="utf-8")))

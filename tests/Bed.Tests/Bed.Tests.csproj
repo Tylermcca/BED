@@ -1,0 +1,110 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- BRUTAL's analyzer asks UI code for UTF-8 string literals; tests pass ordinary strings to non-UI APIs, so that rule is off here. -->
+    <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../samples/FirstTask/FirstTaskAdapter.cs" Link="FirstTask/FirstTaskAdapter.cs" />
+    <Compile Include="../../samples/StarterAdapter/ManagedSourceHooks.cs" Link="Doc19/ManagedSourceHooks.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Bed\Bed.csproj" />
+    <ProjectReference Include="../../src/Bed.Runtime/Bed.Runtime.csproj" />
+    <ProjectReference Include="..\..\samples\Toy\Toy.csproj" />
+    <ProjectReference Include="..\..\src\Bed.Editor\Bed.Editor.csproj" />
+    <ProjectReference Include="..\..\src\Bed.Import\Bed.Import.csproj" />
+    <ProjectReference Include="..\..\src\Bed.Data\Bed.Data.csproj" />
+    <ProjectReference Include="..\..\src\Bed.Editor.ImGui\Bed.Editor.ImGui.csproj" />
+    <ProjectReference Include="..\..\src\Bed.Editor.Text\Bed.Editor.Text.csproj" />
+    <!-- The Text project keeps ImCode private (it ships inside that package, not as a dependency), so a project reference
+         doesn't pass it on; the pane's tests read ImCode types (its squiggle), so they name it here. -->
+    <ProjectReference Include="..\..\third_party\ImCode\src\ImCode\ImCode.csproj" />
+    <ProjectReference Include="..\..\third_party\ImCode\src\ImCode.Text\ImCode.Text.csproj" />
+    <ProjectReference Include="../../samples/Tiles/Tiles.csproj" />
+    <ProjectReference Include="../../samples/Ladder/Ladder.csproj" />
+    <ProjectReference Include="../../samples/SceneTool/SceneTool.csproj" />
+    <ProjectReference Include="../../samples/SceneStarter/SceneStarter.csproj" />
+    <ProjectReference Include="../../samples/PhysicsStarter/PhysicsStarter.csproj" />
+    <ProjectReference Include="../../samples/RuntimeInspect/RuntimeInspect.csproj" />
+    <ProjectReference Include="../../samples/DataCheck/DataCheck.csproj" />
+    <ProjectReference Include="../../src/Bed.Agent.Cli/Bed.Agent.Cli.csproj" />
+    <ProjectReference Include="../../samples/ImportCheck/ImportCheck.csproj" />
+    <ProjectReference Include="../../samples/LightsPlugin/LightsPlugin.csproj" />
+    <ProjectReference Include="../../samples/Checkers/Checkers.csproj" />
+    <ProjectReference Include="../../samples/Checkers.Game/Checkers.Game.csproj" />
+    <!-- Licence assertions inspect the complete built sample; it is never started or referenced as test code. -->
+    <ProjectReference Include="../../samples/Checkers.App/Checkers.App.csproj" ReferenceOutputAssembly="false" />
+    <!-- The general app, for its headless path (the shot option) only: no test opens its window. -->
+    <ProjectReference Include="../../src/Bed.Launcher/Bed.Launcher.csproj" />
+    <!-- Built first, but not referenced: the tests load its DLL the way the app does. -->
+    <ProjectReference Include="../../samples/StarterAdapter/StarterAdapter.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../samples/CheckersAdapter/CheckersAdapter.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../LinkedPlayTestGame/LinkedPlayTestGame.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../samples/RoutePuzzle.Game/RoutePuzzle.Game.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <None Include="../../samples/RoutePuzzle/data/routes.json" Link="FrameRoute/data/routes.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="CopyFrameRouteGame" AfterTargets="Build">
+    <ItemGroup>
+      <FrameRouteGame Include="../../samples/RoutePuzzle.Game/bin/$(Configuration)/net10.0/RoutePuzzle.Game.exe;../../samples/RoutePuzzle.Game/bin/$(Configuration)/net10.0/RoutePuzzle.Game.dll;../../samples/RoutePuzzle.Game/bin/$(Configuration)/net10.0/RoutePuzzle.Game.deps.json;../../samples/RoutePuzzle.Game/bin/$(Configuration)/net10.0/RoutePuzzle.Game.runtimeconfig.json;../../samples/RoutePuzzle.Game/bin/$(Configuration)/net10.0/RoutePuzzle.dll;../../samples/RoutePuzzle.Game/bin/$(Configuration)/net10.0/Bed.Runtime.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FrameRouteGame)" DestinationFolder="$(OutDir)FrameRouteGame" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyLinkedPlayTestGame" AfterTargets="Build">
+    <ItemGroup>
+      <LinkedPlayHelper Include="../LinkedPlayTestGame/bin/$(Configuration)/net10.0/LinkedPlayTestGame.exe;../LinkedPlayTestGame/bin/$(Configuration)/net10.0/LinkedPlayTestGame.dll;../LinkedPlayTestGame/bin/$(Configuration)/net10.0/LinkedPlayTestGame.deps.json;../LinkedPlayTestGame/bin/$(Configuration)/net10.0/LinkedPlayTestGame.runtimeconfig.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LinkedPlayHelper)" DestinationFolder="$(OutDir)LinkedPlayTestGame" SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup>
+    <ProjectReference Include="../LinkedBuildTestGame/LinkedBuildTestGame.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+  <Target Name="CopyLinkedBuildTestGame" AfterTargets="Build">
+    <ItemGroup>
+      <LinkedBuildHelper Include="../LinkedBuildTestGame/bin/$(Configuration)/net10.0/LinkedBuildTestGame.exe;../LinkedBuildTestGame/bin/$(Configuration)/net10.0/LinkedBuildTestGame.dll;../LinkedBuildTestGame/bin/$(Configuration)/net10.0/LinkedBuildTestGame.deps.json;../LinkedBuildTestGame/bin/$(Configuration)/net10.0/LinkedBuildTestGame.runtimeconfig.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LinkedBuildHelper)" DestinationFolder="$(OutDir)LinkedBuildTestGame" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopySceneStarterReviewInputs" AfterTargets="Build">
+    <ItemGroup>
+      <SceneStarterReviewInput Include="../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.exe;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.deps.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.runtimeconfig.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Bed.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Bed.Runtime.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/scene.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/LICENSE.txt;../../samples/SceneStarter/bin/$(Configuration)/net10.0/NOTICE.txt" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SceneStarterReviewInput)" DestinationFolder="$(OutDir)SceneStarterReview" />
+  </Target>
+  <Target Name="CopySceneStarterLinkedProof" AfterTargets="Build">
+    <ItemGroup>
+      <SceneStarterProof Include="../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.exe;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.deps.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.runtimeconfig.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Bed.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Bed.Runtime.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/LICENSE.txt;../../samples/SceneStarter/bin/$(Configuration)/net10.0/NOTICE.txt" />
+      <SceneStarterProject Include="../../samples/SceneStarterProject/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SceneStarterProof)" DestinationFolder="$(OutDir)samples/SceneStarter" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SceneStarterProject)" DestinationFiles="@(SceneStarterProject->'$(OutDir)samples/scene-starter/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="../../samples/SceneStarterAdapter/bin/$(Configuration)/net10.0/SceneStarterAdapter.dll" DestinationFolder="$(OutDir)adapters" SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup>
+    <ProjectReference Include="../ProjectPlayTestGame/ProjectPlayTestGame.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+  <Target Name="CopyProjectPlayTestGame" AfterTargets="Build">
+    <ItemGroup><ProjectPlayHelper Include="../ProjectPlayTestGame/bin/$(Configuration)/net10.0/ProjectPlayTestGame.exe;../ProjectPlayTestGame/bin/$(Configuration)/net10.0/ProjectPlayTestGame.dll;../ProjectPlayTestGame/bin/$(Configuration)/net10.0/ProjectPlayTestGame.deps.json;../ProjectPlayTestGame/bin/$(Configuration)/net10.0/ProjectPlayTestGame.runtimeconfig.json" /></ItemGroup>
+    <Copy SourceFiles="@(ProjectPlayHelper)" DestinationFolder="$(OutDir)ProjectPlayTestGame" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyPhysicsStarterSample" AfterTargets="Build">
+    <ItemGroup><PhysicsStarterRuntime Include="../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/*.dll;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/PhysicsStarter.exe;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/PhysicsStarter.deps.json;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/PhysicsStarter.runtimeconfig.json;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/LICENSE.txt;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/NOTICE.txt" /><PhysicsStarterNotice Include="../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/licenses/*.txt" /><PhysicsStarterNative Include="../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/runtimes/win-x64/native/jolt.dll" /></ItemGroup>
+    <Copy SourceFiles="@(PhysicsStarterRuntime)" DestinationFolder="$(OutDir)samples/PhysicsStarter" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(PhysicsStarterNotice)" DestinationFolder="$(OutDir)samples/PhysicsStarter/licenses" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(PhysicsStarterNative)" DestinationFolder="$(OutDir)samples/PhysicsStarter/runtimes/win-x64/native" SkipUnchangedFiles="true" />
+  </Target>
+  <!-- Tests start the real program by its public name, as people do. -->
+  <Target Name="CopyPublicAppHostName" AfterTargets="Build" Condition="Exists('$(TargetDir)Bed.Launcher.exe')">
+    <Copy SourceFiles="$(TargetDir)Bed.Launcher.exe" DestinationFiles="$(TargetDir)BED.exe" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

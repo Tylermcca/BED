@@ -1,6 +1,6 @@
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.App;
-using Brutal.Authoring.Editor.ImGui;
+using Bed.Editor;
+using Bed.Editor.App;
+using Bed.Editor.ImGui;
 using Checkers;
 
 // Checkers in the editor, in a window: the opening position as a document, the checkers plug-in (its commands, square

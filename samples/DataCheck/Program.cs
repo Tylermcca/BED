@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Brutal.Authoring.Data;
+using Bed.Data;
 
 namespace DataCheck;
 

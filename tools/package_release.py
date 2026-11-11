@@ -30,6 +30,10 @@ NAME = "BED"
 REQUIRED = [
     "BED.exe",
     "accesskit.dll",
+    "OpenAL32.dll",
+    "licenses/BRUTAL-OPENAL-THIRD-PARTY-NOTICES.txt",
+    "licenses/openal-soft-COPYING.txt",
+    "licenses/NVorbis-LICENSE.txt",
     "licenses/AccessKit-LICENSE-MIT.txt",
     "licenses/AccessKit-LICENSE-APACHE.txt",
     "bed-cli.exe",
@@ -70,7 +74,7 @@ REQUIRED = [
 ]
 
 # Only these files and folders may sit at the top of a release.
-TOP_LEVEL = {"accesskit.dll", "BED.exe", "bed-cli.exe", "START_HERE.txt", "LICENSE.txt", "NOTICE.txt", "licenses", "samples", "adapters", "guides"}
+TOP_LEVEL = {"OpenAL32.dll", "accesskit.dll", "BED.exe", "bed-cli.exe", "START_HERE.txt", "LICENSE.txt", "NOTICE.txt", "licenses", "samples", "adapters", "guides"}
 
 # Vendored source (third_party/) whose licence ships beside the programs, by its name in licenses/.
 VENDORED_LICENCES = {"ImCode-LICENSE.txt": "third_party/ImCode/LICENSE"}
@@ -112,6 +116,10 @@ def publish(project: str, rid: str, into: Path) -> Path:
     into a scratch folder, and returns that folder."""
     run(["dotnet", "publish", project, "-c", "Release", "-r", rid, "--self-contained", "true", "-p:PublishSingleFile=true",
          "-p:IncludeNativeLibrariesForSelfExtract=true", "-p:EnableCompressionInSingleFile=true", "-p:DebugType=none", "-o", str(into), "--nologo", "-v:q"])
+    public_name = {"Bed.Launcher": "BED", "Bed.Agent.Cli": "bed-cli"}.get(Path(project).stem)
+    if public_name:
+        suffix = ".exe" if rid.startswith("win-") else ""
+        (into / (Path(project).stem + suffix)).replace(into / (public_name + suffix))
     return into
 
 
@@ -133,7 +141,7 @@ def copy_ai_guide(stage: Path) -> None:
 
 
 SCENE_EXPORT_RUNTIME = ("SceneStarter.exe", "SceneStarter.dll", "SceneStarter.deps.json", "SceneStarter.runtimeconfig.json",
-                        "Brutal.Authoring.dll", "Brutal.Authoring.Runtime.dll", "LICENSE.txt", "NOTICE.txt")
+                        "Bed.dll", "Bed.Runtime.dll", "LICENSE.txt", "NOTICE.txt")
 REQUIRED += tuple("samples/scene-starter/game/export/" + name for name in SCENE_EXPORT_RUNTIME)
 
 
@@ -168,8 +176,8 @@ def build(stage: Path, rid: str) -> None:
     if rid != "win-x64":
         raise RuntimeError("AccessKit C 0.23.2 is vendored only for win-x64")
     with tempfile.TemporaryDirectory(prefix="bed-publish-") as tmp:
-        app = publish("src/Brutal.Authoring.Launcher/Brutal.Authoring.Launcher.csproj", rid, Path(tmp) / "app")
-        cli = publish("src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj", rid, Path(tmp) / "cli")
+        app = publish("src/Bed.Launcher/Bed.Launcher.csproj", rid, Path(tmp) / "app")
+        cli = publish("src/Bed.Agent.Cli/Bed.Agent.Cli.csproj", rid, Path(tmp) / "cli")
         game = publish("samples/Checkers.Game/Checkers.Game.csproj", rid, Path(tmp) / "game")   # play-checkers, the game itself
         scene = publish("samples/SceneStarter/SceneStarter.csproj", rid, Path(tmp) / "scene")
         # Play keeps its self-contained executable. Export needs explicit pure runtime files to copy and verify.
@@ -178,6 +186,7 @@ def build(stage: Path, rid: str) -> None:
              "--self-contained", "false", "-p:PublishSingleFile=false", "-p:DebugType=none", "-o", str(export_runtime), "--nologo", "-v:q"])
         stage.mkdir(parents=True)
         shutil.copy2(app / "BED.exe", stage / "BED.exe")
+        shutil.copy2(app / "OpenAL32.dll", stage / "OpenAL32.dll")
         shutil.copy2(cli / "bed-cli.exe", stage / "bed-cli.exe")
         shutil.copy2(app / "NOTICE.txt", stage / "NOTICE.txt")
         shutil.copytree(app / "licenses", stage / "licenses")
@@ -303,10 +312,10 @@ def verify_ai_setup(unpacked: Path, guide: Path) -> str:
                                      text=True, encoding="utf-8", timeout=30)
     except (OSError, subprocess.TimeoutExpired, UnicodeError) as e:
         raise RuntimeError(f"AI setup help check failed: {e}") from e
-    # Existing CLI help is usage on stderr with exit 2, without opening a project.
-    usage = help_result.stderr
-    if help_result.returncode != 2 or help_result.stdout.strip() or "usage: bed-cli " not in usage:
-        raise RuntimeError("AI setup help check failed: expected bed-cli usage on stderr (exit 2)")
+    # bed-cli --help prints usage on stdout with exit 0, without opening a project (QA28).
+    usage = help_result.stdout
+    if help_result.returncode != 0 or help_result.stderr.strip() or "usage: bed-cli " not in usage:
+        raise RuntimeError("AI setup help check failed: expected bed-cli usage on stdout (exit 0)")
     calls = {line.strip().split()[0] for line in usage.splitlines() if line.strip()}
     if not {"describe", "mcp"}.issubset(calls):
         raise RuntimeError("AI setup help check failed: incomplete command list")

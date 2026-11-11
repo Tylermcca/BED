@@ -4,19 +4,19 @@ The public library takes as few dependencies as it can, and each one is recorded
 
 | Package | Version | Used by | Licence | Source |
 |---|---|---|---|---|
-| SharpGLTF.Core | 1.0.7 | `Brutal.Authoring.Import` (glTF reading) | MIT | https://github.com/vpenades/SharpGLTF (licence checked on nuget.org, 2026-10-31) |
+| SharpGLTF.Core | 1.0.7 | `Bed.Import` (glTF reading) | MIT | https://github.com/vpenades/SharpGLTF (licence checked on nuget.org, 2026-10-31) |
 
-The core library (`Brutal.Authoring`) takes no third-party package.
+The core library (`Bed`) takes no third-party package.
 
 ## Stb image decoding
 
-The host (`Brutal.Authoring.Editor.App`), not the generic editor model, references `Ahwoo.Brutal.Stb` 2026.10.2 for bounded CPU image previews. The binding is BRUTAL License v1.0 (existing BRUTAL product credit/notice duties remain); its stb_image v2.30 and stb_image_write v1.16 are MIT OR Unlicense, upstream commit f58f558. Package LICENSE.txt, NOTICE.txt and LICENSES/BRUTAL-STB-THIRD-PARTY-NOTICES.txt must accompany redistribution. Source: https://github.com/RocketWerkz/brutal.stb and https://github.com/nothings/stb. No GPU texture package is added.
+The host (`Bed.Editor.App`), not the generic editor model, references `Ahwoo.Brutal.Stb` 2026.10.2 for bounded CPU image previews. The binding is BRUTAL License v1.0 (existing BRUTAL product credit/notice duties remain); its stb_image v2.30 and stb_image_write v1.16 are MIT OR Unlicense, upstream commit f58f558. Package LICENSE.txt, NOTICE.txt and LICENSES/BRUTAL-STB-THIRD-PARTY-NOTICES.txt must accompany redistribution. Source: https://github.com/RocketWerkz/brutal.stb and https://github.com/nothings/stb. No GPU texture package is added.
 
 ## Vendored source
 
 | Component | Version | Used by | Licence | Source |
 |---|---|---|---|---|
-| ImCode (`ImCode`, `ImCode.Text`) | commit `98e69303054540c43fd67909b6a30975a19aca8b` (2026-10-15) | `Brutal.Authoring.Editor.Text` (the Text panel's code editor), and shipped inside its package | MIT | https://github.com/aproposmath/ImCode, copied unchanged into `third_party/ImCode/` (`PINNED.md` says what and when) |
+| ImCode (`ImCode`, `ImCode.Text`) | commit `98e69303054540c43fd67909b6a30975a19aca8b` (2026-10-15) | `Bed.Editor.Text` (the Text panel's code editor), and shipped inside its package | MIT | https://github.com/aproposmath/ImCode, copied unchanged into `third_party/ImCode/` (`PINNED.md` says what and when) |
 
 ImCode is Copyright (c) 2026 aproposmath, and is used under the MIT License:
 
@@ -44,7 +44,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-A release carries the same text beside the programs as `licenses/ImCode-LICENSE.txt`, and so does the `Brutal.Authoring.Editor.Text` package, whose `THIRD-PARTY-NOTICES.txt` names ImCode. The core editor (`Brutal.Authoring.Editor.ImGui`) carries no ImCode.
+A release carries the same text beside the programs as `licenses/ImCode-LICENSE.txt`, and so does the `Bed.Editor.Text` package, whose `THIRD-PARTY-NOTICES.txt` names ImCode. The core editor (`Bed.Editor.ImGui`) carries no ImCode.
 
 ## BRUTAL
 
@@ -309,3 +309,9 @@ shall not be used in advertising or otherwise to promote the sale,
 use or other dealings in these Data Files or Software without prior
 written authorization of the copyright holder.
 ```
+
+## Sound previews
+
+The app references `Ahwoo.BRUTAL.OpenAl` **2026.10.2**, compatible with the existing Core 2026.10.1 (2026.10.3 requires Core 2026.10.4 and is not used). The binding remains under BRUTAL License v1.0. Its dynamically loaded **OpenAL Soft 1.25.2** (commit dd4e07de0fe73d8c0326c4502f63e71da8ef268b) is GNU Library General Public License version 2; the package also includes BSD/PFFFT/fmt/GSL notices. Ship every package LICENSES/*.txt, including BRUTAL-OPENAL-THIRD-PARTY-NOTICES.txt and openal-soft-COPYING.txt. Windows packaging keeps OpenAL32.dll external beside BED.exe, replaceable by the user; no static linking. Source/rebuild instructions: https://github.com/kcat/openal-soft/tree/1.25.2 ; binding: https://github.com/ahwootech/BRUTAL . Preserve the upstream licence's source/relinking duties when redistributing.
+
+OGG/Vorbis decode uses managed **NVorbis 0.10.5**, MIT, Copyright (c) 2020 Andrew Ward. Exact NuGet version checked against https://www.nuget.org/packages/NVorbis/0.10.5 and its package metadata; MIT text checked at https://github.com/NVorbis/NVorbis/blob/master/LICENSE . Its verbatim licence is third_party/NVorbis/LICENSE, staged as licenses/NVorbis-LICENSE.txt. These dependencies are in the app, with no BRUTAL dependency added to Editor or Runtime core. NVorbis's netstandard2.0 dependency declarations include System.Memory 4.5.3 and System.ValueTuple 4.5.0 (MIT).

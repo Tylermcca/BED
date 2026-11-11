@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Checkers (goal 13) in a real window: the same editor and plug-in the tests drive headless, hosted by
-       Brutal.Authoring.Editor.App. Running it opens a window; nothing in the test run starts it. -->
+       Bed.Editor.App. Running it opens a window; nothing in the test run starts it. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>Checkers.App</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Checkers\Checkers.csproj" />
-    <ProjectReference Include="..\..\src\Brutal.Authoring.Editor.App\Brutal.Authoring.Editor.App.csproj" />
+    <ProjectReference Include="..\..\src\Bed.Editor.App\Bed.Editor.App.csproj" />
   </ItemGroup>
   <Import Project="..\..\build\Notices.targets" />
 </Project>

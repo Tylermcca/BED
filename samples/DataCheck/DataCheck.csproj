@@ -6,6 +6,6 @@
     <RootNamespace>DataCheck</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Brutal.Authoring.Data\Brutal.Authoring.Data.csproj" />
+    <ProjectReference Include="..\..\src\Bed.Data\Bed.Data.csproj" />
   </ItemGroup>
 </Project>

@@ -152,4 +152,4 @@ Keep external images and buffers inside the model's folder. A .glb can still nam
 
 Replace the fixture path in a worked command with your model path. Use --frame only when your project needs that conversion. Exit 0 means this importer accepted the data it reports; it does not establish renderer quality or every possible format feature.
 
-For the exact self-authored fixture facts and expected outcomes, read fixtures/import/README.md and expected.json. The guide's tests live in tests/Brutal.Authoring.Tests/ImportCheckTests.cs.
+For the exact self-authored fixture facts and expected outcomes, read fixtures/import/README.md and expected.json. The guide's tests live in tests/Bed.Tests/ImportCheckTests.cs.

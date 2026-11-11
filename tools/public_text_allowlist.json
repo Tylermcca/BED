@@ -61,7 +61,7 @@
       "file": "tools/test_prepare_package_first_use_a293.py",
       "line": 195,
       "code": "PT001",
-      "line_sha256": "07798e4d5108fb9e912fa134ec391336e3e58746d4507f923b67a4744a2c03e7",
+      "line_sha256": "0d170c95550d3b0322483b59e76e4b0019a8fdb23ab1f2c634112a6f42957c70",
       "reason": "Marker list a test uses to detect leaked local paths; not a real location."
     },
     {

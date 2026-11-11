@@ -1,6 +1,6 @@
 # Read saved levels in a game
 
-Use `Brutal.Authoring` for the scene JSON reader and `Brutal.Authoring.Runtime` for prepared meshes and textures. A game needs these two libraries and the .NET 10 runtime. The [RuntimeInspect console sample](../../samples/RuntimeInspect/README.md) shows this route without an editor, renderer or importer dependency.
+Use `Bed` for the scene JSON reader and `Bed.Runtime` for prepared meshes and textures. A game needs these two libraries and the .NET 10 runtime. The [RuntimeInspect console sample](../../samples/RuntimeInspect/README.md) shows this route without an editor, renderer or importer dependency.
 
 ## Prepare the saved files
 
@@ -27,8 +27,8 @@ For a game project in this repository, adjust these relative paths to its locati
 
 ```xml
 <ItemGroup>
-  <ProjectReference Include="../../src/Brutal.Authoring/Brutal.Authoring.csproj" />
-  <ProjectReference Include="../../src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj" />
+  <ProjectReference Include="../../src/Bed/Bed.csproj" />
+  <ProjectReference Include="../../src/Bed.Runtime/Bed.Runtime.csproj" />
 </ItemGroup>
 ```
 
@@ -36,8 +36,8 @@ The following is a complete console `Program.cs` for a .NET 10 project with impl
 
 <!-- DOC16 compiling runtime example -->
 ```csharp
-using Brutal.Authoring;
-using Brutal.Authoring.Runtime;
+using Bed;
+using Bed.Runtime;
 
 if (args.Length != 1)
 {
@@ -107,3 +107,9 @@ Each part has positions, triangle indices and optional vertex-aligned normals an
 The snapshot allows at most 4,096 artifacts, 64 MiB per artifact and 256 MiB total. Mesh decoding bounds vertices and triangle indices before allocating geometry. Texture dimensions are at most 8,192 per axis and the complete artifact must still fit its 64 MiB limit. Both decoders require exact supported headers, dimensions/counts and byte lengths.
 
 A missing publication reports `Open the project in BED once to prepare its assets`. Corrupt cache JSON, changed hashes, unsupported binary versions, truncated payloads and excess budgets refuse with exceptions rather than returning partial results. Invalid scene syntax/version raises `DocumentFormatException`; invalid scene links or IDs raise `InvalidDocumentException`. Keep the previously loaded game state until a complete replacement has loaded successfully. This example catches load failures, prints the reason and exits 1; argument mistakes exit 2.
+
+## Version-two levels and physics
+
+The example above uses the version-one reader. A game that supports prefab and sprite levels opts in to version two. It first flattens the saved level with `Scene2Kit.Flatten`, which expands each placed piece from its accepted copy and applies its local changes, then reads the result with `SceneRuntimeReader.Read2`. Flattening never looks for or updates the original prefab files. `Read2` refuses a level that still contains unexpanded pieces. Sprite size, pivot, draw order and sampling survive, along with transforms, references and object order. See [Reading flattened scene-v2 data](api_overview.md#reading-flattened-scene-v2-data) and [Export](exporting.md).
+
+Physics is optional, and a game must opt in to it. The separate [physics sample](../../samples/PhysicsStarter/README.md) shows how: it runs the saved gravity, fixed step and bodies in its own world, and exports its native physics library and notices with the build. Reading a level never starts a simulation, and the simulation never writes back to the saved level. Flat levels keep bodies moving in X and Y and turning around Z. If the game supports [Pause and Step](pause_step.md), each step advances one whole simulation tick.

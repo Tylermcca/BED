@@ -1,0 +1,70 @@
+{
+  "kind": "prefab-definition",
+  "version": 1,
+  "space": "3d",
+  "guid": "11111111111111111111111111111111",
+  "root": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "nodes": [
+    {
+      "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "label": "frame",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "properties": {
+        "locked": false
+      },
+      "references": {}
+    },
+    {
+      "key": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "label": "marker",
+      "parentKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "position": [
+        0,
+        1,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "properties": {},
+      "references": {
+        "owner": {
+          "slot": "cccccccccccccccccccccccccccccccc"
+        },
+        "frame": {
+          "node": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    }
+  ],
+  "slots": [
+    {
+      "key": "cccccccccccccccccccccccccccccccc",
+      "label": "Owner",
+      "required": true
+    }
+  ]
+}

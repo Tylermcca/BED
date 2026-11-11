@@ -5,6 +5,16 @@ Inspector to edit the selected item. The project's adapter and schemas decide
 which files and fields BED can edit. Read any opening or read-only message before
 changing a file; generated files may belong to another tool.
 
+## Quick steps
+
+1. Open your project, then choose a data file in **Files**.
+2. Type in **Filter** to find a row, and select it.
+3. Edit a cell, or a field in **Inspector**, and press Enter. If BED refuses the
+   value, the reason appears next to the field.
+4. Press **Ctrl+Z** to undo or **Ctrl+Y** to redo.
+5. Press **Ctrl+S** to save the file, or **Save all** in **Files** to save every
+   changed file.
+
 ## Open a file and change a value
 
 1. Choose **Open project...** in the launcher and choose your project.
@@ -92,3 +102,17 @@ Use **Close find and replace** or **Escape** in the panel to close it. Closing t
 panel does not undo edits already applied. See [troubleshooting](troubleshooting.md)
 for save and project problems, or [checks and lifetime](check_threads.md) if you
 are writing an adapter's checks.
+
+## Readable tables and saving several files
+
+Tables size their columns to fit their headings and contents when a file opens.
+You can still resize, reorder and sort columns; BED remembers your choice for each
+file in your personal settings. Very wide data scrolls sideways.
+
+A refused edit shows its reason next to the field until you correct the value.
+
+**Save all** saves every changed file, including levels, in one go. It waits for
+any background checks to finish, and if one file is refused, nothing is saved and
+every draft is kept. When you close a project with several changed files, BED lists
+each one with its own **Save** and **Don't Save** buttons, plus **Save all** and
+**Cancel**.

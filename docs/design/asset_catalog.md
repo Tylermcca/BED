@@ -8,10 +8,10 @@ Status: design contract on main cba9bd1. No new interface, schema, importer, cac
 
 Current source anchors:
 
-- `src/Brutal.Authoring/Assets.cs:47-60`: AssetRecord holds GUID, source hash, importer/version, settings, provenance and AI-use policy. Its sidecar format version is 1. These are not a catalog generation.
+- `src/Bed/Assets.cs:47-60`: AssetRecord holds GUID, source hash, importer/version, settings, provenance and AI-use policy. Its sidecar format version is 1. These are not a catalog generation.
 - `Assets.cs:217-270`: AssetIndex scans sidecars, reports problems, indexes GUIDs and refuses duplicate GUID resolution. A changed source produces a warning but can still resolve to a path. A missing source is not indexed. Therefore a non-null Resolve result does not prove current imported content or permission to export.
-- `src/Brutal.Authoring.Editor/AssetBrowser.cs:49-67`: Refresh builds an index, then reads sidecars again to construct entries. This is currently a browser model, not an atomic shared snapshot. Its entries include problematic sidecars that have no resolvable asset.
-- `src/Brutal.Authoring/Scene.cs:13-25,91-110`: a scene asset is an optional string, documented as path or GUID. Null means an empty object. No automatic reference migration is present.
+- `src/Bed.Editor/AssetBrowser.cs:49-67`: Refresh builds an index, then reads sidecars again to construct entries. This is currently a browser model, not an atomic shared snapshot. Its entries include problematic sidecars that have no resolvable asset.
+- `src/Bed/Scene.cs:13-25,91-110`: a scene asset is an optional string, documented as path or GUID. Null means an empty object. No automatic reference migration is present.
 - `Scene.cs:226-233,238,294-301`: missing assets retain placeholders; AddObject and SetAsset are commands. Catalog publication must not silently mutate the scene or its undo history.
 
 This contract adds no second asset database. Sidecars and source files remain authoritative. The catalog is a disposable projection plus rebuildable derived cache. It must not become an independently writable copy of provenance, settings or identities. No asset contents, historical import-security work or real project data were inspected for this design.
@@ -89,8 +89,8 @@ Play's eventual pure reader receives the manifest/resolver contract, not AssetBr
 
 **INVENTED** implementation split, not permission for concurrent edits:
 
-1. Core owner: proposed `src/Brutal.Authoring/AssetCatalog.cs` holds immutable snapshot/reference/resolution contracts using existing AssetRecord/Issue concepts. No editor dependency or schema migration.
-2. Asset owner: proposed `src/Brutal.Authoring.Editor/AssetGeneration.cs` owns input observation, revision/dependency calculation, candidate publication and leases; coordinate any necessary Assets.cs projection seam before changing it. No separate sidecar database.
+1. Core owner: proposed `src/Bed/AssetCatalog.cs` holds immutable snapshot/reference/resolution contracts using existing AssetRecord/Issue concepts. No editor dependency or schema migration.
+2. Asset owner: proposed `src/Bed.Editor/AssetGeneration.cs` owns input observation, revision/dependency calculation, candidate publication and leases; coordinate any necessary Assets.cs projection seam before changing it. No separate sidecar database.
 3. Browser owner: `AssetBrowser.cs` becomes a projection of that snapshot instead of a second scan. Keep existing search/problem behavior and diagnostics.
 4. Scene owner: existing scene command boundaries consume the resolved drag handoff; typed document host owns scene/session admission. No DataWorkspace behavior is changed here.
 5. Preview/Play/export owners: consume leases/manifests and declare representation/dependency requirements. Their device/process lifetimes remain outside the catalog. Runtime package extraction is a separate task.

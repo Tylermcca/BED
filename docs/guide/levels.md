@@ -2,13 +2,28 @@
 
 A level contains objects you can move, rotate, resize and group. A game's adapter connects its level files to BED's level editor. Stop Play before changing the level.
 
+For newer levels with prefabs, sprites or physics, see [Reusable pieces](prefabs.md) and [Flat levels](flat_levels.md). Their controls differ a little from the steps below.
+
+## Quick steps
+
+1. Choose **File > Open project...** and open your project folder (to try it, use **samples/scene-starter** from the download).
+2. If the level isn't showing, click **level.json** in **Files** at the bottom.
+3. Click an object in the **Viewport**, or its name in the **Outliner** on the left. The **Inspector** on the right shows its position, rotation and scale.
+4. Press **G**, **R** or **S** (or click **Move**, **Rotate** or **Scale**) and drag a handle. You can also type exact numbers in the Inspector.
+5. To look around: **Alt** + left drag orbits, middle drag pans, **Alt** + right drag zooms, and **F** frames the selection. Hold the right button and press **W**, **A**, **S**, **D**, **Q** or **E** to fly.
+6. Press **Ctrl+Z** to undo a step, and **Ctrl+S** to save.
+
+![A level open in BED: Outliner, Viewport, Inspector and Files](../images/guide/level.png)
+
+The sections below explain each part in detail.
+
 ## Open and select objects
 
-Choose **Open project** and select your project folder, then open **level.json** in **Files**. For the 3D example, choose the supplied level-example folder. The project must include its level schema and adapter connection.
+Choose **Open project** and select your project folder. A level project opens straight into its level; to open another level, choose it in **Files**. For the 3D example, choose the supplied level-example folder. The project must include its level schema and adapter connection.
 
 The **Outliner** window contains the object list. Select a row, or click an object in the 3D view, to inspect it. Ctrl-click a row to toggle it in the selection. On scene rows, **Shift+Up/Down** extends the keyboard selection and **Ctrl+Space** toggles the focused object. Use Ctrl+Tab to choose a panel, Tab to reach its rows, and the arrows to navigate. **F** focuses the selected outline branch; **Escape** steps out of that focus. The Inspector follows the selected object.
 
-With the Outliner focused, **Ctrl+F** enters **Search objects**. Search by object ID or asset name. Parents of matching objects remain visible, so you can follow the hierarchy. **Escape** clears the filter. Searching changes the view and leaves the saved level alone.
+With the Outliner focused, **Ctrl+F** enters **Search objects**. Search by object ID or name, asset name, or property name or value. Parents of matching objects remain visible, so you can follow the hierarchy. **Escape** clears the filter. Searching changes the view and leaves the saved level alone.
 
 ## Add an object
 
@@ -36,9 +51,22 @@ Use **Position**, **Rotation** and **Scale** in the Inspector, or focus the 3D c
 | **F** | Frame the selected object's bounds. |
 | **Escape** | Cancel an active transform gesture. |
 
-Each accepted keyboard nudge is one undo step. Without move snapping, an ordinary ground-direction arrow nudge is 0.5 metre. With no selection, or with Ctrl held, arrows orbit instead of moving an object. Right-drag orbits, Shift+right-drag pans, and the wheel or +/- zooms.
+Each accepted keyboard nudge is one undo step. Without move snapping, an ordinary ground-direction arrow nudge is 0.5 metre. With no selection, or with Ctrl held, arrows orbit instead of moving an object.
 
-**Snap (B)** toggles move and rotation snapping; press **B** while the canvas has focus for the same action. **Grid step (m)** offers 0.1, 0.25, 0.5 and 1 metre. Snapped arrow moves use the selected grid step. Rotation snaps to 15 degrees while Snap is on. Hold **Alt** to reverse snapping for the current move or turn.
+To move the camera:
+
+| Mouse and keys | Camera |
+| --- | --- |
+| **Alt** + left drag, or right drag | Orbit. |
+| Middle drag, or **Shift** + right drag | Pan. |
+| **Alt** + right drag | Dolly in and out. |
+| Hold the right button, then **W**, **A**, **S**, **D** | Fly forward, left, back and right. **Q** goes down and **E** up; **Shift** flies faster. |
+| Wheel, or **+** / **-** | Zoom. |
+| **F** | Frame the selection. |
+
+Camera moves never change the level. If you prefer **W**, **E** and **R** for Move, Rotate and Scale, choose **Edit > Preferences > Open preferences...** (Ctrl+,) and set **Viewport keymap** to **W/E/R**.
+
+**Snap (B)** toggles move and rotation snapping; press **B** while the canvas has focus for the same action. **Grid step (m)** offers 0.1, 0.25, 0.5 and 1 metre. Snapped arrow moves use the selected grid step. Rotation snaps to 15 degrees while Snap is on. Hold **Shift** while dragging to reverse snapping for that drag, or hold **Alt** to reverse it for arrow-key nudges.
 
 ## Duplicate, copy and paste
 
@@ -78,6 +106,8 @@ Choose **Cancel** (or Escape) to keep everything. **Delete anyway** removes the 
 
 **Ctrl+Z** undoes a document edit; **Ctrl+Y** redoes it. **Ctrl+S** saves the active level through its validation, save policy and file-conflict checks.
 
-If another program changed or removed the saved file, BED keeps your draft and asks you to resolve the conflict. Stop Play before saving. Use Save for an existing level; Save as for levels is still being finished. Play and export use saved files and retain the undo history.
+If another program changed or removed the saved file, BED keeps your draft and asks you to resolve the conflict. Stop Play before saving. Use **Save** for a level. **Save as** is unavailable for levels and says why: a level keeps its place in the project. Play and export use saved files and retain the undo history.
+
+**Save all** and **Close project** handle levels and data files together. Closing the 3D view's tab or window, or the level with **Ctrl+W** or **Ctrl+F4**, asks **Save**, **Don't Save** or **Cancel** if the level has unsaved changes.
 
 Next: [browse assets](assets.md), [run Play](playing.md), [export a build](exporting.md), or [see all keyboard controls](keyboard.md).

@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Editor;
+using Bed;
+using Bed.Editor;
 using Brutal.ImGuiApi;
 
 namespace LightsPlugin;

@@ -18,24 +18,26 @@ Library and adapter samples build a component for a host; they are not standalon
 | Checkers.Game | The same checkers rules in a standalone player; `dotnet run --project samples/Checkers.Game/Checkers.Game.csproj` opens a window. |
 | CheckersAdapter | Checkers project integration for the general host; `dotnet build samples/CheckersAdapter/CheckersAdapter.csproj -c Release`, then use the host's adapter-loading route with CheckersProject. |
 | CheckersProject | Two editable checkers positions; open `samples/CheckersProject` in the host with CheckersAdapter loaded; see [its README](CheckersProject/README.md). |
-| StarterAdapter | A minimal project adapter with a game rule beyond the schema; `dotnet build samples/StarterAdapter/StarterAdapter.csproj -c Release`, then load it in the matching host for StarterProject. |
+| StarterAdapter | A minimal project adapter with a game rule beyond the schema, plus [compiled managed-source hooks](StarterAdapter/ManagedSourceHooks.cs) for admission, saved events, owner ticks, background checks and multiline text; `dotnet build samples/StarterAdapter/StarterAdapter.csproj -c Release`, then load it in the matching host for StarterProject. |
 | StarterProject | Small generic data and a reference map; open `samples/StarterProject` in the host; see [its README](StarterProject/README.md). |
 | RoutePuzzle | Runtime-only route model/loader; `dotnet build samples/RoutePuzzle/RoutePuzzle.csproj -c Release`; use its authoring companion to play, as [documented](RoutePuzzle/README.md). |
+| RoutePuzzle.Game | Saved-files console player with cooperative Pause/Step/Resume; `dotnet build samples/RoutePuzzle.Game/RoutePuzzle.Game.csproj`; run with `--project samples/RoutePuzzle --seconds 5 --route brook,summit`. No window/audio in automated tests. |
 | RoutePuzzle.Authoring | Data editing, frozen Check and workspace-owned Play; `dotnet build samples/RoutePuzzle.Authoring/RoutePuzzle.Authoring.csproj -c Release`, then follow [the opening instructions](RoutePuzzle/README.md#opening-it-after-integration). |
 | FirstTask | The newcomer task: change a settings preset, see a mistake caught, check, save and undo; `dotnet build samples/FirstTask/FirstTask.csproj -c Release`, then open `samples/FirstTask` in BED and follow [the first task guide](../docs/guide/first_task.md). |
 | RuntimeInspect | Print a saved level’s objects, mesh parts and textures without an editor; `dotnet run --project samples/RuntimeInspect/RuntimeInspect.csproj -- samples/SceneStarterProject` after preparing the sample in BED once. See [its README](RuntimeInspect/README.md). |
 | SceneStarter | A tiny self-made game that loads a level with only the runtime reader; used to prove an exported build runs without BED. `dotnet build samples/SceneStarter/SceneStarter.csproj -c Release`. |
+| PhysicsStarter | [Game-owned headless physics](PhysicsStarter/README.md) from explicitly enabled saved scenes, pinned native integration; `dotnet build samples/PhysicsStarter/PhysicsStarter.csproj` then `--project <saved-project> --seconds 1`. |
 | SceneStarterAdapter | Connects BED to SceneStarter so Play launches the sample as its own program; `dotnet build samples/SceneStarterAdapter/SceneStarterAdapter.csproj -c Release`. |
 
 ## Check the sample index
 
 Run `python tools/check_samples_index.py --root .` to check that sample projects belong to the solution and that documented source paths exist. It does not build or run samples. Its report distinguishes checked-in source, generated outputs and paths you must supply.
 
-To build the samples and the solution's other projects, run `dotnet build Brutal.Authoring.slnx -c Release`. Every sample project belongs to that solution, including Tiles and Ladder under its tests folder. Check the build result before running a sample.
+To build the samples and the solution's other projects, run `dotnet build Bed.slnx -c Release`. Every sample project belongs to that solution, including Tiles and Ladder under its tests folder. Check the build result before running a sample.
 
 The index checker does not run that build, GUI samples, import workloads or tests.
 
 
 ## Runtime assets
 
-The game-facing `src/Brutal.Authoring.Runtime` library reads saved project asset generations and BEDMESH geometry without an Editor, ImGui or BRUTAL dependency. Build it with `dotnet build src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj -c Release`. It does not derive assets or grant export permission.
+The game-facing `src/Bed.Runtime` library reads saved project asset generations and BEDMESH geometry without an Editor, ImGui or BRUTAL dependency. Build it with `dotnet build src/Bed.Runtime/Bed.Runtime.csproj -c Release`. It does not derive assets or grant export permission.

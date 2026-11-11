@@ -8,7 +8,7 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <ProjectReference Include="../../samples/RoutePuzzle.Authoring/RoutePuzzle.Authoring.csproj" />
-    <ProjectReference Include="../../src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj" />
+    <ProjectReference Include="../../src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj" />
     <None Include="../../samples/RoutePuzzle/data/routes.json" Link="Fixture/data/routes.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../samples/RoutePuzzle/schemas/routes.schema.json" Link="Fixture/schemas/routes.schema.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

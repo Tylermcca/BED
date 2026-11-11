@@ -1,6 +1,6 @@
 # Check threads and lifetime
 
-This is the generic check contract, not a promise that every project object is thread-safe. It describes `ICheck`, `Checks` and `CheckRun` in [Checks.cs](../../src/Brutal.Authoring.Data/Checks.cs).
+This is the generic check contract, not a promise that every project object is thread-safe. It describes `ICheck`, `Checks` and `CheckRun` in [Checks.cs](../../src/Bed.Data/Checks.cs).
 
 ## Keep project and registry entry points on their owner thread
 
@@ -28,7 +28,7 @@ The existing worker continuation observes late faults and retains the linked tok
 
 ## Focused proof and limits
 
-[CheckRunPublicationTests.cs](../../tests/Brutal.Authoring.Tests/CheckRunPublicationTests.cs) uses invented temporary JSON, public seams and controlled completion signals. It covers valid/invalid progress, result copying/normalization, exact malformed-result/fault diagnostics, late progress, cancellation with a lingering worker, reentrant progress and nonblocking status reads during controlled findings enumeration. Fixtures release and await their own work before deleting their own synthetic directory. Redirect TEMP/TMP into the caller's isolated test area when running there.
+[CheckRunPublicationTests.cs](../../tests/Bed.Tests/CheckRunPublicationTests.cs) uses invented temporary JSON, public seams and controlled completion signals. It covers valid/invalid progress, result copying/normalization, exact malformed-result/fault diagnostics, late progress, cancellation with a lingering worker, reentrant progress and nonblocking status reads during controlled findings enumeration. Fixtures release and await their own work before deleting their own synthetic directory. Redirect TEMP/TMP into the caller's isolated test area when running there.
 
 These focused seam tests are not proof of exhaustive interleavings or runtime memory-order behavior, and they do not replace compilation, serial UI integration or full native gates. No torn-read defect was reproduced by the source review, and no allocation, latency or throughput gain is claimed. The private immutable status allocates on accepted progress, cancellation and terminal transitions; measure if a workload makes that material.
 

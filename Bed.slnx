@@ -1,0 +1,52 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Bed.Runtime/Bed.Runtime.csproj" />
+    <Project Path="src/Bed/Bed.csproj" />
+    <Project Path="src/Bed.Editor.Text/Bed.Editor.Text.csproj" />
+    <Project Path="src/Bed.Editor/Bed.Editor.csproj" />
+    <Project Path="src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj" />
+    <Project Path="src/Bed.Editor.App/Bed.Editor.App.csproj" />
+    <Project Path="src/Bed.Launcher/Bed.Launcher.csproj" />
+    <Project Path="src/Bed.Import/Bed.Import.csproj" />
+    <Project Path="src/Bed.Agent.Cli/Bed.Agent.Cli.csproj" />
+    <Project Path="src/Bed.Agent/Bed.Agent.csproj" />
+    <Project Path="src/Bed.Data/Bed.Data.csproj" />
+  </Folder>
+  <Folder Name="/third_party/">
+    <Project Path="third_party/ImCode/src/ImCode.Text/ImCode.Text.csproj" />
+    <Project Path="third_party/ImCode/src/ImCode/ImCode.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Toy/Toy.csproj" />
+    <Project Path="samples/SceneTool/SceneTool.csproj" />
+    <Project Path="samples/DataCheck/DataCheck.csproj" />
+    <Project Path="samples/ImportCheck/ImportCheck.csproj" />
+    <Project Path="samples/LightsPlugin/LightsPlugin.csproj" />
+    <Project Path="samples/Checkers/Checkers.csproj" />
+    <Project Path="samples/Checkers.App/Checkers.App.csproj" />
+    <Project Path="samples/Checkers.Game/Checkers.Game.csproj" />
+    <Project Path="samples/StarterAdapter/StarterAdapter.csproj" />
+    <Project Path="samples/CheckersAdapter/CheckersAdapter.csproj" />
+    <Project Path="samples/RoutePuzzle/RoutePuzzle.csproj" />
+    <Project Path="samples/RoutePuzzle.Game/RoutePuzzle.Game.csproj" />
+    <Project Path="samples/RoutePuzzle.Authoring/RoutePuzzle.Authoring.csproj" />
+    <Project Path="samples/FirstTask/FirstTask.csproj" />
+    <Project Path="samples/SceneStarter/SceneStarter.csproj" />
+    <Project Path="samples/PhysicsStarter/PhysicsStarter.csproj" />
+    <Project Path="samples/RuntimeInspect/RuntimeInspect.csproj" />
+    <Project Path="samples/SceneStarterAdapter/SceneStarterAdapter.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/SceneShaderCompiler/SceneShaderCompiler.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Bed.Tests/Bed.Tests.csproj" />
+    <Project Path="samples/Tiles/Tiles.csproj" />
+    <Project Path="samples/Ladder/Ladder.csproj" />
+    <Project Path="tests/RoutePuzzle.Sample.Tests/RoutePuzzle.Sample.Tests.csproj" />
+    <Project Path="tests/LinkedPlayTestGame/LinkedPlayTestGame.csproj" />
+    <Project Path="tests/LinkedBuildTestGame/LinkedBuildTestGame.csproj" />
+    <Project Path="tests/ProjectPlayTestGame/ProjectPlayTestGame.csproj" />
+  </Folder>
+</Solution>
+

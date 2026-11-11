@@ -1,0 +1,1012 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BED prefab definition v1",
+  "$ref": "#/$defs/definition",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,127}$"
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "text": {
+      "type": "string",
+      "maxLength": 65536
+    },
+    "scalar": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": -3.4028234663852886e+38,
+        "maximum": 3.4028234663852886e+38
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "quat": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": -3.4028234663852886e+38,
+        "maximum": 3.4028234663852886e+38
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "size": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 3.4028234663852886e+38
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "pivot": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "order": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "filter": {
+      "enum": [
+        "nearest",
+        "linear"
+      ]
+    },
+    "space": {
+      "enum": [
+        "3d",
+        "2d-xy"
+      ],
+      "default": "3d"
+    },
+    "sprite": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "$ref": "#/$defs/size"
+        },
+        "pivot": {
+          "$ref": "#/$defs/pivot"
+        },
+        "order": {
+          "$ref": "#/$defs/order"
+        },
+        "filter": {
+          "$ref": "#/$defs/filter"
+        }
+      },
+      "required": [
+        "size",
+        "pivot",
+        "order",
+        "filter"
+      ],
+      "additionalProperties": false
+    },
+    "object": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "asset": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "position": {
+          "$ref": "#/$defs/vec3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/quat"
+        },
+        "scale": {
+          "$ref": "#/$defs/vec3"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/scalar"
+          },
+          "maxProperties": 1024,
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "parent": {
+          "$ref": "#/$defs/id"
+        },
+        "sprite": {
+          "$ref": "#/$defs/sprite"
+        },
+        "references": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/id"
+          },
+          "maxProperties": 1024,
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "body": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "placement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "position": {
+          "$ref": "#/$defs/vec3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/quat"
+        },
+        "scale": {
+          "$ref": "#/$defs/vec3"
+        },
+        "parent": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "target": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            }
+          },
+          "required": [
+            "node"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "slot": {
+              "$ref": "#/$defs/key"
+            }
+          },
+          "required": [
+            "slot"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "node": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/key"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "asset": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "position": {
+          "$ref": "#/$defs/vec3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/quat"
+        },
+        "scale": {
+          "$ref": "#/$defs/vec3"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/scalar"
+          },
+          "maxProperties": 1024,
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "parentKey": {
+          "$ref": "#/$defs/key"
+        },
+        "sprite": {
+          "$ref": "#/$defs/sprite"
+        },
+        "references": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/target"
+          },
+          "maxProperties": 1024,
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "body": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "required": [
+        "key",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "slot": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/key"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "required"
+      ],
+      "additionalProperties": false
+    },
+    "definition": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "prefab-definition"
+        },
+        "version": {
+          "const": 1
+        },
+        "guid": {
+          "$ref": "#/$defs/key"
+        },
+        "space": {
+          "$ref": "#/$defs/space"
+        },
+        "root": {
+          "$ref": "#/$defs/key"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "maxItems": 10000,
+          "minItems": 1
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/slot"
+          },
+          "maxItems": 256
+        }
+      },
+      "required": [
+        "kind",
+        "version",
+        "guid",
+        "root",
+        "nodes",
+        "slots"
+      ],
+      "additionalProperties": false
+    },
+    "base": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "definition": {
+          "$ref": "#/$defs/definition"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "definition"
+      ],
+      "additionalProperties": false
+    },
+    "override": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "enum": [
+                "/position",
+                "/scale"
+              ]
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "enum": [
+                "/rotation"
+              ]
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "#/$defs/quat"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "enum": [
+                "/asset"
+              ]
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "type": "string",
+              "pattern": "^/properties/(?:[^~/]|~[01])+$"
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "#/$defs/scalar"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "type": "string",
+              "pattern": "^/references/(?:[^~/]|~[01])+$"
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "$ref": "#/$defs/id"
+                }
+              },
+              "required": [
+                "object"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "enum": [
+                "/sprite/size"
+              ]
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "#/$defs/size"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "enum": [
+                "/sprite/pivot"
+              ]
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "#/$defs/pivot"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "enum": [
+                "/sprite/order"
+              ]
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "#/$defs/order"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "enum": [
+                "/sprite/filter"
+              ]
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "#/$defs/filter"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "type": "string",
+              "pattern": "^(?:/asset|/(?:properties|references)/(?:[^~/]|~[01])+)$"
+            },
+            "op": {
+              "const": "unset"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "const": "/body"
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "#/$defs/body"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "const": "/body"
+            },
+            "op": {
+              "const": "unset"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "const": "/body/motion"
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "enum": [
+                "static",
+                "kinematic",
+                "dynamic"
+              ]
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "const": "/body/shape"
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "#/$defs/bodyShape"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "const": "/body/massKg"
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3.4028234663852886e+38
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "const": "/body/massKg"
+            },
+            "op": {
+              "const": "unset"
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "$ref": "#/$defs/key"
+            },
+            "field": {
+              "const": "/body/friction"
+            },
+            "op": {
+              "const": "set"
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [
+            "node",
+            "field",
+            "op",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "instance": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/key"
+        },
+        "source": {
+          "$ref": "#/$defs/key"
+        },
+        "base": {
+          "$ref": "#/$defs/id"
+        },
+        "placement": {
+          "$ref": "#/$defs/placement"
+        },
+        "nodeIds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/id"
+          },
+          "maxProperties": 10000,
+          "propertyNames": {
+            "pattern": "^[0-9a-f]{32}$"
+          }
+        },
+        "bindings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/id"
+          },
+          "maxProperties": 256,
+          "propertyNames": {
+            "pattern": "^[0-9a-f]{32}$"
+          }
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/override"
+          },
+          "maxItems": 10000
+        }
+      },
+      "required": [
+        "key",
+        "source",
+        "base",
+        "placement",
+        "nodeIds",
+        "bindings",
+        "overrides"
+      ],
+      "additionalProperties": false
+    },
+    "bodyShape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "box"
+            },
+            "halfExtents": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 3.4028234663852886e+38
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "center": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "required": [
+            "kind",
+            "halfExtents"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "sphere"
+            },
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3.4028234663852886e+38
+            },
+            "center": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "required": [
+            "kind",
+            "radius"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "capsule-y"
+            },
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3.4028234663852886e+38
+            },
+            "halfHeight": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3.4028234663852886e+38
+            },
+            "center": {
+              "$ref": "#/$defs/vec3"
+            }
+          },
+          "required": [
+            "kind",
+            "radius",
+            "halfHeight"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "mesh-bounds"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "motion": {
+          "enum": [
+            "static",
+            "kinematic",
+            "dynamic"
+          ]
+        },
+        "shape": {
+          "$ref": "#/$defs/bodyShape"
+        },
+        "friction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "massKg": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 3.4028234663852886e+38
+        }
+      },
+      "required": [
+        "motion",
+        "shape",
+        "friction"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "motion": {
+                "const": "dynamic"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "massKg"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "massKg"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -4,6 +4,6 @@
     <AssemblyName>importcheck</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Brutal.Authoring.Import/Brutal.Authoring.Import.csproj" />
+    <ProjectReference Include="../../src/Bed.Import/Bed.Import.csproj" />
   </ItemGroup>
 </Project>

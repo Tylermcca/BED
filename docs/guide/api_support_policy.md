@@ -1,18 +1,18 @@
 # API support and compatibility review
 
-Status: proposed maintenance policy for the existing libraries; not a release announcement, product-name decision, package-version assignment or binary-compatibility certificate. Names here are current source project names. No support period or platform certification is promised by this document.
+Status: maintenance/review policy with the approved 0.2 plugin API line; not a release announcement, product-name decision, package-version assignment or binary-compatibility certificate. Names here are current source project names. No support period or platform certification is promised by this document.
 
 ## Three versions with different jobs
 
-- `AuthoringInfo.ApiVersion` currently equals `0.1.0`. A plugin manifest's `Api` is the minimum host API it requests. This is a host admission check, not a comparison of assemblies or proof that all plugin operations work.
-- A package version identifies a distribution. Its first public value, package IDs and release scope still need owner approval. Do not use the historical `0.0.0-local.a194` experiment as a selected release version. Package and plugin API numbers need not be numerically identical; every future release note must state both.
+- `AuthoringInfo.ApiVersion` currently equals `0.2.0`. The default host rejects manifests requiring the old 0.1 line; rebuild/review the plugin for the selected host, then declare `"api":"0.2"`. Changing the manifest alone cannot repair a binary incompatibility. A plugin manifest's `Api` is the minimum host API it requests. This is a host admission check, not a comparison of assemblies or proof that all plugin operations work.
+- A distribution version identifies a build. The reviewed source build uses `0.2.1-rc.1` (assembly version `0.2.1.0`); that does not change the plugin admission API version or select independently versioned NuGet package IDs/support. Do not use the historical `0.0.0-local.a194` experiment as a selected version. Distribution and plugin API numbers need not match; release notes must distinguish them.
 - Document/schema versions and command/journal revisions govern persisted data. An API or package increment does not migrate documents. `AuthoringInfo.PlanRevision` is an existing public constant, not a package version; removing or changing it requires API review. Do not quietly remove it as internal-document cleanup.
 
 ## Existing plugin admission behavior
 
-`ApiVersion.Satisfies(required)` in `src/Brutal.Authoring/Plugins.cs` requires equal major versions. When the host major is zero, the minor must also match and the host patch must be at least the requested patch. For a positive major, the host's major/minor/patch tuple must be at least the requested tuple. Thus a `0.1.2` host accepts `0.1.0`, but a `0.2.0` host does not accept `0.1.0`. A `1.2.0` host accepts `1.1.9`, not `2.0.0`.
+`ApiVersion.Satisfies(required)` in `src/Bed/Plugins.cs` requires equal major versions. When the host major is zero, the minor must also match and the host patch must be at least the requested patch. For a positive major, the host's major/minor/patch tuple must be at least the requested tuple. Thus a `0.1.2` host accepts `0.1.0`, but a `0.2.0` host does not accept `0.1.0`. A `1.2.0` host accepts `1.1.9`, not `2.0.0`.
 
-`ApiVersion.Parse` accepts one to three numeric components with missing components treated as zero; it does not support prerelease/build suffixes. Do not feed a NuGet prerelease label to it. Keep this admission behavior unchanged unless a separately reviewed API change explicitly replaces it. These statements describe source, not results from a new executed test.
+`ApiVersion.Parse` accepts one to three numeric components with missing components treated as zero; it does not support prerelease/build suffixes. Do not feed a NuGet prerelease label to it. Keep this admission behavior unchanged unless a separately reviewed API change explicitly replaces it. The rules are unchanged. ApiLineApi02Tests exercises default-host admission for 0.1, 0.2, a newer 0.2 patch, 0.3 and 1.0; PluginAcceptanceTests retains explicit compatible registration on both 0.1 and 0.2 hosts.
 
 ## Proposed change and deprecation rules
 
@@ -38,9 +38,15 @@ Until that workflow runs, label compatibility UNKNOWN rather than green. Current
 
 Provenance: MIXED. Existing semantics come from AuthoringInfo.cs/Plugins.cs and framework/dependency project files. Review/deprecation workflow is INVENTED for these boundaries; it does not replace owner release decisions.
 
+## 0.2.1 review inventory
+
+The [current source-build review](../api/0_2_1_api_review.md) adds a [metadata delta](../api/0_2_1_api_delta.json) for every src assembly between the preview version-introduction snapshot and the reviewed main commit. All 510 new entries are listed, including generated members; removed and changed signatures/annotations are retained. It also records XML parameter gaps, assembly placement, CLI wire behavior and candidates for internal implementation status.
+
+This is a manual review baseline, not an automatic compatibility gate or approval of an API change. It does not replace the two-source detector below. Known old method/type removals require a migration/API-line decision before claiming binary compatibility; an unchanged AuthoringInfo.ApiVersion does not resolve them. Rebuild matching adapters against the selected host and review its compatibility ledger. No support duration or general prerelease binary guarantee is introduced.
+
 ## Current provisional tripwire
 
-`docs/api/source_compatibility_baseline.json` captures exactly two snapshots: all of AuthoringInfo.cs, and Plugins.cs's preamble plus its leading ApiVersion declaration. No other public types or enum values are inventoried. The detector uses the current column-zero closing-brace layout, not a C# grammar; layout drift is a review signal/error, not something it silently normalizes. It stops before later declarations. Captured method bodies/comments/whitespace deliberately overflag non-API changes.
+`docs/api/source_compatibility_baseline.json` captures exactly two snapshots: all of AuthoringInfo.cs, and Plugins.cs's preamble plus its leading ApiVersion declaration. No other public types or enum values are inventoried by that detector. The detector uses the current column-zero closing-brace layout, not a C# grammar; layout drift is a review signal/error, not something it silently normalizes. It stops before later declarations. Captured method bodies/comments/whitespace deliberately overflag non-API changes.
 
 Run `python -B tools/check_api_source_baseline.py` from a source checkout. Exit0 means only those two snapshots are unchanged; exit1 means source drift; exit2 means invalid/missing inputs or extraction failure. None means complete API compatibility. `python -B tools/test_api_source_baseline.py` runs the bounded stdlib detector tests. It detects a synthetic signature/constant change and fails closed on missing scope; no C# is compiled or loaded. Enum/public-package compatibility remains outside this partial gate.
 

@@ -18,15 +18,15 @@ Source anchors below are relative to the repository at the stated base.
 
 | Existing source | Fact and consequence |
 | --- | --- |
-| `src/Brutal.Authoring/DocumentSession.cs:27,54,106-116,163-172` | `DocumentSession<TDoc>` already supplies typed current state, revision, commands and batch edits. Reuse it; do not add another undo journal. |
-| `src/Brutal.Authoring/DocumentSession.cs:250-301` | Save atomically writes and updates its disk baseline; `CheckDisk` and `Revert` are separate operations. Atomic write alone is **not** a conflict policy. Revert discards history only after a successful parse/validation. |
-| `src/Brutal.Authoring/Scene.cs:54-88,366` | Scene is immutable; SceneFormat checks the configured kind and version; SceneKit registers typed commands. A custom scene kind is not necessarily the literal string `scene`. |
-| `src/Brutal.Authoring.Editor/SceneEditing.cs:15-47` | Existing typed outline, object fields and command mapping can bind to an `EditorModel<Scene>`. |
-| `src/Brutal.Authoring.Editor/EditorModel.cs:134-145,242-266,432-447` | The editor holds the supplied session, selection and Play lifecycle; commands and revision-aware batches already provide the mutation boundary. |
-| `src/Brutal.Authoring.Data/DataProject.cs:500-565,591-665` | DataFile owns a `DocumentSession<DataDocument>`; Open hardcodes DataFormat. Save enforces read-only, check and external-change rules. Close directly drops its session, including unsaved edits. The host must guard destructive closure. |
-| `src/Brutal.Authoring.Editor.ImGui/DataWorkspace.cs:36-38,62-95,205-253` | Current windows and configuration callbacks are data-specific. Show preserves the previous active file on refusal and checks that a cached window still holds the file's own session. Preserve these facts. |
-| `src/Brutal.Authoring.Editor.ImGui/DataWorkspace.cs:101-137,490-525,541-583` | Play stops before switching/replacing an owner. Pending saves check session identity **and** revision. File panels/configuration use the existing session, and their failures do not invalidate the file. |
-| `samples/SceneTool/Program.cs:48-66`; `tests/Brutal.Authoring.Tests/SceneToolTests.cs:133` | A scene consumer and explicit outside-edit conflict test exist. Their existence is not evidence that the workspace already hosts scenes. |
+| `src/Bed/DocumentSession.cs:27,54,106-116,163-172` | `DocumentSession<TDoc>` already supplies typed current state, revision, commands and batch edits. Reuse it; do not add another undo journal. |
+| `src/Bed/DocumentSession.cs:250-301` | Save atomically writes and updates its disk baseline; `CheckDisk` and `Revert` are separate operations. Atomic write alone is **not** a conflict policy. Revert discards history only after a successful parse/validation. |
+| `src/Bed/Scene.cs:54-88,366` | Scene is immutable; SceneFormat checks the configured kind and version; SceneKit registers typed commands. A custom scene kind is not necessarily the literal string `scene`. |
+| `src/Bed.Editor/SceneEditing.cs:15-47` | Existing typed outline, object fields and command mapping can bind to an `EditorModel<Scene>`. |
+| `src/Bed.Editor/EditorModel.cs:134-145,242-266,432-447` | The editor holds the supplied session, selection and Play lifecycle; commands and revision-aware batches already provide the mutation boundary. |
+| `src/Bed.Data/DataProject.cs:500-565,591-665` | DataFile owns a `DocumentSession<DataDocument>`; Open hardcodes DataFormat. Save enforces read-only, check and external-change rules. Close directly drops its session, including unsaved edits. The host must guard destructive closure. |
+| `src/Bed.Editor.ImGui/DataWorkspace.cs:36-38,62-95,205-253` | Current windows and configuration callbacks are data-specific. Show preserves the previous active file on refusal and checks that a cached window still holds the file's own session. Preserve these facts. |
+| `src/Bed.Editor.ImGui/DataWorkspace.cs:101-137,490-525,541-583` | Play stops before switching/replacing an owner. Pending saves check session identity **and** revision. File panels/configuration use the existing session, and their failures do not invalidate the file. |
+| `samples/SceneTool/Program.cs:48-66`; `tests/Bed.Tests/SceneToolTests.cs:133` | A scene consumer and explicit outside-edit conflict test exist. Their existence is not evidence that the workspace already hosts scenes. |
 
 **Important:** wrapping DataWorkspace alone is insufficient. Direct DataFile/agent opens would otherwise parse the same scene as generic JSON and create a second session. Typed admission must cover those entry points too.
 
@@ -35,7 +35,7 @@ Source anchors below are relative to the repository at the stated base.
 **INVENTED:** a small type-erased lifetime surface with typed access behind it. This is an interface sketch, not copy-ready declarations or an approved persisted schema.
 
 ```csharp
-// Proposed in Brutal.Authoring.Editor; no ImGui/runtime dependency.
+// Proposed in Bed.Editor; no ImGui/runtime dependency.
 interface IDocumentHostEntry
 {
     DocumentKey Key { get; }          // project identity + admitted file identity
@@ -104,14 +104,14 @@ This is a future work split, not permission to edit paths currently owned by a S
 | Path | Future owner and narrow responsibility |
 | --- | --- |
 | `docs/design/typed_host.md` | SC-S0a: this contract only. |
-| New `src/Brutal.Authoring.Editor/DocumentHost.cs` | SC-S1a host owner: entry/key/binding/result types and single-session registry; no UI references. |
-| New `src/Brutal.Authoring.Editor/SceneDocumentEntry.cs` | Same host owner: Scene session/model binding and policy; use SC-S0b reader decisions, no duplicate parser. |
-| `src/Brutal.Authoring.Data/DataProject.cs` | Same host owner, explicitly coordinated before SC-S1a starts: narrow claimed-file admission guard and data-entry reuse. Preserve data validation, repair, save transaction and diagnostics. This additional shared path is necessary to prevent a second writer, not a general DataProject redesign. |
-| `src/Brutal.Authoring.Editor.ImGui/DataWorkspace.cs` | SC-S1a/b/c serialized owner: registry-backed typed dispatch, cached typed views, shared current-entry/lifecycle routing. No simultaneous behavior writer. |
-| `src/Brutal.Authoring.Editor.ImGui/EditorWindow.cs` | SC-S1b/c, coordinated with the shell owner: generic model attachment and typed save/close routes; preserve menu IDs, Ui wrappers and keyboard facts. |
-| New `tests/Brutal.Authoring.Tests/SceneHostConnectionTests.cs` | Same host owner: admission, wrong-kind and authority identity tests. |
-| New `tests/Brutal.Authoring.Tests/TypedHostLifecycleTests.cs` | SC-S1c: dirty/save/close/external-change and stale completion proofs. |
-| `src/Brutal.Authoring/Scene.cs`, `DocumentSession.cs`, existing SceneEditing/Viewport | Reuse unchanged for S1a. Any required change returns to its owning contract first. Scene reader work belongs to SC-S0b; asset identities/resolution to SC-S0c/AS01; GPU ownership to SC-S5c. |
+| New `src/Bed.Editor/DocumentHost.cs` | SC-S1a host owner: entry/key/binding/result types and single-session registry; no UI references. |
+| New `src/Bed.Editor/SceneDocumentEntry.cs` | Same host owner: Scene session/model binding and policy; use SC-S0b reader decisions, no duplicate parser. |
+| `src/Bed.Data/DataProject.cs` | Same host owner, explicitly coordinated before SC-S1a starts: narrow claimed-file admission guard and data-entry reuse. Preserve data validation, repair, save transaction and diagnostics. This additional shared path is necessary to prevent a second writer, not a general DataProject redesign. |
+| `src/Bed.Editor.ImGui/DataWorkspace.cs` | SC-S1a/b/c serialized owner: registry-backed typed dispatch, cached typed views, shared current-entry/lifecycle routing. No simultaneous behavior writer. |
+| `src/Bed.Editor.ImGui/EditorWindow.cs` | SC-S1b/c, coordinated with the shell owner: generic model attachment and typed save/close routes; preserve menu IDs, Ui wrappers and keyboard facts. |
+| New `tests/Bed.Tests/SceneHostConnectionTests.cs` | Same host owner: admission, wrong-kind and authority identity tests. |
+| New `tests/Bed.Tests/TypedHostLifecycleTests.cs` | SC-S1c: dirty/save/close/external-change and stale completion proofs. |
+| `src/Bed/Scene.cs`, `DocumentSession.cs`, existing SceneEditing/Viewport | Reuse unchanged for S1a. Any required change returns to its owning contract first. Scene reader work belongs to SC-S0b; asset identities/resolution to SC-S0c/AS01; GPU ownership to SC-S5c. |
 
 Retain the data constructor, DataFilePanel and ConfigureFile signatures. They continue to run only for DataDocument. Add a typed registration surface rather than passing Scene through those delegates. Legacy `Active`, `Window`, `TableOf`, data checks/proposals and reference-map calls are data-only compatibility views: on an active scene they return their existing nullable absence/refusal form, never the last data file. A new current-entry surface drives shared shell actions for either kind. Any caller assuming non-null data state must be audited in SC-S1a before scene activation.
 

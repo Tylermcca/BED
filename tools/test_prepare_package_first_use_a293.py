@@ -192,7 +192,7 @@ class PreparationTests(unittest.TestCase):
 
     def test_public_template_and_program_have_no_checkout_or_private_path_dependency(self):
         text=self.template.read_text()+self.program.read_text()
-        for marker in ["C:\\code","C:/code","codex/","../../src","BRUTAL_AUTHORING","Brutal.Authoring.slnx","/home/","/Users/"]:
+        for marker in ["C:\\code","C:/code","codex/","../../src","BRUTAL_AUTHORING","Bed.slnx","/home/","/Users/"]:
             self.assertNotIn(marker,text)
         self.assertIn("DataKit.Session",text);self.assertIn("DataKit.Open",text)
         self.assertIn("session.Undo()",text);self.assertIn("session.Redo()",text)

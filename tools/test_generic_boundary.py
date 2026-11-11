@@ -51,7 +51,7 @@ const string Help = "Acme and Zorbit are example consumers, not library dependen
         failures,notes=boundary.scan_source('class Generic { const string Credit = "Acme"; }',"synthetic.cs",ROOTS)
         self.assertEqual([],failures);self.assertEqual(1,len(notes))
     def test_generic_words_and_brutal_names_are_not_consumer_roots(self):
-        self.assertEqual([],self.codes('namespace Brutal.Authoring; class ReadOnlyData { int Zorbitglyph; int Acmestic; }'))
+        self.assertEqual([],self.codes('namespace Bed; class ReadOnlyData { int Zorbitglyph; int Acmestic; }'))
     def test_escaped_identifier_and_interpolated_raw_string_require_review(self):
         for source in [r'class \u0041cme {}','class Generic { string x = $$"""{{AcmeCatalog.Name}}"""; }']:
             with self.subTest(source=source):self.assertIn("GB900",self.codes(source))

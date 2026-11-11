@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Brutal.Authoring;
+using Bed;
 
 namespace SceneStarter;
 
@@ -36,10 +36,13 @@ public static class Program
                 }
                 if(string.IsNullOrWhiteSpace(project))throw new ArgumentException("Choose a saved project with --project or BED_PROJECT.");
                 var saved=SavedScene.Open(project);
-                output.WriteLine($"SceneStarter loaded saved level: {saved.Level.Scene.Objects.Count()} objects, {saved.Meshes.Count} meshes.");output.Flush();
+                if(saved.Level2 is {} v2)output.WriteLine($"SceneStarter loaded saved level-v2: {v2.Scene.Objects.Length} objects, {saved.Meshes.Count} meshes, {saved.Textures.Count} textures.");
+                else output.WriteLine($"SceneStarter loaded saved level: {saved.Level.Scene.Objects.Count()} objects, {saved.Meshes.Count} meshes.");output.Flush();
                 if(seconds is {} duration)Thread.Sleep(TimeSpan.FromSeconds(duration));else if(!exitChosen)Thread.Sleep(Timeout.Infinite);
                 return exitCode;
             }
+            if(args is ["--compile-scene2",var sceneProject])
+            { Scene2Compiler.Compile(sceneProject);output.WriteLine("SceneStarter generated the saved scene-v2 runtime files.");return 0; }
             if(args is ["--build",var inputDirectory,var outputDirectory])
             {ExportBuild.Create(inputDirectory,outputDirectory,AppContext.BaseDirectory);output.WriteLine("SceneStarter build copied checked saved project files.");return 0;}
             if(args is ["--smoke-payload",var payloadPath])

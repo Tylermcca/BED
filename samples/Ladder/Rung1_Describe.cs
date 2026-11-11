@@ -1,4 +1,4 @@
-using Brutal.Authoring.Editor;
+using Bed.Editor;
 
 namespace Ladder;
 

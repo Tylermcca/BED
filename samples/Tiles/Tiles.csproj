@@ -5,6 +5,6 @@
     <RootNamespace>Tiles</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Brutal.Authoring/Brutal.Authoring.csproj" />
+    <ProjectReference Include="../../src/Bed/Bed.csproj" />
   </ItemGroup>
 </Project>

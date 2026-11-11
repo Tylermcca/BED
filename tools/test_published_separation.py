@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 
 import pytest
 
-FAMILY = "Brutal.Authoring"
+FAMILY = "Bed"
 PROBE_NAME = FAMILY + ".InspectionProbe"
 PRUNED = {"bin", "obj", ".git", "codex", ".gate", "artifacts", ".vs", ".idea", "__pycache__"}
 PROBE_SOURCE = r'''
@@ -257,7 +257,7 @@ def test_neutral_runtime_and_legacy_editor_names_are_not_the_authoring_family(tm
     assert len(_inspect(output,meta,policy,"Neutral.Client")["files"])==2
 
 
-@pytest.mark.parametrize("name",["Brutal.Authoring.dll","BRUTAL.AUTHORING.EDITOR.EXE","Native.Host.exe","Native.Host.runtimeconfig.json","Native.Host.deps.json","Native.Host.pdb","schemas/table.json","table.SCHEMA.JSON","folder/host-map.json",".editorconfig"])
+@pytest.mark.parametrize("name",["Bed.dll","BED.EDITOR.EXE","Native.Host.exe","Native.Host.runtimeconfig.json","Native.Host.deps.json","Native.Host.pdb","schemas/table.json","table.SCHEMA.JSON","folder/host-map.json",".editorconfig"])
 def test_filename_and_tool_content_guards_refuse_contamination(tmp_path,name):
     output,policy,meta=_fixture(tmp_path);p=output/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b"original control")
     with pytest.raises(AssertionError):_inspect(output,meta,policy,"Neutral.Client")
@@ -281,7 +281,7 @@ def test_dependency_manifest_guards_refuse_authoring(tmp_path,kind):
     if kind=="library":doc["libraries"][FAMILY+"/1"]={}
     elif kind=="target":doc["targets"]["framework"]["Native.Host/1"]={}
     elif kind=="dependency":doc["targets"]["framework"]["Neutral.Client/1"]={"dependencies":{FAMILY+".Data":"1"}}
-    else:doc["targets"]["framework"]["Neutral.Client/1"]={"runtime":{"elsewhere/Brutal.Authoring.dll":{}}}
+    else:doc["targets"]["framework"]["Neutral.Client/1"]={"runtime":{"elsewhere/Bed.dll":{}}}
     (output/"Neutral.Client.deps.json").write_text(json.dumps(doc),encoding="utf-8")
     with pytest.raises(AssertionError):_inspect(output,meta,policy,"Neutral.Client")
 

@@ -45,7 +45,7 @@ def test_every_pinvoke_is_an_export_in_the_actual_amd64_dll():
         rva = struct.unpack_from('<I', data, offset(names_rva)+i*4)[0]
         start = offset(rva)
         names.add(data[start:data.index(b'\0', start)].decode('ascii'))
-    source = (ROOT/'src/Brutal.Authoring.Editor.ImGui/AccessKitNativeTreeApi.cs').read_text() + (ROOT/'src/Brutal.Authoring.Editor.App/AccessKitNativeWindowApi.cs').read_text()
+    source = (ROOT/'src/Bed.Editor.ImGui/AccessKitNativeTreeApi.cs').read_text() + (ROOT/'src/Bed.Editor.App/AccessKitNativeWindowApi.cs').read_text()
     functions = re.findall(r'extern (?:nint|void) (accesskit_\w+)\(', source)
     assert len(functions) == 26  # A11Y01 adds the live-region and atomic setters
     assert set(functions) <= names
@@ -62,7 +62,7 @@ def test_all_role_ordinals_are_checked_against_the_vendored_header():
     mapping = {'Window':'WINDOW','MenuBar':'MENU_BAR','Menu':'MENU','MenuItem':'MENU_ITEM','Button':'BUTTON',
         'Link':'LINK','Label':'LABEL','TextInput':'TEXT_INPUT','CheckBox':'CHECK_BOX','ComboBox':'COMBO_BOX',
         'ListItem':'LIST_ITEM','Table':'TABLE','Row':'ROW','Cell':'CELL','TreeItem':'TREE_ITEM','Tab':'TAB','Dialog':'DIALOG','Status':'STATUS','Canvas':'CANVAS'}
-    source = (ROOT/'src/Brutal.Authoring.Editor.ImGui/AccessKitTreeEncoder.cs').read_text()
+    source = (ROOT/'src/Bed.Editor.ImGui/AccessKitTreeEncoder.cs').read_text()
     actual = {name:int(number) for name,number in re.findall(r'AccessKitProjectedRole\.(\w+) => (\d+)', source)}
     assert actual == {name:names.index(native) for name,native in mapping.items()}
 

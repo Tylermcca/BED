@@ -187,7 +187,7 @@ def inspect(repo, paths, names, allowlist, omissions=()):
                 text = data.decode("utf-8-sig")
                 decodings[relative] = "utf-8-sig"
             except UnicodeDecodeError:
-                if relative != "tests/Brutal.Authoring.Tests/UntypedFieldsTests.cs": raise
+                if relative != "tests/Bed.Tests/UntypedFieldsTests.cs": raise
                 text = data.decode("latin-1")
                 decodings[relative] = "latin-1 (explicit known-file fallback)"
             if "\x00" in text: raise ValueError("NUL in selected text; encoding/content review needed")

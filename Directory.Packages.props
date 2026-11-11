@@ -5,10 +5,13 @@
     <PackageVersion Include="SharpGLTF.Core" Version="1.0.7" />
     <!-- BRUTAL, for the editor window only (D3: the line our BRUTAL games use, headless-testable). The core and the editor model take none. -->
     <PackageVersion Include="Ahwoo.Brutal.ShaderC" Version="2026.10.2" />
+    <PackageVersion Include="Ahwoo.Brutal.OpenAl" Version="2026.10.2" />
+    <PackageVersion Include="NVorbis" Version="0.10.5" />
     <PackageVersion Include="Ahwoo.Brutal.Stb" Version="2026.10.2" />
+    <PackageVersion Include="Ahwoo.Brutal.Jolt" Version="2026.10.2" />
     <PackageVersion Include="Ahwoo.Brutal.Core" Version="2026.10.1" />
     <PackageVersion Include="Ahwoo.Brutal.ImGui" Version="2026.10.2" />
-    <!-- The interactive editor host only (Brutal.Authoring.Editor.App): a GLFW window, Vulkan and ImGui's backends, at
+    <!-- The interactive editor host only (Bed.Editor.App): a GLFW window, Vulkan and ImGui's backends, at
          the versions our BRUTAL games use (D3). The library, the editor model and the headless ImGui host take none of these. -->
     <PackageVersion Include="Ahwoo.Brutal.Glfw" Version="2026.10.4" />
     <PackageVersion Include="Ahwoo.Brutal.Vulkan" Version="2026.10.2" />
@@ -21,5 +24,3 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
   </ItemGroup>
 </Project>
-
-

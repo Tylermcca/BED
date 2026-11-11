@@ -125,12 +125,12 @@ The source actually measured is identified by SHA-256, without depending on a br
 
 | File | Before SHA-256 | Current SHA-256 |
 | --- | --- | --- |
-| `src/Brutal.Authoring.Data/DataDocument.cs` | `2afc195c874defa95f4cb6339203c298d90010bad27b8dad460dab2bab63c2e2` | `112e4ff371a526c61935b579cf8ad62b578e17e6b86feb93b5c4027481af56d9` |
-| `src/Brutal.Authoring.Data/JsonSchemas.cs` | `142bf6fab5b17be398a57fa76354bb18beb9d41e54b7ec957cd4042b7c488ff4` | `950813458bc84483ef5f162d48d2d60e92c372600082161dbcd99af397853252` |
-| `src/Brutal.Authoring.Editor/DataEditing.cs` | `1b8d40329cd6eb771aaefd362d9ffdb1c007a74041240432111f434c3146cc70` | `0fb5ecf36534babf104ea8017570b4fcfb259fe875e3eefed2d2acfae667ba02` |
-| `src/Brutal.Authoring.Editor.ImGui/DataTableView.cs` | `67d3a7449868343877e63df66b963c3e81db17d24cc87db27d75b5a494b045e1` | `78bf79caca47a71f95bf1348e074f7684aeb68e82a99ca00e44a0d9ca5a5c892` |
-| `src/Brutal.Authoring.Editor.ImGui/HeadlessHost.cs` | `3ce08df748af78cbe4f932a52118a58026b9b30dcb4bdea42b4c69f853245a1c` | `3ce08df748af78cbe4f932a52118a58026b9b30dcb4bdea42b4c69f853245a1c` |
-| `src/Brutal.Authoring/DocumentSession.cs` | `67245649c5ea4d972324473a2810aa554d17693d465a701d7e821c1479d0f7da` | `67245649c5ea4d972324473a2810aa554d17693d465a701d7e821c1479d0f7da` |
+| `src/Bed.Data/DataDocument.cs` | `2afc195c874defa95f4cb6339203c298d90010bad27b8dad460dab2bab63c2e2` | `112e4ff371a526c61935b579cf8ad62b578e17e6b86feb93b5c4027481af56d9` |
+| `src/Bed.Data/JsonSchemas.cs` | `142bf6fab5b17be398a57fa76354bb18beb9d41e54b7ec957cd4042b7c488ff4` | `950813458bc84483ef5f162d48d2d60e92c372600082161dbcd99af397853252` |
+| `src/Bed.Editor/DataEditing.cs` | `1b8d40329cd6eb771aaefd362d9ffdb1c007a74041240432111f434c3146cc70` | `0fb5ecf36534babf104ea8017570b4fcfb259fe875e3eefed2d2acfae667ba02` |
+| `src/Bed.Editor.ImGui/DataTableView.cs` | `67d3a7449868343877e63df66b963c3e81db17d24cc87db27d75b5a494b045e1` | `78bf79caca47a71f95bf1348e074f7684aeb68e82a99ca00e44a0d9ca5a5c892` |
+| `src/Bed.Editor.ImGui/HeadlessHost.cs` | `3ce08df748af78cbe4f932a52118a58026b9b30dcb4bdea42b4c69f853245a1c` | `3ce08df748af78cbe4f932a52118a58026b9b30dcb4bdea42b4c69f853245a1c` |
+| `src/Bed/DocumentSession.cs` | `67245649c5ea4d972324473a2810aa554d17693d465a701d7e821c1479d0f7da` | `67245649c5ea4d972324473a2810aa554d17693d465a701d7e821c1479d0f7da` |
 
 ## Determinism and independent fixture check
 

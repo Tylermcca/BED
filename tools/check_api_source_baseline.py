@@ -11,8 +11,8 @@ from pathlib import Path
 import re
 import sys
 
-INFO = "src/Brutal.Authoring/AuthoringInfo.cs"
-VERSION = "src/Brutal.Authoring/Plugins.cs::ApiVersion"
+INFO = "src/Bed/AuthoringInfo.cs"
+VERSION = "src/Bed/Plugins.cs::ApiVersion"
 KEYS = {INFO, VERSION}
 FORMAT = "partial-source-baseline-v1"
 
@@ -40,7 +40,7 @@ def version_prefix(lines):
 
 def capture(root):
     info = (root / INFO).read_text(encoding="utf-8")
-    with (root / "src/Brutal.Authoring/Plugins.cs").open(encoding="utf-8") as stream:
+    with (root / "src/Bed/Plugins.cs").open(encoding="utf-8") as stream:
         version = version_prefix(stream)
     return {INFO: info, VERSION: version}
 

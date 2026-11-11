@@ -47,3 +47,7 @@ Use a disposable `ROUTE_SAMPLE_TEST_ROOT` and isolated build/cache/TEMP roots fo
 ## Reuse the sample
 
 The puzzle, names, routes, data, rules and messages are original; there are no third-party fixtures or assets. The wiring follows StarterAdapter, CheckersAdapter and frozen check inputs from `Checks.cs`. Keep the runtime separate from the editor adapter when adapting this pattern. No new public interface is required.
+
+## Standalone saved-files simulation with Pause/Step
+
+`../RoutePuzzle.Game` is a separate console player, added after the original in-editor demo above. It references the pure Runtime helper and RoutePuzzle model. Build with `dotnet build samples/RoutePuzzle.Game/RoutePuzzle.Game.csproj`; run with `--project samples/RoutePuzzle --seconds 5 --route brook,summit`. At each permitted20ms tick it accepts at most one route decision (the scripted route chooses every tenth tick); paused loops still pump control and presentation. It reads saved routes.json, never the authoring draft, and has no catch-up accumulator. In BED copy its full runtime output into the project, select its executable through Play settings, then Pause/Step/Resume through the console. The original in-process Try route behavior remains as described above. See docs/guide/playing.md for the optional helper and strict owned-pipe contract. The optional --tick-log path is a test receipt created only if absent.

@@ -1,33 +1,32 @@
 using System.Security.Cryptography;
 using System.Text;
-using Brutal.Authoring;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
-using Brutal.Authoring.Runtime;
+using Bed;
+using Bed.Editor;
+using Bed.Editor.ImGui;
+using Bed.Runtime;
 namespace SceneStarterAdapter;
 
 public sealed partial class SceneStarterAdapter
 {
-    private static readonly string[] ExportRuntime=["SceneStarter.exe","SceneStarter.dll","SceneStarter.deps.json","SceneStarter.runtimeconfig.json","Brutal.Authoring.dll","Brutal.Authoring.Runtime.dll","LICENSE.txt","NOTICE.txt","README.txt"];
+    private static readonly string[] ExportRuntime=["SceneStarter.exe","SceneStarter.dll","SceneStarter.deps.json","SceneStarter.runtimeconfig.json","Bed.dll","Bed.Runtime.dll","LICENSE.txt","NOTICE.txt","README.txt"];
     private const string SavedProjectFormat="scene-starter.saved-project.v1";
     /// <summary>Packages only the installed runtime and explicitly captured saved project files.</summary>
     public GameBuildSpec Build(DataWorkspace workspace)
     {
         var root=savedProjectRoot??Path.GetDirectoryName(Path.GetFullPath(workspace.Project.DataFolder))!;
-        var directory=Path.Combine(root,"game");
-        var exportRuntime=Path.Combine(directory,"export");
-        if(File.Exists(Path.Combine(exportRuntime,"SceneStarter.exe")))directory=exportRuntime;
-        // Published projects carry the same runtime used by Play. Source-only fixtures retain their development runtime.
-        if(!File.Exists(Path.Combine(directory,"SceneStarter.exe")))directory=Path.Combine(AppContext.BaseDirectory,"samples","SceneStarter");
-        return new(Path.Combine(directory,"SceneStarter.exe"),directory,["--build","{input}","{output}"]);
+        var physics=SceneSettings(root)?.SupportsPhysics==true;var program=physics?"PhysicsStarter":"SceneStarter";
+        var directory=Path.Combine(root,"game");var exportRuntime=Path.Combine(directory,"export");
+        if(File.Exists(Path.Combine(exportRuntime,program+".exe")))directory=exportRuntime;
+        if(!File.Exists(Path.Combine(directory,program+".exe")))directory=Path.Combine(AppContext.BaseDirectory,"samples",program);
+        return new(Path.Combine(directory,program+".exe"),directory,["--build","{input}","{output}"]);
     }
     /// <summary>Captures the saved level and exactly the currently published generation, with producing asset policy.</summary>
     public GameExportDeclaration Export(DataWorkspace workspace)
     {
-        Captured? captured=null;
+        Captured? captured=null,admitted=null;string? admittedSourceHash=null;
         return new(input=>
         {
-            captured=null;
+            captured=null;admitted=null;admittedSourceHash=null;
             try
             {
                 var root=savedProjectRoot??Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(workspace.Project.DataFolder)))!;
@@ -41,7 +40,8 @@ public sealed partial class SceneStarterAdapter
             var capture=captured??throw new InvalidOperationException("Capture Saved input before exporting.");
             if(saved.Format!=SavedProjectFormat||Hash(saved.CopyPayload())!=capture.PayloadHash)throw new InvalidOperationException("The export capture belongs to another Saved level.");
             capture.Current();
-            var sourceProfile=GameBuildProfile.Create("scene-starter-source","samples/SceneStarter/SceneStarter.csproj",GameBuildTarget.WindowsX64,capture.Nodes.Select(n=>n.Output));
+            var project=capture.Physics?"samples/PhysicsStarter/PhysicsStarter.csproj":"samples/SceneStarter/SceneStarter.csproj";
+            var sourceProfile=GameBuildProfile.Create(capture.Physics?"physics-starter-source":"scene-starter-source",project,GameBuildTarget.WindowsX64,capture.Nodes.Select(n=>n.Output));
             var admission=SavedBuildAdmission.Prepare(saved,sourceProfile,"scene-starter",true,_=>capture.Nodes,
                 ["scene-starter.runtime-input"],manifest=>
                 {
@@ -49,35 +49,60 @@ public sealed partial class SceneStarterAdapter
                     return [new(manifest.Hash,"scene-starter.runtime-input",ExportCheckVerdict.Passed,DateTimeOffset.UtcNow,TimeSpan.Zero)];
                 },capture.Records);
             if(!admission.Origin.Notices.IsEmpty)throw new InvalidOperationException("This sample build cannot yet retain additional asset attributions.");
-            var outputs=ExportRuntime.Select((path,index)=>new GameContentMapping("runtime-"+index,path,"scene-starter.runtime"))
+            var runtimeFiles=capture.Physics?SceneStarter.PhysicsRuntimeInventory.Files.Append("README.txt"):ExportRuntime;
+            var outputs=runtimeFiles.Select((path,index)=>new GameContentMapping("runtime-"+index,path,"scene-starter.runtime"))
                 .Concat(capture.Nodes.Select(n=>n.Output)).ToArray();
-            var profile=GameBuildProfile.Create("scene-starter-runtime","samples/SceneStarter/SceneStarter.csproj",GameBuildTarget.WindowsX64,outputs);
-            capture.Current();return new(admission,admission.DeclareOutputs(profile,outputs.Select(m=>new BuildOutputItem(m,[])),[]));
-        },(directory,_)=>new(Path.Combine(directory,"SceneStarter.exe"),directory,["--project",".","--seconds","0"]));
+            var profile=GameBuildProfile.Create(capture.Physics?"physics-starter-runtime":"scene-starter-runtime",project,GameBuildTarget.WindowsX64,outputs);
+            capture.Current();admitted=capture;admittedSourceHash=admission.Source.Hash;return new(admission,admission.DeclareOutputs(profile,outputs.Select(m=>new BuildOutputItem(m,[])),[]));
+        },(directory,outputs)=>
+        {
+            if(admitted is null||outputs.SourceManifestHash!=admittedSourceHash)throw new InvalidOperationException("The unpacked build belongs to another Saved capture.");
+            admitted.Current();return new(Path.Combine(directory,admitted.Physics?"PhysicsStarter.exe":"SceneStarter.exe"),directory,["--project",".","--seconds","0"]);
+        });
     }
-    private sealed record Captured(string PayloadHash,GameContentNode[] Nodes,AssetRecord[] Records,Action Current);
+    private sealed record Captured(string PayloadHash,GameContentNode[] Nodes,AssetRecord[] Records,Action Current,bool Physics);
     private static Captured CaptureProject(string root,string savedText,AssetCatalog? catalog)
     {
-        var runtime=ProjectAssets.Open(root);
-        if(runtime.ArtifactNames.Count>1020)throw new InvalidOperationException("Saved export exceeds the 1024-file source inventory bound.");
-        var files=new Dictionary<string,byte[]>(StringComparer.Ordinal);
-        void Read(string relative,int maximum)
+        var files=new Dictionary<string,byte[]>(StringComparer.Ordinal);var guards=new Dictionary<string,byte[]>(StringComparer.Ordinal);
+        void Read(string relative,int maximum,bool guard=false)
         {
             var path=Path.Combine(root,relative);
             for(var at=Path.GetFullPath(path);at is not null;at=Path.GetDirectoryName(at))
                 if((File.GetAttributes(at)&FileAttributes.ReparsePoint)!=0)throw new IOException("Linked export inputs are not supported.");
             using var stream=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read|FileShare.Delete);
             if(stream.Length>maximum)throw new IOException("Saved export input exceeds its byte budget.");
-            var bytes=new byte[checked((int)stream.Length)];stream.ReadExactly(bytes);files.Add(relative,bytes);
+            var bytes=new byte[checked((int)stream.Length)];stream.ReadExactly(bytes);(guard?guards:files).Add(relative,bytes);
         }
-        Read("data/level.json",1024*1024);
-        var text=new UTF8Encoding(false,true).GetString(files["data/level.json"]);
-        if(text!=savedText)throw new InvalidOperationException("The saved level changed; capture Saved input again.");
-        var level=SceneRuntimeReader.Read(text,assetExists:runtime.ContainsAsset);
-        if(level.AssetIssues.Count!=0)throw new InvalidOperationException("The saved level references an asset outside its published generation.");
-        foreach(var id in level.Scene.Objects.Select(o=>o.Asset).OfType<string>().Distinct(StringComparer.Ordinal))
-            foreach(var part in runtime.ReadMesh(id).Parts)
-                if(part.Material?.Texture is {} texture)_=runtime.ReadTexture(texture);
+        ProjectAssets runtime;Action freshness=()=>{};var physics=false;
+        if(SceneSettings(root) is {} settings)
+        {
+            physics=settings.SupportsPhysics;
+            Read(settings.Source,32*1024*1024,true);Read(".bed/project.json",Scene2BuildSettings.MaxProjectBytes,true);
+            var text=new UTF8Encoding(false,true).GetString(guards[settings.Source]);
+            if(text!=savedText)throw new InvalidOperationException("The saved level changed; capture Saved input again.");
+            var defaults=new PlaySettings(build:new(physics?"game/PhysicsStarter.exe":"game/SceneStarter.exe",["--compile-scene2","."],physics?SceneStarter.PhysicsRuntimeInventory.BuildInputs(settings.Source):[settings.Source,".bed/project.json",".bed/cache/current.json"]){Stamp=".bed/generated/scenes/build.stamp.json"});
+            var play=PlaySettings.ReadProject(new UTF8Encoding(false,true).GetString(guards[".bed/project.json"]),defaults)!;
+            var build=play.Build??throw new InvalidOperationException("Declare the scene build and its content stamp before export.");
+            var stamp=build.Stamp??throw new InvalidOperationException("Declare a content stamp before exporting scene-v2.");
+            freshness=()=>{if(!ProjectBuildStamp.Current(root,stamp,build.Inputs,out var why))throw new InvalidOperationException("Build the saved scene before exporting: "+why);};
+            freshness();Read(stamp,ProjectBuildStamp.MaxStampBytes,true);
+            var prepared=SceneStarter.Scene2RuntimeInput.Open(root,physics);runtime=prepared.Assets;
+            if(prepared.ScenePath!=settings.Generated||new Scene2Format().Write(SceneStarter.ScenePhysicsPreparation.Prepare(new Scene2Format().Read(text),runtime,physics))!=new UTF8Encoding(false,true).GetString(prepared.SceneBytes))
+                throw new InvalidOperationException("The generated scene differs from Saved input; build again before exporting.");
+            files.Add(prepared.ScenePath,prepared.SceneBytes);files.Add(SceneStarter.Scene2RuntimeInput.Descriptor,prepared.DescriptorBytes);
+        }
+        else
+        {
+            runtime=ProjectAssets.Open(root);Read("data/level.json",1024*1024);
+            var text=new UTF8Encoding(false,true).GetString(files["data/level.json"]);
+            if(text!=savedText)throw new InvalidOperationException("The saved level changed; capture Saved input again.");
+            var level=SceneRuntimeReader.Read(text,assetExists:runtime.ContainsAsset);
+            if(level.AssetIssues.Count!=0)throw new InvalidOperationException("The saved level references an asset outside its published generation.");
+            foreach(var id in level.Scene.Objects.Select(o=>o.Asset).OfType<string>().Distinct(StringComparer.Ordinal))
+                foreach(var part in runtime.ReadMesh(id).Parts)
+                    if(part.Material?.Texture is {} texture)_=runtime.ReadTexture(texture);
+        }
+        if(runtime.ArtifactNames.Count+files.Count+3>1024)throw new InvalidOperationException("Saved export exceeds the 1024-file source inventory bound.");
         var prefix=".bed/cache/generations/"+runtime.Id+"/";
         Read(".bed/cache/current.json",64*1024);Read(prefix+"manifest.json",1024*1024);Read(prefix+"owner.txt",128);
         var records=new List<AssetRecord>();var selections=new List<(string Id,AssetCatalog.Selection Selection,AssetRecord Record)>();
@@ -95,7 +120,8 @@ public sealed partial class SceneStarterAdapter
         }
         void Current()
         {
-            foreach(var (relative,bytes) in files)
+            freshness();
+            foreach(var (relative,bytes) in files.Concat(guards))
             {
                 var path=Path.Combine(root,relative);
                 for(var at=Path.GetFullPath(path);at is not null;at=Path.GetDirectoryName(at))
@@ -123,6 +149,6 @@ public sealed partial class SceneStarterAdapter
         Current();
         var nodes=files.OrderBy(p=>p.Key,StringComparer.Ordinal).Select((file,index)=>new GameContentNode(
             new("saved-"+index,file.Key,SavedProjectFormat),file.Value,Hash(file.Value),[],true,sources.GetValueOrDefault(file.Key,ExportSource.GameOwned))).ToArray();
-        return new(Hash(Encoding.UTF8.GetBytes(savedText)),nodes,records.ToArray(),Current);
+        return new(Hash(Encoding.UTF8.GetBytes(savedText)),nodes,records.ToArray(),Current,physics);
     }
 }

@@ -6,13 +6,21 @@ Export build is in BED **0.2.1-rc.1** and later.
 
 The project needs an adapter that supplies a build command and the checks for its output. If **File > Export build** is unavailable, follow your project's build setup instructions.
 
+## Quick steps
+
+1. Stop Play and save with **Ctrl+S** (or **Save all**).
+2. Choose **File > Export build**, then **Build saved files**.
+3. Wait until the checks pass and **Copy build to folder...** becomes available.
+4. Enter a new or empty **Destination folder**.
+5. Choose **Copy build to folder...**, then run the game from that folder.
+
 ## Build, verify and copy
 
 1. Choose **File > Export build**.
 2. Choose **Build saved files**. Read **Export status** and the output below it. Fix any reported data, asset or build problem before trying again.
 3. Wait through **Building saved files...** and **Checking the unpacked build...**. BED checks the saved inputs, the files produced by the build and the project's test launch. **Copy build to folder...** becomes available only after verification succeeds.
 4. Enter a new or empty **Destination folder**. BED may suggest the last folder you used for this project. Choose a fresh folder if that one still contains an earlier build.
-5. Choose **Copy build to folder...**. Wait through **Copying verified build...** until **Build copied to** names your destination, then open it in File Explorer.
+5. Choose **Copy build to folder...**. Wait through **Copying verified build...** until **Copied to:** names your destination, then open it in File Explorer.
 
 BED refuses a destination that already contains files. It does not replace your previous build. If copying fails, read the message and choose a suitable folder.
 
@@ -29,7 +37,7 @@ Each run has its own folder under your local BED export storage, beside the veri
 For a project with one level document and an adapter that supports Export build, run this from the folder containing BED.exe:
 
 ```powershell
-.\BED.exe --probe-export "C:\work\project" --destination "C:\builds\game" --timeout 60
+.\BED.exe --probe-export ".\my-project" --destination ".\my-build" --timeout 60
 ```
 
 Replace the two paths with your saved project and a new or empty output folder. Keep the project's adapter in the **adapters** folder beside BED.exe. This runs without opening a window. It builds from saved files, verifies the build, and copies it only after the checks pass, using the same steps as **File > Export build**. Save any open edits first; the command does not save them for you.
@@ -59,5 +67,13 @@ The bundled level example uses a console program to confirm that the saved level
 ```
 
 Replace **Game.exe** with the executable's actual filename. Here `.` means the copied folder, and `--seconds 0` makes this example report the loaded level and exit. These arguments belong to the example; another game's arguments can differ. The example's exported executable needs the .NET 10 runtime installed on the computer where you run it.
+
+## Prefab, sprite and physics levels
+
+For a game that opts in to version-two levels, the build includes each saved level with its placed pieces expanded and their local changes applied, plus the models and sprite images it uses. Export checks that the saved files and prepared assets haven't changed since the build, and refuses if they have. The copied game doesn't need the original prefab files or source images.
+
+A level with physics also needs a game that opts in to physics, such as the separate [physics sample](../../samples/PhysicsStarter/README.md). Its build includes the Windows native physics library and its notices. A game without physics support refuses such a level rather than dropping the bodies.
+
+## Before you share
 
 Try the copied game before sharing it. Include its required runtime files, licences and notices. See [content rights](content_rights.md) for asset permissions and [Play](playing.md) for trying saved files while editing.

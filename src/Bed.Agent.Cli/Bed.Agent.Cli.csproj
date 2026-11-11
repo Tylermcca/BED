@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- `authoring`: the command line and the MCP server for AI agents (goal 20), over Bed.Agent. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Bed.Agent.Cli</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Bed.Agent\Bed.Agent.csproj" />
+    <!-- for the game adapter loader only (Adapters, IProjectAdapter); it opens no window. Layering debt: the adapter contract
+         belongs below the editor, and moving it is a public-API change for later (A188). -->
+    <ProjectReference Include="..\Bed.Editor.ImGui\Bed.Editor.ImGui.csproj" />
+  </ItemGroup>
+  <Import Project="..\..\build\Notices.targets" />
+  <Target Name="CopyPublicAppHostName" AfterTargets="Build" Condition="Exists('$(TargetDir)Bed.Agent.Cli.exe')">
+    <Copy SourceFiles="$(TargetDir)Bed.Agent.Cli.exe" DestinationFiles="$(TargetDir)bed-cli.exe" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

@@ -1,6 +1,6 @@
-using Brutal.Authoring;
-using Brutal.Authoring.Editor.App;
-using Brutal.Authoring.Editor.ImGui;
+using Bed;
+using Bed.Editor.App;
+using Bed.Editor.ImGui;
 using Brutal.ImGuiApi;
 using Brutal.Numerics;
 using Checkers;

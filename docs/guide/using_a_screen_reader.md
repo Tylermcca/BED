@@ -1,10 +1,8 @@
 # Using a screen reader
 
-Use the `authoring` command line for the data tasks listed below. Its text output can be read through your terminal. The Dear ImGui window has no accessibility tree, so visual keyboard controls do not make it usable with a screen reader. The existing audit is in `docs/research/accessibility_audit.md`; this route is not a replacement for a desktop accessibility bridge.
+The Windows x64 desktop window now has an AccessKit accessibility tree and checked actions for built-in wrapped controls. See [Accessibility](accessibility.md) for keyboard routes, text size, high contrast and the limits of the tested assistive-tool support. A complete real screen-reader walkthrough after those changes has not been completed.
 
-The command line uses the same agent API as AI tools. A desktop accessibility bridge remains future work.
-
-The window now has visual keyboard routes for the map, 3D viewport, Files forms and project-close prompt; see [Keyboard](editing_data.md#keyboard). A focus outline and keyboard controls do not expose an accessibility tree or make the window speak. Continue using the command-line route below when you need a screen reader.
+This page describes the `bed-cli` command-line fallback for data tasks. Its text output can be read through your terminal. It uses the same agent API as AI tools. The historical audit in `docs/research/accessibility_audit.md` describes earlier gaps; it is not the current desktop support statement.
 
 ## What you can do
 
@@ -31,20 +29,20 @@ Places are JSON Pointers: `/wares/3/price` is the price of the fourth ware.
 Build it once from the repository root:
 
 ```
-dotnet build src/Brutal.Authoring.Agent.Cli -c Release
+dotnet build src/Bed.Agent.Cli -c Release
 ```
 
 Then call it with your game's data and schema folders:
 
 ```
-dotnet src/Brutal.Authoring.Agent.Cli/bin/Release/net10.0/bed-cli.dll --data <data folder> --schemas <schema folder> describe
+dotnet src/Bed.Agent.Cli/bin/Release/net10.0/Bed.Agent.Cli.dll --data <data folder> --schemas <schema folder> describe
 ```
 
 If your game has an adapter, add it, so every call uses the game's rules and checks as the
 window does:
 
 ```
-dotnet src/Brutal.Authoring.Agent.Cli/bin/Release/net10.0/bed-cli.dll --data <data folder> --schemas <schema folder> --adapter <the adapter's DLL> describe
+dotnet src/Bed.Agent.Cli/bin/Release/net10.0/Bed.Agent.Cli.dll --data <data folder> --schemas <schema folder> --adapter <the adapter's DLL> describe
 ```
 
 `--read-only` can't be used with `--adapter` yet.

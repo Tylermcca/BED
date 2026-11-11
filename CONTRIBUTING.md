@@ -8,15 +8,15 @@ Build small changes around the existing public APIs. Start with [the goals](docs
 
 | Path | Responsibility and boundary |
 |---|---|
-| src/Brutal.Authoring | Immutable documents, typed commands, validation, history, journals and safe saving. The core has no UI dependency. |
-| src/Brutal.Authoring.Data | JSON documents, schemas, data projects, reference maps and frozen checks. Keep game rules out of this generic layer. |
-| src/Brutal.Authoring.Editor | Editor models, commands, panels, selection and editing behavior shared by hosts. |
-| src/Brutal.Authoring.Editor.ImGui and Editor.Text | UI views and headless test seams. Editor.Text wraps the separately noticed ImCode dependency. |
-| src/Brutal.Authoring.Import | Import and diagnostics; fixtures describe expected refusals as well as successful imports. |
-| src/Brutal.Authoring.Agent and Agent.Cli | Typed AI calls and the CLI/MCP stdio host. The CLI currently references Editor.ImGui for adapter loading; moving that contract below the editor is acknowledged debt, not a new runtime dependency policy. |
-| src/Brutal.Authoring.Editor.App and Launcher | Desktop shells. Tests use headless routes; do not launch a desktop window as a test. |
+| src/Bed | Immutable documents, typed commands, validation, history, journals and safe saving. The core has no UI dependency. |
+| src/Bed.Data | JSON documents, schemas, data projects, reference maps and frozen checks. Keep game rules out of this generic layer. |
+| src/Bed.Editor | Editor models, commands, panels, selection and editing behavior shared by hosts. |
+| src/Bed.Editor.ImGui and Editor.Text | UI views and headless test seams. Editor.Text wraps the separately noticed ImCode dependency. |
+| src/Bed.Import | Import and diagnostics; fixtures describe expected refusals as well as successful imports. |
+| src/Bed.Agent and Agent.Cli | Typed AI calls and the CLI/MCP stdio host. The CLI currently references Editor.ImGui for adapter loading; moving that contract below the editor is acknowledged debt, not a new runtime dependency policy. |
+| src/Bed.Editor.App and Launcher | Desktop shells. Tests use headless routes; do not launch a desktop window as a test. |
 | samples/ | Small neutral demonstrations such as Toy, Tiles and StarterAdapter, with original data. |
-| tests/Brutal.Authoring.Tests | xUnit unit and acceptance tests. The solution currently has one test project. |
+| tests/Bed.Tests | xUnit unit and acceptance tests. The solution currently has one test project. |
 | tools/ and fixtures/ | Python checks, fixture generators and retained expected results. Source and runtime dependency notices stay with their respective inputs. |
 
 Game types and private records belong in external game-side adapters. Never add a ship, quest or particular game's prop model to the public library. A host can reference editor code; a shipping game must not acquire editor/AI dependencies through it. The research's proposed runtime split is a design boundary, not a claim that another Runtime project already exists. [Extension points](docs/api/extension_points.md) gives compiled examples and current limitations.
@@ -28,9 +28,9 @@ Use .NET 10 as selected by global.json, Python 3.12, and the existing pytest and
 ```powershell
 dotnet --version
 python --version
-dotnet restore Brutal.Authoring.slnx --nologo -v:minimal
-dotnet build Brutal.Authoring.slnx --no-restore --nologo -v:minimal
-dotnet test Brutal.Authoring.slnx --no-build --no-restore --nologo -v:minimal
+dotnet restore Bed.slnx --nologo -v:minimal
+dotnet build Bed.slnx --no-restore --nologo -v:minimal
+dotnet test Bed.slnx --no-build --no-restore --nologo -v:minimal
 python -m pytest -q tools
 python tools/check_fixtures.py .
 python tools/check_doc.py CONTRIBUTING.md --sections "## Layout,## Building and checking,## House rules,## Tests,## Review,## Sign-off (DCO),## Not decided yet"
@@ -68,12 +68,12 @@ For a comment-only change, record every documented declaration and source refere
 
 ## Tests
 
-Put a focused regression beside the relevant cases in tests/Brutal.Authoring.Tests; the SDK includes new C# files automatically. Use Fact for a case and Theory with explicit data for a matrix. Reproduce the bug, assert the promised outcome, and cover the meaningful refusal/recovery boundary. Do not assert only that no exception occurred when the behavior could still be wrong.
+Put a focused regression beside the relevant cases in tests/Bed.Tests; the SDK includes new C# files automatically. Use Fact for a case and Theory with explicit data for a matrix. Reproduce the bug, assert the promised outcome, and cover the meaningful refusal/recovery boundary. Do not assert only that no exception occurred when the behavior could still be wrong.
 
 SessionTests illustrates validated edits, history and replay; inspect its actual assertions before adding another case. This exact command runs those existing examples after the build above:
 
 ```powershell
-dotnet test tests/Brutal.Authoring.Tests/Brutal.Authoring.Tests.csproj --no-build --no-restore --nologo -v:minimal --blame-hang-timeout 10m --filter FullyQualifiedName~SessionTests
+dotnet test tests/Bed.Tests/Bed.Tests.csproj --no-build --no-restore --nologo -v:minimal --blame-hang-timeout 10m --filter FullyQualifiedName~SessionTests
 ```
 
 While you work, run only the tests for what you changed, with a filter like this one and a 10-minute hang timeout: a run far past its usual time is presumed hung. Don't run the whole suite to check a small change. The lead runs everything once per merge batch, on exactly what lands. Slow sets (big matrices, pixel comparisons, fuzzers) run only when their area changed. A job gets about one and a half times its coding time, tests included; past that, stop and say what's done and what isn't. Keep all existing assertions: never weaken, skip or delete a failing test to obtain green. Use temporary directories for settings/files and clean only the directory your test owns. Never use a person's saves or clipboard. A required unavailable input should say so and skip explicitly, never count as a passing workflow.
@@ -90,6 +90,6 @@ A contribution should be reviewable without knowing any particular game that use
 
 ## Names
 
-The editor is called **BED**. The code's namespaces, project files and solution still use the earlier working name, Brutal.Authoring. They will be renamed together in one change, so please don't rename them as part of a contribution. Nothing in this guide grants trademark permission or publishes a package.
+The editor is called **BED**. The code's namespaces, project files and solution still use the earlier working name, Bed. They will be renamed together in one change, so please don't rename them as part of a contribution. Nothing in this guide grants trademark permission or publishes a package.
 
 The licence is **MIT**, chosen by the user on 2026-11-01 and recorded in LICENSE.txt and README.md. This is an existing decision, not one made by this guide. BRUTAL and other dependencies retain their own terms and notices. No contribution, green build or generated record grants approval to publish or settles every dependency obligation.

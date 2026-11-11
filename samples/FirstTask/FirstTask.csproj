@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><AssemblyName>FirstTaskAdapter</AssemblyName></PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj" Private="false" />
+    <ProjectReference Include="../../src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj" Private="false" />
   </ItemGroup>
 </Project>

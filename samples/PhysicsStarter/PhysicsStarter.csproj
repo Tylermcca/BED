@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><AssemblyName>PhysicsStarter</AssemblyName><AllowUnsafeBlocks>true</AllowUnsafeBlocks><DebugType>none</DebugType></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../src/Bed/Bed.csproj" /><ProjectReference Include="../../src/Bed.Runtime/Bed.Runtime.csproj" /><PackageReference Include="Ahwoo.Brutal.Jolt" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../SceneStarter/PhysicsRuntimeInventory.cs" Link="PhysicsRuntimeInventory.cs" />
+    <Compile Include="../SceneStarter/SavedProjectManifest.cs" Link="SavedProjectManifest.cs" />
+    <Compile Include="../SceneStarter/Scene2Compiler.cs" Link="Scene2Compiler.cs" />
+    <Compile Include="../SceneStarter/Scene2RuntimeInput.cs" Link="Scene2RuntimeInput.cs" />
+    <Compile Include="../SceneStarter/ScenePhysicsPreparation.cs" Link="ScenePhysicsPreparation.cs" />
+    <None Include="../../LICENSE.txt" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Import Project="../../build/Notices.targets" />
+</Project>

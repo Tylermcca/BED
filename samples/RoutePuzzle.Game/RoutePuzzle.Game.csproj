@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType></PropertyGroup><ItemGroup><ProjectReference Include="../RoutePuzzle/RoutePuzzle.csproj" /><ProjectReference Include="../../src/Bed.Runtime/Bed.Runtime.csproj" /></ItemGroup><Import Project="../../build/Notices.targets" /></Project>

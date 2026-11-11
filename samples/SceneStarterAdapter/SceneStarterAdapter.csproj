@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><RootNamespace>SceneStarterAdapter</RootNamespace></PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj" Private="false" />
-    <ProjectReference Include="../../src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj" Private="false" />
+    <Compile Include="../SceneStarter/PhysicsRuntimeInventory.cs" Link="PhysicsRuntimeInventory.cs" />
+    <Compile Include="../SceneStarter/ScenePhysicsPreparation.cs" Link="ScenePhysicsPreparation.cs" />
+    <Compile Include="../SceneStarter/Scene2RuntimeInput.cs" Link="Scene2RuntimeInput.cs" />
+    <ProjectReference Include="../../src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj" Private="false" />
+    <ProjectReference Include="../../src/Bed.Runtime/Bed.Runtime.csproj" Private="false" />
   </ItemGroup>
 </Project>

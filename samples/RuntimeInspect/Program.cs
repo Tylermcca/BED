@@ -1,5 +1,5 @@
-using Brutal.Authoring;
-using Brutal.Authoring.Runtime;
+using Bed;
+using Bed.Runtime;
 namespace RuntimeInspect;
 
 // Console-only consumer: no editor, importer, renderer or source-asset lookup.

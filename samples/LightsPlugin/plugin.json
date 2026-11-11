@@ -2,7 +2,7 @@
   "id": "lights",
   "name": "Lights",
   "version": "1.0.0",
-  "api": "0.1",
+  "api": "0.2",
   "license": "MIT",
   "description": "Point lights in any scene: an Add light command, a light inspector and a Lighting workspace."
 }

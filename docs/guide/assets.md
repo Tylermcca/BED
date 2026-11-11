@@ -39,6 +39,6 @@ Keep the model's origin and licence with its source. **Source file found. Placem
 
 ## Source reference
 
-- [Assets panel](../../src/Brutal.Authoring.Editor.ImGui/AssetsPanel.cs)
-- [Catalog selection and leases](../../src/Brutal.Authoring/AssetCatalog.cs)
-- [Scene placement checks](../../src/Brutal.Authoring.Editor/DocumentHost.cs)
+- [Assets panel](../../src/Bed.Editor.ImGui/AssetsPanel.cs)
+- [Catalog selection and leases](../../src/Bed/AssetCatalog.cs)
+- [Scene placement checks](../../src/Bed.Editor/DocumentHost.cs)

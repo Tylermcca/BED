@@ -12,7 +12,7 @@ Open the source of `samples/Tiles/TileMap.cs`. TileMap holds width, height, cell
 
 An immutable collection matters. A caller holding a document must not edit a session by changing an array behind its back. Make a new record and collection for an edit. The sample caps maps at 1,000,000 cells as an explicit allocation budget; it is not an engine-wide limit.
 
-To build a different document type, replace this model and its rules. Keep the core reference. `samples/Tiles/Tiles.csproj` references only `src/Brutal.Authoring`, not Toy, an editor or a game.
+To build a different document type, replace this model and its rules. Keep the core reference. `samples/Tiles/Tiles.csproj` references only `src/Bed`, not Toy, an editor or a game.
 
 ## Step 2 — Define its text format
 
@@ -102,7 +102,7 @@ The first command reports that the Console App template was created. The second 
 Replace the generated `.tutorial-tiles/probe/Program.cs` with this **complete program**:
 
 ```csharp
-using Brutal.Authoring;
+using Bed;
 using Tiles;
 
 var catalog = TilesKit.Catalog()
@@ -144,8 +144,8 @@ The custom command is registered explicitly and replayed using that catalogue. I
 
 ## Step 8 — Where to go next
 
-The sample's tests are in `tests/Brutal.Authoring.Tests/TilesTests.cs`. They cover references, bounded arrays, refusal, undo, strict reading, bytes and all four CLI exit codes. Build your own domain tests as you replace the tile rules.
+The sample's tests are in `tests/Bed.Tests/TilesTests.cs`. They cover references, bounded arrays, refusal, undo, strict reading, bytes and all four CLI exit codes. Build your own domain tests as you replace the tile rules.
 
-To add selection, workspaces, a command palette and focus, use EditorModel<TDoc> in Brutal.Authoring.Editor with your IDocumentOutline<TDoc>. See docs/guide/api_overview.md for those APIs.
+To add selection, workspaces, a command palette and focus, use EditorModel<TDoc> in Bed.Editor with your IDocumentOutline<TDoc>. See docs/guide/api_overview.md for those APIs.
 
 This tutorial does not open an editor window. Keep game-specific rules in your adapter and use content you created yourself.

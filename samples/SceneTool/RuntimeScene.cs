@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Numerics;
 using System.Text.Json;
-using Brutal.Authoring;
+using Bed;
 
 namespace SceneTool;
 

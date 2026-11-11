@@ -4,6 +4,8 @@ Press **F1** in an open file to show **Keys**, or choose **Help > Keyboard short
 
 These are BED's built-in defaults. A shortcut uses the same save, validation and approval decisions as its menu command. While typing, ordinary editing keys belong to the text field; the Play function keys remain available. A command can be unavailable for the current selection, file or Play state.
 
+Press **Ctrl+,** to open Preferences on the start screen or in a project. In a project, **Edit > Preferences > Open preferences...** opens the same controls. Tab between Theme and UI scale; choices apply live and are remembered for the next launch. Escape closes Preferences after any open dropdown has closed. This fixed shortcut is separate from the rebindable command list below.
+
 ## Commands in an open file
 
 The action IDs in the first column identify the commands for a host that changes bindings.
@@ -39,7 +41,7 @@ See [Play](playing.md) for save decisions, Build and Play, approval and Stop. Th
 
 ## Search the Outliner
 
-With a scene’s Outliner focused, press **Ctrl+F** to focus **Search objects**. Type an object ID, asset path or imported asset source name. Matching objects keep their parent rows for context. **Escape** clears the filter without changing selection or the document. This shortcut belongs to the Outliner; text fields in other panels keep their own shortcuts.
+With a scene’s Outliner focused, press **Ctrl+F** to focus **Search objects**. Type an object ID or name, asset path, imported asset source name, or property name or value. Matching objects keep their parent rows for context. **Escape** clears the filter without changing selection or the document. This shortcut belongs to the Outliner; text fields in other panels keep their own shortcuts.
 
 ## Hide and lock scene objects
 
@@ -72,25 +74,35 @@ These controls are handled by the focused table or canvas and are fixed rather t
 - Table: Up/Down/Left/Right moves the cell selection; Shift extends it (not rebindable).
 - Canvas: Escape cancels a move (not rebindable).
 - Canvas: 0 or keypad 0 resets zoom and pan (not rebindable).
+- Viewport: Tab/Shift+Tab cycles objects (not rebindable).
+- Viewport: Enter or keypad Enter frames selection (not rebindable).
+- Viewport: Escape then Tab leaves object cycling (not rebindable).
 
 The last item applies to the **2D map canvas**. The 3D viewport uses F to frame a selection instead of a 0-to-fit command. In a focused table cell, **Shift+F10** or the **Menu key** opens the cell menu. Text fields keep their ordinary text-editing controls while active.
 
-In either canvas, **Enter** selects the next object/marker and **Shift+Enter** selects the previous one, wrapping at the ends. Keypad Enter works too. **= / +**, **-**, and keypad **+ / -** zoom. Tab leaves the canvas.
+On the **2D map**, **Enter** selects the next marker and **Shift+Enter** selects the previous one, wrapping at the ends. Keypad Enter works too; Tab leaves the map.
 
-On the map, arrows move a selected movable marker by the active grid step. With no selection, or with Ctrl held, arrows pan. On the 3D viewport, arrows move a selected object in the camera-facing ground directions; Ctrl+arrows, or arrows with no selection, orbit. Alt reverses snapping for the current viewport move. Each accepted move is an undo step.
+On the focused **3D viewport**, **Tab** selects the next displayed object in Outliner hierarchy order and **Shift+Tab** selects the previous one, wrapping at the ends. Selection is announced by name. **Enter**, keypad Enter or **F** frames the selected bounds without changing the level. Press **Escape**, then **Tab** or **Shift+Tab** to leave object cycling for the next or previous control. Choosing Move, Rotate or Scale returns focus to the canvas; press Escape then Tab to navigate its controls again. Snap keeps focus on its checkbox. **Ctrl+Tab** remains panel navigation. In either canvas, **= / +**, **-**, and keypad **+ / -** zoom.
+
+On the map, arrows move a selected movable marker by the active grid step. With no selection, or with Ctrl held, arrows pan. On the 3D viewport, arrows move a selected object in the camera-facing ground directions; Ctrl+arrows, or arrows with no selection, orbit. Alt reverses snapping for keyboard arrow nudges; Shift reverses snapping for mouse drags. Each accepted move is an undo step.
 
 | 3D viewport key | Action while the canvas has focus |
 | --- | --- |
+| `Tab` / `Shift+Tab` | Select the next/previous displayed object in Outliner order. |
+| `Enter` / keypad `Enter` | Frame the current selection. |
+| `Escape`, then `Tab` / `Shift+Tab` | Return to ordinary control navigation. |
 | `B` | Toggle move snapping and 15-degree rotation snapping. |
+| `E` | In the optional W/E/R keymap, choose Rotate. |
 | `F` | Frame the selected object's bounds. |
-| `G` | Choose the Move tool. |
-| `R` | Choose the Rotate tool when supported. |
-| `S` | Choose the Scale tool when supported. |
+| `G` | Choose the Move tool with BED defaults. |
+| `R` | Choose Rotate with BED defaults, or Scale with the W/E/R keymap. |
+| `S` | Choose the Scale tool with BED defaults. |
+| `W` | In the optional W/E/R keymap, choose Move. |
 | `X` | Constrain the current tool's arrow nudges to X. |
 | `Y` | Constrain the current tool's arrow nudges to Y. |
 | `Z` | Constrain the current tool's arrow nudges to Z. |
 
-The viewport toolbar has **Snap (B)** and **Grid step (m)**. Choose 0.1, 0.25, 0.5 or 1 metre; snapped arrow moves use that step. Toggle Snap from the toolbar or press B while the canvas has focus. Rotation uses 15-degree steps while Snap is on; Alt still reverses snapping for the current move or turn.
+The viewport toolbar has **Snap (B)** and **Grid step (m)**. Choose 0.1, 0.25, 0.5 or 1 metre; snapped arrow moves use that step. Toggle Snap from the toolbar or press B while the canvas has focus. Rotation uses 15-degree steps while Snap is on; Alt still reverses snapping for keyboard nudges; Shift does so during a drag.
 
 Choose an axis before rotating with arrows. Scale uses the chosen local axis, or all axes when unconstrained. Escape cancels an active move, rotation or scale gesture. Transform controls are unavailable while Play owns the view. See [editing data](editing_data.md#keyboard) for table and canvas navigation details.
 
@@ -106,7 +118,7 @@ Tab to **Rebind selected shortcut**, press Enter, then press the new chord. Hold
 
 A conflict message names actions sharing a chord. That chord runs neither action until one is changed. Choose another chord or reset one action. Commands remain available in the palette. Fixed table, canvas, menu and native navigation controls above cannot be rebound here.
 
-BED loads `shortcuts.json` beside its user-local `recent.json` and `settings.json` at startup (`%APPDATA%\brutal-authoring` on Windows). Changes and resets save there immediately, using `WriteOverrides`; startup restores them with `ReadOverrides`. They never change a project's files. Invalid entries are skipped with a plain message in Keys; an unreadable file leaves defaults available. If saving fails, Keys says so and the change works for this session. Opening a project does not overwrite shortcut preferences.
+BED loads `shortcuts.json` beside its user-local `recent.json` and `settings.json` at startup (`%APPDATA%\BED` on Windows). Changes and resets save there immediately, using `WriteOverrides`; startup restores them with `ReadOverrides`. They never change a project's files. Invalid entries are skipped with a plain message in Keys; an unreadable file leaves defaults available. If saving fails, Keys says so and the change works for this session. Opening a project does not overwrite shortcut preferences.
 
 ## For custom hosts
 
@@ -127,3 +139,11 @@ For persistence in a custom host, write `keys.WriteOverrides()` to user-local pr
 The checked source inventory is `Shortcuts.EditorDefaults`, the scene workspace's Close/Add registrations, `KeysPanel.FixedKeys`, `CanvasKeys`, `ViewportView.Keyboard`, the start-screen handlers and the menu/dialog handlers. The guide test compares every registered built-in action/chord and the fixed-key inventory with those live definitions.
 
 In a data workspace, **Ctrl+H** opens **Find and replace**. Enter whole scalar values (quoted text, numbers, true, false or null), choose **Preview matches**, select the matches and choose **Replace chosen**. Changes stay in drafts with one undo step per file. Preview again after an edit or outside file change.
+
+### Viewport camera and keymap
+
+Choose **Edit > Preferences** (Ctrl+,), then **Viewport keymap**: BED defaults use G/R/S for 3D tools; W/E/R uses W to move, E to rotate and R to scale. This optional personal choice is saved outside the project. The flat view defaults remain W/R/S; the optional profile uses W/E/R there too.
+
+Right-drag or Alt+left-drag orbits. Middle-drag or Shift+right-drag pans. Alt+right-drag dollies. Hold right mouse and WASD/QE to fly (Q down, E up); Shift speeds flight up. Wheel or +/- zooms and F frames the selection. Camera controls never change the level.
+
+**Shift+drag temporarily reverses snapping** while dragging an object or transform handle in the 3D view. This replaces the old Alt+drag action because Alt+left-drag now orbits the camera. Alt still reverses snapping for keyboard arrow nudges. An active transform drag owns wheel/right-drag until it finishes, so those gestures cannot move the camera halfway through an edit.

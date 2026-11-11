@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Brutal.Authoring.Data;
+using Bed.Data;
 
 // INVENTED document/data. Uses only public headless data-session APIs.
 internal static class Program

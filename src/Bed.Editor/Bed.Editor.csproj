@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The editor model: selection, workspaces, the command palette and focus, on top of the core session. No UI package
+       yet: the ImGui window is added on top once the BRUTAL inventory (A007) and the usability profile (A008) land.
+       Games never reference this project (goal 6). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Bed.Runtime\Bed.Runtime.csproj" />
+    <ProjectReference Include="..\Bed\Bed.csproj" />
+    <ProjectReference Include="..\Bed.Data\Bed.Data.csproj" />
+  </ItemGroup>
+  <ItemGroup><InternalsVisibleTo Include="Bed.Editor.ImGui" /></ItemGroup>
+</Project>
+

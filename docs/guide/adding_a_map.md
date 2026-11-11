@@ -1,6 +1,6 @@
 # Add a planar map over your own document
 
-Build a map with movable pins and a read-only line, save its JSON plan, and produce a headless image. The example uses the public [map binding contract](../../src/Brutal.Authoring.Editor/MapModel.cs), validation and undo history. Start with [the linked-project walkthrough](start_here.md) when you need a map inside an adapter. The plan and binding are self-authored.
+Build a map with movable pins and a read-only line, save its JSON plan, and produce a headless image. The example uses the public [map binding contract](../../src/Bed.Editor/MapModel.cs), validation and undo history. Start with [the linked-project walkthrough](developer_walkthrough.md) when you need a map inside an adapter. The plan and binding are self-authored.
 
 Use .NET SDK 10 and a local checkout of this tools repository with its existing BRUTAL dependencies available. Set the environment variable BRUTAL_AUTHORING to that checkout's absolute path before starting. No game checkout, workbook, art or new package is needed. Dependencies are those already declared in the referenced library projects; their notices/licences remain in `THIRD-PARTY-NOTICES.md` and `NOTICE.txt`. This tutorial is not a packaging or publication recipe.
 
@@ -9,7 +9,7 @@ Use .NET SDK 10 and a local checkout of this tools repository with its existing 
 From an empty working directory, run this PowerShell block. NeutralMap must not already exist.
 
 ~~~powershell
-if (-not (Test-Path -LiteralPath "$env:BRUTAL_AUTHORING/src/Brutal.Authoring.Editor/MapModel.cs")) {
+if (-not (Test-Path -LiteralPath "$env:BRUTAL_AUTHORING/src/Bed.Editor/MapModel.cs")) {
     throw 'Set BRUTAL_AUTHORING to your local BED checkout first.'
 }
 New-Item -ItemType Directory -Path NeutralMap -ErrorAction Stop | Out-Null
@@ -29,8 +29,8 @@ Replace the generated NeutralMap.csproj with this entire project. MSBuild reads 
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="$(BRUTAL_AUTHORING)/src/Brutal.Authoring.Data/Brutal.Authoring.Data.csproj" />
-    <ProjectReference Include="$(BRUTAL_AUTHORING)/src/Brutal.Authoring.Editor.App/Brutal.Authoring.Editor.App.csproj" />
+    <ProjectReference Include="$(BRUTAL_AUTHORING)/src/Bed.Data/Bed.Data.csproj" />
+    <ProjectReference Include="$(BRUTAL_AUTHORING)/src/Bed.Editor.App/Bed.Editor.App.csproj" />
   </ItemGroup>
 </Project>
 ~~~
@@ -39,11 +39,11 @@ Replace Program.cs with this entire source. The sample keeps a canonical height 
 
 ~~~csharp
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
-using Brutal.Authoring.Editor.App;
+using Bed;
+using Bed.Data;
+using Bed.Editor;
+using Bed.Editor.ImGui;
+using Bed.Editor.App;
 using Brutal.ImGuiApi;
 using Brutal.Numerics;
 
@@ -183,10 +183,10 @@ The proof prints PASS and creates map.png plus plan.json in NeutralMap. It uses 
 
 ## Own the binding
 
-The current public types are in `src/Brutal.Authoring.Editor/MapModel.cs`, the controller in `src/Brutal.Authoring.Editor.ImGui/MapCanvas.cs`, and the broker in `src/Brutal.Authoring.Editor/EditorModel.cs`.
+The current public types are in `src/Bed.Editor/MapModel.cs`, the controller in `src/Bed.Editor.ImGui/MapCanvas.cs`, and the broker in `src/Bed.Editor/EditorModel.cs`.
 
 - MapKey is scope + kind + stable local id. Scope separates files/namespaces. Labels, outlines and array indices are not durable keys.
-- MapMarker.OutlineId names the current editor outline item, not its durable map key. This sample's custom FlatOutline uses native ids, so OutlineId and MapEdit.Touches use the pin id. DataWorkspace's stock JSON outline instead uses current pointers such as /depots/0: keep Key as the stable depot id, but derive OutlineId and Touches from its freshly resolved array index. The [linked-project adapter](start_here.md#map-inside-the-adapter) shows that variant in a complete binding.
+- MapMarker.OutlineId names the current editor outline item, not its durable map key. This sample's custom FlatOutline uses native ids, so OutlineId and MapEdit.Touches use the pin id. DataWorkspace's stock JSON outline instead uses current pointers such as /depots/0: keep Key as the stable depot id, but derive OutlineId and Touches from its freshly resolved array index. The [linked-project adapter](developer_walkthrough.md#map-inside-the-adapter) shows that variant in a complete binding.
 - Read supplies an owned, frozen snapshot for a frame; arrays must have unique keys and remain unchanged after return. Frame Id identifies the coordinate system; increment Version when its meaning changes. This cancels an old drag and refits bounds. The current implementation retains the numeric zoom when refitting; it does not reset Zoom to 1 merely because Version changes.
 - MoveBy resolves a key against the current document, adds a double delta to canonical numbers, and returns commands plus every changed outline identity. Preserve all other axes and fields. Binding-specific rounding belongs here, with its own precision contract; repeated rounded small moves may vanish or drift.
 - The canvas handles pointer selection, overlap click cycling, ghost translation, optional snap, wheel zoom and right pan. Tab reaches the canvas; Enter and Shift+Enter select markers in source order, including overlapping markers. Arrows move a selected movable marker; Ctrl+arrows pan after zooming in. With no selected marker, arrows pan too. =/+ and - zoom about the centre, 0 resets zoom/pan, and Tab leaves. Alt reverses the grid setting for the move. Each accepted arrow step or completed drag calls ExecuteAt with its captured revision and makes one undo step. Empty/null edits add no history. See [Keyboard](editing_data.md#keyboard).
@@ -198,7 +198,7 @@ The current public types are in `src/Brutal.Authoring.Editor/MapModel.cs`, the c
 
 Use the EditorModel supplied to IProjectAdapter.Configure; its session is already the DataFile session. Do not create a second session, and do not copy this standalone sample's session.Save into an adapter. The stock workspace Save stays on DataFile.Save and the configured SaveCheck/FileCheck authority; a custom save button must call that same DataFile.Save, or DataProject.SaveAll for coordinated drafts.
 
-The [complete two-file example](start_here.md#map-inside-the-adapter) shows Configure, the shared editor, a cross-file SaveCheck and the actual guarded save proof together. Use PanelSide.Centre for a large map and map.Draw(Math.Max(160, ImGui.GetContentRegionAvail().Y)) to use the available panel height. Width is an initial floating-size hint; a right dock can remain narrow regardless of a large Width value.
+The [complete two-file example](developer_walkthrough.md#map-inside-the-adapter) shows Configure, the shared editor, a cross-file SaveCheck and the actual guarded save proof together. Use PanelSide.Centre for a large map and map.Draw(Math.Max(160, ImGui.GetContentRegionAvail().Y)) to use the available panel height. Width is an initial floating-size hint; a right dock can remain narrow regardless of a large Width value.
 
 Working-document JsonElement.GetRawText is not a persistence boundary: an edit can rebuild its in-memory formatting while preserving the saved source span. The indented input above is checked with JsonSchemas.Same for unchanged values, DataFormat.Write for serialized sibling text and File.ReadAllText after Save for actual disk text. Do not replace the value check with only a formatting comparison.
 

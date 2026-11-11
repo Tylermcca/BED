@@ -1,0 +1,27 @@
+{
+  "kind": "scene",
+  "version": 2,
+  "space": "2d-xy",
+  "physics": {
+    "gravity": [
+      0,
+      0,
+      0
+    ],
+    "fixedStepSeconds": 0.016666666666666666
+  },
+  "objects": [
+    {
+      "id": "puck",
+      "body": {
+        "motion": "dynamic",
+        "shape": {
+          "kind": "sphere",
+          "radius": 0.5
+        },
+        "massKg": 1,
+        "friction": 0
+      }
+    }
+  ]
+}

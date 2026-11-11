@@ -14,7 +14,7 @@ class SampleIndexTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         (self.root / "samples/Small").mkdir(parents=True)
         (self.root / "samples/Small/Small.csproj").write_text("<Project />", encoding="utf-8")
-        (self.root / "Brutal.Authoring.slnx").write_text(
+        (self.root / "Bed.slnx").write_text(
             '<Solution><Folder Name="/tests/"><Project Path="samples/Small/Small.csproj" /></Folder></Solution>', encoding="utf-8")
 
     def test_projects_count_even_under_tests_solution_folder(self):

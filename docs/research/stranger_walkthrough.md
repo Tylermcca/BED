@@ -35,7 +35,7 @@ $LASTEXITCODE
 ```powershell
 $probe=Join-Path $gate 'sdk-probe'
 dotnet new console --output $probe --no-restore --framework net10.0
-dotnet add "$probe/sdk-probe.csproj" reference src/Brutal.Authoring.Data/Brutal.Authoring.Data.csproj src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj
+dotnet add "$probe/sdk-probe.csproj" reference src/Bed.Data/Bed.Data.csproj src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj
 dotnet run --project "$probe/sdk-probe.csproj" -- "$gate/tmp-ps51/authoring-guide"
 ```
 
@@ -99,10 +99,10 @@ First unsuccessful copy encountered inherited clipboard text. Its persisted log 
 
 **W18.** Source-assisted Follow then Back: local tool and cross-file seed/pair/tagged/plot. Successful Back returns gardeners.json /gardeners/0. Plot selects/beds/1, `Went to Alcove in beds.json; the link points inside it, at /plots/0.` Duplicate Follow=false, `duplicate doesn't name an item here.` Documented dead-end without detailed Note. No document edits by navigation; keyboard Follow/Back unverified.
 
-Card-authorized CLI absent from guide. `dotnet run --project src/Brutal.Authoring.Agent.Cli -- --help` printed usage exit 2 ([04-authoring-help.log](../../.gate/04-authoring-help.log)). Fallback exact script [10-agent-fallback.ps1](../../.gate/10-agent-fallback.ps1):
+Card-authorized CLI absent from guide. `dotnet run --project src/Bed.Agent.Cli -- --help` printed usage exit 2 ([04-authoring-help.log](../../.gate/04-authoring-help.log)). Fallback exact script [10-agent-fallback.ps1](../../.gate/10-agent-fallback.ps1):
 
 ```powershell
-$base=@('run','--no-build','--project','src/Brutal.Authoring.Agent.Cli','--','--data',"$gate/lantern-garden/data",'--schemas',"$gate/lantern-garden/schemas",'--map',"$gate/lantern-garden/reference-map.json")
+$base=@('run','--no-build','--project','src/Bed.Agent.Cli','--','--data',"$gate/lantern-garden/data",'--schemas',"$gate/lantern-garden/schemas",'--map',"$gate/lantern-garden/reference-map.json")
 & dotnet @base describe
 & dotnet @base get gardeners.json /gardeners/0/duplicate
 & dotnet @base get gardeners.json /gardeners/0/seed

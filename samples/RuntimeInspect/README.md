@@ -1,6 +1,6 @@
 # RuntimeInspect
 
-A console example that reads a saved level and its prepared asset generation, then prints every object, mesh part and used texture size. It references only `Brutal.Authoring` (the scene reader) and `Brutal.Authoring.Runtime` (asset readers). It opens no window and writes nothing.
+A console example that reads a saved level and its prepared asset generation, then prints every object, mesh part and used texture size. It references only `Bed` (the scene reader) and `Bed.Runtime` (asset readers). It opens no window and writes nothing.
 
 From the repository root, run:
 

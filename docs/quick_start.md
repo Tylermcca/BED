@@ -33,19 +33,19 @@ Build the two hosts. These commands restore the existing dependencies as needed;
 
 <!-- command:launcher-build; exit:0 -->
 ```powershell
-dotnet build src/Brutal.Authoring.Launcher/Brutal.Authoring.Launcher.csproj --nologo -v:minimal
+dotnet build src/Bed.Launcher/Bed.Launcher.csproj --nologo -v:minimal
 ```
 
 <!-- command:cli-build; exit:0 -->
 ```powershell
-dotnet build src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj --nologo -v:minimal
+dotnet build src/Bed.Agent.Cli/Bed.Agent.Cli.csproj --nologo -v:minimal
 ```
 
 Open the project without a window first. --shot writes an image; --settings keeps this trial separate from your recent-project settings. Expect exit 0, an Opened message and .quick-start/plain.png.
 
 <!-- command:plain-open; exit:0 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Launcher/Brutal.Authoring.Launcher.csproj --no-build -- .quick-start --settings .quick-start/settings --shot .quick-start/plain.png
+dotnet run --project src/Bed.Launcher/Bed.Launcher.csproj --no-build -- .quick-start --settings .quick-start/settings --shot .quick-start/plain.png
 ```
 
 ## Your rules
@@ -63,7 +63,7 @@ Write .quick-start/adapter/QuickGardenAdapter.csproj. The relative reference poi
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
-  <ItemGroup><ProjectReference Include="../../src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj" /></ItemGroup>
 </Project>
 ```
 
@@ -74,10 +74,10 @@ Configure is empty because the built-in table and inspector already edit this da
 <!-- file:.quick-start/adapter/GardenAdapter.cs -->
 ```csharp
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
+using Bed;
+using Bed.Data;
+using Bed.Editor;
+using Bed.Editor.ImGui;
 namespace QuickGarden;
 public sealed class GardenAdapter : IProjectAdapter
 {
@@ -111,8 +111,8 @@ This check is advisory, not a mandatory save rule. The validator above refuses n
 <!-- file:.quick-start/adapter/InventoryCheck.cs -->
 ```csharp
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Data;
+using Bed;
+using Bed.Data;
 namespace QuickGarden;
 public sealed class InventoryCheck : ICheck
 {
@@ -146,12 +146,12 @@ List its checks, then run the one you added. The listing should contain garden.i
 
 <!-- command:checks; exit:0 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll checks
+dotnet run --project src/Bed.Agent.Cli/Bed.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll checks
 ```
 
 <!-- command:check; exit:0 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll check garden.inventory
+dotnet run --project src/Bed.Agent.Cli/Bed.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll check garden.inventory
 ```
 
 ## Links between files
@@ -179,14 +179,14 @@ Reopen without a window, this time with the adapter. The project folder automati
 
 <!-- command:linked-open; exit:0 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Launcher/Brutal.Authoring.Launcher.csproj --no-build -- .quick-start --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll --settings .quick-start/settings --shot .quick-start/linked.png
+dotnet run --project src/Bed.Launcher/Bed.Launcher.csproj --no-build -- .quick-start --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll --settings .quick-start/settings --shot .quick-start/linked.png
 ```
 
 Follow the stored id through the CLI. Expect link.outcome=Found, file=items.json and at=/items/0.
 
 <!-- command:link; exit:0 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll get recipes.json /recipes/0/uses
+dotnet run --project src/Bed.Agent.Cli/Bed.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll get recipes.json /recipes/0/uses
 ```
 
 ## An AI on your data
@@ -195,33 +195,33 @@ The same adapter attaches the rule and check to typed AI calls. Start with descr
 
 <!-- command:describe; exit:0 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll describe
+dotnet run --project src/Bed.Agent.Cli/Bed.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll describe
 ```
 
 Preview a negative score. **Exit 1 is expected here:** the refused list must contain /items/0/score and Score must be zero or higher. Nothing changes on disk. Do not treat this expected refusal as a failed build or replace the schema/rule to make it pass.
 
 <!-- command:refused; exit:1 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll set items.json /items/0/score -1 --preview
+dotnet run --project src/Bed.Agent.Cli/Bed.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll set items.json /items/0/score -1 --preview
 ```
 
 Preview 2 instead, then deliberately save that edit. Without --save a standalone CLI process discards its draft; the next command does not inherit it. --preview changes nothing even when validation accepts it.
 
 <!-- command:preview; exit:0 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll set items.json /items/0/score 2 --preview
+dotnet run --project src/Bed.Agent.Cli/Bed.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll set items.json /items/0/score 2 --preview
 ```
 
 <!-- command:save; exit:0 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll set items.json /items/0/score 2 --save
+dotnet run --project src/Bed.Agent.Cli/Bed.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll set items.json /items/0/score 2 --save
 ```
 
 Read it in a fresh process: value should be 2.
 
 <!-- command:reopen-value; exit:0 -->
 ```powershell
-dotnet run --project src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll get items.json /items/0/score
+dotnet run --project src/Bed.Agent.Cli/Bed.Agent.Cli.csproj --no-build -- --data .quick-start/data --schemas .quick-start/schemas --map .quick-start/reference_map.json --adapter .quick-start/adapter/bin/Debug/net10.0/QuickGardenAdapter.dll get items.json /items/0/score
 ```
 
 Use the CLI's mcp mode to serve these calls over stdio to your configured AI client. The server has no sign-in of its own; you configure the client separately.

@@ -46,7 +46,7 @@ Required settings/members, confirmed in the installed XML:
 - Always feed backend events to ImGui. Respect capture and key ownership to prevent document actions while text/popup controls own input. `WantCaptureKeyboard` is not permission to drop ImGui's events. Text-field Undo must not also undo the document.
 - Use stable object/command/property identities with `PushID` or an invariant `###id` suffix. Translated, renamed and duplicate labels must not collide.
 
-Existing bindings in `src/Brutal.Authoring.Editor/Shortcuts.cs` are authoritative: Ctrl+Shift+P palette, Ctrl+S save, Ctrl+Z undo, Ctrl+Y redo, F focus in, Escape focus out. Effective user overrides/removals win; menus show effective bindings; palette routes survive shortcut clashes. This profile changes no shortcut schema. **BORROWED lesson:** Blender's [menu search](https://docs.blender.org/manual/en/2.91/interface/controls/templates/operator_search.html) [S12] provides typed search and keyboard activation; borrow discovery rather than replacing existing bindings with F3.
+Existing bindings in `src/Bed.Editor/Shortcuts.cs` are authoritative: Ctrl+Shift+P palette, Ctrl+S save, Ctrl+Z undo, Ctrl+Y redo, F focus in, Escape focus out. Effective user overrides/removals win; menus show effective bindings; palette routes survive shortcut clashes. This profile changes no shortcut schema. **BORROWED lesson:** Blender's [menu search](https://docs.blender.org/manual/en/2.91/interface/controls/templates/operator_search.html) [S12] provides typed search and keyboard activation; borrow discovery rather than replacing existing bindings with F3.
 
 | Action/surface | Required route and focus behavior |
 |---|---|

@@ -1,0 +1,1 @@
+INVENTED fixture: 800 mono frames at 8000 Hz, amplitude 0.15 sine at 440 Hz. Generated locally with installed Python soundfile/libsndfile, OGG/Vorbis. No external media. Tests read these bytes without playback.

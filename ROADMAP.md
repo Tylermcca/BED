@@ -26,7 +26,7 @@ The goal: someone new to BED can open the sample level, add a model, position it
 - Right-click menus, and tooltips that show shortcuts and explain why a command is unavailable.
 - Light and dark themes that follow Windows, and sharp text at any display scaling.
 - Panels you can move into their own windows; the layout is remembered and can be reset.
-- Screen readers can read the whole editor in real windows. Pressing buttons and typing through assistive tools is still being finished.
+- Screen readers can read the whole editor in real windows.
 - Tables, forms, links between files, checks, and undo for every edit.
 - AI assistants can read, check and edit data through the command line and MCP.
 
@@ -58,17 +58,50 @@ The goal: someone new to BED can open the sample level, add a model, position it
 - Done: an automated test of the whole workflow on the sample level, from opening it to exporting a build.
 - Done: using BED for real work on one of my own games. All of that game's design data is now edited in BED.
 - Done: hands-on testing in real windows, including the 3D view.
-- Now: the 0.2.1-rc.1 release candidate for testers, then the release.
+- Done: the 0.2.1-rc.1 release candidate for testers. The 0.3.0-rc.1 candidate builds on it.
 
-## 0.3: next
+## 0.3: prefabs, 2D and physics (release candidate: 0.3.0-rc.1)
 
-- **2D.** A flat view, sprites with sizes and pivots, and 2D levels with the same place, parent, snap and save tools.
-- **Prefabs.** Place the same piece many times, change one copy, see what you changed and undo it. Editing the original never overwrites changes you made to a copy.
-- **Sound preview.** Play and stop sound files in the editor.
-- **Pause and step.** Pause the running game and advance it one frame at a time.
+The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and play and export it.
+
+### Prefabs: done
+- Place a reusable piece more than once, and point its named slots at objects in the level.
+- Change one copy. Changed fields are marked, and **Revert** puts one back.
+- Review every change to an updated original before accepting it. Local changes are kept, and an update that would break one is refused as a whole.
+- Duplicate, unlink or delete a copy, and copy and paste pieces between levels.
+
+### 2D levels: done
+- Flat levels in X and Y, with sprites from imported PNG images.
+- Size, pivot, drawing order and image sampling, with handles, the keyboard and snapping.
+- A camera remembered for each level.
+
+### Physics: done
+- Gravity and a fixed time step for each level.
+- Static, dynamic and kinematic bodies with box, sphere, capsule or fitted-bounds shapes, mass and friction.
+- Edit them in **View > Physics** and the Inspector, and see collision shapes in the view.
+- A separate physics sample runs them in a game, in Play and in an exported build. Simulation belongs to the game and never changes the saved level.
+
+### Levels in games and builds: done
+- A game that opts in reads saved prefab and sprite levels.
+- Export build carries them with their checked assets, and the copied game runs without BED or the original prefab files and images.
+
+### Also in 0.3: done
+- Sound preview in Assets.
+- Pause and Step for games that support them.
+- Check findings and game messages that take you to the saved field.
+- Larger default text that follows Windows, high contrast, and assistive tools that can press buttons and set values.
+- An engine-style layout and camera, an optional W/E/R keymap, and a first-run guided tour.
+- **Help > Report a problem**, which shows exactly what a report contains and sends nothing by itself.
+- Pinned recent projects.
+
+### Before release
+- Now: the 0.3.0-rc.1 release candidate for testers, then the release.
+
+## 0.4: next, working with the running game
+
 - **Inspect the running game.** See an object's current values while the game runs.
 - **Live tweaks.** Try a change in the running game without changing your saved files.
-- **Jump to the problem.** A game error or failed check takes you straight to the object or field that caused it.
+- **Fixes from real use.** Fix what turns up when BED is used on real games and by testers.
 
 ## Later
 
@@ -80,7 +113,6 @@ Driven by what games built with BED actually need. Roughly in order of priority:
 - Nested prefabs.
 - Animation preview.
 - A basic profiler for the running game.
-- Collision and physics settings.
 - Particles and game-UI layout.
 - Code changes while the game is running (hot reload).
 - More rendering backends alongside Vulkan.

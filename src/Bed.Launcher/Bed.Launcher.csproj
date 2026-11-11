@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- BED: the general app anyone can open (the user, 2026-11-01). It opens any project of JSON data and
+       schemas with no code, remembers recent projects, and hosts the data workspace in a window. With shot it draws
+       the same screens headless into a PNG instead, so it can be checked where no window may open. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>Bed.Launcher</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Bed.Editor.App\Bed.Editor.App.csproj" />
+    <!-- The Text panel (with ImCode, MIT), which the app adds to every data file (Program.SetUp). -->
+    <ProjectReference Include="..\Bed.Editor.Text\Bed.Editor.Text.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The sample project a newcomer is offered on the start screen, copied next to the program. -->
+    <None Include="..\..\samples\StarterProject\**\*" LinkBase="samples/recipes" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Import Project="..\..\build\Notices.targets" />
+  <ItemGroup>
+    <ProjectReference Include="../../samples/SceneStarter/SceneStarter.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../samples/PhysicsStarter/PhysicsStarter.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../samples/SceneStarterAdapter/SceneStarterAdapter.csproj" ReferenceOutputAssembly="false" />
+    <None Include="../../samples/SceneStarterProject/**/*" LinkBase="samples/scene-starter" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="CopySceneStarterLinkedSample" AfterTargets="Build">
+    <ItemGroup>
+      <SceneStarterRuntime Include="../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.exe;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.deps.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/SceneStarter.runtimeconfig.json;../../samples/SceneStarter/bin/$(Configuration)/net10.0/Bed.dll;../../samples/SceneStarter/bin/$(Configuration)/net10.0/LICENSE.txt;../../samples/SceneStarter/bin/$(Configuration)/net10.0/NOTICE.txt" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SceneStarterRuntime)" DestinationFolder="$(OutDir)samples/SceneStarter" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="../../samples/SceneStarterAdapter/bin/$(Configuration)/net10.0/SceneStarterAdapter.dll" DestinationFolder="$(OutDir)adapters" SkipUnchangedFiles="true" />
+  </Target>  <ItemGroup>
+    <InternalsVisibleTo Include="Bed.Tests" />
+  </ItemGroup>
+  <Target Name="CopyPhysicsStarterSample" AfterTargets="Build">
+    <ItemGroup><PhysicsStarterRuntime Include="../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/*.dll;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/PhysicsStarter.exe;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/PhysicsStarter.deps.json;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/PhysicsStarter.runtimeconfig.json;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/LICENSE.txt;../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/NOTICE.txt" /><PhysicsStarterNotice Include="../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/licenses/*.txt" /><PhysicsStarterNative Include="../../samples/PhysicsStarter/bin/$(Configuration)/net10.0/runtimes/win-x64/native/jolt.dll" /></ItemGroup>
+    <Copy SourceFiles="@(PhysicsStarterRuntime)" DestinationFolder="$(OutDir)samples/PhysicsStarter" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(PhysicsStarterNotice)" DestinationFolder="$(OutDir)samples/PhysicsStarter/licenses" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(PhysicsStarterNative)" DestinationFolder="$(OutDir)samples/PhysicsStarter/runtimes/win-x64/native" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyPublicAppHostName" AfterTargets="Build" Condition="Exists('$(TargetDir)Bed.Launcher.exe')">
+    <Copy SourceFiles="$(TargetDir)Bed.Launcher.exe" DestinationFiles="$(TargetDir)BED.exe" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

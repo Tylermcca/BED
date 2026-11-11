@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Data editing (goal 15): any JSON data file with a JSON Schema (2020-12) becomes an editable, validated, undoable
+       document. No packages: the schema validator is self-authored (see JsonSchemas). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Bed\Bed.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The reference map's format, kept once in docs/spec and embedded so a map can be checked without the docs. -->
+    <EmbeddedResource Include="..\..\docs\spec\schemas\reference_map.schema.json" LogicalName="reference_map.schema.json" />
+  </ItemGroup>
+</Project>

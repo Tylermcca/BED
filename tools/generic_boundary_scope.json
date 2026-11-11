@@ -4,36 +4,36 @@
   "status": "owner-approved eight-library technical census: original seven plus framework-only Runtime, 2026-11-09; not release adoption",
   "projects": [
     {
-      "path": "src/Brutal.Authoring/Brutal.Authoring.csproj",
-      "assembly": "Brutal.Authoring"
+      "path": "src/Bed/Bed.csproj",
+      "assembly": "Bed"
     },
     {
-      "path": "src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj",
-      "assembly": "Brutal.Authoring.Runtime"
+      "path": "src/Bed.Runtime/Bed.Runtime.csproj",
+      "assembly": "Bed.Runtime"
     },
     {
-      "path": "src/Brutal.Authoring.Data/Brutal.Authoring.Data.csproj",
-      "assembly": "Brutal.Authoring.Data"
+      "path": "src/Bed.Data/Bed.Data.csproj",
+      "assembly": "Bed.Data"
     },
     {
-      "path": "src/Brutal.Authoring.Editor/Brutal.Authoring.Editor.csproj",
-      "assembly": "Brutal.Authoring.Editor"
+      "path": "src/Bed.Editor/Bed.Editor.csproj",
+      "assembly": "Bed.Editor"
     },
     {
-      "path": "src/Brutal.Authoring.Import/Brutal.Authoring.Import.csproj",
-      "assembly": "Brutal.Authoring.Import"
+      "path": "src/Bed.Import/Bed.Import.csproj",
+      "assembly": "Bed.Import"
     },
     {
-      "path": "src/Brutal.Authoring.Agent/Brutal.Authoring.Agent.csproj",
-      "assembly": "Brutal.Authoring.Agent"
+      "path": "src/Bed.Agent/Bed.Agent.csproj",
+      "assembly": "Bed.Agent"
     },
     {
-      "path": "src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj",
-      "assembly": "Brutal.Authoring.Editor.ImGui"
+      "path": "src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj",
+      "assembly": "Bed.Editor.ImGui"
     },
     {
-      "path": "src/Brutal.Authoring.Editor.Text/Brutal.Authoring.Editor.Text.csproj",
-      "assembly": "Brutal.Authoring.Editor.Text"
+      "path": "src/Bed.Editor.Text/Bed.Editor.Text.csproj",
+      "assembly": "Bed.Editor.Text"
     }
   ],
   "support_projects": [
@@ -45,21 +45,21 @@
     "SampleConsumer"
   ],
   "engine_free": [
-    "Brutal.Authoring",
-    "Brutal.Authoring.Data",
-    "Brutal.Authoring.Editor",
-    "Brutal.Authoring.Import",
-    "Brutal.Authoring.Agent",
-    "Brutal.Authoring.Runtime"
+    "Bed",
+    "Bed.Data",
+    "Bed.Editor",
+    "Bed.Import",
+    "Bed.Agent",
+    "Bed.Runtime"
   ],
   "no_imcode": [
-    "Brutal.Authoring",
-    "Brutal.Authoring.Data",
-    "Brutal.Authoring.Editor",
-    "Brutal.Authoring.Import",
-    "Brutal.Authoring.Agent",
-    "Brutal.Authoring.Editor.ImGui",
-    "Brutal.Authoring.Runtime"
+    "Bed",
+    "Bed.Data",
+    "Bed.Editor",
+    "Bed.Import",
+    "Bed.Agent",
+    "Bed.Editor.ImGui",
+    "Bed.Runtime"
   ],
   "binary_assemblies_unverified": true,
   "source_exclusions": [],

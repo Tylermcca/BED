@@ -1,6 +1,6 @@
 # The first slice: what it promises
 
-This is the contract of the shared core's first slice (worksheet_r2, "The first slice"). It's written so someone who has never seen the code can test it. The public API is in `src/Brutal.Authoring`, and the neutral sample is in `samples/Toy`.
+This is the contract of the shared core's first slice (worksheet_r2, "The first slice"). It's written so someone who has never seen the code can test it. The public API is in `src/Bed`, and the neutral sample is in `samples/Toy`.
 
 ## Documents and commands
 

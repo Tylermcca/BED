@@ -21,7 +21,7 @@ def check_membership(root):
     """Check all source sample projects, independent of solution folder labels."""
     root = Path(root).resolve()
     projects = [p.relative_to(root).as_posix() for p in sample_files(root) if p.suffix == ".csproj"]
-    solution = ET.parse(root / "Brutal.Authoring.slnx")
+    solution = ET.parse(root / "Bed.slnx")
     members = {node.attrib["Path"].replace("\\", "/") for node in solution.iter("Project")}
     errors = ["Sample project is absent from solution: " + p for p in projects if p not in members]
     if not projects:

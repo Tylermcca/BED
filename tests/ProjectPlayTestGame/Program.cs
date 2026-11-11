@@ -3,6 +3,11 @@ Console.WriteLine("plain stdout");Console.Error.WriteLine("plain stderr");
 Console.WriteLine("BED_PROJECT="+Environment.GetEnvironmentVariable("BED_PROJECT"));
 Console.WriteLine("BED_PLAY="+Environment.GetEnvironmentVariable("BED_PLAY"));
 var mode=args.FirstOrDefault()??"ok";
+if(mode=="diagnostic")
+{
+    Console.WriteLine(args[1]);Console.Error.WriteLine(args[2]);return 0;
+}
+
 if(mode=="stdin")
 {
     var text=await Console.In.ReadToEndAsync();Console.WriteLine("stdin-bytes="+System.Text.Encoding.UTF8.GetByteCount(text));
@@ -33,6 +38,12 @@ if(mode is "missing-runtime" or "missing-runtime-quiet" or "runtime-text-only")
 {
     if(mode!="missing-runtime-quiet")Console.Error.WriteLine("Framework: 'Microsoft.NETCore.App', version '10.0.0' (x64)");
     return mode=="runtime-text-only"?7:unchecked((int)0x80008096);
+}
+if(mode=="exit-on-file")
+{
+    var deadline=System.Diagnostics.Stopwatch.StartNew();
+    while(!File.Exists(args[1])&&deadline.Elapsed<TimeSpan.FromSeconds(30))await Task.Delay(2);
+    return File.Exists(args[1])?0:32;
 }
 if(mode=="crash")return 7;
 if(mode=="build-fail")return 9;

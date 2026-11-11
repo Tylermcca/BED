@@ -8,13 +8,13 @@ Seven development libraries pack, and the accepted quick-start adapter builds fr
 
 | Working package ID | Role and boundary |
 |---|---|
-| Brutal.Authoring | Core authoring documents, validated commands, undo, serialization and asset identities. No external package. |
-| Brutal.Authoring.Data | JSON editing, schemas, projects and checks; depends on Core. |
-| Brutal.Authoring.Editor | UI-independent editor model, selection and inspectors; depends on Core and Data. |
-| Brutal.Authoring.Import | Optional glTF importer; depends on Core and SharpGLTF.Core. |
-| Brutal.Authoring.Agent | Optional typed sessions and MCP protocol; depends on Core, Data and Editor. This is the library, not the CLI host. |
-| Brutal.Authoring.Editor.ImGui | Optional editor panels and adapter contract; depends on Editor and BRUTAL Core/ImGui. |
-| Brutal.Authoring.Editor.Text | Optional raw JSON text panel; depends on Editor.ImGui and BRUTAL, and bundles the pinned ImCode assemblies. |
+| Bed | Core authoring documents, validated commands, undo, serialization and asset identities. No external package. |
+| Bed.Data | JSON editing, schemas, projects and checks; depends on Core. |
+| Bed.Editor | UI-independent editor model, selection and inspectors; depends on Core and Data. |
+| Bed.Import | Optional glTF importer; depends on Core and SharpGLTF.Core. |
+| Bed.Agent | Optional typed sessions and MCP protocol; depends on Core, Data and Editor. This is the library, not the CLI host. |
+| Bed.Editor.ImGui | Optional editor panels and adapter contract; depends on Editor and BRUTAL Core/ImGui. |
+| Bed.Editor.Text | Optional raw JSON text panel; depends on Editor.ImGui and BRUTAL, and bundles the pinned ImCode assemblies. |
 
 Keep Editor.App, Launcher and Agent.Cli as internal host/application projects for this proposal. Editor.App is a library-shaped host, but its platform renderer is not a public package here. Tests and samples are development inputs, not packages. The recipe packs an explicit list of seven projects; it does not run solution-wide pack. Vendored projects have their own upstream build props, so the root whitelist does not disable their independent pack targets.
 
@@ -30,7 +30,7 @@ All seven library packages carry the existing LICENSE.txt byte-for-byte, an orig
 
 | Package suffix | .nupkg entries | Direct dependencies as emitted in nuspec |
 |---|---:|---|
-| Core (Brutal.Authoring) | 8 | none |
+| Core (Bed) | 8 | none |
 | Data | 8 | Core: trial version |
 | Editor | 8 | Core, Data: trial version |
 | Import | 8 | Core: trial version; SharpGLTF.Core 1.0.7 |
@@ -58,14 +58,14 @@ Representative commands below were run inside their indicated scratch folders. T
 
 ```powershell
 # In the source copy, repeated for the explicit seven-project list above:
-dotnet pack src/Brutal.Authoring/Brutal.Authoring.csproj -c Release -o ../packages --nologo -v:minimal -p:NuGetAudit=false -p:EnableSourceControlManagerQueries=false -p:EnableSourceLink=false -p:UseSharedCompilation=false -p:PathMap="${PWD}=/_/"
+dotnet pack src/Bed/Bed.csproj -c Release -o ../packages --nologo -v:minimal -p:NuGetAudit=false -p:EnableSourceControlManagerQueries=false -p:EnableSourceLink=false -p:UseSharedCompilation=false -p:PathMap="${PWD}=/_/"
 # Copy the seven resulting nupkg files into the local dependency feed.
 # In a separate fresh consumer with its own empty cache and no ancestor build settings:
 dotnet restore QuickGardenAdapter.csproj --configfile NuGet.Config --source ../feed --packages ../consumer-cache -p:NuGetAudit=false --no-http-cache -v:normal
 dotnet build QuickGardenAdapter.csproj -c Release --no-restore --nologo -p:UseSharedCompilation=false
 ```
 
-The actual consumer copies GardenAdapter.cs and InventoryCheck.cs unchanged from the accepted quick start. Its project replaces the source ProjectReference with one PackageReference to Brutal.Authoring.Editor.ImGui, version [0.0.0-local.a194]. Empty local Directory.Build.props and Directory.Packages.props block accidental inheritance from the outer repository. The final fresh restore selected 26 packages, using only the named local feed and its newly empty private cache; its assets contain no project-reference libraries. Build succeeded with zero warnings and errors.
+The actual consumer copies GardenAdapter.cs and InventoryCheck.cs unchanged from the accepted quick start. Its project replaces the source ProjectReference with one PackageReference to Bed.Editor.ImGui, version [0.0.0-local.a194]. Empty local Directory.Build.props and Directory.Packages.props block accidental inheritance from the outer repository. The final fresh restore selected 26 packages, using only the named local feed and its newly empty private cache; its assets contain no project-reference libraries. Build succeeded with zero warnings and errors.
 
 An independent executable consumer references all seven packages and uses another initially empty cache: 30 resolved packages, again only the local feed and no source references. Its build also has zero warnings and errors. It recognizes the original garden sample through the unchanged adapter, opens the data and runs the registered frozen-input inventory check to a complete result with no findings. It then inspects the DLL/PDB metadata described above. No window, graphical host, game, live AI client or gameplay is exercised.
 

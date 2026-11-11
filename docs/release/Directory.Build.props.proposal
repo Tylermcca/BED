@@ -16,7 +16,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1573</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Brutal.Authoring' Or '$(MSBuildProjectName)' == 'Brutal.Authoring.Data' Or '$(MSBuildProjectName)' == 'Brutal.Authoring.Editor' Or '$(MSBuildProjectName)' == 'Brutal.Authoring.Import' Or '$(MSBuildProjectName)' == 'Brutal.Authoring.Agent' Or '$(MSBuildProjectName)' == 'Brutal.Authoring.Editor.ImGui' Or '$(MSBuildProjectName)' == 'Brutal.Authoring.Editor.Text'">
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Bed' Or '$(MSBuildProjectName)' == 'Bed.Data' Or '$(MSBuildProjectName)' == 'Bed.Editor' Or '$(MSBuildProjectName)' == 'Bed.Import' Or '$(MSBuildProjectName)' == 'Bed.Agent' Or '$(MSBuildProjectName)' == 'Bed.Editor.ImGui' Or '$(MSBuildProjectName)' == 'Bed.Editor.Text'">
     <IsPackable>true</IsPackable>
     <PackageId>$(MSBuildProjectName)</PackageId>
     <Version Condition="'$(Version)' == ''">0.0.0-local.a194</Version>
@@ -36,12 +36,12 @@
     <PathMap>$(MSBuildThisFileDirectory)=/_/</PathMap>
     <Description>Development-only authoring library for validated, undoable editing. Working package name; dependencies keep their own licences.</Description>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Brutal.Authoring'"><Description>Authoring documents, validated commands, undo, serialization and asset identities; no renderer or external package.</Description></PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Brutal.Authoring.Data'"><Description>JSON documents, schemas, projects and checks for authoring tools; no UI dependency.</Description></PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Brutal.Authoring.Editor'"><Description>UI-independent authoring editor model, selection, commands and inspectors.</Description></PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Brutal.Authoring.Import'"><Description>glTF authoring import through SharpGLTF.Core, under its separate MIT terms.</Description></PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Brutal.Authoring.Agent'"><Description>Typed authoring sessions and MCP protocol over data and editor models, without a UI host.</Description></PropertyGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Brutal.Authoring.Editor.ImGui' Or '$(MSBuildProjectName)' == 'Brutal.Authoring.Editor.Text'">
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Bed'"><Description>Authoring documents, validated commands, undo, serialization and asset identities; no renderer or external package.</Description></PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Bed.Data'"><Description>JSON documents, schemas, projects and checks for authoring tools; no UI dependency.</Description></PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Bed.Editor'"><Description>UI-independent authoring editor model, selection, commands and inspectors.</Description></PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Bed.Import'"><Description>glTF authoring import through SharpGLTF.Core, under its separate MIT terms.</Description></PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Bed.Agent'"><Description>Typed authoring sessions and MCP protocol over data and editor models, without a UI host.</Description></PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Bed.Editor.ImGui' Or '$(MSBuildProjectName)' == 'Bed.Editor.Text'">
     <Description>Optional authoring editor panel using BRUTAL under BRUTAL License v1.0. Distributed hosts must meet its credits, logo and notice conditions; see README.md and licenses.</Description>
   </PropertyGroup>
   <ItemGroup Condition="'$(IsPackable)' == 'true'">
@@ -51,7 +51,7 @@
   </ItemGroup>
   <!-- BORROWED: the existing Notices.targets resolves terms from the actual restored asset folders.
        Pack terms with the libraries; deployment and graphical attribution remain the host's duty. -->
-  <Target Name="PackBrutalTerms" BeforeTargets="_GetPackageFiles" DependsOnTargets="ResolveReferences" Condition="'$(IsPackable)' == 'true' And ('$(MSBuildProjectName)' == 'Brutal.Authoring.Editor.ImGui' Or '$(MSBuildProjectName)' == 'Brutal.Authoring.Editor.Text')">
+  <Target Name="PackBrutalTerms" BeforeTargets="_GetPackageFiles" DependsOnTargets="ResolveReferences" Condition="'$(IsPackable)' == 'true' And ('$(MSBuildProjectName)' == 'Bed.Editor.ImGui' Or '$(MSBuildProjectName)' == 'Bed.Editor.Text')">
     <ItemGroup>
       <_TermsAsset Include="@(ReferencePath)" Condition="$([System.String]::Copy('%(ReferencePath.NuGetPackageId)').StartsWith('Ahwoo.Brutal.', System.StringComparison.OrdinalIgnoreCase))" />
       <_TermsRoot Include="$([MSBuild]::GetDirectoryNameOfFileAbove('%(_TermsAsset.RootDir)%(_TermsAsset.Directory)', '.nupkg.metadata'))"><Id>%(_TermsAsset.NuGetPackageId)</Id></_TermsRoot>

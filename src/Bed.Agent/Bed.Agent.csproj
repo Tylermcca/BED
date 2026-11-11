@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Goal 20: AI agents use the editor directly. One engine (AgentSession) over a data project, with two thin doors on
+       top: the command line and an MCP server over stdio (Bed.Agent.Cli). No packages, no UI. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Bed\Bed.csproj" />
+    <ProjectReference Include="..\Bed.Data\Bed.Data.csproj" />
+    <ProjectReference Include="..\Bed.Editor\Bed.Editor.csproj" />
+  </ItemGroup>
+</Project>

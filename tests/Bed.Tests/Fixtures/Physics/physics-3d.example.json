@@ -1,0 +1,75 @@
+{
+  "kind": "scene",
+  "version": 2,
+  "physics": {
+    "gravity": [
+      0,
+      -9.81,
+      0
+    ],
+    "fixedStepSeconds": 0.016666666666666666
+  },
+  "objects": [
+    {
+      "id": "floor",
+      "position": [
+        0,
+        -1,
+        0
+      ],
+      "body": {
+        "motion": "static",
+        "shape": {
+          "kind": "box",
+          "halfExtents": [
+            10,
+            0.5,
+            10
+          ]
+        },
+        "friction": 0.7
+      }
+    },
+    {
+      "id": "crate",
+      "position": [
+        0,
+        2,
+        0
+      ],
+      "body": {
+        "motion": "dynamic",
+        "shape": {
+          "kind": "box",
+          "halfExtents": [
+            0.5,
+            0.5,
+            0.5
+          ]
+        },
+        "massKg": 12,
+        "friction": 0.4
+      }
+    },
+    {
+      "id": "platform",
+      "position": [
+        3,
+        0,
+        0
+      ],
+      "body": {
+        "motion": "kinematic",
+        "shape": {
+          "kind": "box",
+          "halfExtents": [
+            1,
+            0.2,
+            1
+          ]
+        },
+        "friction": 0.6
+      }
+    }
+  ]
+}

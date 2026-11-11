@@ -4,7 +4,7 @@ SC-S0b, based on main `1658914`. **MIXED:** existing immutable Scene/SceneFormat
 
 ## Current entry point
 
-`SceneRuntimeReader.Read(text, kind = "scene", assetExists = null)` lives in `src/Brutal.Authoring/SceneRuntimeReader.cs`. The existing core project has no editor, ImGui, rendering or package references. It accepts already decoded JSON, validates the complete scene and returns immutable scene data. It does not open files, create a DocumentSession, load meshes, resolve absolute paths, spawn objects, calculate world transforms, or run a game. The optional predicate is supplied by the caller; the reader itself performs no external operations.
+`SceneRuntimeReader.Read(text, kind = "scene", assetExists = null)` lives in `src/Bed/SceneRuntimeReader.cs`. The existing core project has no editor, ImGui, rendering or package references. It accepts already decoded JSON, validates the complete scene and returns immutable scene data. It does not open files, create a DocumentSession, load meshes, resolve absolute paths, spawn objects, calculate world transforms, or run a game. The optional predicate is supplied by the caller; the reader itself performs no external operations.
 
 Source contracts reused without modification:
 - `Scene.cs:54-88`: immutable object order and strict SceneFormat kind/version policy.

@@ -14,7 +14,7 @@ In Windows PowerShell 5.1 or PowerShell 7:
 
 ```powershell
 dotnet build samples/Ladder/Ladder.csproj --nologo -v:q
-dotnet test tests/Brutal.Authoring.Tests/Brutal.Authoring.Tests.csproj --filter "FullyQualifiedName~LadderTests" --nologo -v:q
+dotnet test tests/Bed.Tests/Bed.Tests.csproj --filter "FullyQualifiedName~LadderTests" --nologo -v:q
 ```
 
 The build should succeed with no errors. The filtered run should report 23 passed and zero failed or skipped. The commands run headless. The first build may restore the repository's existing packages.
@@ -38,7 +38,7 @@ The project references only the core and editor model. Each step extends the sup
 Whole file: samples/Ladder/Rung1_Describe.cs, 21 lines.
 
 ```csharp
-using Brutal.Authoring.Editor;
+using Bed.Editor;
 
 namespace Ladder;
 
@@ -80,7 +80,7 @@ This is C# field registration today. A future zero-C# authoring surface would ne
 Whole file: samples/Ladder/Rung2_OneClassTool.cs, 15 lines.
 
 ```csharp
-using Brutal.Authoring;
+using Bed;
 
 namespace Ladder;
 
@@ -109,8 +109,8 @@ Whole file: samples/Ladder/Rung3_Extension.cs, 38 lines.
 
 ```csharp
 using System.Collections.Immutable;
-using Brutal.Authoring;
-using Brutal.Authoring.Editor;
+using Bed;
+using Bed.Editor;
 
 namespace Ladder;
 
@@ -154,7 +154,7 @@ Switch to ladder.notes with EditorModel.Use. Workspace commands lead the empty p
 
 Check workspace ordering with Rung3WorkspaceCommandsLeadThePalette. Rung3RegistersBothObjectTypesWithTheSameInspector and Rung3InspectorEditsItsNewTypeThroughTheSession cover the note type. Keep the replay and focus checks in Rung3MixedJournalReplaysToIdenticalCanonicalText and Rung3NewInspectorTypeHonorsExistingFocusLock.
 
-All test code is in tests/Brutal.Authoring.Tests/LadderTests.cs.
+All test code is in tests/Bed.Tests/LadderTests.cs.
 
 ## Where to go next
 

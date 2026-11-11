@@ -1,0 +1,152 @@
+{
+  "kind": "scene",
+  "version": 2,
+  "objects": [
+    {
+      "id": "owner",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "properties": {
+        "name": "Reference target"
+      },
+      "references": {}
+    }
+  ],
+  "bases": [
+    {
+      "id": "base_frame",
+      "revision": "sha256:3401412037e446e3cb76c970e49647fce19aba75aca39a02f8e43c80e1bb1c05",
+      "definition": {
+        "kind": "prefab-definition",
+        "version": 1,
+        "space": "3d",
+        "guid": "11111111111111111111111111111111",
+        "root": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "nodes": [
+          {
+            "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "label": "frame",
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "properties": {
+              "locked": false
+            },
+            "references": {}
+          },
+          {
+            "key": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "label": "marker",
+            "parentKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "position": [
+              0,
+              1,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "properties": {},
+            "references": {
+              "owner": {
+                "slot": "cccccccccccccccccccccccccccccccc"
+              },
+              "frame": {
+                "node": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            }
+          }
+        ],
+        "slots": [
+          {
+            "key": "cccccccccccccccccccccccccccccccc",
+            "label": "Owner",
+            "required": true
+          }
+        ]
+      }
+    }
+  ],
+  "instances": [
+    {
+      "key": "22222222222222222222222222222222",
+      "source": "11111111111111111111111111111111",
+      "base": "base_frame",
+      "placement": {
+        "id": "frame_a",
+        "position": [
+          4,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "nodeIds": {
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": "frame_a_root",
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": "frame_a_marker"
+      },
+      "bindings": {
+        "cccccccccccccccccccccccccccccccc": "owner"
+      },
+      "overrides": [
+        {
+          "node": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "field": "/properties/locked",
+          "op": "set",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "objectOrder": [
+    "owner",
+    "frame_a",
+    "frame_a_root",
+    "frame_a_marker"
+  ]
+}

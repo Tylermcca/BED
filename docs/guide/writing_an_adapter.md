@@ -1,6 +1,6 @@
 # Write an adapter for your game
 
-For the complete two-file data/reference/map route, begin at [Start here](start_here.md).
+For the complete two-file data/reference/map route, begin at the [developer walkthrough](developer_walkthrough.md).
 
 ## What an adapter is
 
@@ -17,9 +17,9 @@ You need Windows, PowerShell 7, the .NET 10 SDK, and a working BED checkout with
 The complete Lantern Yard example below includes rules, checks and a panel. If you only need the contract's starting point, this is the smallest useful implementation. Put it in its own class-library project using the same project reference and target framework as P02. Do not add it to the Lantern Yard assembly: that would intentionally load two adapters. It uses the default false Recognises and empty Checks, so choose it explicitly in the launcher's adapter selector (a DLL argument only loads candidates) or use the agent's explicit --adapter route. It adds no game rules or panel; schemas still apply.
 
 ```csharp
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
+using Bed.Data;
+using Bed.Editor;
+using Bed.Editor.ImGui;
 
 // BORROWED adapter contract; INVENTED minimal Garden name.
 public sealed class PlainGardenAdapter : IProjectAdapter
@@ -37,7 +37,7 @@ The first block records the checkout location, then enters a brand-new example f
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 $authoringRoot = $env:BRUTAL_AUTHORING
-if (!(Test-Path -LiteralPath (Join-Path $authoringRoot 'Brutal.Authoring.slnx'))) {
+if (!(Test-Path -LiteralPath (Join-Path $authoringRoot 'Bed.slnx'))) {
     throw 'Set BRUTAL_AUTHORING to the tools checkout.'
 }
 $work = Join-Path $env:TEMP ('lantern-yard-guide-' + [Guid]::NewGuid().ToString('N'))
@@ -85,16 +85,16 @@ Save-Demo 'adapter/LanternYardAdapter.csproj' @'
     <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="$(AuthoringRoot)/src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj" />
+    <ProjectReference Include="$(AuthoringRoot)/src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj" />
   </ItemGroup>
 </Project>
 '@
 Save-Demo 'adapter/LanternYardAdapter.cs' @'
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
+using Bed;
+using Bed.Data;
+using Bed.Editor;
+using Bed.Editor.ImGui;
 using Brutal.ImGuiApi;
 
 namespace LanternYard;
@@ -255,7 +255,7 @@ Build both projects, then load the adapter explicitly. `--settings` keeps prefer
 
 ```powershell
 # P03 - Build the development host and the adapter, using only existing tools dependencies.
-dotnet build (Join-Path $authoringRoot 'src/Brutal.Authoring.Launcher/Brutal.Authoring.Launcher.csproj') --output (Join-Path $work 'app') --nologo -v:q
+dotnet build (Join-Path $authoringRoot 'src/Bed.Launcher/Bed.Launcher.csproj') --output (Join-Path $work 'app') --nologo -v:q
 if ($LASTEXITCODE -ne 0) { throw 'Host build failed.' }
 dotnet build (Join-Path $work 'adapter/LanternYardAdapter.csproj') "-p:AuthoringRoot=$authoringRoot" --nologo -v:q
 if ($LASTEXITCODE -ne 0) { throw 'Adapter build failed.' }
@@ -378,10 +378,10 @@ Save-Demo 'verify/Verify.csproj' @'
 '@
 Save-Demo 'verify/Program.cs' @'
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
+using Bed;
+using Bed.Data;
+using Bed.Editor;
+using Bed.Editor.ImGui;
 using Brutal.ImGuiApi;
 
 // INVENTED proof driver. Only its supplied example/settings/output paths are used; no OS window.
@@ -619,9 +619,9 @@ This standalone adapter uses a nonstandard `content/game` layout. Compile it in 
 ```csharp
 using System;
 using System.IO;
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
+using Bed.Data;
+using Bed.Editor;
+using Bed.Editor.ImGui;
 
 // INVENTED example layout and command; BORROWED public adapter contract.
 public sealed class SavedGameAdapter : IProjectAdapter
@@ -671,7 +671,7 @@ Run the final block to observe an ordinary non-adapter library, a missing projec
 
 ```powershell
 # P07 - Expected diagnostics on disposable inputs, always headless.
-& $appExe $project --adapter (Join-Path $appFolder 'Brutal.Authoring.dll') --settings (Join-Path $work 'settings-app') --shot (Join-Path $work 'ordinary-library.png') 2> (Join-Path $work 'ordinary-library.txt')
+& $appExe $project --adapter (Join-Path $appFolder 'Bed.dll') --settings (Join-Path $work 'settings-app') --shot (Join-Path $work 'ordinary-library.png') 2> (Join-Path $work 'ordinary-library.txt')
 if ($LASTEXITCODE -ne 0) { throw 'An optional bad library should not stop the valid project.' }
 Get-Content -LiteralPath (Join-Path $work 'ordinary-library.txt')
 & $appExe 'missing-layout' --settings (Join-Path $work 'settings-app') --shot (Join-Path $work 'missing-layout.png') 2> (Join-Path $work 'missing-layout.txt')
@@ -697,7 +697,7 @@ The diagnostic table below is filled from these runs and the proof driver. Paths
 |---|---|---|
 | Intensity above its row's limit | `Intensity 6 exceeds limit 5; lower intensity or raise limit.` | Correct that value; the refused command did not dirty the draft. |
 | Duplicate names | `Lamp name 'Signal' appears more than once.` | Choose a distinct name and rerun Unique lamp names; the driver observed `2 name problem(s).`, then `0 name problem(s).`. |
-| Ordinary library supplied as an adapter | `Brutal.Authoring.dll holds no game adapter (a public IProjectAdapter with an empty constructor).` | Supply the adapter assembly, containing a public concrete implementation with a public parameterless constructor. This optional library problem did not prevent the discovered valid adapter opening. |
+| Ordinary library supplied as an adapter | `Bed.dll holds no game adapter (a public IProjectAdapter with an empty constructor).` | Supply the adapter assembly, containing a public concrete implementation with a public parameterless constructor. This optional library problem did not prevent the discovered valid adapter opening. |
 | Missing DLL | The observed message starts `AbsentAdapter.dll didn't load: Could not find file '` and ends with the supplied absolute DLL path followed by `'.` | Fix the path or rebuild the DLL; this optional failure did not stop the discovered valid adapter opening. |
 | Missing project layout | `missing-layout doesn't hold a data folder and a schemas folder. Choose the two folders separately.` | Choose a parent containing both folders, or select them separately in the start screen. Headless open returned exit 1 and produced no editor shot. |
 | Constructor throws | `Verify.dll: ConstructorFault didn't load: Example constructor failure` | Fix the adapter constructor and rebuild. The proof-only fixture is in Verify.dll, never installed. |
@@ -717,9 +717,9 @@ The agent is a separate host: loading an adapter in the editor does not configur
 
 ```powershell
 # P08 - Same adapter rules through the agent, on the original unsaved fixture.
-dotnet build (Join-Path $authoringRoot 'src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj') --output (Join-Path $work 'cli') --nologo -v:q
+dotnet build (Join-Path $authoringRoot 'src/Bed.Agent.Cli/Bed.Agent.Cli.csproj') --output (Join-Path $work 'cli') --nologo -v:q
 if ($LASTEXITCODE -ne 0) { throw 'Agent build failed.' }
-$agentDll = Join-Path $work 'cli/bed-cli.dll'
+$agentDll = Join-Path $work 'cli/Bed.Agent.Cli.dll'
 $agentArgs = @('--data', (Join-Path $project 'data'), '--schemas', (Join-Path $project 'schemas'), '--adapter', $adapterDll)
 dotnet $agentDll @agentArgs describe
 if ($LASTEXITCODE -ne 0) { throw 'Agent adapter open failed.' }
@@ -768,3 +768,143 @@ paths as explicit inputs. Reopening rediscovers them. An explicit map override r
 provider is unavailable and no standard layout exists, opening is refused with the retained adapter identity;
 BED does not guess, use stale paths or silently choose another adapter. Old recent entries and explicitly
 chosen folders retain their prior behavior. The folder is shown in Recent projects even while its provider is absent.
+
+## Managed source hooks
+
+The five examples below compile in [ManagedSourceHooks.cs](../../samples/StarterAdapter/ManagedSourceHooks.cs). They are independent helper methods in the existing sample library, not a second adapter loaded beside it. Build them with `dotnet build samples/StarterAdapter/StarterAdapter.csproj -c Release` from the checkout root. Use the same target framework and editor references as that project; no new package is needed.
+
+### Choose exactly which files belong
+
+Inside `IProjectAdapter.Open`, use `ManagedSourceHooks.OpenSources(paths)`. Names passed to `admit` are case-sensitive paths relative to the selected data folder, with `/` separators. `recursive: true` visits nested folders; the predicate admits only `index.json` and JSON files under `entries/`. For example, `entries/sub/one.json` belongs; `generated/one.json` does not. The schema in this small fixture is `source.schema.json`: an object with a required string `text` property.
+
+Exclusion is an ownership boundary for project documents, snapshots and file operations; it is not a sandbox for the adapter's own code. Mark admitted generated documents read-only with `readOnlyFile` if you want users to inspect them. Keep `ProjectPaths.Root` pointing at the actual project root when a source workspace lives deeper in the tree, so Play and prepared assets use the right root.
+
+<!-- DOC19 ADMIT -->
+```csharp
+/// <summary>Admits one index and nested entries; other files never become project documents.</summary>
+public static DataProject OpenSources(ProjectPaths paths, bool readOnly = false)
+{
+    var project = DataProject.Open(paths.Data, paths.Schemas, readOnly,
+        readOnlyFile: null, rules: null, recursive: true,
+        admit: name => name == "index.json"
+            || name.StartsWith("entries/", StringComparison.Ordinal) && name.EndsWith(".json", StringComparison.Ordinal));
+    project.SchemaFor = _ => "source.schema.json";
+    return project;
+}
+```
+
+
+### React after a real save
+
+Register this once per project, retain the returned subscription, and dispose it when your adapter/workspace owner is done. `FilesSaved` runs synchronously on the save caller's thread after files are written and sessions marked saved. Native background-save completion runs it on the owner. A single dirty Save raises one notification; Save all raises one list of the files actually written. A no-edit or refused save raises none. Observer exceptions are contained; an observer cannot veto or roll back the finished save.
+
+Keep the callback short. Queue background work there if needed; capture the exact committed inputs before starting it and recheck freshness before publishing generated files. This notification is not permission to overwrite outputs after the source changes.
+
+<!-- DOC19 SAVED -->
+```csharp
+/// <summary>Observes committed dirty saves on the save caller's thread; dispose on the owner to unsubscribe.</summary>
+public static IDisposable AfterSaved(DataProject project, Action<IReadOnlyList<string>> react)
+{
+    void Saved(IReadOnlyList<DataFile> files) => react(files.Select(file => file.Name).ToArray());
+    project.FilesSaved += Saved;
+    return new Subscription(() => project.FilesSaved -= Saved);
+}
+```
+
+
+### Finish background work without an open panel
+
+Use `DataWorkspace.Ticked` to poll work on the workspace owner's thread. It fires at the end of `FinishSaves`, even when no save is pending; `Draw` already pumps that method each frame. A headless host that draws nothing must call `workspace.FinishSaves()` on its owner. `Ticked` is not a timer, does not create a thread, and does not depend on a panel's visibility. Do not put the pump in the panel's draw callback.
+
+This helper delivers one task result once, including a cancellation/failure message. Retain/dispose its subscription on the owner; disposing unhooks the observer and does not cancel the task. The caller owns task cancellation, fresh-input checks and any publication transaction. Do not touch ImGui, project sessions or panel state from the worker itself.
+
+<!-- DOC19 TICK -->
+```csharp
+/// <summary>Delivers one completed task from the workspace's owner-thread pump; disposal unhooks, not cancels, it.</summary>
+public static IDisposable DeliverOnTick<T>(DataWorkspace workspace, Task<T> work, Action<T> accept, Action<string> failed)
+{
+    void Tick()
+    {
+        if (!work.IsCompleted) return;
+        workspace.Ticked -= Tick;
+        if (work.IsCompletedSuccessfully) accept(work.Result);
+        else failed(work.IsCanceled ? "Background work was cancelled." : work.Exception!.GetBaseException().Message);
+    }
+    workspace.Ticked += Tick;
+    return new Subscription(() => workspace.Ticked -= Tick);
+}
+```
+
+
+### Check before committing, in the background
+
+Call this after constructing a `DataWorkspace` over the admitted source project. `SaveCheck` returns null to allow the proposed save, or a plain reason to refuse it. It must read/check, not mutate documents or write files. Exceptions refuse the save. BED's single-file native Save uses a worker when `BackgroundSaves` is true, returns a pending message, then finishes through the owning file on the owner pump. An edit, reload, outside change or read-only change can still refuse completion; a passed old verdict does not authorize a newer draft.
+
+`BeingSaved(saving)` identifies the candidate documents this save would persist. Count their drafts and use saved bytes for everything else. This example totals the fixture's text against a caller-supplied limit; another open file's unsaved draft does not count in a single Save. Save all and direct/agent saves keep their existing synchronous behavior. Schemas and per-edit rules still run. Background checking does not turn an unchecked write into a save path, and Save does not automatically rebuild outputs unless the adapter explicitly observes it.
+
+<!-- DOC19 CHECK -->
+```csharp
+/// <summary>Checks the proposed persisted text total; other unsaved drafts do not count in a single-file save.</summary>
+public static void ConfigureBackgroundCheck(DataWorkspace workspace, int maximumCharacters)
+{
+    ArgumentOutOfRangeException.ThrowIfNegative(maximumCharacters);
+    var project = workspace.Project;
+    project.SaveCheck = saving =>
+    {
+        var drafts = project.BeingSaved(saving).ToDictionary(file => file.Name, file => file.Session!.TextToSave);
+        var total = 0;
+        foreach (var file in project.Files)
+        {
+            var text = drafts.TryGetValue(file.Name, out var draft) ? draft : File.ReadAllText(file.Path);
+            using var json = JsonDocument.Parse(text);
+            total = checked(total + json.RootElement.GetProperty("text"u8).GetString()!.Length);
+        }
+        return total <= maximumCharacters ? null : $"Combined source text exceeds {maximumCharacters} characters.";
+    };
+    workspace.BackgroundSaves = true;
+}
+```
+
+
+### Edit multiline prose through the same document
+
+In the workspace-aware `Configure` overload, use `editor.Add(ManagedSourceHooks.TextPanel(file, editor))`. The panel captures that file's existing session. Valid changes go through `EditorModel.Execute(new SetValue(...))`, so schema/domain refusals, Undo and native Save use the same document as the table/Inspector. There is no separate Apply buffer in this example. BED's raw Text panel still requires its own Apply action.
+
+The native multiline field records a named TextField with value/focus actions; readonly/disabled controls do not accept value requests. This panel refreshes its buffer after Undo or another session edit and restores the previous accepted value when validation refuses. Its small fixed buffer is part of the example: size a production buffer for your schema's supported text limit and handle oversize text explicitly. A source is not editable merely because a panel can show its string. Keep the file's read-only reason and host edit guards.
+
+<!-- DOC19 TEXT -->
+```csharp
+/// <summary>Edits /text through the file's existing session, including Undo refresh and read-only refusal.</summary>
+public static Panel TextPanel(DataFile file, EditorModel<DataDocument> editor)
+{
+    if (!ReferenceEquals(file.Session, editor.Session)) throw new ArgumentException("Use the file's own editor session.", nameof(editor));
+    var buffer = new ImInputString(4096, ""u8);
+    var message = "";
+    return new Panel("sample.source.text", "Source text", () =>
+    {
+        var value = editor.Session.Current.At("/text")!.Value.GetString()!;
+        if (System.Text.Encoding.UTF8.GetByteCount(value) >= buffer.Capacity)
+        { Ui.TextWrapped("This example's source text exceeds its buffer; increase the supported limit before editing."u8); return; }
+        var id = ImGui.GetID("Source prose"u8).Value;
+        void Reset()
+        {
+            if (ImGui.GetCurrentContext().ActiveId.Value == id) ImGui.Internal.ClearActiveID();
+            buffer.SetValue(value.AsSpan());
+        }
+        if (buffer.ToString() != value) Reset();
+        var why = file.ReadOnlyReason;
+        Ui.BeginDisabled(why is not null, why);
+        if (Ui.InputTextMultiline("Source prose"u8, buffer, new float2(-1, 140), why is null ? 0 : ImGuiInputTextFlags.ReadOnly))
+        {
+            if (editor.Execute(new SetValue("/text", JsonSerializer.SerializeToElement(buffer.ToString())))) message = "";
+            else { message = string.Join("; ", editor.Refused.Concat(editor.Session.LastIssues).Select(issue => issue.Message)); Reset(); }
+        }
+        Ui.EndDisabled();
+        if (why is not null) Ui.TextWrapped(why);
+        if (message.Length > 0) Ui.Status(message, "sample.source.text.refusal");
+    }, Side: PanelSide.Centre);
+}
+```
+
+
+Run the compiled sample behaviors with `dotnet test tests/Bed.Tests -c Release --filter FullyQualifiedName~ManagedSourceHooksDoc19Tests`. They use temporary self-authored sources and a headless host. `python -B -m pytest tools/test_adapter_hooks_doc19.py -q -p no:cacheprovider` checks that these five published snippets stay identical to the compiled sample regions and still name the real hook declarations.

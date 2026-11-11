@@ -1,10 +1,10 @@
 using System.Text;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
+using Bed;
+using Bed.Data;
+using Bed.Editor;
+using Bed.Editor.ImGui;
 
 namespace SceneStarterAdapter;
 
@@ -22,19 +22,44 @@ public sealed partial class SceneStarterAdapter : IProjectAdapter
     }
     public DataProject Open(ProjectPaths project)
     {
-        var data=DataProject.Open(project.Data,project.Schemas);
-        if(!DocumentHost.For(data).BindScene("level.json","scene",out var why)) throw new InvalidOperationException(why);
+        var scene=SceneSettings(ProjectRoot(project));
+        var data=scene is null?DataProject.Open(project.Data,project.Schemas):DataProject.Open(project.Data,project.Schemas,recursive:true,admit:name=>!name.Split('/').Contains(".bed",StringComparer.OrdinalIgnoreCase));
+        var name="level.json";
+        if(scene is not null)
+        {
+            var path=Path.GetFullPath(Path.Combine(ProjectRoot(project),scene.Source));
+            name=Path.GetRelativePath(Path.GetFullPath(project.Data),path).Replace('\\','/');
+            if(name.StartsWith("../",StringComparison.Ordinal)||name==".."||Path.IsPathRooted(name))throw new InvalidOperationException("The declared scene source must be inside the admitted data folder.");
+        }
+        if(!DocumentHost.For(data).BindScene(name,"scene",out var why)) throw new InvalidOperationException(why);
         return data;
     }
     public void Configure(EditorModel<DataDocument> editor,DataTableView table) { }
     /// <summary>Ordinary saved-file Play from the project-owned game folder; no external program approval is implied.</summary>
     public PlaySettings DefaultPlay(ProjectPaths project)
     {
-        var root=Path.GetFullPath(project.Root??project.Folder??Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(project.Data)))!);
+        var root=ProjectRoot(project);
         savedProjectRoot=root;
+        if(SceneSettings(root) is {} scene)
+        {
+            var program=scene.SupportsPhysics?"game/PhysicsStarter.exe":"game/SceneStarter.exe";
+            var inputs=scene.SupportsPhysics?SceneStarter.PhysicsRuntimeInventory.BuildInputs(scene.Source):[scene.Source,".bed/project.json",".bed/cache/current.json"];
+            return new(program,["--project","."],".",new(program,["--compile-scene2","."],inputs){Stamp=".bed/generated/scenes/build.stamp.json"});
+        }
         var source=Path.GetFullPath(Path.Combine(root,"..","SceneStarter","SceneStarter.csproj"));
         PlayBuildSettings? build=File.Exists(source)?new("dotnet",["build",source,"-c","Release","-o","game"],[]):null;
         return new("game/SceneStarter.exe",["--project","."],".",build);
+    }
+    private static string ProjectRoot(ProjectPaths project)=>Path.GetFullPath(project.Root??project.Folder??Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(project.Data)))!);
+    private static Scene2BuildSettings? SceneSettings(string root)
+    {
+        var path=Path.Combine(root,".bed","project.json");
+        for(string? at=path;at is not null;at=Path.GetDirectoryName(at))
+            if(Path.Exists(at)&&(File.GetAttributes(at)&FileAttributes.ReparsePoint)!=0)throw new IOException("Linked scene build settings are refused.");
+        if(!File.Exists(path))return null;
+        using var file=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read|FileShare.Delete);
+        if(file.Length>Scene2BuildSettings.MaxProjectBytes)throw new IOException("Scene build settings exceed one MiB.");
+        var bytes=new byte[checked((int)file.Length)];file.ReadExactly(bytes);return Scene2BuildSettings.ReadProject(new UTF8Encoding(false,true).GetString(bytes));
     }
     public GameLaunchSpec LinkedPlay(DataWorkspace workspace)
     {

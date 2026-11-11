@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
+using Bed;
+using Bed.Data;
+using Bed.Editor;
+using Bed.Editor.ImGui;
 using Brutal.ImGuiApi;
 using Checkers;
 

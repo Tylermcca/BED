@@ -1,8 +1,23 @@
-# Editing your game's data
+# Edit game data
+
+Change a value, see validation, and save it without writing code. You need BED and a writable project with data and schemas. The built-in tour supplies a safe example copy.
+
+## Try a price change
+
+1. From the start screen choose **Take the tour**, then **Try the example**. If the tour is hidden, open **Getting started** first. BED makes a separate copy; the installed example stays unchanged.
+2. Choose **Skip tour** to explore freely, then open **wares.json** in **Files**.
+3. In the table, change Bread's price to **4** and leave the cell. The changed value remains in the draft.
+4. Try **-1**. Read the validation message beside the field; the invalid value cannot replace the valid draft.
+5. Enter **5**, leave the cell, and press **Ctrl+S**. Check that the status says **Unsaved changes: None**.
+6. Close and reopen the project to check the saved price. For your own data, choose **File > Open project...** and select your project's data and schema folders.
+
+If the file opens as text or has no editable fields, ask the project's maintainer for its schema and editor setup. A read-only file reports why it cannot be saved. Keep a valid draft while you fix the reported problem.
+
+Next, follow [Start here](start_here.md) for a complete editing session or [Play](playing.md) to run your saved changes.
+
+## For developers: embed the data editor
 
 Use JSON data and JSON Schemas to build an editor with an outline, inspector and table. Edits are validated and undoable. Saving preserves unchanged source text where possible.
-
-**Just want to edit data? You don't need this tutorial.** Open `BED.exe` (from the release zip, or `dotnet run --project src/Brutal.Authoring.Launcher`), choose your data and schema folders, and edit. `docs/release/START_HERE.txt` is the one-page guide. This tutorial is for wiring the editor into your own program.
 
 This SDK tutorial uses a local BED checkout, Windows PowerShell 5.1 and .NET SDK 10. Existing BRUTAL dependencies must be available from the repository's configured package sources; see [THIRD-PARTY-NOTICES](../../THIRD-PARTY-NOTICES.md). No additional package is needed. Use writable throwaway inputs.
 
@@ -24,7 +39,7 @@ First bind the checkout and two example roots:
 
 ~~~powershell
 $repo = $env:BRUTAL_AUTHORING
-if (!(Test-Path "$repo/Brutal.Authoring.slnx")) { throw "Set BRUTAL_AUTHORING to the tools checkout." }
+if (!(Test-Path "$repo/Bed.slnx")) { throw "Set BRUTAL_AUTHORING to the tools checkout." }
 Set-Location -LiteralPath $repo
 $work = Join-Path $env:TEMP ("authoring-data-guide-" + [Guid]::NewGuid().ToString("N"))
 $example = Join-Path $work "catalog"
@@ -245,7 +260,7 @@ The catalog and schema now exist. Make a console project and add the actual refe
 $hostDir = Join-Path $work "host"
 $hostProject = Join-Path $hostDir "GuideHost.csproj"
 dotnet new console --name GuideHost --output $hostDir --framework net10.0 --no-restore
-dotnet add $hostProject reference "$repo/src/Brutal.Authoring.Data/Brutal.Authoring.Data.csproj" "$repo/src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj"
+dotnet add $hostProject reference "$repo/src/Bed.Data/Bed.Data.csproj" "$repo/src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj"
 ~~~
 
 Write this complete Program.cs. Its modes implement the later exercises on tutorial inputs.
@@ -256,9 +271,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor.ImGui;
+using Bed.Editor;
+using Bed.Data;
+using Bed.Editor.ImGui;
 using Brutal.ImGuiApi;
 
 var root = Path.GetFullPath(args[0]);
@@ -508,7 +523,7 @@ To use Files without a pointer, hold Ctrl and press Tab to choose the Files pane
 
 If the host offers Close project, reach it in Files and press Enter. With unsaved edits the launcher offers Save all, then close; Close anyway; and Keep it open. Tab to the choice and press Enter. Escape while that prompt has focus keeps the project and its draft open. This is the editor's project-close prompt, not an operating-system window-close shortcut.
 
-The Start a project driver supplies the full setup: DataProject.Open receives data/ and schemas/, DataWorkspace.Show opens a file, and its other modes exercise those components. The driver explicitly loads root/reference-map.json if present; the library does not auto-load a map by its location. The general launcher and ProjectPaths.In use root/reference_map.json (underscore) for automatic discovery instead. Keep the tutorial's hyphenated name when running this explicit driver; use the underscore name for the [complete adapter/launcher walkthrough](start_here.md), or pass an explicit ProjectPaths.Map.
+The Start a project driver supplies the full setup: DataProject.Open receives data/ and schemas/, DataWorkspace.Show opens a file, and its other modes exercise those components. The driver explicitly loads root/reference-map.json if present; the library does not auto-load a map by its location. The general launcher and ProjectPaths.In use root/reference_map.json (underscore) for automatic discovery instead. Keep the tutorial's hyphenated name when running this explicit driver; use the underscore name for the [complete adapter/launcher walkthrough](developer_walkthrough.md), or pass an explicit ProjectPaths.Map.
 
 | Refusal | What to do |
 |---|---|
@@ -544,7 +559,7 @@ Create HeadlessHost before accessing ImGui, call EditorWindow<DataDocument>.Conf
 The CLI comes from this checkout; no global authoring install is assumed:
 
 ~~~powershell
-$cli = Join-Path $repo "src/Brutal.Authoring.Agent.Cli/Brutal.Authoring.Agent.Cli.csproj"
+$cli = Join-Path $repo "src/Bed.Agent.Cli/Bed.Agent.Cli.csproj"
 dotnet build $cli --nologo -v:q
 dotnet run --no-build --project $cli -- --help
 $LASTEXITCODE
@@ -659,6 +674,8 @@ The main =/+ and - keys and keypad + and - work; keypad Enter works too. Movemen
 If Table is already visible, leave it open. Otherwise open the default Ctrl+Shift+P palette, search Table, choose **Show Table** and Enter. **Hide Table** closes an already-open panel; do not use it as an opening step. A closed panel also opens when one of its panel commands runs. Host/user shortcut overrides may replace the defaults. Use Ctrl+Tab to choose an editor window, then Tab to reach its controls; the exact Tab count depends on the current layout, columns and visible controls.
 
 Choose a top-level object list. Type in the filter to match names or shown values. Tab to a column header and press Enter to sort; press Enter again to reverse. Filter and sort change the view, not source order, dirty state or undo.
+
+Drag a header edge to resize a column, or drag a header to change its position. The item-name column stays pinned. Column widths, order and sort are remembered for each file and list in your local user layout, outside the project. Right-click a column header and choose **Reset table layout** to restore the default widths and order and return to file order. With a header focused, Menu or Shift+F10 opens the same menu; use the arrow keys and Enter to choose reset. These preferences do not create an edit or undo step. A changed set or order of schema fields starts with a fresh layout; moving the file also starts fresh.
 
 First establish current keyboard navigation: hold Ctrl while cycling Tab to Table, release Ctrl, use Down/Down/Enter to enter its scrolling child, then Tab to the intended cell. Confirm its focus cue rather than an old selection. The executable keyboard mode above uses Table.Anchor plus the native focus ID as the checkpoint. Layout/columns change the required Tab count.
 
@@ -1361,7 +1378,7 @@ sample.json $: the schema uses 'format', which this validator doesn't support, s
 
 ## Four known suite limitations
 
-The [official-suite adapter](../../tests/Brutal.Authoring.Tests/JsonSchemaSuiteTests.cs) lists four skipped cases. The validator does not fully conform to draft 2020-12:
+The [official-suite adapter](../../tests/Bed.Tests/JsonSchemaSuiteTests.cs) lists four skipped cases. The validator does not fully conform to draft 2020-12:
 
 | Suite file, group:case (zero-based) | Current limit |
 |---|---|
@@ -1410,4 +1427,4 @@ To discard a bare DataFile session deliberately, call Close: it drops unsaved ed
 
 Newly generated portions use two-space indentation and literal Unicode. Output keeps the file's line endings (LF for a new file; a file read with CRLF keeps CRLF on every line) and ends with a final newline, so an input without one gains it. Adding or removing a property/item can also change a neighbouring comma or container boundary; replacing a whole container can change that container's lines. Source preservation is not a promise that every structural edit changes one line, nor that other line-ending styles remain byte-identical.
 
-Use the session for atomic writing; use DataFile/DataWorkspace for project read-only policy and outside-edit refusal. See [DataDocument and DataFormat](../../src/Brutal.Authoring.Data/DataDocument.cs), [JsonSchemas](../../src/Brutal.Authoring.Data/JsonSchemas.cs), [DataEditing](../../src/Brutal.Authoring.Editor/DataEditing.cs) and the [datacheck entry point](../../samples/DataCheck/Program.cs) for the current contracts.
+Use the session for atomic writing; use DataFile/DataWorkspace for project read-only policy and outside-edit refusal. See [DataDocument and DataFormat](../../src/Bed.Data/DataDocument.cs), [JsonSchemas](../../src/Bed.Data/JsonSchemas.cs), [DataEditing](../../src/Bed.Editor/DataEditing.cs) and the [datacheck entry point](../../samples/DataCheck/Program.cs) for the current contracts.

@@ -1,5 +1,5 @@
-using Brutal.Authoring;
-using Brutal.Authoring.Editor;
+using Bed;
+using Bed.Editor;
 using Brutal.ImGuiApi;
 using Brutal.Numerics;
 

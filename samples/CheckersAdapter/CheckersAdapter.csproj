@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Checkers for the general app (the user, 2026-11-01: author in the editor, play inside it while making it, and
-       play in its own window as the game). brutal-authoring loads CheckersAdapter.dll from its adapters folder: a
+       play in its own window as the game). BED loads CheckersAdapter.dll from its adapters folder: a
        position file gets a Board panel, a Match play mode, and Play in its own window, which starts play-checkers. -->
   <PropertyGroup>
     <RootNamespace>CheckersAdapter</RootNamespace>
@@ -10,6 +10,6 @@
     <ProjectReference Include="..\Checkers\Checkers.csproj" />
     <!-- The game itself, copied beside the adapter, so Play in its own window can start it. -->
     <ProjectReference Include="..\Checkers.Game\Checkers.Game.csproj" />
-    <ProjectReference Include="..\..\src\Brutal.Authoring.Editor.ImGui\Brutal.Authoring.Editor.ImGui.csproj" Private="false" />
+    <ProjectReference Include="..\..\src\Bed.Editor.ImGui\Bed.Editor.ImGui.csproj" Private="false" />
   </ItemGroup>
 </Project>

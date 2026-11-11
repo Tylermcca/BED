@@ -213,7 +213,7 @@ Source: [CheckersPlugin.cs:46](../../samples/Checkers/CheckersPlugin.cs#L46), li
 Select d4 and choose dark king to author a different starting position. The play test does exactly that and snapshots the document's file text, journal and undo availability before Play.
 
 <!-- excerpt E22 -->
-Source: [CheckersTests.cs:318](../../tests/Brutal.Authoring.Tests/CheckersTests.cs#L318), lines 318-321.
+Source: [CheckersTests.cs:318](../../tests/Bed.Tests/CheckersTests.cs#L318), lines 318-321.
 
 ~~~csharp
         Assert.True(inspector.Set("piece", "dark king"));   // author a position: an extra dark king
@@ -234,7 +234,7 @@ Source: [plugin.json:1](../../samples/Checkers/plugin.json#L1), lines 1-8.
   "id": "checkers",
   "name": "Checkers",
   "version": "1.0.0",
-  "api": "0.1",
+  "api": "0.2",
   "license": "MIT",
   "description": "English draughts made with the authoring tools: set up a board, play it by clicking, let the computer move, replay a match."
 }
@@ -317,7 +317,7 @@ public sealed class Match(Game start) : IPlaySession
 The real test starts the mode, verifies that the authored king reached the match and checks that document edits, inspector changes and undo are locked while playing.
 
 <!-- excerpt E20 -->
-Source: [CheckersTests.cs:331](../../tests/Brutal.Authoring.Tests/CheckersTests.cs#L331), lines 331-341.
+Source: [CheckersTests.cs:331](../../tests/Bed.Tests/CheckersTests.cs#L331), lines 331-341.
 
 ~~~csharp
         Assert.True(window.Run(EditorWindow<Game>.PlayAction + "checkers.match"), window.Status);
@@ -336,7 +336,7 @@ Source: [CheckersTests.cs:331](../../tests/Brutal.Authoring.Tests/CheckersTests.
 A match can take back its own last move using its local history. Stop discards the match. The test then compares document text, journal and undo availability to their pre-Play values and verifies editing works again.
 
 <!-- excerpt E21 -->
-Source: [CheckersTests.cs:361](../../tests/Brutal.Authoring.Tests/CheckersTests.cs#L361), lines 361-367.
+Source: [CheckersTests.cs:361](../../tests/Bed.Tests/CheckersTests.cs#L361), lines 361-367.
 
 ~~~csharp
         // Stop: back to editing, exactly as before Play.
@@ -355,7 +355,7 @@ The window also has a test for a throwing play mode: it stops the failed mode, r
 Document-session moves and setup edits are journaled. The whole-game test replays those entries onto the same opening and checks canonical text equality, then undoes the last edit.
 
 <!-- excerpt E17 -->
-Source: [CheckersTests.cs:174](../../tests/Brutal.Authoring.Tests/CheckersTests.cs#L174), lines 174-177.
+Source: [CheckersTests.cs:174](../../tests/Bed.Tests/CheckersTests.cs#L174), lines 174-177.
 
 ~~~csharp
         var replay = DocumentSession<Game>.Replay(Game.Opening(), s.Journal, new GameFormat(), new GameValidator(), s.Catalog);
@@ -367,7 +367,7 @@ Source: [CheckersTests.cs:174](../../tests/Brutal.Authoring.Tests/CheckersTests.
 Another test saves via the actual window's Save As field, opens the file again and continues from the same side to move:
 
 <!-- excerpt E18 -->
-Source: [CheckersTests.cs:288](../../tests/Brutal.Authoring.Tests/CheckersTests.cs#L288), lines 288-291.
+Source: [CheckersTests.cs:288](../../tests/Bed.Tests/CheckersTests.cs#L288), lines 288-291.
 
 ~~~csharp
             var reopened = DocumentSession<Game>.Open(file, new GameFormat(), new GameValidator(), editor.Session.Catalog);
@@ -385,7 +385,7 @@ The tests use HeadlessHost: real ImGui input and CPU-rendered pixels, with no OS
 A square's screen centre is measured from the actual board layout, then clicked through the host:
 
 <!-- excerpt E19 -->
-Source: [CheckersTests.cs:218](../../tests/Brutal.Authoring.Tests/CheckersTests.cs#L218), lines 218-225.
+Source: [CheckersTests.cs:218](../../tests/Bed.Tests/CheckersTests.cs#L218), lines 218-225.
 
 ~~~csharp
         {
@@ -416,7 +416,7 @@ Run the following from the tools repository root in **Windows PowerShell 5.1**. 
 
 ~~~powershell
 $env:BRUTAL_AUTHORING_SHOTS = "$env:TEMP\checkers-shots"
-dotnet test tests\Brutal.Authoring.Tests\Brutal.Authoring.Tests.csproj --filter "FullyQualifiedName~CheckersTests" --nologo -v:q
+dotnet test tests\Bed.Tests\Bed.Tests.csproj --filter "FullyQualifiedName~CheckersTests" --nologo -v:q
 [Environment]::SetEnvironmentVariable('BRUTAL_AUTHORING_SHOTS', $null, 'Process')
 ~~~
 

@@ -10,11 +10,11 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-COPY = ["src", "samples", "tests", "tools", "docs", "fixtures", "build", "NOTICE.txt", "LICENSE.txt", "THIRD-PARTY-NOTICES.md", "Brutal.Authoring.slnx", "Directory.Build.props", "Directory.Packages.props", "global.json"]
+COPY = ["src", "samples", "tests", "tools", "docs", "fixtures", "build", "NOTICE.txt", "LICENSE.txt", "THIRD-PARTY-NOTICES.md", "Bed.slnx", "Directory.Build.props", "Directory.Packages.props", "global.json"]
 SKIP = {"bin", "obj", "__pycache__", ".gate"}
 # Shared project files a card may carry a copy of: their project lines are merged into the repo's current file, never
 # replace it, so a copy made before someone else's addition can't erase that addition.
-MERGED = {"Brutal.Authoring.slnx": r'<Project Path="[^"]+" />', "Brutal.Authoring.Tests.csproj": r'<ProjectReference Include="[^"]+" />'}
+MERGED = {"Bed.slnx": r'<Project Path="[^"]+" />', "Bed.Tests.csproj": r'<ProjectReference Include="[^"]+" />'}
 
 
 def merge(card_file, repo_file, pattern):
@@ -59,7 +59,7 @@ def main(outbox):
     lay(outbox, repo, merge_shared=True)   # the card's files, at their final paths; shared project files merged
     tmp.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, TEMP=str(tmp), TMP=str(tmp), DOTNET_CLI_TELEMETRY_OPTOUT="1")
-    r = subprocess.run(["dotnet", "test", str(repo / "Brutal.Authoring.slnx")], cwd=repo, env=env, capture_output=True, text=True)
+    r = subprocess.run(["dotnet", "test", str(repo / "Bed.slnx")], cwd=repo, env=env, capture_output=True, text=True)
     tail = [l for l in r.stdout.splitlines() if "Passed!" in l or "Failed!" in l or " error " in l or "[FAIL]" in l]
     print("\n".join(tail) or r.stdout[-2000:])
     ok = r.returncode == 0 and any("Passed!" in l for l in tail)

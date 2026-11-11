@@ -5,8 +5,8 @@ import re
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-BED = ROOT / "src/Brutal.Authoring.Launcher/Program.cs"
-CLI = ROOT / "src/Brutal.Authoring.Agent.Cli/Program.cs"
+BED = ROOT / "src/Bed.Launcher/Program.cs"
+CLI = ROOT / "src/Bed.Agent.Cli/Program.cs"
 GUIDE = ROOT / "docs/guide/command_line.md"
 TICK = chr(96)
 
@@ -70,16 +70,16 @@ def test_guide_links_exist_and_probe_examples_use_the_real_argument_order():
     text = GUIDE.read_text(encoding="utf-8")
     for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
         assert (GUIDE.parent / target).is_file(), target
-    assert './BED.exe "C:/work/project" --shot "C:/work/frame.png"' in text
-    assert './BED.exe --probe-play "C:/work/project" --probe-args "--seconds 0" --timeout 30' in text
-    assert './BED.exe --probe-export "C:/work/project" --destination "C:/work/export" --timeout 60' in text
+    assert './BED.exe "./project" --shot "./frame.png"' in text
+    assert './BED.exe --probe-play "./project" --probe-args "--seconds 0" --timeout 30' in text
+    assert './BED.exe --probe-export "./project" --destination "./export" --timeout 60' in text
     assert "Import writes the asset record when accepted without requiring --save." in text
     assert "There is no separate one-shot save command." in text
     assert "must be used alone" in section(text, "BED options")
 
 
 def test_scene_actions_and_json_shapes_match_the_shared_non_drawing_route():
-    source = (ROOT / "src/Brutal.Authoring.Agent.Cli/SceneCommandCall.cs").read_text(encoding="utf-8")
+    source = (ROOT / "src/Bed.Agent.Cli/SceneCommandCall.cs").read_text(encoding="utf-8")
     text = section(GUIDE.read_text(encoding="utf-8"), "Scene commands")
     actions = set(re.findall(r'"(add|move|duplicate|delete|rename|group)"', source))
     assert set(cells(text)) == actions == {"add", "move", "duplicate", "delete", "rename", "group"}

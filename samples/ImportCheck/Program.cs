@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 using System.Text.Json;
-using Brutal.Authoring.Import;
+using Bed.Import;
 
 namespace ImportCheck;
 

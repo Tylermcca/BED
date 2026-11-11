@@ -17,7 +17,7 @@ New-Item -ItemType Directory -Force 'samples\MemoPlugin' | Out-Null
 Save the next block as samples/MemoPlugin/plugin.json. The host reads this description before calling Register. Version is your plug-in's own version; api is the oldest library API it supports. The licence is optional information under the user's current policy: omitting it loads with a warning. A supplied expression is still checked for SPDX syntax. Known clashes with enabled plug-ins or the host project licence are warnings in PluginStatus.Warnings, not registration refusals.
 
 ~~~json
-{"id":"memos","name":"Memos","version":"1.0.0","api":"0.1","license":"MIT","permissions":[],"description":"Rename and inspect self-authored memos."}
+{"id":"memos","name":"Memos","version":"1.0.0","api":"0.2","license":"MIT","permissions":[],"description":"Rename and inspect self-authored memos."}
 ~~~
 
 Before API 1.0, the minor version must match the host as well. On API 1 or later, the major must match and the host cannot be older than the requested version. A future or retired incompatible API is refused with an issue identifying requested and provided versions; Register is not called.
@@ -30,8 +30,8 @@ Save the complete block as samples/MemoPlugin/MemoPlugin.cs. Keep the public com
 
 ~~~csharp
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Editor;
+using Bed;
+using Bed.Editor;
 using Brutal.ImGuiApi;
 
 namespace MemoExample
@@ -103,7 +103,7 @@ Save this as samples/MemoPlugin/MemoPlugin.csproj. The reference stays inside th
     <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj" />
+    <ProjectReference Include="../../src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj" />
   </ItemGroup>
 </Project>
 ~~~
@@ -128,14 +128,14 @@ Add a test like the one below to an xUnit class in the existing ImGuiCollection.
 
 Do not run tests that create ImGui contexts concurrently. Keep only one HeadlessHost alive at a time.
 
-The method uses the imports already shown plus System.Numerics, System.IO, System.Text.Json, Brutal.Authoring.Editor.ImGui and Xunit. Those are the existing test project's imports. It does not discover or load an assembly from a plug-in folder.
+The method uses the imports already shown plus System.Numerics, System.IO, System.Text.Json, Bed.Editor.ImGui and Xunit. Those are the existing test project's imports. It does not discover or load an assembly from a plug-in folder.
 
 ~~~csharp
     [Fact]
     public void GuideHeadlessMemoWorkflow()
     {
         var manifest = PluginManifest.Read("""
-            {"id":"memos","name":"Memos","version":"1.0.0","api":"0.1","license":"MIT","permissions":[],"description":"Rename and inspect self-authored memos."}
+            {"id":"memos","name":"Memos","version":"1.0.0","api":"0.2","license":"MIT","permissions":[],"description":"Rename and inspect self-authored memos."}
             """);
         var item = SceneObject.At("note", null, Vector3.Zero) with
         {
@@ -179,7 +179,7 @@ The existing tests can save a frame with this block:
 
 ~~~powershell
 $env:BRUTAL_AUTHORING_SHOTS = Join-Path $env:TEMP 'memos-guide-shots'
-dotnet test tests\Brutal.Authoring.Tests\Brutal.Authoring.Tests.csproj --filter "FullyQualifiedName~PluginAcceptanceTests.Guide" --nologo -v:q
+dotnet test tests\Bed.Tests\Bed.Tests.csproj --filter "FullyQualifiedName~PluginAcceptanceTests.Guide" --nologo -v:q
 [Environment]::SetEnvironmentVariable('BRUTAL_AUTHORING_SHOTS', $null, 'Process')
 ~~~
 
@@ -200,8 +200,8 @@ A play mode runs your game's code from the current authored document, then retur
 Implement IPlaySession, then register a PlayMode through PluginRegistrar. Its id belongs to your plugin.json manifest's prefix. Here the existing memos manifest owns memos.preview. This exact example compiles in PlayAcceptanceTests.cs; it uses the existing Scene document and packages.
 
 ~~~csharp
-using Brutal.Authoring;
-using Brutal.Authoring.Editor;
+using Bed;
+using Bed.Editor;
 using Brutal.ImGuiApi;
 
 namespace PlayGuideExample
@@ -244,7 +244,7 @@ Test with HeadlessHost inside the existing ImGuiCollection: create the document/
 From the repository root in Windows PowerShell 5.1:
 
 ~~~powershell
-dotnet test tests\Brutal.Authoring.Tests\Brutal.Authoring.Tests.csproj --filter "FullyQualifiedName~PlayAcceptanceTests.GuideHeadlessPlayWorkflow" --nologo -v:q
+dotnet test tests\Bed.Tests\Bed.Tests.csproj --filter "FullyQualifiedName~PlayAcceptanceTests.GuideHeadlessPlayWorkflow" --nologo -v:q
 ~~~
 
 Only one HeadlessHost can be alive at once; the collection serialises tests that share ImGui's process-wide context. For a throwing game, assert that Game and Playing become null, Dispose runs, Status includes the error, and editing works again.
@@ -270,8 +270,8 @@ The next five sections build Harbor Relay, an original beacon-routing example. I
 Make samples/HarborRelay and save the following as RelayActions.cs there. The action checks files already on disk; unsaved drafts must be saved or undone first.
 
 ~~~csharp
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
+using Bed.Data;
+using Bed.Editor;
 using Brutal.ImGuiApi;
 
 namespace HarborRelay;
@@ -316,7 +316,7 @@ The check creates fresh read-only sessions with the same game rules, so files al
 Save RelayProject.cs beside RelayActions.cs. Open receives the fixture root containing data and schemas folders. Each callback receives a file name, not its full path. Return a reason for a protected file and null for one the editor may save.
 
 ~~~csharp
-using Brutal.Authoring.Data;
+using Bed.Data;
 
 namespace HarborRelay;
 
@@ -346,8 +346,8 @@ Save RelayRules.cs. It contains the example loader and validator adapter. The ad
 
 ~~~csharp
 using System.Text.Json;
-using Brutal.Authoring;
-using Brutal.Authoring.Data;
+using Bed;
+using Bed.Data;
 
 namespace HarborRelay;
 
@@ -442,8 +442,8 @@ Save fixture/reference_map.json:
 Save RelayWorkspace.cs beside the other C# files:
 
 ~~~csharp
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor.ImGui;
+using Bed.Data;
+using Bed.Editor.ImGui;
 
 namespace HarborRelay;
 
@@ -478,8 +478,8 @@ The generic authoring CLI opens data and schema folders, optionally with a map a
 Save Program.cs in samples/HarborRelay:
 
 ~~~csharp
-using Brutal.Authoring.Agent;
-using Brutal.Authoring.Data;
+using Bed.Agent;
+using Bed.Data;
 
 namespace HarborRelay;
 
@@ -507,7 +507,7 @@ public static class Program
             return 0;
         }
         catch (Exception e) when (e is IOException or System.Text.Json.JsonException
-            or Brutal.Authoring.InvalidDocumentException or UnauthorizedAccessException)
+            or Bed.InvalidDocumentException or UnauthorizedAccessException)
         {
             Console.Error.WriteLine("Cannot open Harbor Relay: " + e.Message);
             return 2;
@@ -528,8 +528,8 @@ Save HarborRelay.csproj in the same folder. This references only the library's e
     <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Brutal.Authoring.Editor.ImGui/Brutal.Authoring.Editor.ImGui.csproj" />
-    <ProjectReference Include="../../src/Brutal.Authoring.Agent/Brutal.Authoring.Agent.csproj" />
+    <ProjectReference Include="../../src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj" />
+    <ProjectReference Include="../../src/Bed.Agent/Bed.Agent.csproj" />
   </ItemGroup>
 </Project>
 ~~~
@@ -556,7 +556,7 @@ For a quick stdio check, start the built program with --mcp and send one JSON-RP
 
 Replies have ids 1, 2 and 3. The notification has no reply. Tools include describe, find, get, problems, refs, repair, set, insert, remove, undo and save. A call's JSON is in result.content's text entry. Inspect both protocol/tool errors and the returned JSON's error/refused fields; isError alone is not a sufficient success check for every operation.
 
-To register the server with an MCP client, add a **local stdio server** named harbor-relay in that client's MCP settings. Use dotnet as the executable and the already-built DLL, --mcp and an absolute fixture root as separate arguments. For example, these client-neutral connection fields describe a checkout at C:/work/BED; replace both paths with yours. The enclosing settings format depends on the client.
+To register the server with an MCP client, add a **local stdio server** named harbor-relay in that client's MCP settings. Use dotnet as the executable and the already-built DLL, --mcp and an absolute fixture root as separate arguments. For example, replace `<checkout>` in these client-neutral connection fields with the absolute path to your checkout. The enclosing settings format depends on the client.
 
 ~~~json
 {
@@ -564,9 +564,9 @@ To register the server with an MCP client, add a **local stdio server** named ha
   "transport": "stdio",
   "command": "dotnet",
   "args": [
-    "C:/work/BED/samples/HarborRelay/bin/Debug/net10.0/HarborRelay.dll",
+    "<checkout>/samples/HarborRelay/bin/Debug/net10.0/HarborRelay.dll",
     "--mcp",
-    "C:/work/BED/samples/HarborRelay/fixture"
+    "<checkout>/samples/HarborRelay/fixture"
   ]
 }
 ~~~

@@ -5,7 +5,7 @@ import re
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-UI = ROOT / "src/Brutal.Authoring.Editor.ImGui"
+UI = ROOT / "src/Bed.Editor.ImGui"
 
 
 def read(path):
@@ -104,7 +104,9 @@ def test_reference_scope_and_pointer_jumps_keep_their_implementation():
 
 def test_guide_links_resolve_and_everyday_workflow_is_first_in_index():
     index = read(ROOT / "docs/guide/README.md")
-    assert re.search(r'^1\. \[Edit project data\]\(data_workflow.md\)', index, re.M)
+    # The newcomer walkthrough comes first (UX04, 2026-11-10); everyday data editing is the next entry.
+    assert re.search(r'^1\. \[Start here\]\(start_here\.md\)', index, re.M)
+    assert re.search(r'^2\. \[Edit project data\]\(data_workflow\.md\)', index, re.M)
     assert '[Build a data editor](editing_data.md)' in index
     for target in re.findall(r'\]\(([^)]+)\)', guide()):
         assert (ROOT / "docs/guide" / target.split("#")[0]).is_file(), target

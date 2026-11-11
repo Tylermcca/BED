@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><AssemblyName>RuntimeInspect</AssemblyName></PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Brutal.Authoring/Brutal.Authoring.csproj" />
-    <ProjectReference Include="../../src/Brutal.Authoring.Runtime/Brutal.Authoring.Runtime.csproj" />
+    <ProjectReference Include="../../src/Bed/Bed.csproj" />
+    <ProjectReference Include="../../src/Bed.Runtime/Bed.Runtime.csproj" />
   </ItemGroup>
 </Project>

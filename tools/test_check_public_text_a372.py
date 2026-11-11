@@ -113,14 +113,14 @@ class PublicTextTests(unittest.TestCase):
 
     def test_proposal_and_only_exact_known_latin1_file(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).parents[2] / '.gate') as folder:
-            root=Path(folder);directory=root/'tests/Brutal.Authoring.Tests';directory.mkdir(parents=True)
+            root=Path(folder);directory=root/'tests/Bed.Tests';directory.mkdir(parents=True)
             (root/'change.proposal').write_text('Zorbit')
             (directory/'UntypedFieldsTests.cs').write_bytes(b'// caf\xe9 Zorbit')
             (directory/'OtherTests.cs').write_bytes(b'// caf\xe9 Zorbit')
-            result=guard.inspect(root,['change.proposal','tests/Brutal.Authoring.Tests/UntypedFieldsTests.cs','tests/Brutal.Authoring.Tests/OtherTests.cs'],['Zorbit'],[])
+            result=guard.inspect(root,['change.proposal','tests/Bed.Tests/UntypedFieldsTests.cs','tests/Bed.Tests/OtherTests.cs'],['Zorbit'],[])
             self.assertEqual(2,len(result['findings']))
             self.assertEqual(1,len(result['errors']))
-            self.assertEqual('latin-1 (explicit known-file fallback)',result['decodings']['tests/Brutal.Authoring.Tests/UntypedFieldsTests.cs'])
+            self.assertEqual('latin-1 (explicit known-file fallback)',result['decodings']['tests/Bed.Tests/UntypedFieldsTests.cs'])
 
     def test_upstream_omission_is_exact_reasoned_and_reported_without_opening(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).parents[2] / '.gate') as folder:

@@ -113,9 +113,9 @@ def validate(root, text):
 
 def repository():
     for root in Path(__file__).resolve().parents:
-        if (root/"Brutal.Authoring.slnx").is_file():
+        if (root/"Bed.slnx").is_file():
             return root
-    raise AssertionError("cannot locate repository by Brutal.Authoring.slnx")
+    raise AssertionError("cannot locate repository by Bed.slnx")
 
 
 class ReadmeStepsTests(unittest.TestCase):
@@ -131,13 +131,13 @@ class ReadmeStepsTests(unittest.TestCase):
         for page in ("levels", "assets", "playing", "exporting"):
             self.assertIn(f"docs/guide/{page}.md", text)
             self.assertTrue((root/f"docs/guide/{page}.md").is_file())
-        placement = (root/"src/Brutal.Authoring.Editor.ImGui/DataWorkspace.SceneAssets.cs").read_text(encoding="utf-8-sig")
+        placement = (root/"src/Bed.Editor.ImGui/DataWorkspace.SceneAssets.cs").read_text(encoding="utf-8-sig")
         self.assertIn("Add selected object", placement)
-        launcher = (root/"src/Brutal.Authoring.Launcher/Brutal.Authoring.Launcher.csproj").read_text(encoding="utf-8-sig")
+        launcher = (root/"src/Bed.Launcher/Bed.Launcher.csproj").read_text(encoding="utf-8-sig")
         # The build must supply the adapter; the reader need not learn its assembly name.
         self.assertIn("SceneStarterAdapter/SceneStarterAdapter.csproj", launcher)
         self.assertIn("samples/SceneStarterProject", launcher)
-        self.assertIn("0.2.1-rc.1", text)
+        self.assertIn("0.3.0-rc.1", text)
         self.assertIn("The download includes a level sample", text)
         self.assertIn("samples\scene-starter", text)
         self.assertIn("#build-from-source", text)
@@ -148,8 +148,8 @@ class ReadmeStepsTests(unittest.TestCase):
         root = repository()
         text = (root/"docs/guide/exporting.md").read_text(encoding="utf-8-sig")
         readme = (root/"README.md").read_text(encoding="utf-8-sig")
-        window = (root/"src/Brutal.Authoring.Editor.ImGui/EditorWindow.cs").read_text(encoding="utf-8-sig")
-        dialog = (root/"src/Brutal.Authoring.Editor.ImGui/ExportBuildDialog.cs").read_text(encoding="utf-8-sig")
+        window = (root/"src/Bed.Editor.ImGui/EditorWindow.cs").read_text(encoding="utf-8-sig")
+        dialog = (root/"src/Bed.Editor.ImGui/ExportBuildDialog.cs").read_text(encoding="utf-8-sig")
         self.assertIn('Choice("Export build..."', window)
         for label in ("Build saved files", "Destination folder", "Copy build to folder..."):
             self.assertIn(label, text)

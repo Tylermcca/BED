@@ -1,0 +1,125 @@
+{
+  "kind": "scene",
+  "version": 2,
+  "space": "2d-xy",
+  "objects": [
+    {
+      "id": "room",
+      "position": [
+        10,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "properties": {},
+      "references": {}
+    },
+    {
+      "id": "door",
+      "parent": "room",
+      "position": [
+        3,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "properties": {
+        "name": "Door marker"
+      },
+      "references": {}
+    },
+    {
+      "id": "sign",
+      "parent": "room",
+      "asset": "33333333333333333333333333333333",
+      "position": [
+        2,
+        3,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "sprite": {
+        "size": [
+          0.64,
+          0.96
+        ],
+        "pivot": [
+          0.5,
+          0
+        ],
+        "order": 10,
+        "filter": "nearest"
+      },
+      "properties": {
+        "name": "Gate sign"
+      },
+      "references": {
+        "door": "door"
+      }
+    },
+    {
+      "id": "overlay",
+      "asset": "44444444444444444444444444444444",
+      "position": [
+        12,
+        3,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "sprite": {
+        "size": [
+          1,
+          1
+        ],
+        "pivot": [
+          0.5,
+          0.5
+        ],
+        "order": 20,
+        "filter": "linear"
+      },
+      "properties": {},
+      "references": {}
+    }
+  ]
+}

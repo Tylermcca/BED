@@ -1,9 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Brutal.Authoring;
-using Brutal.Authoring.Data;
-using Brutal.Authoring.Editor;
-using Brutal.Authoring.Editor.ImGui;
+using Bed;
+using Bed.Data;
+using Bed.Editor;
+using Bed.Editor.ImGui;
 using RoutePuzzleSample;
 using RoutePuzzleSample.Authoring;
 using Xunit;
@@ -52,7 +52,7 @@ public sealed class RouteSampleTests
     {
         var catalog = RouteCatalog.Read(Example);
         Assert.Equal(4, catalog.MinimumCost()); Assert.Equal(5, catalog.Energy);
-        Assert.DoesNotContain(typeof(RouteCatalog).Assembly.GetReferencedAssemblies(), a => a.Name!.StartsWith("Brutal.Authoring", StringComparison.Ordinal));
+        Assert.DoesNotContain(typeof(RouteCatalog).Assembly.GetReferencedAssemblies(), a => a.Name!.StartsWith("Bed", StringComparison.Ordinal));
     }
 
     [Fact]

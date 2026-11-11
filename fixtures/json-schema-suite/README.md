@@ -567,7 +567,7 @@ File/group:test identifies exact unchanged schema and data. T/F is the independe
 Scratch rerun real summary (individual mismatch skips removed only in scratch):
 
 ```text
-Failed!  - Failed:     2, Passed:    18, Skipped:     0, Total:    20, Duration: 178 ms - Brutal.Authoring.Tests.dll (net10.0)
+Failed!  - Failed:     2, Passed:    18, Skipped:     0, Total:    20, Duration: 178 ms - Bed.Tests.dll (net10.0)
 ```
 
 The delivered rows retain both required mismatch skips. The scratch rerun does not alter fixture bytes or suite expectations. The final exact full gate uses the delivered harness again.

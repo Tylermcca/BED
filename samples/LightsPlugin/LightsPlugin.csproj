@@ -7,7 +7,7 @@
     <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Brutal.Authoring.Editor.ImGui\Brutal.Authoring.Editor.ImGui.csproj" />
+    <ProjectReference Include="..\..\src\Bed.Editor.ImGui\Bed.Editor.ImGui.csproj" />
     <EmbeddedResource Include="plugin.json" LogicalName="plugin.json" />
   </ItemGroup>
 </Project>

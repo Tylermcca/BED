@@ -1,14 +1,14 @@
 # Command line
 
-Run these commands from PowerShell in the unzipped BED folder. Quote paths containing spaces. Replace `C:/work/project` with your project folder, which normally contains `data/` and `schemas/`, and optionally `reference_map.json`.
+Run these commands from PowerShell in the unzipped BED folder. Quote paths containing spaces. Replace `./project` with your project folder, which normally contains `data/` and `schemas/`, and optionally `reference_map.json`.
 
 ## Open BED or draw a screenshot
 
 ```powershell
 ./BED.exe
-./BED.exe "C:/work/project"
-./BED.exe --data "C:/work/project/data" --schemas "C:/work/project/schemas"
-./BED.exe "C:/work/project" --shot "C:/work/frame.png"
+./BED.exe "./project"
+./BED.exe --data "./project/data" --schemas "./project/schemas"
+./BED.exe "./project" --shot "./frame.png"
 ./BED.exe --version
 ./BED.exe --help
 ```
@@ -38,8 +38,8 @@ With no project, BED opens the start screen. Choose either a project folder or t
 ### Probe Play and Export
 
 ```powershell
-./BED.exe --probe-play "C:/work/project" --probe-args "--seconds 0" --timeout 30
-./BED.exe --probe-export "C:/work/project" --destination "C:/work/export" --timeout 60
+./BED.exe --probe-play "./project" --probe-args "--seconds 0" --timeout 30
+./BED.exe --probe-export "./project" --destination "./export" --timeout 60
 ```
 
 The game in the first example must understand `--seconds 0` and exit successfully on its own. These commands require exactly one admitted scene document and the project's normal Play or Export support. Configure and approve the normal command in BED first. Probes do not save settings or approvals; extra Play arguments are temporary.
@@ -55,10 +55,10 @@ See [Play](playing.md), [Export](exporting.md) and [troubleshooting](troubleshoo
 This program runs a single data command and exits, or serves MCP over standard input/output. It does not open the normal BED window.
 
 ```powershell
-./bed-cli.exe --data "C:/work/project/data" --schemas "C:/work/project/schemas" describe
-./bed-cli.exe --data "C:/work/project/data" --schemas "C:/work/project/schemas" get settings.json /speed
-./bed-cli.exe --data "C:/work/project/data" --schemas "C:/work/project/schemas" set settings.json /speed 25 --preview
-./bed-cli.exe --data "C:/work/project/data" --schemas "C:/work/project/schemas" set settings.json /speed 25 --save
+./bed-cli.exe --data "./project/data" --schemas "./project/schemas" describe
+./bed-cli.exe --data "./project/data" --schemas "./project/schemas" get settings.json /speed
+./bed-cli.exe --data "./project/data" --schemas "./project/schemas" set settings.json /speed 25 --preview
+./bed-cli.exe --data "./project/data" --schemas "./project/schemas" set settings.json /speed 25 --save
 ```
 
 The last three examples assume a `settings.json` file with a numeric `/speed` field. Use `describe` and `find` to obtain your actual file names and pointers. `<at>` and `<list>` below are JSON Pointers, such as `/items/0/name`; `<json>` is a JSON value passed as one argument. PowerShell single quotes are useful for JSON containing double quotes.
@@ -69,10 +69,11 @@ Set, insert and remove without --save end without writing the data file; the res
 
 | Option | Meaning |
 |---|---|
+| `--help` | Print usage to stdout and exit 0; must be used alone. |
 | `--data` | Data folder, required for normal commands and ai-setup. |
 | `--schemas` | Schema folder, required with --data. |
 | `--map` | Reference map, needed for link lookups and checks. |
-| `--adapter` | One DLL containing exactly one adapter; its rules and checks apply. |
+| `--adapter` | One DLL; its adapter rules and checks apply. If it contains several adapters, the first that recognises the supplied project is selected, as in BED. If none recognises it, the command refuses. |
 | `--assets` | Asset folder for import/declare and the content-rights check. |
 | `--own-name` | An own rights-holder name; repeat to supply more names. |
 | `--read-only` | Open plain data read-only; combining it with an adapter is currently refused. |
@@ -90,7 +91,9 @@ Set, insert and remove without --save end without writing the data file; the res
 | `--version` | Print the build version and exit; must be used alone. |
 | `--run` | Refused by one-shot CLI: run IDs last only within a persistent MCP session. |
 
-There is no CLI help flag: running `bed-cli.exe` with no arguments prints usage to stderr and returns 2. Options take their following argument, except the switches --read-only, --preview, --save, --json and --version. Normal commands require both data and schema folders. Adapter loading failures refuse rather than silently dropping validation.
+`bed-cli.exe --help` prints usage to stdout and returns 0 without opening a project. Combining --help with any other argument is refused with exit 2 before project I/O. There are no -h or /? aliases. Running `bed-cli.exe` with no arguments still prints usage to stderr and returns 2. Options take their following argument, except the switches --read-only, --preview, --save, --json, --help and --version. Normal commands require both data and schema folders. Adapter loading failures refuse rather than silently dropping validation.
+
+`bed-cli.exe report`, used alone, prints a problem report with personal paths removed and returns 0. It needs no data or schema folders, opens no project, writes no file and opens no browser. See [Reporting a problem](reporting_a_problem.md).
 
 ### bed-cli commands
 
@@ -98,7 +101,7 @@ There is no CLI help flag: running `bed-cli.exe` with no arguments prints usage 
 |---|---|
 | `ai-setup [--json]` | Print setup examples without opening the project, loading an adapter or writing configuration. Requires data and schema paths; a supplied adapter file must exist. |
 | `ui [--json] [--script <json array>]` | Draw a separate headless instance and print recorded controls. With no data/schema paths it draws the start screen. |
-| `scene <file> <action> <args-json> [--preview] [--save]` | Preview or save a validated scene add, move, duplicate, delete, rename or group. |
+| `scene <file> <action> <args-json> [--preview] [--save]` | Preview or save typed scene edits; version two also supports prefab and sprite actions. |
 | `describe` | List files, lists, problems and available calls. |
 | `find <file> <list> [text] [--limit N]` | Find items by label or field text. |
 | `get <file> <at>` | Read a value, label and the target of an ID. |
@@ -128,8 +131,8 @@ For UI snapshots and the supported click/type/key/select script steps, read [rec
 Use an admitted scene file from the data folder. A scene command computes a candidate without writing by default. Add `--save` to keep it through the same typed validation and disk-conflict checks as the editor. `--preview` takes precedence over `--save`. The reply includes the candidate scene, its journal, one undo step and the resulting selection. An invalid command or failed save writes nothing.
 
 ```powershell
-./bed-cli.exe --data "C:/work/project/data" --schemas "C:/work/project/schemas" scene level.json move '{"id":"crate","position":[2,0,3]}'
-./bed-cli.exe --data "C:/work/project/data" --schemas "C:/work/project/schemas" scene level.json move '{"id":"crate","position":[2,0,3]}' --save
+./bed-cli.exe --data "./project/data" --schemas "./project/schemas" scene level.json move '{"id":"crate","position":[2,0,3]}'
+./bed-cli.exe --data "./project/data" --schemas "./project/schemas" scene level.json move '{"id":"crate","position":[2,0,3]}' --save
 ```
 
 | Action | JSON arguments | Result |
@@ -142,3 +145,31 @@ Use an admitted scene file from the data folder. A scene command computes a cand
 | `group` | `{"ids":["crate","other_crate"]}` | Add an unused group ID at the mean selected world position, reparent selected roots while preserving world poses and select the new parent. |
 
 Duplicate and group share their non-drawing planner with the editor, including collision-free IDs and one atomic undo step. Their `ids` argument must be a nonempty array of unique existing IDs, with no extra argument fields. The other actions use the scene catalog's strict v1 arguments. The file must have the expected `scene` kind and version 1. Read-only and protected files refuse; adapter save policies remain in force. A referenced delete can be prepared by editing the references explicitly; the CLI does not show the editor's confirmation dialog. These are one-shot CLI commands, separate from MCP's data tools.
+
+With a multi-adapter DLL, both data commands and `ui` report the selected adapter type on stderr. A recognition exception is reported and that adapter is skipped, as on the start screen. Selection never falls back to plain data when an explicit multi-adapter DLL has no match. A DLL containing one adapter retains the explicit single-adapter behavior, including adapters that do not implement automatic recognition. All edits still use the selected adapter's admitted files, rules, checks and checked save path.
+
+### Version-two scene commands
+
+The same `scene` command chooses the explicitly bound file's exact version. V1 actions and replies keep their existing meaning. A v2 preview uses a short-lived typed draft and one journal step, with no disk write; `--preview` still wins over `--save`. `--save` commits the checked host plan and saves through `Scene2SaveCheck` and conflict checks. Unsupported versions and unsafe, read-only, stale or malformed inputs refuse plainly.
+
+V2 accepts the core payloads in [the API overview](api_overview.md). `add`, `move`, `rotate`, `scale`, `rename` and `delete` alias compatible object actions; `duplicate` with `ids` duplicates ordinary objects, while the instance payload duplicates an entire linked instance. `group` accepts `ids` and an optional unused `id`. Sprite metadata and accepted prefab content survive compatible edits.
+
+| Action | Host JSON arguments | Result |
+|---|---|---|
+| `instantiate` | `source` GUID, `placement`, optional `key`, `baseId`, `nodeIds`, `bindings` | Accept one admitted saved definition. Missing instance/node/base keys are allocated once and recorded. |
+| `update` | `instance`, optional `baseId`, `newNodeIds` | Look up that instance's source GUID, preview conflicts, retain overrides and accept the saved source. New node IDs are allocated once if omitted. |
+| `set` | `id`, atomic `field`, optional `value` | Set an explicit local value; omit value to unset a permitted field. |
+| `revert` | `instance`, `node`, `field` | Remove an explicit override. |
+| `break_link` | `instance` | Preserve effective IDs, order and content as ordinary objects. |
+| `add_sprite` | `object` with complete sprite metadata | Add an ordinary planar sprite. |
+| `paste` | `fragment` in the existing scene-v2 shape, same space, copied objects/bases/complete instances and exact copied objectOrder | Append a preallocated fragment atomically; collisions, absent external targets and invalid graphs refuse. No source discovery or system clipboard format. |
+| `set_physics` | Optional complete `physics` block | Set world gravity/step atomically; omit to remove, refused while bodies remain. |
+| `edit_bodies` | `edits` array of `{id,field,value?,revert?}` | Atomic motion/mass or multi-object body changes. Only approved body addresses, 4096 IDs and five nonoverlapping fields per ID; `revert:true` returns an inherited field to its accepted value. |
+| `set_sprite` | `id`, `sprite` with size/pivot/order/filter | Replace sprite fields through their authoring owners. |
+
+```powershell
+./bed-cli.exe --data "./project/data" --schemas "./project/schemas" scene level.json set '{"id":"door","field":"/position","value":[3,2,0]}' --preview
+./bed-cli.exe --data "./project/data" --schemas "./project/schemas" scene level.json update '{"instance":"22222222222222222222222222222222"}' --save
+```
+
+Source lookup uses only the project's admitted saved JSON files (including subfolders only when the adapter admits them). It accepts GUIDs, never caller-supplied source paths or inline definitions. Duplicate GUIDs, changed source bytes between preview and commit, unsaved source drafts and exhausted scan budgets refuse. Commands journal their accepted snapshot, so later source removal does not change replay or an existing accepted scene. These host/CLI routes do not add a native scene-v2 panel or runtime/build reader.

@@ -40,12 +40,12 @@ def test_every_vendored_licence_exists_and_a_release_must_carry_it() -> None:
 def test_a_release_carries_the_text_package_and_the_imcode_licence() -> None:
     # BED.exe is a single file: the Text panel and the vendored ImCode are inside it, so only the licence is a file.
     assert "licenses/ImCode-LICENSE.txt" in pr.REQUIRED
-    project = (pr.ROOT / "src" / "Brutal.Authoring.Editor.Text" / "Brutal.Authoring.Editor.Text.csproj").read_text(encoding="utf-8")
+    project = (pr.ROOT / "src" / "Bed.Editor.Text" / "Bed.Editor.Text.csproj").read_text(encoding="utf-8")
     assert 'ImCode.csproj" PrivateAssets="all"' in project and "licenses" in project
-    core = (pr.ROOT / "src" / "Brutal.Authoring.Editor.ImGui" / "Brutal.Authoring.Editor.ImGui.csproj").read_text(encoding="utf-8")
+    core = (pr.ROOT / "src" / "Bed.Editor.ImGui" / "Bed.Editor.ImGui.csproj").read_text(encoding="utf-8")
     assert "ImCode.csproj" not in core, "the core editor carries no third-party code"
-    launcher = (pr.ROOT / "src" / "Brutal.Authoring.Launcher" / "Brutal.Authoring.Launcher.csproj").read_text(encoding="utf-8")
-    assert "Brutal.Authoring.Editor.Text.csproj" in launcher, "the app the release publishes has the Text panel"
+    launcher = (pr.ROOT / "src" / "Bed.Launcher" / "Bed.Launcher.csproj").read_text(encoding="utf-8")
+    assert "Bed.Editor.Text.csproj" in launcher, "the app the release publishes has the Text panel"
 
 
 def test_the_start_page_and_the_sample_it_names_exist() -> None:
@@ -179,7 +179,7 @@ def test_ai_setup_capability_and_failures_are_distinct(monkeypatch, tmp_path, mo
         if command == [str(tmp_path / "bed-cli.exe"), "--help"]:
             help_text = "usage: bed-cli options\n  describe details\n  mcp stdio\n"
             if mode != "absent": help_text += "  ai-setup [--json] examples\n"
-            return pr.subprocess.CompletedProcess(command, 1 if mode == "bad-help" else 2, "", help_text)
+            return pr.subprocess.CompletedProcess(command, 1 if mode == "bad-help" else 0, help_text, "")
         assert command == [str(tmp_path / "bed-cli.exe"), "ai-setup", "--data", "samples/recipes/data",
                            "--schemas", "samples/recipes/schemas", "--map", "samples/recipes/reference_map.json", "--json"]
         if mode == "timeout": raise pr.subprocess.TimeoutExpired(command, 30)
@@ -456,3 +456,19 @@ def test_scene_package_missing_export_runtime_refuses_before_creating_the_stage(
     with pytest.raises(RuntimeError, match="export runtime is missing"):
         pr.copy_scene_sample(tmp_path / "stage", runtime, export_runtime)
     assert not (tmp_path / "stage").exists()
+
+
+@pytest.mark.parametrize("project,public_name", [("src/Bed.Launcher/Bed.Launcher.csproj", "BED"), ("src/Bed.Agent.Cli/Bed.Agent.Cli.csproj", "bed-cli")])
+@pytest.mark.parametrize("rid,suffix", [("win-x64", ".exe"), ("linux-x64", "")])
+def test_renamed_managed_program_keeps_the_public_apphost_name(monkeypatch, tmp_path, project, public_name, rid, suffix):
+    import package_release as package
+    seen = []
+    def fake_run(command):
+        seen.append(command)
+        (tmp_path / (Path(project).stem + suffix)).write_bytes(b"compiled apphost fixture")
+    monkeypatch.setattr(package, "run", fake_run)
+    assert package.publish(project, rid, tmp_path) == tmp_path
+    assert (tmp_path / (public_name + suffix)).read_bytes() == b"compiled apphost fixture"
+    assert not (tmp_path / (Path(project).stem + suffix)).exists()
+    assert seen[0][2] == project
+    assert not any("AssemblyName=" in arg for arg in seen[0])
