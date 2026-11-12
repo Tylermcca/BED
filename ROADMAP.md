@@ -18,9 +18,9 @@ There are no dates. A release ships when everything in it works from start to fi
 ## Done so far
 
 - **0.2 (0.2.1-rc.1):** a data editor that works like a normal Windows program; 3D levels with handles, snapping and undo; model and texture assets with licence records; Play from saved files; tested Windows builds and Export build.
-- **0.3 (0.3.0-rc.7, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
+- **0.3 (0.3.0, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
 
-## 0.3: prefabs, 2D and physics (out now as 0.3.0-rc.7)
+## 0.3: prefabs, 2D and physics (out now as 0.3.0)
 
 The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and play and export it.
 
@@ -71,17 +71,7 @@ The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and 
 - **Samples for the new features.** Two small original samples ship in the download: a flat sprite level with a prefab placed twice, and a 3D level with a crate prefab, a floor and a paddle, all with physics bodies. The Start here guide walks through both. Both are small games that play in their own window: a garden to run and jump through, and an island to drop crates on.
 - **Small fixes from the first real-window checks.** The welcome and tour boxes no longer cover the Files panel or **Used by** when a level opens.
 
-## Next: the 0.3 release
-
-No new features until 0.3 is out. The work is testing and fixing.
-
-- **Testers.** People other than the author try the download: open a project, change data and a level, save, play and export. Anything they get stuck on is reported with **Help > Report a problem** or on GitHub, and anything that stops them or comes up more than once is fixed first.
-- **A real game, start to finish.** BED is used on a real game that isn't one of the samples, from setup to an exported build. Whatever is missing, awkward or needs a workaround is written down and fixed or listed.
-- **A clean PC.** The download is checked on a Windows PC that has never had BED or the developer tools on it.
-
-0.3 is released when all three are done and the last release candidate has had no stopping problems reported for a week.
-
-## 0.4: one thing done well: the running game
+## Next, 0.4: one thing done well: the running game
 
 0.4 starts small, with one game and a handful of values, and grows only once that works every time.
 

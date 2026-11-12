@@ -4,6 +4,22 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-12
+
+BED 0.3: prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. It is the same as 0.3.0-rc.7 apart from its version number and one guide picture; the release candidates below list every change and fix since 0.2.1-rc.1.
+
+### Fixed
+
+- The first steps guide showed an old picture of the start screen with the samples in a separate list. It now shows the samples in the project list, as BED does.
+- Everything fixed while 0.3 was a release candidate is listed under each candidate below: among them the 3D view's flicker, levels that wouldn't close or save with **Save all**, files changed by an AI assistant not loading until the project was reopened, and samples missing from the start screen.
+
+### Known issues
+
+- Builds and the download are Windows only.
+- Physics uses a Windows-only native library, and a game must opt in to it.
+- The OpenGL fallback view shows sprite outlines, not images.
+- A full walkthrough with a real screen reader has not been done yet.
+
 ## [0.3.0-rc.7]
 
 Seventh release candidate for 0.3: the samples are in the start screen's project list.

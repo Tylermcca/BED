@@ -20,7 +20,7 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 - **A first-run tour** you can skip and reopen later from **Help > Take the tour**.
 - **Help > Report a problem** shows exactly what a report contains before you share it.
 
-The current download is **0.3.0-rc.7**, a release candidate for 0.3. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
+The current download is **0.3.0**. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
 
 ## Try it (Windows, 2 minutes)
 
