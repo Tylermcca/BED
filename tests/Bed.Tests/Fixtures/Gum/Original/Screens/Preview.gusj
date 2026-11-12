@@ -1,0 +1,243 @@
+{
+  "Name": "Preview",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Panel.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "Panel.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "Panel.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 260
+        },
+        {
+          "Name": "Panel.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 120
+        },
+        {
+          "Name": "Panel.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "Panel.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "Panel.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 90
+        },
+        {
+          "Name": "Panel.Alpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Glass.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 60
+        },
+        {
+          "Name": "Glass.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 60
+        },
+        {
+          "Name": "Glass.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "Glass.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 60
+        },
+        {
+          "Name": "Glass.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 200
+        },
+        {
+          "Name": "Glass.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 120
+        },
+        {
+          "Name": "Glass.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 50
+        },
+        {
+          "Name": "Glass.Alpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 128
+        },
+        {
+          "Name": "Alpha.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 285
+        },
+        {
+          "Name": "Alpha.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "Alpha.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "Alpha.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "Alpha.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 200
+        },
+        {
+          "Name": "Alpha.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 120
+        },
+        {
+          "Name": "Alpha.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 50
+        },
+        {
+          "Name": "Alpha.Alpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 128
+        },
+        {
+          "Name": "Title.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 30
+        },
+        {
+          "Name": "Title.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 30
+        },
+        {
+          "Name": "Title.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 240
+        },
+        {
+          "Name": "Title.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 30
+        },
+        {
+          "Name": "Title.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "BED GUM"
+        },
+        {
+          "Name": "Title.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Fonts/PressStart2P-Regular.ttf"
+        },
+        {
+          "Name": "Title.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "Title.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Title.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Title.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Title.Alpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Panel",
+      "BaseType": "ColoredRectangle"
+    },
+    {
+      "Name": "Glass",
+      "BaseType": "ColoredRectangle"
+    },
+    {
+      "Name": "Alpha",
+      "BaseType": "ColoredRectangle"
+    },
+    {
+      "Name": "Title",
+      "BaseType": "Text"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

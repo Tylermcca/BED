@@ -172,7 +172,9 @@ public static class Program
         if(shot is null)ProblemReportLog.Record(ReportEvent.Started);
         var launcher = new ProjectLauncher(new RecentProjects(Path.Combine(settings, "recent.json")),
             ProjectPaths.In(SampleFolder()));
-        var (loaded, problems) = Adapters.Load(Adapters.In(Path.Combine(AppContext.BaseDirectory, "adapters")).Concat(adapterDlls));
+        // BED's own adapters, then the person's extra adapters folder (Preferences > Locations), then any named here.
+        var extra = ProjectLauncher.AdaptersFolderIn(launcher.SettingsFile) is { } extras ? Adapters.In(extras) : [];
+        var (loaded, problems) = Adapters.Load(Adapters.In(Path.Combine(AppContext.BaseDirectory, "adapters")).Concat(extra).Concat(adapterDlls));
         SetUp(launcher);
         launcher.Loaded = loaded;
         launcher.AdapterProblems = problems;

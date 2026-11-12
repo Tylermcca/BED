@@ -3,6 +3,21 @@
   <ItemGroup>
     <!-- glTF reading (D4). MIT; net10.0 target with no dependencies (nuget.org, checked 2026-10-31, OSS-004). -->
     <PackageVersion Include="SharpGLTF.Core" Version="1.0.7" />
+    <!-- Gum's own project loader and dependency walker, for reading Gum projects (Bed.Editor). MIT; the preview-5 build of
+         commit 927cd9e. Brings BrotliSharpLib, CsvHelper, SharpCompress and FlatRedBall.InterpolationCore (THIRD-PARTY-NOTICES.md); no rendering or native package. -->
+    <PackageVersion Include="FlatRedBall.GumCommon" Version="2026.11.11.1-preview.5" />
+    <!-- Gum's own checker, the one behind gumcli check: ProjectLoader, HeadlessErrorChecker and ErrorDocsRegistry (Bed.Editor).
+         MIT, the same preview-5 build. Brings KernSmith, FreeType (native), SkiaSharp (through Gum.ImageDiff, which BED never calls),
+         Newtonsoft.Json and an embedded bmfont.exe (THIRD-PARTY-NOTICES.md). -->
+    <PackageVersion Include="Gum.ProjectServices" Version="2026.11.11.1-preview.5" />
+    <!-- Gum's own expression reader for linked values (GumExpressionService), which gumcli check turns on so GUM0002 checks
+         linked values written as sums or plain numbers too (Bed.Editor). MIT; the same preview-5 build. Brings Microsoft.CodeAnalysis.CSharp
+         (Roslyn) (THIRD-PARTY-NOTICES.md). -->
+    <PackageVersion Include="Gum.Expressions" Version="2026.11.11.1-preview.5" />
+    <!-- Gum's own Skia drawing, for the live picture of a Gum screen (GumScreenPicture). MIT; the same preview-5 build as
+         FlatRedBall.GumCommon. Brings Gum.SkiaSharp, SkiaSharp (+ native libSkiaSharp), HarfBuzzSharp (+ native) and
+         Topten.RichTextKit (THIRD-PARTY-NOTICES.md). Drawn on the CPU, so it is the same on Vulkan and OpenGL. -->
+    <PackageVersion Include="Gum.SkiaSharp.Standalone" Version="2026.11.11.1-preview.5" />
     <!-- BRUTAL, for the editor window only (D3: the line our BRUTAL games use, headless-testable). The core and the editor model take none. -->
     <PackageVersion Include="Ahwoo.Brutal.ShaderC" Version="2026.10.2" />
     <PackageVersion Include="Ahwoo.Brutal.OpenAl" Version="2026.10.2" />

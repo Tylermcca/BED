@@ -156,6 +156,9 @@ public sealed class AgentSession
                     ["severity"] = f.Problem.Severity.ToString().ToLowerInvariant(), ["message"] = f.Problem.Message,
                     ["file"] = f.Place?.File, ["item"] = f.Place?.Item, ["at"] = f.Place?.At, ["next"] = f.Next,
                 };
+                // Another tool's code for the problem (Gum's GUM0004, say) and its help page, so an agent can look it up.
+                if (f.Code is { } code) finding["code"] = code;
+                if (f.Help is { } help) finding["help"] = help;
                 if (paged) finding["ordinal"] = start + i;
                 return (JsonNode)finding;
             }).ToArray());
@@ -507,6 +510,21 @@ public sealed class AgentSession
         ourNames = ownNames;
         Checks.Add(new ContentRightsCheck(AssetFolder, ourNames: ownNames));
         return this;
+    }
+
+    /// <summary>Adds the Gum screens check (<see cref="Bed.Editor.Gum.GumFilesCheck"/>) when <paramref name="projectRoot"/> holds a
+    /// Gum project, as the editor does, so <c>checks</c> and <c>check</c> can run Gum's own checker. Returns whether it was
+    /// added. A folder that can't be searched adds nothing.</summary>
+    public bool UseGum(string projectRoot)
+    {
+        try
+        {
+            if (Checks.Registered.Any(d => d.Id == "gum.files")) return true;   // the editor's workspace already has it
+            if (!Bed.Editor.Gum.GumFilesCheck.Applies(projectRoot)) return false;
+            Checks.Add(new Bed.Editor.Gum.GumFilesCheck(projectRoot));
+            return true;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException) { return false; }
     }
 
     /// <summary>Imports the asset <paramref name="file"/> (relative to <see cref="AssetFolder"/>) with its origin declared:

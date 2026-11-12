@@ -47,7 +47,7 @@ public static class Program
             errors.WriteLine($"{file} isn't a checkers position: {e.Message}");
             return 1;
         }
-        var play = new Play(start);
+        using var play = new Play(start, title: file is null);
         if (shot is not null)
         {
             using var host = new HeadlessHost(720, 800);
@@ -62,11 +62,26 @@ public static class Program
     }
 }
 
-/// <summary>The game's one screen: the match fills the window, with New game to start over from the same position.</summary>
-public sealed class Play(Game start)
+/// <summary>The game: a match fills the window, with New game to start over from the same position. With its Gum screens
+/// beside it (CheckersProject/ui/CheckersUi.gumj, made in Gum), a title comes first when <paramref name="title"/> is true, and a strip above
+/// the board shows whose turn it is and the pieces left; without them, or with <paramref name="plain"/>, a plain line does.</summary>
+public sealed class Play(Game start, bool title = false, bool plain = false) : IDisposable
 {
+    private readonly string? gum = plain ? null : CheckersScreen.Project();
+    private CheckersScreen? titleScreen, panel;
+    private bool onTitle = title;
+
     /// <summary>The match being played.</summary>
     public Match Match { get; private set; } = new(start);
+
+    /// <summary>The Gum strip above the board, once a match has been drawn with the Gum screens.</summary>
+    public CheckersScreen? Strip => panel;
+
+    /// <summary>The Gum title, once drawn.</summary>
+    public CheckersScreen? TitleScreen => titleScreen;
+
+    /// <summary>Whether the title is showing (only with the Gum screens).</summary>
+    public bool OnTitle => onTitle && gum is not null;
 
     /// <summary>Draws a frame.</summary>
     public void Draw()
@@ -76,17 +91,44 @@ public sealed class Play(Game start)
         ImGui.SetNextWindowSize(viewport.WorkSize);
         if (ImGui.Begin("Checkers###game"u8, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoSavedSettings))
         {
-            if (ImGui.Button("New game"u8)) Match = new Match(start);
-            ImGui.SameLine();
-            ImGui.TextDisabled(Match.Status);
             // The credits line (BRUTAL License v1.0, 2.1), wrapped so it's whole at any text size, with room kept for it
-            // under the board (found by A067: at 1.5x and 2x the board pushed it out of the window).
+            // under the board or the title (found by A067: at 1.5x and 2x the board pushed it out of the window).
             var credit = ImGui.CalcTextSize(BrutalCredit.Copyright, false, ImGui.GetContentRegionAvail().X).Y + ImGui.GetStyle().ItemSpacing.Y * 2;
-            Match.Draw(credit);
+            if (OnTitle)
+            {
+                titleScreen ??= new CheckersScreen(gum!, "Title", fill: true);
+                if (titleScreen.Draw(credit) == "NewGameButton") { onTitle = false; Match = new Match(start); }
+            }
+            else
+            {
+                if (gum is not null)
+                {
+                    panel ??= new CheckersScreen(gum, "MatchPanel", fill: false);
+                    var (dark, light) = Rules.Count(Match.Current);
+                    panel.Set("TurnText.Text", Match.Status);
+                    panel.Set("CountText.Text", $"Dark {dark}   Light {light}");
+                    if (panel.Draw() == "NewGameButton") Match = new Match(start);
+                }
+                else
+                {
+                    if (ImGui.Button("New game"u8)) Match = new Match(start);
+                    ImGui.SameLine();
+                    ImGui.TextDisabled(Match.Status);
+                }
+                Match.ShowsStatus = gum is null;   // the Gum strip already says whose move it is and the pieces left
+                Match.Draw(credit);
+            }
             ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyleColorVec4(ImGuiCol.TextDisabled));
             ImGui.TextWrapped(BrutalCredit.Copyright);
             ImGui.PopStyleColor();
         }
         ImGui.End();
+    }
+
+    /// <summary>Lets go of the Gum screens.</summary>
+    public void Dispose()
+    {
+        titleScreen?.Dispose();
+        panel?.Dispose();
     }
 }

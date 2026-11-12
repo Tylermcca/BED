@@ -1,0 +1,79 @@
+{
+  "Version": 8,
+  "ScreenReferences": [
+    {
+      "Name": "Menu",
+      "ElementType": 0,
+      "LinkType": 0
+    },
+    {
+      "Name": "Broken",
+      "ElementType": 0,
+      "LinkType": 0
+    },
+    {
+      "Name": "Looped",
+      "ElementType": 0,
+      "LinkType": 0
+    },
+    {
+      "Name": "Dynamic",
+      "ElementType": 0,
+      "LinkType": 0
+    },
+    {
+      "Name": "Gone",
+      "ElementType": 0,
+      "LinkType": 0
+    }
+  ],
+  "ComponentReferences": [
+    {
+      "Name": "Button",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "Panel",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "LoopA",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "LoopB",
+      "ElementType": 1,
+      "LinkType": 0
+    }
+  ],
+  "StandardElementReferences": [
+    {
+      "Name": "Container",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Sprite",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Text",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "NineSlice",
+      "ElementType": 2,
+      "LinkType": 0
+    }
+  ],
+  "BehaviorReferences": [
+    {
+      "Name": "Clickable"
+    }
+  ]
+}

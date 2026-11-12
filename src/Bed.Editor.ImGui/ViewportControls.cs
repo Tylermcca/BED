@@ -9,6 +9,7 @@ internal static class ViewportControls
     internal static string Note {get;set;} = "";
     internal static void DrawChoice()
     {
+        Brutal.ImGuiApi.ImGui.SetNextItemWidth(MathF.Min(Brutal.ImGuiApi.ImGui.GetFontSize()*12,Brutal.ImGuiApi.ImGui.GetContentRegionAvail().X));
         if(Ui.BeginCombo("Viewport keymap"u8,Wer?"W/E/R":"BED defaults"))
         {
             if(Ui.Selectable("BED defaults"u8,!Wer))Choose(false);

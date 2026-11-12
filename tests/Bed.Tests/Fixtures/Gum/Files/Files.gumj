@@ -1,0 +1,21 @@
+{
+  "Version": 8,
+  "LocalizationFiles": [ "Strings/Words.csv" ],
+  "ScreenReferences": [
+    { "Name": "Pages", "ElementType": 0, "LinkType": 0 },
+    { "Name": "Other", "ElementType": 0, "LinkType": 0 },
+    { "Name": "Child", "ElementType": 0, "LinkType": 0 }
+  ],
+  "ComponentReferences": [
+    { "Name": "OtherPart", "ElementType": 1, "LinkType": 0 },
+    { "Name": "Spare", "ElementType": 1, "LinkType": 0 },
+    { "Name": "CycleA", "ElementType": 1, "LinkType": 0 },
+    { "Name": "CycleB", "ElementType": 1, "LinkType": 0 }
+  ],
+  "StandardElementReferences": [
+    { "Name": "Container", "ElementType": 2, "LinkType": 0 },
+    { "Name": "Sprite", "ElementType": 2, "LinkType": 0 },
+    { "Name": "Text", "ElementType": 2, "LinkType": 0 }
+  ],
+  "BehaviorReferences": []
+}

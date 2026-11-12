@@ -1,0 +1,22 @@
+{
+  "Name": "Sprite",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "SourceFile",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFile": true
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

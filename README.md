@@ -8,6 +8,15 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 
 ![BED editing a flat 2D level: a cartoon garden of sprites, with the Outliner, the level view and the Inspector](docs/images/bed-sprite-level.png)
 
+## What's new in the 0.3.9 preview
+
+A preview to try: Gum screens are new, so tell us what doesn't work. 0.3.1 is the main download.
+
+- **Game screens made in [Gum](https://docs.flatredball.com/gum)**, the free menu and screen designer. Choose **File > Show Gum screens** to see each screen as your game will draw it, and **Edit in Gum** to change it. When you save in Gum, BED and a running game update by themselves.
+- **A Gum screens check** in the Checks panel lists anything a screen needs and is missing, such as a picture or a font.
+- **Preferences > Locations:** where Gum is, where new projects go, and a folder of extra adapters.
+- The checkers sample's title and match screens are made in Gum. See [Gum screens](docs/guide/gum.md).
+
 ## What's new in 0.3
 
 - **Prefabs.** Make a reusable piece, place it many times, and change one copy without touching the others.
@@ -20,9 +29,7 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 - **A first-run tour** you can skip and reopen later from **Help > Take the tour**.
 - **Help > Report a problem** shows exactly what a report contains before you share it.
 
-The current download is **0.3.1**. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
-
-Want to try game screens made in [Gum](https://docs.flatredball.com/gum)? The **0.3.9 preview** on the [Releases page](../../releases) has them: see your screens in BED, open them in Gum with one button, and watch BED and your game update when you save.
+The current download is **0.3.9-preview**, a preview of Gum screens; the main download is 0.3.1. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
 
 ## Try it (Windows, 2 minutes)
 
@@ -49,7 +56,7 @@ Choose **Tools > Build and Play** to run either one; each opens a small game in 
 
 Move things in BED, save and play again, and the games change with them. [Start here](docs/guide/start_here.md#5-try-the-2d-and-physics-samples) walks through both.
 
-The download includes a level sample too: **samples\scene-starter**, a 3D level to add models to, move them, play it and export a copy. [Edit a level](docs/guide/levels.md) has the step-by-step, and the zip's small checkers game shows an adapter at work. If you [build from source](#build-from-source), this sample is `samples/SceneStarterProject` and the others are beside it in the `samples` folder.
+The download includes a level sample too: **samples\scene-starter**, a 3D level to add models to, move them, play it and export a copy. [Edit a level](docs/guide/levels.md) has the step-by-step, and the zip's small checkers game shows an adapter at work, with its title and match screens made in Gum. If you [build from source](#build-from-source), this sample is `samples/SceneStarterProject` and the others are beside it in the `samples` folder.
 
 The [guide index](docs/guide/README.md) covers everyday editing, levels, [Play](docs/guide/playing.md), [Export](docs/guide/exporting.md), [troubleshooting](docs/guide/troubleshooting.md) and [working with an AI assistant](docs/guide/using_bed_with_ai.md).
 
@@ -71,6 +78,7 @@ Then click **Open**. If a file breaks its rules, BED still opens it and helps yo
 - **Tables and forms** for your data, with errors shown next to the field.
 - **Links between files.** Click a name to jump to the item it refers to, and see everything that refers to an item.
 - **Play and Export.** Run the game from your saved files, pause it and step it if the game supports it, and export a copy that runs without BED.
+- **Game screens made in Gum.** See your Gum screens in BED, open them in Gum with one button, and check that nothing they need is missing. See [Gum screens](docs/guide/gum.md).
 - **Your game's own rules.** A small C# adapter adds checks, panels or a playable preview. See [Writing an adapter](docs/guide/writing_an_adapter.md).
 - **A command line** (`bed-cli.exe`) that makes the same checked edits, for scripts, AI assistants and screen readers.
 - **Keyboard and accessibility.** Text follows Windows' text size, with larger sizes and high contrast in Preferences. See the [keyboard guide](docs/guide/keyboard.md) and [accessibility](docs/guide/accessibility.md).
@@ -81,8 +89,8 @@ Then click **Open**. If a file breaks its rules, BED still opens it and helps yo
 |---|---|
 | ![BED editing a 3D island level with a stack of crates](docs/images/bed-physics-level.png) | ![BED showing a recipes table in the dark theme](docs/images/bed-data-dark.png) |
 | A 3D level with prefabs and physics. | A data table in the dark theme. |
-| ![BED showing the checkers sample's board](docs/images/sample-checkers.png) | |
-| A board game's adapter: edit the board by clicking. | |
+| ![BED showing the checkers sample's board](docs/images/sample-checkers.png) | ![BED showing a game screen made in Gum, with an Edit in Gum button](docs/images/bed-gum-screens.png) |
+| A board game's adapter: edit the board by clicking. | A game screen made in Gum, as the game draws it. |
 
 ## Made with BED
 
@@ -99,7 +107,7 @@ I'm using BED on three or four games of my own at the moment, each a different k
 
 ## Roadmap
 
-0.2 added 3D levels, assets, Play and Windows builds. 0.3 adds prefabs, 2D levels with sprites and physics. Next, 0.4 works with the running game. See [the roadmap](ROADMAP.md) for what's done and what's left.
+0.2 added 3D levels, assets, Play and Windows builds. 0.3 adds prefabs, 2D levels with sprites and physics, and the 0.3.9 preview adds game screens made in Gum. Next, 0.4 works with the running game. See [the roadmap](ROADMAP.md) for what's done and what's left.
 
 ## Build from source
 

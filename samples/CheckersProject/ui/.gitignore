@@ -1,0 +1,5 @@
+# Made by Gum when the project is opened or saved, and not used by checkers (it draws with Skia from the .ttf font).
+*.user.setj
+FontCache/
+EventExport/
+ProjectCodeSettings.codsj

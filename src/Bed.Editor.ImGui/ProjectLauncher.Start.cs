@@ -11,7 +11,10 @@ public sealed partial class ProjectLauncher
     private enum StartPage { Home, New, Open }
     private StartPage startPage;
     private readonly ProjectCreator projectCreator;
-    private readonly string personalProjects;
+    private readonly string? chosenProjects;   // given by the host (tests, trials); otherwise Preferences > Locations decides
+    /// <summary>Where new projects go: the host's choice, else Preferences > Locations, else DocumentsBED Projects.</summary>
+    internal string NewProjectsFolder => personalProjects;
+    private string personalProjects => chosenProjects ?? (Locations.Projects.Length > 0 ? Locations.Projects : ProjectCreator.DefaultLocation ?? "");
     private ImInputString recentSearch = new(512, ""u8);
     private ImInputString projectName = new(256, "My project"u8);
     private ImInputString projectLocation;
@@ -92,7 +95,7 @@ public sealed partial class ProjectLauncher
         {
             var width=ImGui.GetContentRegionAvail().X;
             var footer=ImGui.GetFrameHeightWithSpacing()*2+ImGui.CalcTextSize(BrutalCredit.Copyright,false,width).Y+ImGui.CalcTextSize("Built with BRUTAL, a game development framework by Ahwoo Limited. See NOTICE.txt beside this program."u8,false,width).Y+ImGui.GetStyle().ItemSpacing.Y*4;
-            if(showPreferences)footer+=ImGui.GetFrameHeightWithSpacing()*7;
+            if(showPreferences)footer+=ImGui.GetFrameHeightWithSpacing()*16;
             if(showGuide)footer+=ImGui.GetFrameHeightWithSpacing()*10;
             if(Ui.BeginChild("Start choices###launcher.choices"u8,new float2(0,MathF.Max(200,ImGui.GetContentRegionAvail().Y-footer)),ImGuiChildFlags.NavFlattened))DrawHome();
             Ui.EndChild();
@@ -139,6 +142,7 @@ public sealed partial class ProjectLauncher
                 Ui.EndCombo();
             }
             ViewportControls.DrawChoice();
+            Locations.Draw();
             Ui.Text($"Text size {EditorWindow<DataDocument>.TextScale:P0}");
             if (Ui.SmallButton("Smaller"u8)) EditorWindow<DataDocument>.SetTextScale(EditorWindow<DataDocument>.TextScale - EditorWindow<DataDocument>.TextStep);
             ImGui.SameLine();

@@ -1,0 +1,10 @@
+{
+  "Name": "CycleA",
+  "BaseType": "CycleB",
+  "States": [ { "Name": "Default", "Variables": [], "VariableLists": [] } ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

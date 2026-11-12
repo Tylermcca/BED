@@ -1,0 +1,9 @@
+{
+  "Name": "Other",
+  "States": [ { "Name": "Default", "Variables": [], "VariableLists": [] } ],
+  "Categories": [],
+  "Instances": [ { "Name": "Thing", "BaseType": "OtherPart" } ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

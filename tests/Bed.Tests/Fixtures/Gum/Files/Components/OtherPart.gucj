@@ -1,0 +1,18 @@
+{
+  "Name": "OtherPart",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        { "Name": "Pic.SourceFile", "Type": "string", "SetsValue": true, "ValueAsString": "Images/other.png" }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [ { "Name": "Pic", "BaseType": "Sprite" } ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

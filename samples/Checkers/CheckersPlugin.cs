@@ -117,10 +117,10 @@ public static class Board
     /// when it's clicked. Returns where square a{size} was drawn and how big a square was.</summary>
     /// <param name="below">Height to leave under the board for what's drawn after it (a host's credits line), so it stays in
     /// the window at any text size (found by A067).</param>
-    public static (float2 Origin, float Cell) Draw(Game g, IReadOnlyCollection<string> picked, Action<string> clicked, float below = 0)
+    public static (float2 Origin, float Cell) Draw(Game g, IReadOnlyCollection<string> picked, Action<string> clicked, float below = 0, bool status = true)
     {
         var (dark, light) = Rules.Count(g);
-        ImGui.Text(Rules.Winner(g) is { } w ? $"{w} wins!" : $"{g.ToMove} to move.   Dark {dark}, light {light}.");
+        if (status) ImGui.Text(Rules.Winner(g) is { } w ? $"{w} wins!" : $"{g.ToMove} to move.   Dark {dark}, light {light}.");
         var size = MathF.Min(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y - ImGui.GetFrameHeightWithSpacing() * 2 - below);
         var cell = MathF.Max(12, size / g.Size);
         var origin = ImGui.GetCursorScreenPos();
@@ -211,13 +211,17 @@ public sealed class Match(Game start) : IPlaySession
         return Said = $"Played {string.Join("-", move.Path)}.";
     }
 
+    /// <summary>Whether the line above the board says whose move it is and the pieces left. A game that shows them
+    /// itself (checkers' Gum strip) turns it off.</summary>
+    public bool ShowsStatus { get; set; } = true;
+
     /// <inheritdoc />
     public void Draw() => Draw(0);
 
     /// <summary>Draws the match, leaving <paramref name="below"/> pixels under it for the host's own lines.</summary>
     public void Draw(float below)
     {
-        LastBoard = Board.Draw(Current, picked, square => Click(square), below);
+        LastBoard = Board.Draw(Current, picked, square => Click(square), below, ShowsStatus);
         if (ImGui.Button("Computer move"u8))
             Said = Computer.Choose(Current) is { } m ? "The computer: " + Play(m) : "No move to play.";
         ImGui.SameLine();

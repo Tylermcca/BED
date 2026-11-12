@@ -32,7 +32,9 @@ public sealed record CheckPlace(string File, string? Item = null, string? At = n
 /// <param name="Problem">The issue to report, including its severity and message.</param>
 /// <param name="Place">The known file, item or field, or null when no location is known.</param>
 /// <param name="Next">A plain next action for the person reading the finding.</param>
-public sealed record CheckFinding(Issue Problem, CheckPlace? Place, string Next);
+/// <param name="Code">The code another tool gives this kind of problem (Gum's GUM0004, say), or null when there is none.</param>
+/// <param name="Help">A web page that explains <paramref name="Code"/>, or null when there is none.</param>
+public sealed record CheckFinding(Issue Problem, CheckPlace? Place, string Next, string? Code = null, string? Help = null);
 
 /// <summary>What a check returns. <paramref name="Complete"/> is false when it couldn't look at everything; then no
 /// result is "clean", whatever it found.</summary>

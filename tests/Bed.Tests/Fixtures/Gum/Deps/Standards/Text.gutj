@@ -1,0 +1,43 @@
+{
+  "Name": "Text",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "UseCustomFont",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "CustomFontFile",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Fonts/unused.fnt"
+        },
+        {
+          "Name": "Font",
+          "Type": "string",
+          "Category": "Font",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Arial"
+        },
+        {
+          "Name": "FontSize",
+          "Type": "int",
+          "Category": "Font",
+          "SetsValue": true,
+          "ValueAsInt": 18
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

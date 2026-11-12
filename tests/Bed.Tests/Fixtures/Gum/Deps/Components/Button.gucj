@@ -1,0 +1,61 @@
+{
+  "Name": "Button",
+  "BaseType": "Panel",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Label.UseCustomFont",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "ButtonCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Pressed",
+          "Variables": [
+            {
+              "Name": "Pic.SourceFile",
+              "Type": "string",
+              "SetsValue": true,
+              "ValueAsString": "Images/pressed.png"
+            },
+            {
+              "Name": "Label.CustomFontFile",
+              "Type": "string",
+              "SetsValue": true,
+              "ValueAsString": "Fonts/pressed.fnt"
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "Label",
+      "BaseType": "Text"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "Clickable"
+    }
+  ],
+  "VariablesHiddenFromInstances": []
+}

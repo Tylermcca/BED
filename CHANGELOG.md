@@ -4,6 +4,30 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.9-preview] - 2026-11-12
+
+A preview to try. Game screens made in [Gum](https://docs.flatredball.com/gum), the free menu and screen designer: BED checks them, shows them, and opens them in Gum for you. The checkers sample now has its title and match screens made in Gum. See the [Gum screens guide](docs/guide/gum.md).
+
+### Added
+
+- **Gum screens panel** (**File > Show Gum screens**): each screen drawn by Gum itself, as your game will show it. When you save a screen in Gum, the picture updates by itself.
+- **Edit in Gum**: opens your screens in Gum. BED finds Gum on its own, brings it to the front if it's already open, and asks you to pick it only when it can't find it.
+- **Gum screens check** in the Checks panel: Gum's own checker looks at every screen and lists anything missing, such as a picture or a font, with what to do about it. It knows which fonts your game needs from how the game draws its text, and an AI assistant can run the same check.
+- **Preferences > Locations**: where Gum is, the folder new projects go in, and a folder of extra adapters, each with **Browse...** and **Back to normal**.
+- The checkers sample's title and match screens are made in Gum. They grow with the text size and fit the window, and a running game updates when you save them in Gum.
+
+### Fixed
+
+- The Checks panel called findings that are only for your information **Warning**. They are now labelled **Note**.
+
+### Known issues
+
+- BED doesn't make a new Gum project for you yet. Make it in Gum, inside your project's folder.
+- Builds and the download are Windows only.
+- Physics uses a Windows-only native library, and a game must opt in to it.
+- The OpenGL fallback view shows sprite outlines, not images.
+- A full walkthrough with a real screen reader has not been done yet.
+
 ## [0.3.1] - 2026-11-12
 
 Two fixes for the checkers sample in the download.

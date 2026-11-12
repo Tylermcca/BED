@@ -121,12 +121,14 @@ public sealed partial class ProjectLauncher : IDisposable
         Recent = recent;
         Sample = sample;
         projectCreator = creator ?? new ProjectCreator();
-        personalProjects = projectsFolder ?? ProjectCreator.DefaultLocation ?? "";
-        projectLocation = new ImInputString(2048, personalProjects);
+        chosenProjects = projectsFolder;
+        Locations.Dialogs = () => FileDialogs;
         // Prefill only; opening still requires the person's action. Keep the existing settings location.
         var initial = Recent.Items.FirstOrDefault(p => Directory.Exists(p.Data) && Directory.Exists(p.Schemas)) ?? sample;
         if (initial is not null) FillPaths(initial);
         ReadPreferences();
+        if (projectsFolder is null) Locations.Projects = rememberedProjects;
+        projectLocation = new ImInputString(2048, personalProjects);
         ReadTourPreference();
         KeysPanel.LoadPreferences(shortcuts,Path.Combine(Path.GetDirectoryName(SettingsFile)!,"shortcuts.json"));
     }
@@ -277,6 +279,8 @@ public sealed partial class ProjectLauncher : IDisposable
             }
             try { SetUpWorkspace?.Invoke(workspace); }
             catch (Exception e) { notes.Add($"The editor's own workspace setup failed: {e.Message}. The project is open; some panels or settings may be missing."); }
+            try { if (Bed.Editor.Gum.GumFilesCheck.Applies(projectRoot)) { workspace.Checks.Add([new Bed.Editor.Gum.GumFilesCheck(projectRoot)]); workspace.BindGum(projectRoot); } }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException) { notes.Add("BED couldn't look for Gum screens in this project, so the Gum check isn't in the Checks panel."); }
             if (adapter is not null)
             {
                 try { workspace.Checks.Add([.. adapter.Checks]); }
@@ -397,6 +401,7 @@ public sealed partial class ProjectLauncher : IDisposable
     public void Draw()
     {
         var frame = Ui.Snapshot().Frame;
+        PictureTexture.Tick();   // frees pictures a closed project left, even with no project open
         var owner = Workspace;
         DrawCore();
         var reportStatus=Workspace?.Said??Said;

@@ -1,0 +1,22 @@
+{
+  "Name": "Pages",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        { "Name": "Walker.SourceFile", "Type": "string", "SetsValue": true, "ValueAsString": "Anim/walk.achx" },
+        { "Name": "Title.UseCustomFont", "Type": "bool", "SetsValue": true, "ValueAsBool": true },
+        { "Name": "Title.CustomFontFile", "Type": "string", "SetsValue": true, "ValueAsString": "Fonts/paged.fnt" }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    { "Name": "Walker", "BaseType": "Sprite" },
+    { "Name": "Title", "BaseType": "Text" }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

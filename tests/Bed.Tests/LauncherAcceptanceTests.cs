@@ -3,6 +3,7 @@ using System.Text.Json;
 using Bed;
 using Bed.Data;
 using Bed.Editor;
+using Bed.Editor.Gum;
 using Bed.Editor.ImGui;
 using Brutal.ImGuiApi;
 using Brutal.Numerics;
@@ -31,6 +32,13 @@ public sealed class LauncherAcceptanceTests
          {"file":"nodes.json","at":"/nodes/*/target","target":{"file":"nodes.json","list":"/nodes","key":"id"},
           "evidence":"Invented A064 courier/watch nodes."}]}
         """;
+    private sealed class PickGum(string gum) : IFileDialogs
+    {
+        public string? Asked { get; private set; }
+        public string? PickFolder(string title, string? start) => null;
+        public string? OpenFile(string title, IReadOnlyList<FileDialogFilter> filters, string? start) { Asked = title; return gum; }
+        public string? SaveFile(string title, IReadOnlyList<FileDialogFilter> filters, string? suggestedName) => null;
+    }
     private sealed class Sandbox : IDisposable
     {
         public string Root { get; }=Path.Combine(Path.GetTempPath(),"a064-launcher-"+Guid.NewGuid().ToString("N"));
@@ -583,6 +591,54 @@ public sealed class LauncherAcceptanceTests
         l.RemoveFromList(l.SearchRecent("my-own-game")[0]);l.RemoveFromList(l.SearchRecent("checkers")[0]);
         Assert.Empty(r.Launcher().SearchRecent("")); // removed samples stay off, files kept
         Assert.True(Directory.Exists(mine.Data));
+    }
+    [Fact]
+    public void A_project_with_Gum_screens_gets_the_Gum_check_and_Edit_in_Gum_finds_Gum_itself()
+    {
+        using var r=new Sandbox();var p=r.Project("Game");var ui=Path.Combine(Path.GetDirectoryName(p.Data)!,"ui");
+        foreach(var file in Directory.GetFiles(GumFixtures.Folder("Original"),"*",SearchOption.AllDirectories))
+        {var to=Path.Combine(ui,Path.GetRelativePath(GumFixtures.Folder("Original"),file));Directory.CreateDirectory(Path.GetDirectoryName(to)!);File.Copy(file,to);}
+        var l=r.Launcher();Assert.True(l.OpenFolder(Path.GetDirectoryName(p.Data)!));
+        Assert.Contains(l.Workspace!.Checks.Registered,d=>d.Id=="gum.files");
+        using var screen=new Screen(l.Draw);
+        GumScreenPanel ShowIt()
+        {
+            screen.Host.Frames(screen.Draw,2);var editor=l.Workspace!.Window!.Editor;Assert.Contains(editor.Panels,x=>x.Id==GumScreenPanel.Id);
+            Assert.NotNull(l.Workspace.Window.ShowGumScreenAction);l.Workspace.Window.ShowGumScreenAction!();Assert.True(editor.IsOpen(GumScreenPanel.Id));
+            screen.Host.Frames(screen.Draw,2);
+            var shown=Assert.IsType<GumScreenPanel>(l.Workspace.GumScreen);Assert.Equal(Directory.GetFiles(ui,"*.gumj").Single(),shown.ProjectFile);
+            Assert.Equal("Preview",shown.Picture?.Screen);Assert.True(shown.Picture!.Drawn,shown.Picture.Problem);Assert.False(GumScreenPicture.GumIsFree);
+            return shown;
+        }
+        var panel=ShowIt();
+        // No Gum on the computer and nowhere to ask: BED says where to get it. Gum found in a usual place: BED remembers it.
+        l.Workspace.GumPlaces=()=>[];Locations.Gum="";Assert.False(l.Workspace.OpenGum());Assert.Equal(GumTool.NotFound,l.Workspace.Said);
+        var found=Path.Combine(r.Root,"Tools","Gum","Gum.exe");Directory.CreateDirectory(Path.GetDirectoryName(found)!);File.WriteAllText(found,"not a program");
+        l.Workspace.GumPlaces=()=>[found];Assert.False(l.Workspace.OpenGum());Assert.Equal(found,Locations.Gum);Assert.Contains("Windows couldn't start Gum",l.Workspace.Said);
+        // Not in a usual place: BED asks with the ordinary file picker, and remembers the pick.
+        Locations.Gum="";var picker=new PickGum(found);l.FileDialogs=picker;l.Workspace.GumPlaces=()=>[];
+        Assert.False(l.Workspace.OpenGum());Assert.Equal("Where is Gum? Pick Gum.exe",picker.Asked);Assert.Equal(found,Locations.Gum);
+        l.FileDialogs=null;Locations.Gum="";
+        // Switching to another project lets go of Gum (its watcher too) and, over the next frames, of the picture's texture.
+        var other=r.Project("Other");Assert.True(l.OpenFolder(Path.GetDirectoryName(other.Data)!),l.Said);
+        Assert.True(GumScreenPicture.GumIsFree);Assert.Null(panel.Picture);
+        screen.Host.Frames(screen.Draw,6);Assert.Equal(0,PictureTexture.Waiting);
+        // Closing the project does the same.
+        Assert.True(l.OpenFolder(Path.GetDirectoryName(p.Data)!),l.Said);panel=ShowIt();
+        Assert.True(l.Close(discard:true),l.Said);
+        Assert.True(GumScreenPicture.GumIsFree);Assert.Null(panel.Picture);
+        screen.Host.Frames(screen.Draw,6);Assert.Equal(0,PictureTexture.Waiting);
+    }
+    [Fact]
+    public void Two_Gum_projects_are_named_and_neither_is_opened_by_guess()
+    {
+        using var r=new Sandbox();var p=r.Project("Game");var root=Path.GetDirectoryName(p.Data)!;
+        foreach(var folder in new[]{"ui","hud"})
+            foreach(var file in Directory.GetFiles(GumFixtures.Folder("Original"),"*",SearchOption.AllDirectories))
+            {var to=Path.Combine(root,folder,Path.GetRelativePath(GumFixtures.Folder("Original"),file));Directory.CreateDirectory(Path.GetDirectoryName(to)!);File.Copy(file,to);}
+        var l=r.Launcher();Assert.True(l.OpenFolder(root));
+        l.Workspace!.GumPlaces=()=>[];Locations.Gum="";Assert.False(l.Workspace!.OpenGum());
+        Assert.Contains("2 Gum projects: hud/Original.gumj and ui/Original.gumj",l.Workspace.Said);Assert.Contains("doesn't pick one",l.Workspace.Said);
     }
     [Fact]
     public void StartScreen_TypedSeparatePathsIncludingOptionalMap_OpenByKeyboard()

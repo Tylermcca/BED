@@ -726,7 +726,7 @@ public sealed class LauncherAccessibilityTests
     }
     private sealed class PlayRig : IDisposable
     {
-        public CheckersPlay.Play Play {get;}=new(Game.Opening());
+        public CheckersPlay.Play Play {get;}=new(Game.Opening(),plain:true);   // ImGui's own words, which these checks read; the Gum strip has its own (CheckersGumTests)
         public Ui Ui {get;}
         public PlayRig(float scale,params string[] captions)=>Ui=new Ui(Play.Draw,scale,captions,720,800);
         public void MoveWithKeys(){Ui.Reach("Computer move",window:PlayWindow);Ui.Key(ImGuiKey.Enter);Assert.Equal(Side.Light,Play.Match.Current.ToMove);}
