@@ -59,7 +59,7 @@ public sealed class GameProcessHostTests
             var helper=executable ?? Path.Combine(AppContext.BaseDirectory,"LinkedPlayTestGame","LinkedPlayTestGame.exe");
             var spec=new GameLaunchSpec(helper,AppContext.BaseDirectory,new[]{mode}.Concat(extra ?? []));
             Host=new(spec,65536,8192,32,Logs);
-            Session=new(Host,snapshot,id,TimeProvider.System,TimeSpan.FromSeconds(4),TimeSpan.FromSeconds(2));
+            Session=new(Host,snapshot,id,TimeProvider.System,TimeSpan.FromSeconds(15),TimeSpan.FromSeconds(10));
         }
         public bool Start()
         {

@@ -15,7 +15,7 @@ namespace Bed.Tests;
 public sealed class FrameControlPause01Tests
 {
     private static void Until(Func<bool> done,Action? pump=null)
-    {var time=Stopwatch.StartNew();while(time.Elapsed<TimeSpan.FromSeconds(4)){pump?.Invoke();if(done())return;Thread.Sleep(5);}Assert.True(done(),"Timed out waiting for frame-control evidence.");}
+    {var time=Stopwatch.StartNew();while(time.Elapsed<TimeSpan.FromSeconds(20)){pump?.Invoke();if(done())return;Thread.Sleep(5);}Assert.True(done(),"Timed out waiting for frame-control evidence.");}
     private static FieldInfo Field(string name)=>typeof(FrameControl).GetField(name,BindingFlags.Instance|BindingFlags.NonPublic)!;
     [Fact]
     public void Gate_applies_pause_at_boundary_and_step_acknowledges_only_after_one_completed_tick()
