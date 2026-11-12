@@ -100,7 +100,7 @@ public sealed class CheckersInTheAppAcceptanceTests
             {ExceptionDispatchInfo.Capture(e.InnerException).Throw();throw;}
         }
         public (float2 Origin,float Cell) Geometry=>(ValueTuple<float2,float>)Board.GetType().GetProperty("LastBoard")!.GetValue(Board)!;
-        public ProcessStartInfo? GameFor(string position)=>(ProcessStartInfo?)LoadedType.GetMethod("GameFor")!.Invoke(null,[position]);
+        public ProcessStartInfo? GameFor(string position)=>(ProcessStartInfo?)LoadedType.GetMethod("GameFor",[typeof(string)])!.Invoke(null,[position]);
         public T InApp<T>(Func<T> action)
         {
             var old=AppContext.GetData("APP_CONTEXT_BASE_DIRECTORY");
@@ -461,6 +461,18 @@ public sealed class CheckersInTheAppAcceptanceTests
         var info=t.InApp(()=>t.GameFor("named position.json"));Assert.NotNull(info);
         Assert.Equal(extension=="exe"?candidate:"dotnet",info.FileName);
         Assert.Equal(extension=="exe"?new[]{"named position.json"}:new[]{candidate,"named position.json"},info.ArgumentList);
+    }
+
+    // Source: BED's own zip puts play-checkers in the project folder (samples/checkers), not beside the adapter or the
+    // app; Play in its own window plays a copy in the temp folder, so the project is the open file's, not the copy's.
+    [Fact] public void Resolver_FindsTheGameInTheOpenFilesProjectFolderWhenPlayingFromACopy()
+    {
+        using var t=new Trial();System.IO.File.Delete(Path.Combine(t.AdapterFolder,"play-checkers.exe"));
+        var game=Path.Combine(t.Project,"play-checkers.exe");System.IO.File.WriteAllText(game,"inert marker; never executed");
+        t.Open();
+        Assert.True(t.InApp(()=>t.Act("PlayInOwnWindow")),t.Said);
+        var (info,_)=Assert.Single(t.Starts);Assert.Equal(game,info.FileName);
+        Assert.NotEqual(t.File,info.ArgumentList[^1]);   // still a copy, so the game never writes the file
     }
 
     // Source: GameFor "Null when it isn't there."

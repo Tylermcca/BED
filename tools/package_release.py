@@ -54,6 +54,9 @@ REQUIRED = [
     "samples/checkers/data/opening.json",
     "samples/checkers/schemas/board.schema.json",
     "samples/checkers/play-checkers.exe",
+    # The game's window has screen-reader support too, which loads accesskit.dll from beside the program (0.3.0 shipped
+    # without it, so the game closed as it opened; the start check below runs it headless, which doesn't load it).
+    "samples/checkers/accesskit.dll",
     "samples/first-task/data/settings.json",
     "samples/first-task/schemas/settings.schema.json",
     "samples/first-task/first_task.md",
@@ -398,6 +401,8 @@ def build(stage: Path, rid: str) -> None:
     shutil.copytree(ROOT / "samples" / "FirstTask" / "schemas", first / "schemas")
     shutil.copy2(ROOT / "docs" / "guide" / "first_task.md", first / "first_task.md")
     copy_accesskit(stage, rid)
+    # play-checkers is a BED window too, and looks for accesskit.dll beside itself.
+    shutil.copy2(stage / "accesskit.dll", stage / "samples" / "checkers" / "accesskit.dll")
     copy_start_here(stage)
     copy_ai_guide(stage)
     shutil.copy2(ROOT / "THIRD-PARTY-NOTICES.md", stage / "licenses" / "THIRD-PARTY-NOTICES.md")

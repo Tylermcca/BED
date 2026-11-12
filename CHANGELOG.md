@@ -4,6 +4,15 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-12
+
+Two fixes for the checkers sample in the download.
+
+### Fixed
+
+- The checkers game closed as soon as it opened when started from the download. It now opens.
+- **Play in its own window** on the checkers board said it couldn't find the game. It now finds the game in the sample's folder and opens it.
+
 ## [0.3.0] - 2026-11-12
 
 BED 0.3: prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. It is the same as 0.3.0-rc.7 apart from its version number and one guide picture; the release candidates below list every change and fix since 0.2.1-rc.1.

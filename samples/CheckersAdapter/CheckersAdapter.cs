@@ -52,10 +52,14 @@ public sealed class CheckersAdapter : IProjectAdapter
 
     /// <summary>Where the game is: beside this adapter, beside the app, or in the checkers project itself (a release keeps
     /// it in samples\checkers). Null when it isn't there.</summary>
-    public static ProcessStartInfo? GameFor(string position)
+    public static ProcessStartInfo? GameFor(string position) => GameFor(position, position);
+
+    /// <summary>As <see cref="GameFor(string)"/>, for playing <paramref name="position"/> (a copy) of the project that
+    /// holds <paramref name="source"/>, the file being edited: the project is the source's, since the copy is elsewhere.</summary>
+    public static ProcessStartInfo? GameFor(string position, string source)
     {
         var here = Path.GetDirectoryName(typeof(CheckersAdapter).Assembly.Location) ?? AppContext.BaseDirectory;
-        var data = Path.GetDirectoryName(Path.GetFullPath(position));
+        var data = Path.GetDirectoryName(Path.GetFullPath(source));
         var project = data is null ? null : Path.GetDirectoryName(data);
         foreach (var dir in new[] { here, AppContext.BaseDirectory, project }.OfType<string>())
         {
@@ -147,7 +151,7 @@ public sealed class BoardView(EditorModel<DataDocument> editor)
         var folder = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "brutal-checkers")).FullName;
         var copy = Path.Combine(folder, $"position-{Guid.NewGuid():N}.json");   // its own copy per launch, so a later one can't change it (found by A071)
         File.WriteAllText(copy, new DataFormat().Write(editor.Session.Current));
-        if (CheckersAdapter.GameFor(copy) is not { } start) { Said = "The game (play-checkers) isn't beside the adapter or the app."; return false; }
+        if (CheckersAdapter.GameFor(copy, editor.Session.FilePath ?? copy) is not { } start) { Said = "The game (play-checkers) isn't beside the adapter or the app."; return false; }
         var ok = CheckersAdapter.Launch(start);
         Said = ok ? "Started the game in its own window." : "The game didn't start.";
         return ok;
