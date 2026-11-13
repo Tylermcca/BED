@@ -203,7 +203,7 @@ public sealed class GumScreenPictureTests(ITestOutputHelper output)
     }
 
     // Gum's reload follows a loop of parts until the stack runs out, which ends the program with no message (Gum preview 5).
-    // So a screen with a loop is never built, and a save that brings one in is refused before Gum's reload applies it.
+    // Gum now skips recursive parts itself; the rest stays drawn and a later save can repair the screen.
     private static void FrameUntil(GumScreenPicture picture, Func<bool> done, ref double t)
     {
         var clock = Stopwatch.StartNew();
@@ -217,15 +217,17 @@ public sealed class GumScreenPictureTests(ITestOutputHelper output)
         try
         {
             using var picture = new GumScreenPicture(Path.Combine(folder, "Deps.gumj"));
-            Assert.False(picture.Show("Looped"));
+            Assert.True(picture.Show("Looped"), picture.Problem);
             Assert.Contains("LoopA, which uses LoopB, which uses LoopA", picture.Problem);
-            Assert.Contains("doesn't draw", picture.Problem);
+            Assert.Contains("leaves out", picture.Problem);
             var t = 0.0;
             picture.Frame(t);
             var button = Path.Combine(folder, "Components", "Button.gucj");
             File.WriteAllText(button, File.ReadAllText(button));   // a save Gum's watcher sees
-            FrameUntil(picture, () => false, ref t);
-            Assert.False(picture.Drawn);
+            FrameUntil(picture, () => picture.Saves > 0, ref t);
+            Assert.True(picture.Saves > 0);
+            Assert.True(picture.Drawn, picture.Problem);
+            Assert.InRange(picture.Parts().Count, 1, 100);
             Assert.Contains("LoopA", picture.Problem);
         }
         finally { try { Directory.Delete(folder, true); } catch (IOException) { } }
@@ -244,12 +246,13 @@ public sealed class GumScreenPictureTests(ITestOutputHelper output)
             var button = Path.Combine(folder, "Components", "Button.gucj");
             var text = File.ReadAllText(button);
             File.WriteAllText(button, text.Replace("\"Instances\": [", "\"Instances\": [ { \"Name\": \"Inner\", \"BaseType\": \"LoopA\" },"));
-            FrameUntil(picture, () => !picture.Drawn, ref t);
-            Assert.False(picture.Drawn);
+            FrameUntil(picture, () => picture.Problem.Contains("LoopA"), ref t);
+            Assert.True(picture.Drawn, picture.Problem);
+            Assert.InRange(picture.Parts().Count, 1, 100);
             Assert.Contains("LoopA", picture.Problem);
 
             File.WriteAllText(button, text);
-            FrameUntil(picture, () => picture.Drawn, ref t);
+            FrameUntil(picture, () => !picture.Problem.Contains("loop"), ref t);
             Assert.True(picture.Drawn, picture.Problem);
             Assert.DoesNotContain("loop", picture.Problem);
         }

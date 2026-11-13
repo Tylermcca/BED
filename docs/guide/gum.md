@@ -33,6 +33,16 @@ BED's command line and its connection for AI agents (`checks` and `check`) can r
 
 Choose **File > Show Gum screens**. The **Gum screens** panel shows each screen as your game will draw it; pick one from the list at the top. When you save a screen in Gum, the picture updates by itself, and BED says **Updated from Gum just now**.
 
+### If parts contain each other
+
+A part can accidentally include itself, directly or through another part. BED now shows the rest of that screen and says which parts form the loop. Open the screen in Gum and remove the link that closes the loop; save to see the corrected picture in BED. The **Gum screens** check lists the problem too.
+
+### Saving changes and pictures
+
+BED uses Gum preview 6 to follow saves. Gum watches the project and updates the picture; there is no extra reload setup to do in BED. This also works when a screen has a loop: the parts outside it still draw and follow saves.
+
+The picture file types BED checks come from the Gum version it includes. A file type Gum does not support appears as a problem in the **Gum screens** check; use a picture type Gum can read.
+
 ## Edit your screens in Gum
 
 1. Press **Edit in Gum** in the **Gum screens** panel, or choose **File > Edit screens in Gum**.

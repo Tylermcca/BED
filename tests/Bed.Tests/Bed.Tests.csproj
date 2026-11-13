@@ -6,6 +6,8 @@
     <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../src/Bed.Editor.Assets/Bed.Editor.Assets.csproj" />
+    <ProjectReference Include="../../src/Bed.Editor.Audio/Bed.Editor.Audio.csproj" />
     <Compile Include="../../samples/FirstTask/FirstTaskAdapter.cs" Link="FirstTask/FirstTaskAdapter.cs" />
     <Compile Include="../../samples/StarterAdapter/ManagedSourceHooks.cs" Link="Doc19/ManagedSourceHooks.cs" />
   </ItemGroup>

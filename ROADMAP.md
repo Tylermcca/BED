@@ -75,12 +75,17 @@ The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and 
 ### Gum screens in the 0.3.9 preview: done
 - **Game screens made in Gum**, the free menu and screen designer. BED shows each screen as the game will draw it, opens it in Gum with one button, and updates the picture, and a running game, when you save in Gum.
 - **A Gum screens check** that lists anything a screen needs and is missing, such as a picture or a font.
+- **Gum preview 6:** screens with a loop between parts still show the rest and name the loop. Gum follows saves itself; supported picture types also come from Gum.
 - **Preferences > Locations** for where Gum is, where new projects go and a folder of extra adapters.
 - The checkers sample's title and match screens are made in Gum.
 
-## Next, 0.4: one thing done well: the running game
+## Next, 0.4: Gum screens, then fixes
 
-0.4 starts small, with one game and a handful of values, and grows only once that works every time.
+0.4 is the Gum screens work from the 0.3.9 preview, made the main download once it has been tried. After that, 0.4.x releases are fixes from real use.
+
+## Then, 0.5: one thing done well: the running game
+
+0.5 starts small, with one game and a handful of values, and grows only once that works every time.
 
 - **See and try values in the running game.** While the game runs, see a few of an object's values as they change, try a different value, and see the game respond. Your saved files don't change unless you choose to keep the new value.
 - **Open your game's code.** Open the game's code in your own code editor from BED, and see build errors in BED in plain words, with a click that takes you to the right line.

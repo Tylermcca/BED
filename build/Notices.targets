@@ -34,8 +34,9 @@
       <_SkiaNative Include="@(NativeCopyLocalItems);@(RuntimeTargetsCopyLocalItems)" Condition="$([System.String]::Copy('%(NuGetPackageId)').StartsWith('SkiaSharp.NativeAssets.', System.StringComparison.OrdinalIgnoreCase)) Or $([System.String]::Copy('%(NuGetPackageId)').StartsWith('HarfBuzzSharp.NativeAssets.', System.StringComparison.OrdinalIgnoreCase))" />
       <_GumNoticeAsset Include="@(_SkiaNative)" />
       <_GumNoticeAsset Include="@(RuntimeCopyLocalItems)" Condition="'%(NuGetPackageId)' == 'KernSmith'" />
+      <_GumNoticeAsset Include="@(RuntimeCopyLocalItems)" Condition="'%(NuGetPackageId)' == 'Gum.ProjectServices'" />
       <_GumPackageDir Condition="'%(_GumNoticeAsset.FullPath)' != ''" Include="$([System.String]::Copy('%(_GumNoticeAsset.FullPath)').Substring(0, $([MSBuild]::Add($([System.String]::Copy('%(_GumNoticeAsset.FullPath)').ToLowerInvariant().IndexOf($([System.String]::Copy('%(_GumNoticeAsset.NuGetPackageId)').ToLowerInvariant()))), $([System.String]::Copy('%(_GumNoticeAsset.NuGetPackageId)/%(_GumNoticeAsset.NuGetPackageVersion)').Length)))))" Prefix="$([System.String]::Copy('%(_GumNoticeAsset.NuGetPackageId)').Split('.')[0])" />
-      <_GumNotice Include="%(_GumPackageDir.Identity)/THIRD-PARTY-NOTICES.*;%(_GumPackageDir.Identity)/LICENSE.txt" Prefix="%(_GumPackageDir.Prefix)" />
+      <_GumNotice Include="%(_GumPackageDir.Identity)/THIRD-PARTY-NOTICES.*;%(_GumPackageDir.Identity)/LICENSE.txt;%(_GumPackageDir.Identity)/BMFont-LICENSE.txt" Prefix="%(_GumPackageDir.Prefix)" />
       <_GumNoticeFound Include="@(_GumNotice)" Condition="Exists('%(_GumNotice.FullPath)')" />
       <_GumNoticeName Include="@(_GumNoticeFound->'%(Prefix)-%(Filename)%(Extension)')" Source="%(_GumNoticeFound.FullPath)" />
     </ItemGroup>

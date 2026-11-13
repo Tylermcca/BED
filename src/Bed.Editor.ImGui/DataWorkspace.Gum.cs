@@ -25,7 +25,7 @@ public sealed partial class DataWorkspace
 
     /// <summary>Opens the project's Gum project in the person's own Gum tool, as File > Edit screens in Gum does.
     /// When the folder holds more than one Gum project, BED doesn't guess which: it names them and opens none.</summary>
-    internal bool OpenGum()
+    internal bool OpenGum(string? screen = null)
     {
         if (gumProjects.Count == 0) { Said = "This project has no Gum screens."; return false; }
         if (gumProjects.Count > 1)
@@ -37,13 +37,18 @@ public sealed partial class DataWorkspace
         }
         var gum = FindGum();
         if (gum is null) { Said = GumTool.NotFound; return false; }
-        var (started, message) = GumTool.Start(GumTool.Plan(gum, GumCatalog.Read(gumProjects[0]), null));
+        var project = GumCatalog.Read(gumProjects[0]);
+        var chosen = project.Screens.FirstOrDefault(s => s.Name == screen);
+        var (started, message) = StartGum(GumTool.Plan(gum, project, chosen));
         Said = message;
         return started;
     }
 
     /// <summary>Where BED looks for Gum when it hasn't been shown; tests replace it so they don't start a real Gum.</summary>
     internal Func<IEnumerable<string>> GumPlaces { get; set; } = GumTool.UsualPlaces;
+
+    // Tests replace the start operation so exercising the real panel never opens a window.
+    internal Func<GumTool.Launch, (bool Started, string Message)> StartGum { get; set; } = launch => GumTool.Start(launch);
 
     // Gum.exe: the one remembered, else one found in the usual places, else the one the person picks. Remembered from then
     // on (Preferences shows it and can change it). Null when there's no Gum and the person didn't pick one.
@@ -72,7 +77,7 @@ public sealed partial class DataWorkspace
     private Action? ShowGumScreen<T>(EditorModel<T> editor) where T : class
     {
         if (OnlyGumProject is not { } file) return null;
-        gumScreen ??= new GumScreenPanel(file, () => OpenGum());
+        gumScreen ??= new GumScreenPanel(file, () => OpenGum(gumScreen?.Picture?.Screen));
         var panel = gumScreen.AsPanel();
         if (editor.Panels.All(p => p.Id != panel.Id)) editor.Add(panel);
         return () => editor.SetOpen(panel.Id, true);

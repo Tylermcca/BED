@@ -586,6 +586,17 @@ public sealed class TextSizeAndLicenceAcceptanceTests : IDisposable
                 Assert.Equal(File.ReadAllBytes(Path.Combine(source,file)),File.ReadAllBytes(shipped));
             }
         }
+        // Preview 6 packages the licence for embedded bmfont.exe; it follows every program resolving ProjectServices.
+        foreach(var package in json.RootElement.GetProperty("libraries").EnumerateObject().Where(p=>p.Name.StartsWith("Gum.ProjectServices/",StringComparison.OrdinalIgnoreCase)))
+        {
+            var relative=package.Value.GetProperty("path").GetString()!;
+            var source=packageFolders.Select(p=>Path.Combine(p,relative,"BMFont-LICENSE.txt")).First(File.Exists);
+            const string name="Gum-BMFont-LICENSE.txt";
+            expected.Add(name);
+            var shipped=Path.Combine(folder,"licenses",name);
+            Assert.True(File.Exists(shipped),project+" lacks the licence for Gum's embedded BMFont");
+            Assert.Equal(File.ReadAllBytes(source),File.ReadAllBytes(shipped));
+        }
         // The CLI has no BRUTAL packages in its resolved dependency graph: zero bundled files is correct there.
         var directory=Path.Combine(folder,"licenses");
         // Package notices can have upstream filenames, not just the old BRUTAL-prefixed names.

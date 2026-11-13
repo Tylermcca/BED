@@ -6,6 +6,8 @@
     <Project Path="src/Bed.Editor/Bed.Editor.csproj" />
     <Project Path="src/Bed.Editor.ImGui/Bed.Editor.ImGui.csproj" />
     <Project Path="src/Bed.Editor.App/Bed.Editor.App.csproj" />
+    <Project Path="src/Bed.Editor.Audio/Bed.Editor.Audio.csproj" />
+    <Project Path="src/Bed.Editor.Assets/Bed.Editor.Assets.csproj" />
     <Project Path="src/Bed.Launcher/Bed.Launcher.csproj" />
     <Project Path="src/Bed.Import/Bed.Import.csproj" />
     <Project Path="src/Bed.Agent.Cli/Bed.Agent.Cli.csproj" />

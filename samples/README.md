@@ -31,6 +31,10 @@ Library and adapter samples build a component for a host; they are not standalon
 | SceneStarterAdapter | Connects BED to SceneStarter so Play launches the sample as its own program; `dotnet build samples/SceneStarterAdapter/SceneStarterAdapter.csproj -c Release`. |
 | PrefabPhysicsProject | A crate prefab placed three times as a stack, one copy with its own mass, a static floor and a kinematic paddle, with world gravity; open `samples/PrefabPhysicsProject` in BED and press Build and Play, as [its README](PrefabPhysicsProject/README.md) describes. Packaged as `samples/prefab-physics`. |
 
+BED-only support project: `src/Bed.Editor.Audio` supplies WAV/OGG playback to the BED launcher. Games using `Bed.Editor.App` do not reference it. Build it with `dotnet build src/Bed.Editor.Audio/Bed.Editor.Audio.csproj`.
+
+BED-only asset producers: `src/Bed.Editor.Assets` supplies startup preparation, model reimport and bounded texture decoding to the launcher. Games using `Bed.Editor.App` do not reference this project, its model importer or its Stb decoder. Build with `dotnet build src/Bed.Editor.Assets/Bed.Editor.Assets.csproj`.
+
 ## Check the sample index
 
 Run `python tools/check_samples_index.py --root .` to check that sample projects belong to the solution and that documented source paths exist. It does not build or run samples. Its report distinguishes checked-in source, generated outputs and paths you must supply.

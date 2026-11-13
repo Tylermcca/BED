@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using Bed.Editor;
 using Bed.Editor.App;
+using Bed.Editor.Audio;
 using Bed.Editor.ImGui;
 using Brutal.ImGuiApi;
 using Brutal.Numerics;
@@ -35,7 +36,7 @@ public sealed class SoundPreviewSound01Tests
             using(var stream=File.Create(Path))using(var w=new BinaryWriter(stream))
             {w.Write("RIFF"u8);w.Write(36+1600);w.Write("WAVEfmt "u8);w.Write(16);w.Write((ushort)1);w.Write((ushort)1);w.Write(8000);w.Write(16000);w.Write((ushort)2);w.Write((ushort)16);w.Write("data"u8);w.Write(1600);w.Write(new byte[1600]);}
             var result=AssetImport.Import(Path,"wav",1,JsonSerializer.SerializeToElement(new{}),new("self","MIT","self-authored",Declared:AssetOrigin.Ours),AiUse.Forbidden);
-            Assert.True(result.Ok);Assets=new AssetCatalogProvisioner().Open(new(System.IO.Path.Combine(Root,"data"),System.IO.Path.Combine(Root,"schemas")){Root=Root})!;
+            Assert.True(result.Ok);Assets=new AudioAssetCatalogProvisioner().Open(new(System.IO.Path.Combine(Root,"data"),System.IO.Path.Combine(Root,"schemas")){Root=Root})!;
             Assert.Empty(Assets.Problems);Assert.NotNull(Assets.AudioPreview);
             Panel=(AssetsPanel)typeof(AssetsPanel).GetConstructors(BindingFlags.Instance|BindingFlags.NonPublic).Single().Invoke([Assets.Browser,Assets.Catalog,null]);
             typeof(AssetsPanel).GetProperty("AudioPreview",BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(Panel,Audio);
@@ -71,7 +72,7 @@ public sealed class SoundPreviewSound01Tests
         var root=AppContext.BaseDirectory;
         while(!Directory.Exists(System.IO.Path.Combine(root,"tests","Bed.Tests","Fixtures","SOUND01")))root=Directory.GetParent(root)!.FullName;
         var bytes=File.ReadAllBytes(System.IO.Path.Combine(root,"tests","Bed.Tests","Fixtures","SOUND01","tone.ogg"));
-        var type=typeof(EditorApp).Assembly.GetType("Bed.Editor.App.OpenAlAssetAudioPreview")!;
+        var type=typeof(OpenAlAssetAudioPreview);
         var result=type.GetMethod("Decode",BindingFlags.Static|BindingFlags.NonPublic)!.Invoke(null,[bytes])!;
         Assert.Equal("OGG Vorbis",result.GetType().GetProperty("Format")!.GetValue(result));
         Assert.Equal(8000,result.GetType().GetProperty("SampleRate")!.GetValue(result));
@@ -88,6 +89,25 @@ public sealed class SoundPreviewSound01Tests
         Assert.True(r.Assets.Catalog.Publish(r.Assets.Catalog.BeginRefresh(),[new(record,bytes,bytes,[],true,"sound-preview-v1",record.Write())],out _));
         var lease=r.Assets.Catalog.Resolve(record.Guid).Current!;var actual=r.Assets.AudioPreview!;
         Assert.Null(actual.Inspect(lease));Assert.StartsWith("Sound preview unavailable:",actual.Status);Assert.False(actual.Play(lease));Assert.False(actual.IsPlaying);
+    }
+
+    [Fact]
+    public void Shared_window_host_has_no_OpenAl_dependency_but_BED_still_does()
+    {
+        var root=AppContext.BaseDirectory;
+        while(!File.Exists(System.IO.Path.Combine(root,"Bed.slnx")))root=Directory.GetParent(root)!.FullName;
+        string[] Packages(string project)
+        {
+            using var json=JsonDocument.Parse(File.ReadAllText(System.IO.Path.Combine(root,"src",project,"obj","project.assets.json")));
+            return json.RootElement.GetProperty("libraries").EnumerateObject().Select(p=>p.Name.Split('/')[0]).ToArray();
+        }
+        Assert.DoesNotContain("Ahwoo.Brutal.OpenAl",Packages("Bed.Editor.App"),StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("NVorbis",Packages("Bed.Editor.App"),StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("Ahwoo.Brutal.OpenAl",Packages("Bed.Launcher"),StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("NVorbis",Packages("Bed.Launcher"),StringComparer.OrdinalIgnoreCase);
+        using var r=new Rig();
+        using var plain=new AssetCatalogProvisioner().Open(new(System.IO.Path.Combine(r.Root,"data"),System.IO.Path.Combine(r.Root,"schemas")){Root=r.Root});
+        Assert.NotNull(plain);Assert.Null(plain.AudioPreview);
     }
 
 }

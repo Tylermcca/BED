@@ -10,10 +10,6 @@
     <Compile Include="../Bed.Runtime/FrameControlWire.cs" Link="FrameControlWire.cs" />
     <!-- Internal host services use the existing UI assembly through its friend seam. -->
     <ProjectReference Include="..\Bed.Editor.ImGui\Bed.Editor.ImGui.csproj" />
-    <ProjectReference Include="..\Bed.Import\Bed.Import.csproj" />
-    <PackageReference Include="Ahwoo.Brutal.OpenAl" />
-    <PackageReference Include="NVorbis" />
-    <PackageReference Include="Ahwoo.Brutal.Stb" />
     <PackageReference Include="Ahwoo.Brutal.Core" />
     <PackageReference Include="Ahwoo.Brutal.Glfw" />
     <PackageReference Include="Ahwoo.Brutal.Vulkan" />
@@ -44,6 +40,8 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Bed.Tests" />
+    <InternalsVisibleTo Include="Bed.Editor.Audio" />
+    <InternalsVisibleTo Include="Bed.Editor.Assets" />
   </ItemGroup>
 </Project>
 

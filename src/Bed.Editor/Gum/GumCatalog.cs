@@ -77,7 +77,7 @@ public static class GumCatalog
         foreach (var error in loaded.LoadErrors)
         {
             // A file the project lists but Gum didn't find: Gum's checker says it once, as GUM0004 (below for screens).
-            if (error.Code is null && project.AllElements.Any(e => e.IsSourceFileMissing && string.Equals(e.Name, error.ElementName, StringComparison.OrdinalIgnoreCase))) continue;
+            if (error.Code == "GUM0004" && project.AllElements.Any(e => e.IsSourceFileMissing && string.Equals(e.Name, error.ElementName, StringComparison.OrdinalIgnoreCase))) continue;
             findings.Add(words.Finding(error, full));
         }
         foreach (var listed in project.ScreenReferences)

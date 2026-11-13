@@ -1,5 +1,6 @@
 using Bed.Data;
 using Bed.Editor.App;
+using Bed.Editor.Audio;
 using Bed.Editor.ImGui;
 using Bed.Editor.Text;
 
@@ -36,7 +37,7 @@ public static class Program
     {
         launcher.ProjectPlayHost ??= new ProjectPlayBridge();
         launcher.GameExportHost ??=new ExportBuildHost(8192,256,TimeSpan.FromMinutes(5));
-        launcher.AssetCatalogProvisioner ??= new AssetCatalogProvisioner();
+        launcher.AssetCatalogProvisioner ??= new AudioAssetCatalogProvisioner();
         launcher.SetUpWorkspace = workspace =>
         {
             workspace.AddTextPanel();

@@ -3,7 +3,9 @@ using Bed.Editor.ImGui;
 using Brutal.OpenAlApi;
 using NVorbis;
 
-namespace Bed.Editor.App;
+using Bed.Editor.App;
+
+namespace Bed.Editor.Audio;
 
 // MIXED: BRUTAL OpenAL lifecycle recipe and managed NVorbis; preview ownership/limits are local.
 internal sealed class OpenAlAssetAudioPreview : IAssetAudioPreview

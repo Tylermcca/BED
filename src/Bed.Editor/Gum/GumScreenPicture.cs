@@ -11,28 +11,14 @@ using GumRuntime;
 using RenderingLibrary;
 using SkiaSharp;
 using ToolsUtilities;
-using GumAnimationLoader = Gum.GumAnimationLoader;
-using GumHotReloadManager = Gum.GumHotReloadManager;
 using GumService = Gum.GumService;
-using LoaderManager = RenderingLibrary.Content.LoaderManager;
 using HotReloadResult = Gum.HotReloadResult;
-using ProjectTextureFilter = Gum.ProjectTextureFilter;
-using Renderer = RenderingLibrary.Graphics.Renderer;
 
 namespace Bed.Editor.Gum;
 
-// GUM-PICTURE: a live picture of one Gum screen, drawn by Gum itself in BED's own process. BORROWED: the route of Gum's
-// "SkiaSharp general canvas" and "rendering to an image" pages (a raster SKSurface, GumService.Default.Initialize on its
-// canvas, the screen added to Gum's root, Clear, Update, Draw, read the pixels), and the careful steps of Gum's own
-// SkiaGumSvgExportService (missing pictures don't throw, the project's default canvas size for a screen, Gum's missing-file
-// setting put back afterwards). Live updates are Gum's own hot reload (GumHotReloadManager), started with the same three
-// steps GumServiceSkiaBase.EnableHotReload gives it (GumServiceSkiaBase.cs 365-377 at Gum commit 927cd9e) and driven with
-// Gum's root each frame as GumService.Update does. MIXED: BED starts it itself, not through EnableHotReload, so the step Gum
-// runs on a newly read project before applying it (the texture filter) can refuse one with a loop of parts: Gum preview
-// 5's reload follows such a loop until the program stops, and refusing makes Gum keep the project it had.
-// MIXED: for a project with a missing screen or component file, which Gum's Initialize refuses, the project-loading steps
-// of Gum's own Initialize are repeated around Gum's tolerant loader (see Ready). INVENTED: re-initialising after another
-// Gum call (the Gum check, the screens list) has changed Gum's shared state.
+// GUM-PICTURE: Gum's documented raster canvas route, using its tolerant Initialize and owned EnableHotReload.
+// BORROWED: Gum initializes, loads and reloads its own project. MIXED: BED retains bounded pixels, plain diagnostics
+// and serialized ownership while its other catalog/check wrappers still change process-wide state.
 
 /// <summary>One look of a Gum screen: a Gum state, in a category or not.</summary>
 /// <param name="Category">The state's category, or null for one of the screen's own states.</param>
@@ -65,14 +51,13 @@ public sealed class GumScreenPicture : IDisposable
     public const int FallbackWidth = 800, FallbackHeight = 600;
 
     private static GumScreenPicture? owner;   // the picture whose screen is in GumService.Default; guarded by GumLibrary's lock
-    private static GumHotReloadManager? reloader;   // the owner's live updates, stopped when Gum is released
-    private static string? relativeBefore;   // Gum's working folder before a tolerant load pointed it at the project
     private (int Width, int Height)? fixedSize;
     private float zoom = 1;
     private SKSurface? surface;
     private byte[] pixels = [];
     private long lastUse = -1;
     private bool fallback, reloadAfterChange;
+    private string missingProblem = "";
     private string? screen;
     private GumLook? look;
     private GraphicalUiElement? shown;   // the screen as Gum built it, while Drawn
@@ -172,13 +157,12 @@ public sealed class GumScreenPicture : IDisposable
             if (Drawn) return Draw(totalSeconds);
             // Nothing to show yet: still let Gum's watcher report a save, so a screen whose file comes back appears.
             if (ReferenceEquals(owner, this) && GumService.Default.IsInitialized)
-                Guard(() => { Live(GumService.Default); GumService.Default.Update(totalSeconds); }, "Gum couldn't check the project's folder for saved changes.");
+                Guard(() => { GumService.Default.Update(totalSeconds); }, "Gum couldn't check the project's folder for saved changes.");
             return false;
         }));
     }
 
-    // Gum's Initialize sets its missing-file setting to throw (Gum issue #6889). Like Gum's own export, BED draws the rest
-    // of a screen whose picture is missing, and puts Gum's setting back afterwards.
+    // Request tolerant loading for this call, then restore the caller's missing-file policy.
     private static T Quietly<T>(Func<T> work)
     {
         var before = GraphicalUiElement.MissingFileBehavior;
@@ -230,8 +214,8 @@ public sealed class GumScreenPicture : IDisposable
         fallback = missing.Count > 0;
         if (!Guard(() =>
             {
-                if (!fallback) service.Initialize(surface.Canvas, width, height, ProjectFile);
-                else Ready(service, surface.Canvas, width, height, project, folder);
+                GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+                service.Initialize(surface.Canvas, width, height, ProjectFile);
             }, $"Gum couldn't open the project {name} to show the screen {screen}. Open it in Gum to check it."))
         {
             Guard(() => Release(service), "");
@@ -240,6 +224,7 @@ public sealed class GumScreenPicture : IDisposable
         // Gum's own zoom: the screen lays itself out in the picture's size divided by the zoom, then is drawn that much bigger.
         // Set on every load: taking Gum down doesn't clear it, so a picture at another zoom would otherwise keep it.
         Guard(() => service.EnableExpandToWindow(zoom), "");
+        missing = service.LastLoadResult?.MissingFiles.Select(f => GumCatalog.Relative(folder, f)).ToList() ?? missing;
         // Linked values written as sums: Gum's own expression reader, turned on after Initialize as Gum asks (taking Gum down
         // clears it, so every load turns it on again). BORROWED: Gum.Expressions, as gumcli does.
         GumExpressionService.Initialize();
@@ -250,12 +235,8 @@ public sealed class GumScreenPicture : IDisposable
         // watch costs only the live updates.
         var watching = Guard(() =>
         {
-            var live = new GumHotReloadManager(applyProjectTextureFilter: Reading, loadAnimationsFromProvider: GumAnimationLoader.LoadAnimationsFromProvider,
-                disposeCachedAsset: path => LoaderManager.Self.Dispose(path))
-            { LocalizationServiceProvider = () => global::SkiaGum.CustomSetPropertyOnRenderable.LocalizationService };
-            live.ReloadFinished += Reloaded;
-            live.Start(ProjectFile);
-            reloader = live;
+            service.HotReloadFinished += Reloaded;
+            service.EnableHotReload(ProjectFile);
         }, "");
 
         var gumProject = ObjectFinder.Self.GumProjectSave!;
@@ -270,12 +251,8 @@ public sealed class GumScreenPicture : IDisposable
                 : $"The Gum project {name} has no screen called {screen}. Choose another screen.";
             return;
         }
-        // A loop of parts: Gum builds the screen empty, but its live reload would follow the loop until BED stops.
-        if (GumDependencyCheck.ScreenLoop(gumProject, folder, element.Name) is { } loop)
-        {
-            Problem = $"{loop.Problem.Message} BED doesn't draw a screen with a loop like this. {loop.Next}";
-            return;
-        }
+        // Gum itself omits recursive parts. Keep the checker's plain diagnosis, without refusing the screen.
+        var loop = GumDependencyCheck.ScreenLoop(gumProject, folder, element.Name);
         Looks = LooksOf(element);
         if (look is not null && !Looks.Contains(look)) look = null;
         if (!Guard(() =>
@@ -289,43 +266,12 @@ public sealed class GumScreenPicture : IDisposable
             return;
         Problem = missing.Count == 0 ? "" : (missing.Count == 1 ? $"This file is missing, so the picture leaves it out: {missing[0]}."
             : $"These files are missing, so the picture leaves them out: {string.Join(", ", missing)}.");
+        missingProblem = Problem;
+        if (loop is not null) Problem = $"Gum leaves out parts in a loop. {loop.Problem.Message} {loop.Next}";
         if (!watching) Problem = (Problem + " BED can't watch the project's folder, so the picture won't follow saves in Gum.").Trim();
         Drawn = true;
         foreach (var (path, value) in values) Apply(path, value);
     }
-
-    // Gum's Initialize refuses a project with a missing file (GumServiceSkiaBase.InitializeCore, loadResult.ThrowIfFailed),
-    // and has no way to take a project already loaded. So Gum is started with no project, and then the project from Gum's
-    // own tolerant loader gets the same steps Initialize gives a project it loads: GumServiceSkiaBase.cs lines 608-632 at
-    // Gum commit 927cd9e (the preview-5 build). ApplyAllVariableReferencesBeforeFirstBuild and ApplyProjectTextureFilter
-    // aren't public, so their bodies (ElementSaveExtensions.GumRuntime.cs 404-416, GumServiceSkiaBase.cs 385-390) are used.
-    private static void Ready(GumService service, SKCanvas canvas, int width, int height, GumProjectSave project, string folder)
-    {
-        service.Initialize(canvas, width, height);
-        if (global::SkiaGum.CustomSetPropertyOnRenderable.LocalizationService is { } localization)
-            ProjectLocalizationLoader.Load(project, localization, null, new List<string>());
-        ObjectFinder.Self.GumProjectSave = project;
-        project.Initialize(tolerateMissingDefaultStates: true);   // Gum passes nothing; a project with a missing file may lack a default look
-        project.ApplyAllVariableReferences();
-        TextureFilter(project);
-        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
-        // Gum's Uninitialize puts the working folder back only for a project it loaded itself; Release does it for this one.
-        relativeBefore ??= FileManager.RelativeDirectory;
-        FileManager.RelativeDirectory = FileManager.GetDirectory(Path.Combine(folder, "x"));
-    }
-
-    // Gum's reload runs this on the project it has just read, before applying it, and on the project it keeps when that
-    // fails. Refusing (throwing) makes Gum keep the project it had and report a failed reload, which loads the picture afresh.
-    private void Reading(GumProjectSave project)
-    {
-        TextureFilter(project);
-        if (Drawn && screen is not null && GumDependencyCheck.ScreenLoop(project, Path.GetDirectoryName(ProjectFile)!, screen) is not null)
-            throw new InvalidOperationException($"The saved project has a loop of parts in the screen {screen}.");
-    }
-
-    // GumServiceSkiaBase.ApplyProjectTextureFilter (GumServiceSkiaBase.cs 385-390), which isn't public.
-    private static void TextureFilter(GumProjectSave project) =>
-        Renderer.TextureFilter = ProjectTextureFilter.UsesLinearFiltering(project) ? SKFilterMode.Linear : SKFilterMode.Nearest;
 
     /// <summary>Sets a value on the shown screen, as a game does while it runs: <c>"TurnText.Text"</c> for a part, or
     /// <c>"NewGameButton.Label.Text"</c> for a part inside a part. The value is kept and set again whenever the screen is
@@ -400,6 +346,10 @@ public sealed class GumScreenPicture : IDisposable
     private void Reloaded(HotReloadResult result)
     {
         Saves++;
+        // Diagnose through Gum's checker after its own safe reload; this does not reject or intercept a reload.
+        var loop = ObjectFinder.Self.GumProjectSave is { } project && screen is not null
+            ? GumDependencyCheck.ScreenLoop(project, Path.GetDirectoryName(ProjectFile)!, screen) : null;
+        Problem = loop is null ? missingProblem : $"Gum leaves out parts in a loop. {loop.Problem.Message} {loop.Next}";
         // Gum keeps the screen in step itself. When its patch doesn't match a fresh start, or a file was missing (Gum's
         // reload only patches what it already shows, so a returning file needs a fresh load), BED loads it afresh.
         if (fallback || !Drawn || !result.MatchesRestart) reloadAfterChange = true;
@@ -416,12 +366,6 @@ public sealed class GumScreenPicture : IDisposable
         return looks;
     }
 
-    // Gum's live updates for its root, as GumService.Update gives them.
-    private static void Live(GumService service)
-    {
-        if (reloader is not null && service.Root is { } root) reloader.Update([root]);
-    }
-
     private bool Draw(double totalSeconds)
     {
         var service = GumService.Default;
@@ -429,7 +373,6 @@ public sealed class GumScreenPicture : IDisposable
         var changed = false;
         Guard(() =>
         {
-            Live(service);
             service.Update(totalSeconds);
             surface!.Canvas.Clear(new SKColor(Background.Red, Background.Green, Background.Blue));
             service.Draw(surface.Canvas);
@@ -450,15 +393,12 @@ public sealed class GumScreenPicture : IDisposable
     {
         try
         {
-            var live = reloader;
-            reloader = null;
-            live?.Stop();
+            if (owner is { } previous) service.HotReloadFinished -= previous.Reloaded;
             if (service.IsInitialized) service.Uninitialize();
         }
         finally
         {
             ObjectFinder.Self.GumProjectSave = null;
-            if (relativeBefore is not null) { FileManager.RelativeDirectory = relativeBefore; relativeBefore = null; }
             owner = null;
         }
     }

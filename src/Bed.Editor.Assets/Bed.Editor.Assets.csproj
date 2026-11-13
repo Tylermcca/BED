@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- BED asset producers. Shared game window hosts consume prepared assets instead. -->
+  <ItemGroup>
+    <ProjectReference Include="../Bed.Editor.App/Bed.Editor.App.csproj" />
+    <ProjectReference Include="../Bed.Import/Bed.Import.csproj" />
+    <PackageReference Include="Ahwoo.Brutal.Stb" />
+  </ItemGroup>
+</Project>

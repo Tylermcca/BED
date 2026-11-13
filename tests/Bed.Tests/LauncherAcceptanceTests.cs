@@ -630,6 +630,34 @@ public sealed class LauncherAcceptanceTests
         screen.Host.Frames(screen.Draw,6);Assert.Equal(0,PictureTexture.Waiting);
     }
     [Fact]
+    public void Edit_in_Gum_opens_the_screen_currently_shown_by_the_panel()
+    {
+        using var r=new Sandbox();var p=r.Project("Game");var root=Path.GetDirectoryName(p.Data)!;
+        var folder=Path.Combine(root,"ui");
+        foreach(var file in Directory.GetFiles(GumFixtures.Folder("Original"),"*",SearchOption.AllDirectories))
+        {var to=Path.Combine(folder,Path.GetRelativePath(GumFixtures.Folder("Original"),file));Directory.CreateDirectory(Path.GetDirectoryName(to)!);File.Copy(file,to);}
+        // A second real screen proves the action reads the current selection rather than the initial one.
+        var second=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(folder,"Screens","Preview.gusj")))!;
+        second["Name"]="Second";File.WriteAllText(Path.Combine(folder,"Screens","Second.gusj"),second.ToJsonString());
+        var projectFile=Path.Combine(folder,"Original.gumj");
+        var project=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(projectFile))!;
+        project["ScreenReferences"]!.AsArray().Add(new System.Text.Json.Nodes.JsonObject { ["Name"]="Second", ["ElementType"]=0, ["LinkType"]=0 });
+        File.WriteAllText(projectFile,project.ToJsonString());
+        var l=r.Launcher();Assert.True(l.OpenFolder(root));var workspace=l.Workspace!;
+        var exe=Path.Combine(r.Root,"Gum.exe");File.WriteAllText(exe,"fake");workspace.GumPlaces=()=>[exe];Locations.Gum="";
+        var launches=new List<GumTool.Launch>();
+        workspace.StartGum=launch=>{launches.Add(launch);return GumTool.Start(launch,_=>true,_=>false);};
+        using var screen=new Screen(l.Draw);screen.Host.Frames(screen.Draw,2);
+        workspace.Window!.OpenGumAction!();Assert.Equal(projectFile,Assert.Single(launches).Argument);launches.Clear();
+        workspace.Window.ShowGumScreenAction!();screen.Host.Frames(screen.Draw,3);
+        var panel=workspace.GumScreen!;Assert.True(panel.Choose("Second"),panel.Picture?.Problem);screen.Host.Frames(screen.Draw,2);
+        var button=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button && n.Label=="Edit in Gum");
+        screen.Host.Click(screen.Draw,button.Bounds.X+button.Bounds.Width/2,button.Bounds.Y+button.Bounds.Height/2);
+        Assert.Equal(Path.Combine(folder,"Screens","Second.gusj"),Assert.Single(launches).Argument);
+        Assert.Equal("Gum is opening the screen Second.",workspace.Said);
+    }
+
+    [Fact]
     public void Two_Gum_projects_are_named_and_neither_is_opened_by_guess()
     {
         using var r=new Sandbox();var p=r.Project("Game");var root=Path.GetDirectoryName(p.Data)!;

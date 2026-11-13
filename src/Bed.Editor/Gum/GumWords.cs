@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Bed.Data;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -93,7 +92,8 @@ internal sealed class GumWords(GumProjectSave project, string folder, string? sc
                 next = $"Put the file back, or open the project in Gum and save {name} so Gum writes the file again.";
                 break;
             case "GUM0006":
-                var (owner, named) = GumMessages.MissingFile(error.Message);
+                var detail = error.Details as MissingExternalFileDetails;
+                var (owner, named) = (detail?.ReferencedFrom, detail?.ReferencedPath);
                 var by = owner is null ? what : Describe(owner);
                 named ??= "a file";
                 message = Start(by, $"names the file {named}, but that file isn't in the project's folder.");
@@ -104,8 +104,8 @@ internal sealed class GumWords(GumProjectSave project, string folder, string? sc
                 next = "Open it in Gum and pick that setting again.";
                 break;
             case "GUM0008":
-                var asked = GumMessages.CaseMismatchAsked(error.Message) ?? "a file";
-                var onDisk = error.FilePath is { } disk ? GumCatalog.Relative(folder, disk) : null;
+                var asked = (error.Details as FileNameCaseMismatchDetails)?.ReferencedPath ?? "a file";
+                var onDisk = (error.Details as FileNameCaseMismatchDetails)?.OnDiskPath;
                 message = Start(what, $"names the file {asked}, but on disk it's spelled {onDisk ?? "with different capitals"}. "
                     + (severity == Severity.Error ? "It won't load." : "Windows doesn't mind, but Linux and Steam Deck do, so it won't load there."));
                 next = "Rename the file, or change the name in Gum, so the capital letters match exactly.";
@@ -187,6 +187,21 @@ internal sealed class GumWords(GumProjectSave project, string folder, string? sc
                 message = $"The behaviour {name} is in the Gum project, but its file {BehaviourFile(name)} isn't in the project's folder, so Gum loads it empty.";
                 next = $"Put the file back, or remove the behaviour {name} in Gum.";
                 break;
+            case "GUM0035":
+                var type = error.Details as TypeReferenceDetails;
+                message = string.IsNullOrEmpty(type?.Type)
+                    ? Start(what, $"has a part, {type?.InstanceName ?? "unnamed"}, that doesn't say what it's made from.")
+                    : Start(what, $"has a part, {type.InstanceName}, made from {type.Type}, but the Gum project has nothing called {type.Type}.");
+                next = "Open it in Gum and choose what the part is.";
+                break;
+            case "GUM0038":
+                message = Start(what, "has a file that isn't laid out the way Gum saves one, so Gum can't read it.");
+                next = "Open the file in Gum to check it, or restore a saved copy.";
+                break;
+            case "GUM0041":
+                message = Start(what, "has a file with unfinished merge marks (<<<<<<<) from version control, so Gum can't read it.");
+                next = "Finish the merge in your version control tool, then check again.";
+                break;
             default:
                 return Uncoded(error, file, what, severity);
         }
@@ -196,23 +211,6 @@ internal sealed class GumWords(GumProjectSave project, string folder, string? sc
     private CheckFinding Uncoded(ErrorResult error, string file, string what, Severity severity)
     {
         var text = error.Message ?? "";
-        if (error.Code is null && GumMessages.InvalidPart(text) is var (partName, made))
-        {
-            var message = made.Length == 0
-                ? Start(what, $"has a part, {partName}, that doesn't say what it's made from.")
-                : Start(what, $"has a part, {partName}, made from {made}, but the Gum project has nothing called {made}.");
-            var next = made.Length == 0 ? "Open it in Gum and choose what the part is." : $"Add {made} back to the project in Gum, or choose another kind for the part.";
-            return Make(Severity.Error, file, error.ElementName, message, next, null);
-        }
-        if (error.Code is null && GumMessages.IsConflictMarkers(text))
-            return Make(Severity.Error, file, error.ElementName,
-                Start(what, "has a file with unfinished merge marks (<<<<<<<) from version control, so Gum can't read it."),
-                "Finish the merge in your version control tool, then check again.", null);
-        if (error.Code is null && GumMessages.IsUnreadableFile(text))
-            return Make(Severity.Error, file, error.ElementName,
-                Start(what, "has a file that isn't laid out the way Gum saves one, so Gum can't read it."),
-                "Open the project in Gum to see what's wrong, or put back an earlier copy of the file.", null);
-        // A problem BED has no sentence for yet: a plain sentence, with Gum's own words only in the next step.
         var said = error.Code is { } code ? $"has a problem Gum's checker marks as {code}." : "has a problem Gum's checker found.";
         var then = Help(error.Code) is null ? "Open the project in Gum and look at its Errors tab." : $"Gum's help page for {error.Code} says what to change.";
         return Make(severity, file, error.ElementName is "" or "(project)" ? null : error.ElementName, Start(what, said), $"{then} Gum's own note: {EndWithStop(text)}", error.Code);
@@ -243,27 +241,18 @@ internal sealed class GumWords(GumProjectSave project, string folder, string? sc
         return names.Count > 0 ? string.Join(joiner, names) : "see Gum's help page";
     }
 
-    /// <summary>The names on the loop a GUM0014 or GUM0018 finding is about, in order, or none. GUM0014's comes from Gum's
-    /// own ObjectFinder.GetBaseTypeCycle; GUM0018's path is only in Gum's message (its search is private).</summary>
-    public static IReadOnlyList<string> LoopOf(ErrorResult error)
-    {
-        if (error.Code == "GUM0014" && ObjectFinder.Self.GetElementSave(error.ElementName) is { } element
-            && ObjectFinder.Self.GetBaseTypeCycle(element) is { Count: > 0 } cycle)
-            return [.. cycle.Select(e => e.Name), cycle[0].Name];
-        return error.Code == "GUM0018" ? GumMessages.InstanceLoop(error.Message) : [];
-    }
+    /// <summary>The loop in Gum's structured details, in order, or none.</summary>
+    public static IReadOnlyList<string> LoopOf(ErrorResult error) =>
+        error.Details is CycleDetails cycle ? cycle.Path : [];
 
     /// <summary>The screen being checked, or null for findings about the project as a whole.</summary>
     public string? Screen => screen;
 }
 
-// The only place BED reads Gum's English message text, for what Gum's result objects don't carry as data. Each pattern is
-// pinned to Gum's real message by GumMessagesTests, so a Gum rewording fails a test instead of mislabelling a finding.
-// BORROWED: the message formats of Gum.ProjectServices at commit 927cd9e (ProjectLoader.ConflictMarkerMessage and
-// ParseElementLoadErrors, HeadlessErrorChecker GUM0006, GUM0008, GUM0018 and the instance base-type check).
+// Fatal project-load ErrorMessage still has no structured row. Keep only these root-load classifications.
 
 /// <summary>Reads the few things Gum puts only in its message text.</summary>
-internal static partial class GumMessages
+internal static class GumMessages
 {
     /// <summary>True for Gum's "unresolved git conflict markers" message (a project or screen file mid-merge).</summary>
     public static bool IsConflictMarkers(string? text) => text?.Contains("unresolved git conflict markers", StringComparison.Ordinal) == true;
@@ -271,24 +260,4 @@ internal static partial class GumMessages
     /// <summary>True for Gum's "Malformed XML: ..." or "Malformed JSON: ..." load error (a file Gum couldn't read).</summary>
     public static bool IsUnreadableFile(string? text) => text?.StartsWith("Malformed ", StringComparison.Ordinal) == true;
 
-    /// <summary>The part and the type it names, from Gum's uncoded "X references Y which is an invalid element".</summary>
-    public static (string Part, string Type)? InvalidPart(string? text) =>
-        text is not null && InvalidPartText().Match(text) is { Success: true } m ? (m.Groups["part"].Value, m.Groups["type"].Value.Trim()) : null;
-
-    /// <summary>The names on the path in Gum's GUM0018 message ("A contains itself: A -> B -> A. ...").</summary>
-    public static IReadOnlyList<string> InstanceLoop(string? text) =>
-        text is not null && InstanceLoopText().Match(text) is { Success: true } m ? m.Groups[1].Value.Split(" -> ", StringSplitOptions.TrimEntries) : [];
-
-    /// <summary>Who names the missing file and the file, from Gum's GUM0006 message ("Owner references "path", ...").</summary>
-    public static (string? Owner, string? File) MissingFile(string? text) =>
-        text is not null && MissingFileText().Match(text) is { Success: true } m ? (m.Groups["owner"].Value, m.Groups["file"].Value) : (null, null);
-
-    /// <summary>The path the project asks for, from Gum's GUM0008 message (the file on disk is the result's FilePath).</summary>
-    public static string? CaseMismatchAsked(string? text) =>
-        text is not null && CaseMismatchText().Match(text) is { Success: true } m ? m.Groups[1].Value : null;
-
-    [GeneratedRegex(@"^(?<part>\S+) references (?<type>.*?) which is an invalid element$")] private static partial Regex InvalidPartText();
-    [GeneratedRegex(@" contains itself: (.+?)\. ")] private static partial Regex InstanceLoopText();
-    [GeneratedRegex("^(?<owner>.+?) references \"(?<file>[^\"]+)\", which was not found on disk")] private static partial Regex MissingFileText();
-    [GeneratedRegex("references \"([^\"]+)\", but the file on disk is named")] private static partial Regex CaseMismatchText();
 }

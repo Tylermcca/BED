@@ -30,9 +30,7 @@ internal static class GumLibrary
     /// rather than an exception.</summary>
     public static ProjectLoadResult Load(string projectFile)
     {
-        // ProjectLoader does what BED did by hand before: StandardElementsManager.Self.Initialize() (ProjectLoader.cs:36) and
-        // project.Initialize() (ProjectLoader.cs:58). Its Initialize doesn't tolerate a missing default state, as gumcli check
-        // doesn't; such a project fails to load and is reported as one BED couldn't read.
+        // Gum main's ProjectLoader tolerates missing registered default states, like its tool.
         ProjectLoadResult result;
         try { result = new ProjectLoader().Load(projectFile); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

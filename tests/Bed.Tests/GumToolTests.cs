@@ -50,6 +50,22 @@ public class GumToolTests
         Assert.False(GumTool.SameFile(Path.Combine(t.Root, "ui", "Other.gumj"), proj));
     }
 
+    [Theory]
+    [InlineData("Menu", false)]
+    [InlineData("Shop/Cart", false)]
+    [InlineData("Missing", true)]
+    public void An_open_project_names_the_selected_screen_without_starting_another(string name, bool missing)
+    {
+        using var t = new Temp();
+        var exe = t.Make("Gum.exe"); var proj = t.Make("ui/Game.gumj");
+        var screen = new GumScreen(name, missing ? Path.Combine(t.Root, "ui/Screens/Missing.gusj") : t.Make($"ui/Screens/{name}.gusj"), missing);
+        var started = false;
+        var (ok, message) = GumTool.Start(GumTool.Plan(exe, new GumProject(proj, [screen], []), screen),
+            _ => started = true, _ => true);
+        Assert.True(ok); Assert.False(started);
+        Assert.Equal($"Gum already has these screens open, so BED brought it to the front. Pick {name} from the screen list there.", message);
+    }
+
     [Fact]
     public void Gum_is_found_without_being_told_where_it_is()
     {

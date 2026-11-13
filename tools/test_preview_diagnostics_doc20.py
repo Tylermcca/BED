@@ -57,7 +57,7 @@ def test_sound_controls_formats_and_limits_match_the_shipped_preview():
     guide = read("docs/guide/sound_preview.md")
     panel = read("src/Bed.Editor.ImGui/AssetsPanel.cs")
     wav = read("src/Bed.Editor.App/WavePreviewDecoder.cs")
-    ogg = read("src/Bed.Editor.App/OpenAlAssetAudioPreview.cs")
+    ogg = read("src/Bed.Editor.Audio/OpenAlAssetAudioPreview.cs")
     for label in ("Play sound", "Stop sound"):
         assert f'Ui.Button("{label}"u8)' in panel and f"**{label}**" in guide
     for key in ("F6", "Escape"):

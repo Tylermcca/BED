@@ -4,6 +4,22 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.3.9-preview.2] - 2026-11-13
+
+An update to the Gum preview. BED now uses Gum's own fixes for the problems we reported, and Edit in Gum opens the screen you were looking at.
+
+### Changed
+
+- BED uses Gum preview 6 (2026.11.12.1-preview.6), which carries Gum's fixes for the problems BED reported. Several of BED's own workarounds are gone.
+- Games that use BED's window no longer carry BED's sound preview, model import or picture import. Only BED itself has them, so a game's download is smaller and its licence list shorter.
+
+### Fixed
+
+- **Edit in Gum** opened the whole project even when the Gum screens panel showed one screen. It now opens Gum on that screen. If Gum already has your screens open, BED brings it to the front and tells you which screen to pick there.
+- A Gum screen whose parts contain each other now shows the rest of the screen and says which parts form the loop. It keeps following saves while you fix the loop in Gum.
+- Live Gum pictures now use Gum preview 6's own reload setup, so saving in Gum updates the picture without BED arranging a separate watcher.
+- The Gum screens check now takes supported picture file types from Gum, keeping the check in step with the Gum version included in BED.
+
 ## [0.3.9-preview] - 2026-11-12
 
 A preview to try. Game screens made in [Gum](https://docs.flatredball.com/gum), the free menu and screen designer: BED checks them, shows them, and opens them in Gum for you. The checkers sample now has its title and match screens made in Gum. See the [Gum screens guide](docs/guide/gum.md).

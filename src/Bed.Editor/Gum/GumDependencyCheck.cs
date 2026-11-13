@@ -13,7 +13,7 @@ namespace Bed.Editor.Gum;
 // GUM-FILES: checks a Gum project screen by screen with Gum's own library. BORROWED, all from Gum: the loader and its load
 // errors (Gum.ProjectServices.ProjectLoader), the checker behind gumcli check with its codes and help pages
 // (HeadlessErrorChecker, with the animation and leftover-setting checks and the expression reader gumcli turns on), what one screen reaches
-// (GumElementReachability, with every other screen left out except the screens it is based on), every file that reached
+// (GumElementReachability, from one explicit root including its base screens), every file that reached
 // set needs, including the pictures inside .fnt files, the frames inside .achx files and the project's translation files
 // (GumProjectDependencyWalker, project-wide mode), and the fonts each one needs (FontReferenceCollector, whose FontCache
 // file names are Gum's own). INVENTED: splitting findings into the screen that needs them and the project as a whole
@@ -38,7 +38,9 @@ public static class GumDependencyCheck
         GumProjectSave.ScreenExtension, GumProjectSave.ScreenJsonExtension, GumProjectSave.ComponentExtension, GumProjectSave.ComponentJsonExtension,
         GumProjectSave.StandardExtension, GumProjectSave.StandardJsonExtension, BehaviorReference.Extension, BehaviorReference.JsonExtension,
     }.Select(e => "." + e).ToHashSet(StringComparer.OrdinalIgnoreCase);
-    private static readonly HashSet<string> PictureExtensions = new(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".svg", ".webp" };
+    // Gum's backend-specific raster list excludes SVG/Lottie, which use separate element loaders.
+    private static readonly HashSet<string> PictureExtensions = new(
+        RenderingLibrary.Content.ContentLoader.SupportedImageExtensions.Select(e => "." + e).Append(".svg"), StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<string> FontExtensions = BmfcSave.FontFileExtensions.Append(".fnt").ToHashSet(StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<string> AnimationExtensions = new(StringComparer.OrdinalIgnoreCase)
         { ".achx", ".achj", "." + ElementAnimationsSave.FileExtension, "." + ElementAnimationsSave.JsonFileExtension };
@@ -123,24 +125,11 @@ public static class GumDependencyCheck
     /// whose parts it has too. Built-in types are left out.</summary>
     private static List<ElementSave> ScreenElements(GumProjectSave gum, string name)
     {
-        var own = BaseChain(gum, name);
-        var others = gum.Screens.Select(s => s.Name).Where(s => !string.IsNullOrEmpty(s) && !own.Contains(s, StringComparer.OrdinalIgnoreCase)).ToList();
-        var kept = new GumElementReachability().Compute(gum, [], others).KeptElementNames;
+        var kept = new GumElementReachability().Compute(gum, [name], excludedElementNames: null, screensAreRoots: false).KeptElementNames;
         return gum.AllElements.Where(e => e is not StandardElementSave && kept.Contains(e.Name)).ToList();
     }
 
-    /// <summary>The screen <paramref name="name"/> and the screens it is based on, nearest first.</summary>
-    private static List<string> BaseChain(GumProjectSave gum, string name)
-    {
-        var chain = new List<string>();
-        for (var at = name; at is not null && !chain.Contains(at, StringComparer.OrdinalIgnoreCase);)
-        {
-            chain.Add(at);
-            at = gum.Screens.FirstOrDefault(s => string.Equals(s.Name, at, StringComparison.OrdinalIgnoreCase))?.BaseType is { Length: > 0 } based
-                && gum.Screens.Any(s => string.Equals(s.Name, based, StringComparison.OrdinalIgnoreCase)) ? based : null;
-        }
-        return chain;
-    }
+
 
     private static GumProjectSave? Readable(ProjectLoadResult loaded) =>
         loaded.Project is { } gum && loaded.ErrorMessage is null && !GumLibrary.Unsupported(gum) ? gum : null;

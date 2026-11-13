@@ -9,7 +9,10 @@ public static class GumTool
 {
     /// <summary>What to start: the program and its one argument, plus a note when Gum can't select the screen itself.
     /// <see cref="Problem"/> is set instead when nothing can be started.</summary>
-    public sealed record Launch(string? Program, string? Argument, string Note, string? Problem, string? Project = null);
+    public sealed record Launch(string? Program, string? Argument, string Note, string? Problem, string? Project = null)
+    {
+        internal string? ScreenName { get; init; }
+    }
 
     /// <summary>Works out how to open <paramref name="screen"/> (or the whole project when null) in the Gum tool at
     /// <paramref name="gumExe"/>. Nothing is started.</summary>
@@ -23,13 +26,13 @@ public static class GumTool
             return new(null, null, "", $"The Gum project file {Path.GetFileName(project.ProjectFile)} isn't in its folder any more, so there is nothing to open.");
         if (screen is null) return new(gumExe, Path.GetFullPath(project.ProjectFile), "Gum is opening your screens. Save there and they update here and in your game.", null, Path.GetFullPath(project.ProjectFile));
         if (screen.Missing || !File.Exists(screen.File))
-            return new(gumExe, Path.GetFullPath(project.ProjectFile), $"The screen {screen.Name} hasn't been saved as its own file, so Gum is opening the whole project instead.", null, Path.GetFullPath(project.ProjectFile));
+            return new(gumExe, Path.GetFullPath(project.ProjectFile), $"The screen {screen.Name} hasn't been saved as its own file, so Gum is opening the whole project instead.", null, Path.GetFullPath(project.ProjectFile)) { ScreenName = screen.Name };
         // Gum finds the project beside the Screens folder only for a screen saved directly in it.
         var screens = Path.Combine(project.Folder, "Screens");
         var direct = string.Equals(Path.GetDirectoryName(Path.GetFullPath(screen.File)), screens, StringComparison.OrdinalIgnoreCase);
         return direct
-            ? new(gumExe, Path.GetFullPath(screen.File), $"Gum is opening the screen {screen.Name}.", null, Path.GetFullPath(project.ProjectFile))
-            : new(gumExe, Path.GetFullPath(project.ProjectFile), $"Gum is opening your project. Gum can't go straight to a screen in a subfolder, so pick {screen.Name} from the screen list in Gum.", null, Path.GetFullPath(project.ProjectFile));
+            ? new(gumExe, Path.GetFullPath(screen.File), $"Gum is opening the screen {screen.Name}.", null, Path.GetFullPath(project.ProjectFile)) { ScreenName = screen.Name }
+            : new(gumExe, Path.GetFullPath(project.ProjectFile), $"Gum is opening your project. Gum can't go straight to a screen in a subfolder, so pick {screen.Name} from the screen list in Gum.", null, Path.GetFullPath(project.ProjectFile)) { ScreenName = screen.Name };
     }
 
     /// <summary>Starts what <see cref="Plan"/> worked out, without a shell, so the path is passed exactly as it is.
@@ -38,7 +41,8 @@ public static class GumTool
     {
         if (launch.Problem is { } problem) return (false, problem);
         if (launch.Project is { } project && (showOpen ?? ShowOpen)(project))
-            return (true, "Gum already has these screens open, so BED brought it to the front.");
+            return (true, "Gum already has these screens open, so BED brought it to the front."
+                + (launch.ScreenName is { } name ? $" Pick {name} from the screen list there." : ""));
         var info = new ProcessStartInfo(launch.Program!) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(launch.Argument!)! };
         info.ArgumentList.Add(launch.Argument!);
         try { return (start ?? (i => Process.Start(i) is not null))(info) ? (true, launch.Note) : (false, "Gum didn't start. Try opening Gum on its own to check it works."); }

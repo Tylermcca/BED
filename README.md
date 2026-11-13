@@ -14,6 +14,7 @@ A preview to try: Gum screens are new, so tell us what doesn't work. 0.3.1 is th
 
 - **Game screens made in [Gum](https://docs.flatredball.com/gum)**, the free menu and screen designer. Choose **File > Show Gum screens** to see each screen as your game will draw it, and **Edit in Gum** to change it. When you save in Gum, BED and a running game update by themselves.
 - **A Gum screens check** in the Checks panel lists anything a screen needs and is missing, such as a picture or a font.
+- **Clearer Gum pictures:** a screen with parts that contain each other still shows the rest, with a message naming the loop. Saves update through Gum preview 6 itself, and the Gum screens check uses its supported picture types.
 - **Preferences > Locations:** where Gum is, where new projects go, and a folder of extra adapters.
 - The checkers sample's title and match screens are made in Gum. See [Gum screens](docs/guide/gum.md).
 
@@ -29,7 +30,9 @@ A preview to try: Gum screens are new, so tell us what doesn't work. 0.3.1 is th
 - **A first-run tour** you can skip and reopen later from **Help > Take the tour**.
 - **Help > Report a problem** shows exactly what a report contains before you share it.
 
-The current download is **0.3.9-preview**, a preview of Gum screens; the main download is 0.3.1. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
+The current download is **0.3.9-preview.2**, a preview of Gum screens; the main download is 0.3.1. Get it from the [Releases page](../../releases); [CHANGELOG.md](CHANGELOG.md) lists every change and fix.
+
+Want to try game screens made in [Gum](https://docs.flatredball.com/gum)? The **0.3.9 preview** on the [Releases page](../../releases) has them: see your screens in BED, open them in Gum with one button, and watch BED and your game update when you save.
 
 ## Try it (Windows, 2 minutes)
 
@@ -107,7 +110,7 @@ I'm using BED on three or four games of my own at the moment, each a different k
 
 ## Roadmap
 
-0.2 added 3D levels, assets, Play and Windows builds. 0.3 adds prefabs, 2D levels with sprites and physics, and the 0.3.9 preview adds game screens made in Gum. Next, 0.4 works with the running game. See [the roadmap](ROADMAP.md) for what's done and what's left.
+0.2 added 3D levels, assets, Play and Windows builds. 0.3 adds prefabs, 2D levels with sprites and physics, and the 0.3.9 preview adds game screens made in Gum. Next, 0.4 makes Gum screens part of the main download, then 0.5 works with the running game. See [the roadmap](ROADMAP.md) for what's done and what's left.
 
 ## Build from source
 
