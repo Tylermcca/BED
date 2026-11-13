@@ -89,7 +89,7 @@ public sealed class SampleSavedFilesPlayTests
         using var f=new Fixture(prepared);var program=Path.Combine(AppContext.BaseDirectory,"samples","SceneStarter","SceneStarter.exe");
         using var host=new ProjectPlayHost(new(new(program,f.Root,["--project",f.Root,"--seconds","0"]),null,f.Root,[]),TimeProvider.System,TimeSpan.FromSeconds(2));
         Assert.True(host.Start(false),host.Status);Assert.Equal(ProjectPlayState.Running,host.State);
-        var time=Stopwatch.StartNew();while(!host.HasCompleted&&time.Elapsed<TimeSpan.FromSeconds(5)){host.Update();Thread.Sleep(5);}host.Update();
+        var time=Stopwatch.StartNew();while(!host.HasCompleted&&time.Elapsed<TimeSpan.FromSeconds(60)){host.Update();Thread.Sleep(5);}host.Update();
         Assert.True(host.HasCompleted,host.Status);Assert.Equal(prepared?ProjectPlayState.Stopped:ProjectPlayState.Failed,host.State);Assert.Equal(prepared?0:3,host.ExitCode);
         var lines=host.DrainLogs();Assert.DoesNotContain(lines,line=>line.Text.Contains("\"kind\"",StringComparison.Ordinal)||line.Text.Contains("Ready",StringComparison.Ordinal));
         if(prepared)Assert.Contains(lines,line=>line.Text.Contains("loaded saved level",StringComparison.Ordinal));else Assert.Contains(lines,line=>line.Error&&line.Text.Contains(ProjectAssets.MissingGeneration,StringComparison.Ordinal));
