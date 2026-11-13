@@ -1,0 +1,10 @@
+{
+  "Version": 99,
+  "ScreenReferences": [
+    {
+      "Name": "Menu",
+      "ElementType": 0,
+      "LinkType": 0
+    }
+  ]
+}

@@ -53,3 +53,4 @@ New to BED? Begin with **[Start here](start_here.md)**: ten minutes, no programm
 35. [API support policy](api_support_policy.md) - Read the proposed compatibility rules and distinguish API, package and document versions.
 36. [Older build-guide link](building.md) - Follow the retained build-guide bookmark to the current Export guide.
 37. [Reporting a problem](reporting_a_problem.md) - See exactly what a report contains, then copy it, save it or open an issue page yourself.
+38. [Gum screens](gum.md) - See your game's Gum screens, open them in Gum, and check that they have every picture, font and part.

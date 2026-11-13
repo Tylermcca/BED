@@ -4,7 +4,7 @@ Press **F1** in an open file to show **Keys**, or choose **Help > Keyboard short
 
 These are BED's built-in defaults. A shortcut uses the same save, validation and approval decisions as its menu command. While typing, ordinary editing keys belong to the text field; the Play function keys remain available. A command can be unavailable for the current selection, file or Play state.
 
-Press **Ctrl+,** to open Preferences on the start screen or in a project. In a project, **Edit > Preferences > Open preferences...** opens the same controls. Tab between Theme and UI scale; choices apply live and are remembered for the next launch. Escape closes Preferences after any open dropdown has closed. This fixed shortcut is separate from the rebindable command list below.
+Press **Ctrl+,** to open Options on the start screen or in a project. In a project, **Edit > Options > Open options...** opens the same controls. Tab between Theme and UI scale; choices apply live and are remembered for the next launch. Escape closes Options after any open dropdown has closed. This fixed shortcut is separate from the rebindable command list below.
 
 ## Commands in an open file
 
@@ -142,8 +142,12 @@ In a data workspace, **Ctrl+H** opens **Find and replace**. Enter whole scalar v
 
 ### Viewport camera and keymap
 
-Choose **Edit > Preferences** (Ctrl+,), then **Viewport keymap**: BED defaults use G/R/S for 3D tools; W/E/R uses W to move, E to rotate and R to scale. This optional personal choice is saved outside the project. The flat view defaults remain W/R/S; the optional profile uses W/E/R there too.
+Choose **Edit > Options** (Ctrl+,), then **Viewport keymap**: BED defaults use G/R/S for 3D tools; W/E/R uses W to move, E to rotate and R to scale. This optional personal choice is saved outside the project. The flat view defaults remain W/R/S; the optional profile uses W/E/R there too.
 
 Right-drag or Alt+left-drag orbits. Middle-drag or Shift+right-drag pans. Alt+right-drag dollies. Hold right mouse and WASD/QE to fly (Q down, E up); Shift speeds flight up. Wheel or +/- zooms and F frames the selection. Camera controls never change the level.
 
 **Shift+drag temporarily reverses snapping** while dragging an object or transform handle in the 3D view. This replaces the old Alt+drag action because Alt+left-drag now orbits the camera. Alt still reverses snapping for keyboard arrow nudges. An active transform drag owns wheel/right-drag until it finishes, so those gestures cannot move the camera halfway through an edit.
+
+## Names for copies
+
+In **Options**, choose **Names for copies**. The example updates as you choose: `Cube (1)` (default), `Cube.001`, `Cube_1`, `Cube2` or `Cube copy`. Copies take the first free number, recognising the other styles too, and keep a single suffix. This changes display names; object IDs and links keep their existing rules. Your choice is remembered for BED and its command-line tools.

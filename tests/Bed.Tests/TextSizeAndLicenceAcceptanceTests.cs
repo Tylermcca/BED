@@ -72,13 +72,14 @@ public sealed class TextSizeAndLicenceAcceptanceTests : IDisposable
     private static void StartButton(HeadlessHost host, ProjectLauncher launcher, string caption)
     {
         if (caption is "Larger" or "Smaller" && !Log(host, launcher.Draw).Contains("Text size", StringComparison.Ordinal))
-            StartButton(host, launcher, "Preferences");
+            StartButton(host, launcher, "Options");
         var window = ImGui.Internal.FindWindowByName("BED###launcher");
         Assert.False(window.IsNull());
-        var wanted = window.GetID(caption).Value;
+        // The text size buttons sit in their own scrolling Options area, so the caption's id belongs to whichever area has the keyboard.
+        bool At() { var c = ImGui.GetCurrentContext(); return c.NavId.Value == window.GetID(caption).Value || !c.NavWindow.IsNull() && c.NavId.Value == c.NavWindow.GetID(caption).Value; }
         for (var i = 0; i < 45; i++)
         {
-            if (ImGui.GetCurrentContext().NavId.Value == wanted)
+            if (At())
             {
                 host.Press(launcher.Draw, ImGuiKey.Space);
                 return;
@@ -509,7 +510,7 @@ public sealed class TextSizeAndLicenceAcceptanceTests : IDisposable
     {
         var l=Launcher();l.Splash=new BrutalSplash();using var h=Host();
         h.Frame(l.Draw);Assert.DoesNotContain("Text size",Log(h,l.Draw));Assert.False(l.Splash.Done);
-        l.Splash.Skip();Assert.Contains("Open recent",Log(h,l.Draw));StartButton(h,l,"Preferences");Assert.Contains("Text size",Log(h,l.Draw));Assert.Contains(Credit,Log(h,l.Draw));
+        l.Splash.Skip();Assert.Contains("Open recent",Log(h,l.Draw));StartButton(h,l,"Options");Assert.Contains("Text size",Log(h,l.Draw));Assert.Contains(Credit,Log(h,l.Draw));
     }
 
     // Source: BRUTAL 2.3 "The NOTICE.txt file shall be distributed alongside all copies of the Product."
@@ -550,6 +551,17 @@ public sealed class TextSizeAndLicenceAcceptanceTests : IDisposable
                 Assert.Equal(File.ReadAllBytes(notice),File.ReadAllBytes(shipped));
             }
         }
+        // Gum's checker brings KernSmith (FreeType): one copy of its notices.
+        foreach(var package in json.RootElement.GetProperty("libraries").EnumerateObject().Where(p=>p.Name.StartsWith("KernSmith/",StringComparison.OrdinalIgnoreCase)))
+        {
+            var relative=package.Value.GetProperty("path").GetString()!;
+            foreach(var notice in packageFolders.Select(p=>Path.Combine(p,relative)).Where(Directory.Exists).SelectMany(d=>Directory.GetFiles(d,"THIRD-PARTY-NOTICES.*")).Take(1))
+            {
+                var shipped=Path.Combine(folder,"licenses","KernSmith-THIRD-PARTY-NOTICES"+Path.GetExtension(notice));
+                Assert.True(File.Exists(shipped),project+" lacks KernSmith's notices");
+                Assert.Equal(File.ReadAllBytes(notice),File.ReadAllBytes(shipped));
+            }
+        }
         // A program that ships a bundled sample game (the launcher carries the physics sample and its native library) also lists
         // that sample's package notices at its top level, so the release's licence folder covers everything in the zip.
         var bundled=Path.Combine(folder,"samples","PhysicsStarter","licenses");
@@ -560,6 +572,32 @@ public sealed class TextSizeAndLicenceAcceptanceTests : IDisposable
                 Assert.True(File.Exists(shipped),project+" lacks the bundled sample's "+Path.GetFileName(notice));
                 Assert.Equal(File.ReadAllBytes(notice),File.ReadAllBytes(shipped));
             }
+        // Gum's native Skia and HarfBuzz packages (the screen picture, and Gum's checker through Gum.ImageDiff): their own
+        // notices and licence, named after the library.
+        foreach(var package in json.RootElement.GetProperty("libraries").EnumerateObject().Where(p=>p.Name.StartsWith("SkiaSharp.NativeAssets.",StringComparison.OrdinalIgnoreCase)
+            ||p.Name.StartsWith("HarfBuzzSharp.NativeAssets.",StringComparison.OrdinalIgnoreCase)))
+        {
+            var relative=package.Value.GetProperty("path").GetString()!;
+            var source=packageFolders.Select(p=>Path.Combine(p,relative)).FirstOrDefault(Directory.Exists);
+            if(source is null)continue;
+            foreach(var file in new[]{"THIRD-PARTY-NOTICES.txt","LICENSE.txt"}.Where(f=>File.Exists(Path.Combine(source,f))))
+            {
+                var name=package.Name.Split('.')[0]+"-"+file;expected.Add(name);var shipped=Path.Combine(folder,"licenses",name);
+                Assert.True(File.Exists(shipped),project+" lacks "+name+" from "+package.Name);
+                Assert.Equal(File.ReadAllBytes(Path.Combine(source,file)),File.ReadAllBytes(shipped));
+            }
+        }
+        // Preview 6 packages the licence for embedded bmfont.exe; it follows every program resolving ProjectServices.
+        foreach(var package in json.RootElement.GetProperty("libraries").EnumerateObject().Where(p=>p.Name.StartsWith("Gum.ProjectServices/",StringComparison.OrdinalIgnoreCase)))
+        {
+            var relative=package.Value.GetProperty("path").GetString()!;
+            var source=packageFolders.Select(p=>Path.Combine(p,relative,"BMFont-LICENSE.txt")).First(File.Exists);
+            const string name="Gum-BMFont-LICENSE.txt";
+            expected.Add(name);
+            var shipped=Path.Combine(folder,"licenses",name);
+            Assert.True(File.Exists(shipped),project+" lacks the licence for Gum's embedded BMFont");
+            Assert.Equal(File.ReadAllBytes(source),File.ReadAllBytes(shipped));
+        }
         // The CLI has no BRUTAL packages in its resolved dependency graph: zero bundled files is correct there.
         var directory=Path.Combine(folder,"licenses");
         // Package notices can have upstream filenames, not just the old BRUTAL-prefixed names.

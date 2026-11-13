@@ -789,6 +789,7 @@ public sealed partial class DataWorkspace : IDisposable
         WatchOutside();
         PrepareRecentProjectsUi();
         PrepareExportUi();
+        PrepareGumUi();
         PreparePlaySettingsUi();
         DrawWorkspaceStatusBar();
         if(Scene2Window is not null&&Active is {} v2File)
@@ -912,6 +913,11 @@ public sealed partial class DataWorkspace : IDisposable
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or DocumentFormatException)
         { Said = $"The source file can't be read: {e.Message}"; return false; }
         var name = Path.GetFileName(source);
+        if(Project.Files.Any(f=>string.Equals(f.Name,name,StringComparison.OrdinalIgnoreCase)))
+        {
+            var stem=CopyNames.Next(Path.GetFileNameWithoutExtension(name),Project.Files.Select(f=>Path.GetFileNameWithoutExtension(f.Name)));
+            name=stem+Path.GetExtension(name);
+        }
         if (!Project.CreateFromText(name, text, out var why)) { Said = why; return false; }
         droppedFile = null;
         form = FileForm.None;
@@ -1087,8 +1093,10 @@ public sealed partial class DataWorkspace : IDisposable
                     {
                         var f = report.Findings[i];
                         var where = f.Place is { } p ? $"  ({p.File} {p.At ?? p.Item})" : "";
-                        if (Ui.Selectable($"{(f.Problem.Severity == Severity.Error ? "Error" : "Warning")}: {Shown(f.Problem.Message)}{Shown(where)}##finding.{i}")) Reveal(f);
-                        if (f.Next is { Length: > 0 } next) ImGui.SetItemTooltip(Shown(next));
+                        if (Ui.Selectable($"{f.Problem.Severity switch { Severity.Error => "Error", Severity.Warning => "Warning", _ => "Note" }}: {Shown(f.Problem.Message)}{Shown(where)}##finding.{i}")) Reveal(f);
+                        // Another tool's code and help page (Gum's, say) go under the next step.
+                        var help = f.Help is { } page ? $"\nHelp page{(f.Code is { } code ? $" for {code}" : "")}: {page}" : "";
+                        if (f.Next is { Length: > 0 } next) ImGui.SetItemTooltip(Shown(next + help));
                     }
                     Ui.TextDisabled($"Showing {shown} of {report.Findings.Count}.");
                     if (shown < report.Findings.Count)

@@ -10,7 +10,7 @@ The core library (`Bed`) takes no third-party package.
 
 ## Stb image decoding
 
-The host (`Bed.Editor.App`), not the generic editor model, references `Ahwoo.Brutal.Stb` 2026.10.2 for bounded CPU image previews. The binding is BRUTAL License v1.0 (existing BRUTAL product credit/notice duties remain); its stb_image v2.30 and stb_image_write v1.16 are MIT OR Unlicense, upstream commit f58f558. Package LICENSE.txt, NOTICE.txt and LICENSES/BRUTAL-STB-THIRD-PARTY-NOTICES.txt must accompany redistribution. Source: https://github.com/RocketWerkz/brutal.stb and https://github.com/nothings/stb. No GPU texture package is added.
+The BED-only asset services (`Bed.Editor.Assets`), referenced by the BED launcher and tests, reference `Ahwoo.Brutal.Stb` 2026.10.2 for bounded CPU image previews. The binding is BRUTAL License v1.0 (existing BRUTAL product credit/notice duties remain); its stb_image v2.30 and stb_image_write v1.16 are MIT OR Unlicense, upstream commit f58f558. Package LICENSE.txt, NOTICE.txt and LICENSES/BRUTAL-STB-THIRD-PARTY-NOTICES.txt must accompany redistribution. Source: https://github.com/RocketWerkz/brutal.stb and https://github.com/nothings/stb. No GPU texture package is added.
 
 ## Vendored source
 
@@ -45,6 +45,86 @@ SOFTWARE.
 ```
 
 A release carries the same text beside the programs as `licenses/ImCode-LICENSE.txt`, and so does the `Bed.Editor.Text` package, whose `THIRD-PARTY-NOTICES.txt` names ImCode. The core editor (`Bed.Editor.ImGui`) carries no ImCode.
+
+## Gum project reading
+
+`Bed.Editor` reads and checks Gum projects with Gum's own libraries: the project loader, dependency walker and font collector in FlatRedBall.GumCommon, the checker behind `gumcli check` in Gum.ProjectServices, and Gum.Expressions, which `gumcli check` turns on so the check of values set against linked values (GUM0002) can work out links that read another component or are written as sums (Gum files in the editor, the Gum screens check, and the same check for BED's agents). BED never draws with these packages or runs a program from them; they come along because Gum.ProjectServices and Gum.Expressions name them. Licences were read from each package's nuspec, its bundled notices and its source repository on 2026-11-11 (GumCommon's packages) and 2026-11-12 (Gum.ProjectServices' packages and Gum.Expressions' packages); Gum preview 6 metadata and its new BMFont licence file were rechecked on 2026-11-13.
+
+| Package | Version | Brought in by | Licence | Source |
+|---|---|---|---|---|
+| FlatRedBall.GumCommon | 2026.11.12.1-preview.6 (Gum commit `97cca3d58987ba84aa1c5c16bb14d208a366679d`) | `Bed.Editor` (direct) | MIT, Copyright (c) 2013-2024 FlatRedBall, LLC | https://github.com/vchelaru/Gum |
+| Gum.ProjectServices | 2026.11.12.1-preview.6 (same Gum commit) | `Bed.Editor` (direct) | MIT, Copyright (c) 2013-2024 FlatRedBall, LLC (the package declares MIT) | https://github.com/vchelaru/Gum |
+| Gum.ImageDiff | 2026.11.12.1-preview.6 (same Gum commit) | Gum.ProjectServices | MIT, Copyright (c) 2013-2024 FlatRedBall, LLC (the package declares MIT) | https://github.com/vchelaru/Gum |
+| Gum.Expressions (`GumExpressions.dll`) | 2026.11.12.1-preview.6 (same Gum commit) | `Bed.Editor` (direct) | MIT, Copyright (c) 2013-2024 FlatRedBall, LLC | https://github.com/vchelaru/Gum |
+| Microsoft.CodeAnalysis.CSharp, Microsoft.CodeAnalysis.Common (Roslyn, `Microsoft.CodeAnalysis.CSharp.dll`, `Microsoft.CodeAnalysis.dll`, with their translated messages in language folders such as `de/` and `fr/`) | 4.12.0 | Gum.Expressions | MIT, Copyright (c) .NET Foundation and Contributors (the packages' `ThirdPartyNotices.rtf` holds only this MIT licence) | https://github.com/dotnet/roslyn |
+| Microsoft.CodeAnalysis.Analyzers | 3.3.4 | Microsoft.CodeAnalysis.Common | MIT, Copyright (c) .NET Foundation and Contributors; build-time code checks only: they also run on `Bed.Editor`'s own build, and nothing from it ships beside the programs | https://github.com/dotnet/roslyn-analyzers |
+| FlatRedBall.InterpolationCore | 2025.4.22.1 | FlatRedBall.GumCommon | MIT, Copyright (c) 2016 FlatRedBall, LLC (the package declares no licence; its source, FlatRedBall commit `33179768435be3cca8750e2ef1de7bc37c7443ab`, is MIT) | https://github.com/vchelaru/FlatRedBall |
+| SharpCompress | 0.48.0 | FlatRedBall.GumCommon | MIT, Copyright (c) 2025 Adam Hathcock | https://github.com/adamhathcock/sharpcompress |
+| BrotliSharpLib | 0.3.3 | FlatRedBall.GumCommon | MIT, Copyright (c) 2017 master131 (declared by licence URL) | https://github.com/master131/BrotliSharpLib |
+| CsvHelper | 33.1.0 | FlatRedBall.GumCommon | MS-PL OR Apache-2.0 (BED uses it under Apache-2.0), Copyright (c) 2009-2024 Josh Close | https://github.com/JoshClose/CsvHelper |
+| KernSmith | 0.27.0 | Gum.ProjectServices | MIT, Copyright (c) 2026 KernSmith contributors | https://github.com/kaltinril/Kernsmith |
+| KernSmith.Rasterizers.FreeType | 0.27.0 | Gum.ProjectServices | MIT, Copyright (c) 2026 KernSmith contributors | https://github.com/kaltinril/Kernsmith |
+| FreeTypeSharp | 3.1.0 | KernSmith.Rasterizers.FreeType | MIT, Copyright 2024 ryancheung | https://github.com/ryancheung/FreeTypeSharp |
+| FreeType (native `freetype.dll`, `libfreetype.so`, `libfreetype.dylib`, bundled by FreeTypeSharp) | 2.13.2 | FreeTypeSharp | The FreeType Project License (FTL), used under FTL rather than GPLv2; see below | https://freetype.org |
+| StbImageSharp | 2.30.16 | KernSmith | Unlicense OR MIT (BED uses it under MIT); stb by Sean Barrett is public domain | https://github.com/StbSharp/StbImageSharp |
+| Newtonsoft.Json | 13.0.1 | Gum.ProjectServices | MIT, Copyright (c) 2007 James Newton-King | https://github.com/JamesNK/Newtonsoft.Json |
+| System.Reflection.MetadataLoadContext | 10.0.5 | Gum.ProjectServices | MIT, Copyright (c) .NET Foundation and Contributors | https://github.com/dotnet/dotnet |
+| SkiaSharp (managed library and native `libSkiaSharp`, see the Gum screen picture) | 4.153.1 (shared Gum SkiaSharp version) | Gum.ImageDiff | MIT, Copyright (c) 2015-2016 Xamarin, Inc. and Copyright (c) 2017-2018 Microsoft Corporation; native Skia is BSD-3-Clause (Copyright (c) 2011 Google Inc.), with the third-party code it bundles listed in the package's `THIRD-PARTY-NOTICES.txt` | https://github.com/mono/SkiaSharp |
+| AngelCode BMFont (`bmfont.exe`, embedded as a resource inside `Gum.ProjectServices.dll`) | as embedded at the Gum commit above | Gum.ProjectServices | zlib licence of AngelCode BMFont, Copyright (c) Andreas Jönsson; the package now includes `BMFont-LICENSE.txt`, copied byte-for-byte to `licenses/Gum-BMFont-LICENSE.txt` | https://www.angelcode.com/products/bmfont/ |
+
+The MIT packages are used under the MIT License, with the copyright lines in the table above:
+
+```
+The MIT License (MIT)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+CsvHelper is used under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0); it is unmodified and ships no NOTICE file.
+
+The FreeType library is used under The FreeType Project License (https://freetype.org/license.html), which asks for this credit: Portions of this software are copyright © 2023 The FreeType Project (www.freetype.org). All rights reserved. It is unmodified, as FreeTypeSharp ships it.
+
+KernSmith's `THIRD-PARTY-NOTICES.md` lists FreeType and StbImageSharp; `build/Notices.targets` copies it into `licenses/` beside each program as `KernSmith-THIRD-PARTY-NOTICES.md`. Gum.ImageDiff brings SkiaSharp (one version, 4.153.1, which Gum.SkiaSharp requires); its native library and notices are listed with the Gum screen picture's packages below.
+
+## Gum screen picture
+
+`Bed.Editor` (GumScreenPicture) draws a live picture of a Gum screen with Gum's own Skia drawing, on the CPU, in BED's process; the editor window shows it in the Gum screen panel. Every program built on `Bed.Editor` carries these packages; licences were read from each package's nuspec, licence file and source repository on 2026-11-12. The native Skia and HarfBuzz libraries bundle further third-party code (Skia, HarfBuzz, FreeType, libpng, zlib, expat, libjpeg-turbo, libwebp and others); their packages' own `THIRD-PARTY-NOTICES.txt` and `LICENSE.txt` are copied beside each program as `licenses/SkiaSharp-*.txt` and `licenses/HarfBuzzSharp-*.txt` (`build/Notices.targets`).
+
+| Package | Version | Brought in by | Licence | Source |
+|---|---|---|---|---|
+| Gum.SkiaSharp.Standalone (`SkiaGum.Standalone.dll`) | 2026.11.12.1-preview.6 | `Bed.Editor` (direct) | MIT, Copyright (c) 2013-2024 FlatRedBall, LLC | https://github.com/vchelaru/Gum |
+| Gum.SkiaSharp (`SkiaGum.dll`) | 2026.11.12.1-preview.6 | Gum.SkiaSharp.Standalone | MIT, Copyright (c) 2013-2024 FlatRedBall, LLC | https://github.com/vchelaru/Gum |
+| SkiaSharp, SkiaSharp.NativeAssets.Win32/Linux/macOS (`libSkiaSharp`) | 4.153.1 | Gum.SkiaSharp | MIT, Copyright (c) 2015-2016 Xamarin, Inc., Copyright (c) 2017-2018 Microsoft Corporation; native third-party code as above | https://github.com/mono/SkiaSharp |
+| SkiaSharp.HarfBuzz, SkiaSharp.Skottie, SkiaSharp.SceneGraph, SkiaSharp.Resources | 4.153.1 | Gum.SkiaSharp, Topten.RichTextKit | MIT, Microsoft Corporation | https://github.com/mono/SkiaSharp |
+| SkiaSharp.Extended | 3.0.0 | Gum.SkiaSharp | MIT, Microsoft Corporation | https://github.com/mono/SkiaSharp.Extended |
+| HarfBuzzSharp, HarfBuzzSharp.NativeAssets.Win32/Linux/macOS (`libHarfBuzzSharp`) | 14.2.1.301 | Svg.Skia, Topten.RichTextKit | MIT, Microsoft Corporation; HarfBuzz itself "Old MIT" (in the notices file) | https://github.com/mono/SkiaSharp |
+| Topten.RichTextKit | 0.6.170 | Gum.SkiaSharp | Apache-2.0, Topten Software | https://github.com/toptensoftware/richtextkit |
+| Svg.Skia, Svg.Model, Svg.Animation, Svg.SceneGraph, ShimSkiaSharp | 5.2.3 | Gum.SkiaSharp | MIT, Copyright (c) Wiesław Šoltés | https://github.com/wieslawsoltes/Svg.Skia |
+| Svg.Custom | 5.2.3 | Svg.Skia | MS-PL, Copyright (c) Wiesław Šoltés (a build of the SVG library, https://github.com/svg-net/SVG, also MS-PL) | https://github.com/wieslawsoltes/Svg.Skia |
+| ExCSS | 4.3.1 | Svg.Custom | MIT, Copyright (c) Tyler Brinks | https://github.com/TylerBrinks/ExCSS |
+
+The MIT packages are used under the MIT License shown above, with the copyright lines in this table. Topten.RichTextKit is used under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0); it is unmodified and ships no NOTICE file. Svg.Custom is used unmodified under the Microsoft Public License (MS-PL, https://opensource.org/license/ms-pl-html); MS-PL requires that a binary distribution keeps its licence terms, which this notice and the licence link do; shipping it was approved by the project owner on 2026-11-12.
+
+
+## Checkers sample font
+
+The checkers sample's Gum screens (`samples/CheckersProject/ui`, copied beside the game as `samples/checkers/ui`) draw their words in **Liberation Sans Regular 2.1.5** (`Fonts/LiberationSans-Regular.ttf`), Digitized data copyright (c) 2010 Google Corporation, Copyright (c) 2012 Red Hat, Inc., with Reserved Font Name Liberation. It is used unmodified under the **SIL Open Font License, Version 1.1** (https://openfontlicense.org), whose full text travels beside the font as `Fonts/LiberationSans-LICENSE.txt`. The font is bundled with the sample only and is not sold on its own. Source: https://github.com/liberationfonts/liberation-fonts
 
 ## BRUTAL
 
@@ -312,6 +392,6 @@ written authorization of the copyright holder.
 
 ## Sound previews
 
-The app references `Ahwoo.BRUTAL.OpenAl` **2026.10.2**, compatible with the existing Core 2026.10.1 (2026.10.3 requires Core 2026.10.4 and is not used). The binding remains under BRUTAL License v1.0. Its dynamically loaded **OpenAL Soft 1.25.2** (commit dd4e07de0fe73d8c0326c4502f63e71da8ef268b) is GNU Library General Public License version 2; the package also includes BSD/PFFFT/fmt/GSL notices. Ship every package LICENSES/*.txt, including BRUTAL-OPENAL-THIRD-PARTY-NOTICES.txt and openal-soft-COPYING.txt. Windows packaging keeps OpenAL32.dll external beside BED.exe, replaceable by the user; no static linking. Source/rebuild instructions: https://github.com/kcat/openal-soft/tree/1.25.2 ; binding: https://github.com/ahwootech/BRUTAL . Preserve the upstream licence's source/relinking duties when redistributing.
+The BED-only `Bed.Editor.Audio` project, referenced by the BED launcher and tests, references `Ahwoo.BRUTAL.OpenAl` **2026.10.2**, compatible with the existing Core 2026.10.1 (2026.10.3 requires Core 2026.10.4 and is not used). The binding remains under BRUTAL License v1.0. Its dynamically loaded **OpenAL Soft 1.25.2** (commit dd4e07de0fe73d8c0326c4502f63e71da8ef268b) is GNU Library General Public License version 2; the package also includes BSD/PFFFT/fmt/GSL notices. Ship every package LICENSES/*.txt, including BRUTAL-OPENAL-THIRD-PARTY-NOTICES.txt and openal-soft-COPYING.txt. Windows packaging keeps OpenAL32.dll external beside BED.exe, replaceable by the user; no static linking. Source/rebuild instructions: https://github.com/kcat/openal-soft/tree/1.25.2 ; binding: https://github.com/ahwootech/BRUTAL . Preserve the upstream licence's source/relinking duties when redistributing.
 
 OGG/Vorbis decode uses managed **NVorbis 0.10.5**, MIT, Copyright (c) 2020 Andrew Ward. Exact NuGet version checked against https://www.nuget.org/packages/NVorbis/0.10.5 and its package metadata; MIT text checked at https://github.com/NVorbis/NVorbis/blob/master/LICENSE . Its verbatim licence is third_party/NVorbis/LICENSE, staged as licenses/NVorbis-LICENSE.txt. These dependencies are in the app, with no BRUTAL dependency added to Editor or Runtime core. NVorbis's netstandard2.0 dependency declarations include System.Memory 4.5.3 and System.ValueTuple 4.5.0 (MIT).

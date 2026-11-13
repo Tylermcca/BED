@@ -8,6 +8,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../Bed.Editor.Assets/Bed.Editor.Assets.csproj" />
+    <ProjectReference Include="../Bed.Editor.Audio/Bed.Editor.Audio.csproj" />
     <ProjectReference Include="..\Bed.Editor.App\Bed.Editor.App.csproj" />
     <!-- The Text panel (with ImCode, MIT), which the app adds to every data file (Program.SetUp). -->
     <ProjectReference Include="..\Bed.Editor.Text\Bed.Editor.Text.csproj" />

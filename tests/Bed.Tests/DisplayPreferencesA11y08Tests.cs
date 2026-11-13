@@ -55,7 +55,7 @@ public sealed class DisplayPreferencesA11y08Tests
             File.WriteAllText(path,"""{"textScale":1,"theme":"System","future":{"keep":[1,true,null]}}""");
             using(var r=new Rig(root))
             {
-                r.Reach("Preferences");r.Key(ImGuiKey.Enter);r.Frames();
+                r.Reach("Options");r.Key(ImGuiKey.Enter);r.Frames();
                 r.Choose("Theme",3);r.Choose("UI scale",index);
                 Assert.Equal(EditorThemePreference.HighContrast,EditorTheme.Preference);Assert.Equal(scale,EditorWindow<DataDocument>.TextScale);
                 var stored=JsonNode.Parse(File.ReadAllText(path))!;

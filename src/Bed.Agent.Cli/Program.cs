@@ -215,6 +215,8 @@ public static class Program
             if (!Directory.Exists(assets)) { errors.WriteLine($"there's no asset folder at {assets}. Check --assets."); return 2; }
             session.UseAssets(assets, ownNames);
         }
+        // Gum screens next to the data, as the editor finds them: the folder above the data folder and its subfolders.
+        if (Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(data))) is { } gumRoot) session.UseGum(gumRoot);
         if(rest[0]=="scene")
         {
             JsonObject sceneResult;

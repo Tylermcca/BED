@@ -29,13 +29,15 @@ public sealed class ThemePreferencesA454Tests
         public void Reach(string label)
         {
             var window = Im.Internal.FindWindowByName("BED###launcher"u8);
-            Assert.False(window.IsNull()); var id = window.GetID(label).Value;
-            for (var i = 0; i < 40 && Im.GetCurrentContext().NavId.Value != id; i++) Host.Press(Launcher.Draw, ImGuiKey.Tab);
-            Assert.Equal(id, Im.GetCurrentContext().NavId.Value);
+            Assert.False(window.IsNull());
+            // The settings sit in their own scrolling Options area, so the label's id belongs to whichever area has the keyboard.
+            bool At() { var c = Im.GetCurrentContext(); return c.NavId.Value == window.GetID(label).Value || !c.NavWindow.IsNull() && c.NavId.Value == c.NavWindow.GetID(label).Value; }
+            for (var i = 0; i < 40 && !At(); i++) Host.Press(Launcher.Draw, ImGuiKey.Tab);
+            Assert.True(At(), "Keyboard never reached " + label);
         }
         public void Preferences()
         {
-            Host.Frames(Launcher.Draw, 4); Reach("Preferences"); Host.Press(Launcher.Draw, ImGuiKey.Enter);
+            Host.Frames(Launcher.Draw, 4); Reach("Options"); Host.Press(Launcher.Draw, ImGuiKey.Enter);
             Assert.Contains(Ui.Snapshot().Nodes, n => n.Role == UiRole.Combo && n.Label == "Theme");
         }
         public void Choose(EditorThemePreference preference)

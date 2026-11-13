@@ -1,0 +1,30 @@
+{
+  "Version": 8,
+  "ScreenReferences": [
+    {
+      "Name": "Menu",
+      "ElementType": 0,
+      "LinkType": 0
+    }
+  ],
+  "ComponentReferences": [
+    {
+      "Name": "Styles",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "Button",
+      "ElementType": 1,
+      "LinkType": 0
+    }
+  ],
+  "StandardElementReferences": [
+    {
+      "Name": "Container",
+      "ElementType": 2,
+      "LinkType": 0
+    }
+  ],
+  "BehaviorReferences": []
+}

@@ -21,8 +21,8 @@ def test_scale_choices_and_theme_labels_match_both_preferences_surfaces():
             assert f"**{percent.strip()}%**" in guide
     assert 'Choice("High contrast"' in read("src/Bed.Editor.ImGui/EditorWindow.cs")
     assert '"High contrast"' in read("src/Bed.Editor.ImGui/EditorTheme.cs")
-    assert "**Edit > Preferences > UI scale**" in guide
-    assert "**Edit > Preferences > Theme > High contrast**" in guide
+    assert "**Edit > Options > UI scale**" in guide
+    assert "**Edit > Options > Theme > High contrast**" in guide
 
 
 def test_keyboard_walk_remains_backed_by_native_example_test():

@@ -10,5 +10,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Bed.Editor.ImGui\Bed.Editor.ImGui.csproj" />
     <EmbeddedResource Include="plugin.json" LogicalName="plugin.json" />
+    <!-- The game's screens are made in Gum (CheckersProject/ui, open CheckersUi.gumj in Gum) and drawn by Gum's Skia drawing. Copied next
+         to the program so the game finds them. -->
+    <PackageReference Include="Gum.SkiaSharp.Standalone" />
+    <None Include="..\CheckersProject\ui\**\*" Exclude="..\CheckersProject\ui\.gitignore" CopyToOutputDirectory="PreserveNewest" LinkBase="ui" />
   </ItemGroup>
 </Project>

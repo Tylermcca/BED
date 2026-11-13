@@ -57,6 +57,8 @@ REQUIRED = [
     # The game's window has screen-reader support too, which loads accesskit.dll from beside the program (0.3.0 shipped
     # without it, so the game closed as it opened; the start check below runs it headless, which doesn't load it).
     "samples/checkers/accesskit.dll",
+    # The game's screens, made in Gum, which the game reads from beside it.
+    "samples/checkers/ui/CheckersUi.gumj",
     "samples/first-task/data/settings.json",
     "samples/first-task/schemas/settings.schema.json",
     "samples/first-task/first_task.md",

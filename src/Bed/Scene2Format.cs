@@ -62,6 +62,7 @@ internal static class Scene2Write
         var o=item.Object;var result=new JsonObject{{"id",o.Id},{"position",Vector(o.Position.X,o.Position.Y,o.Position.Z)},
             {"rotation",Vector(o.Rotation.X,o.Rotation.Y,o.Rotation.Z,o.Rotation.W)},{"scale",Vector(o.Scale.X,o.Scale.Y,o.Scale.Z)}};
         if(o.Parent is not null)result.Add("parent",o.Parent);
+        if(placement&&o.Properties.TryGetValue("name",out var label))result.Add("label",label.GetString());
         if(!placement)
         {
             if(o.Asset is not null)result.Add("asset",o.Asset);result.Add("properties",Properties(o.Properties));result.Add("references",Map(o.References));

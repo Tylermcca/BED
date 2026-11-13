@@ -77,13 +77,27 @@ public sealed partial class ReadabilityUx02Tests
                 if(surface=="3d"){var editor=launcher.Workspace!.Scene2Window!.Editor;Assert.Contains(editor.Panels,p=>p.Id==stage[6..]);editor.SetOpen(stage[6..],true);}
                 else {var editor=launcher.Workspace!.Window!.Editor;Assert.Contains(editor.Panels,p=>p.Id==stage[6..]);editor.SetOpen(stage[6..],true);}
             }
-            host.Frames(launcher.Draw,5);host.Drawing=true;host.Frame(launcher.Draw);
+            host.Frames(launcher.Draw,5);
             var folder=Path.Combine(Repo(),".validation/UX02");Directory.CreateDirectory(folder);var name=$"{mode.Replace('/','_')}-{width}-{scale:0.0}-{theme}";
-            host.Save(Path.Combine(folder,name+".png"));var snapshot=Ui.Snapshot();File.WriteAllText(Path.Combine(folder,name+".json"),JsonSerializer.Serialize(snapshot));
+            var snapshot=Capture(host,launcher.Draw,folder,name);
             AssertReadable(snapshot,scale,Path.Combine(folder,name+".txt"));
         }
         finally{EditorTheme.Preference=previous;Directory.Delete(root,true);}
     }
+    // The assertions read ImGui's complete glyph/clip evidence, independent of CPU rasterisation.
+    // Set BED_READABILITY_SHOTS=1 to also keep the diagnostic PNG and JSON for each matrix case.
+    internal static UiSnapshot Capture(HeadlessHost host,Action draw,string folder,string name)
+    {
+        var capture=Environment.GetEnvironmentVariable("BED_READABILITY_SHOTS")=="1";
+        host.Drawing=capture;host.Frame(draw);var snapshot=Ui.Snapshot();
+        if(capture)
+        {
+            host.Save(Path.Combine(folder,name+".png"));
+            File.WriteAllText(Path.Combine(folder,name+".json"),JsonSerializer.Serialize(snapshot));
+        }
+        return snapshot;
+    }
+
     internal static unsafe void AssertReadable(UiSnapshot snapshot,float scale,string evidence)
     {
             static bool Intersects(UiBounds a,UiBounds b)=>a.Width>0&&a.Height>0&&b.Width>0&&b.Height>0&&a.X<b.X+b.Width&&b.X<a.X+a.Width&&a.Y<b.Y+b.Height&&b.Y<a.Y+a.Height;

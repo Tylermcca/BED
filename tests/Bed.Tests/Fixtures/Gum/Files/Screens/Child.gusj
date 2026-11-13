@@ -1,0 +1,10 @@
+{
+  "Name": "Child",
+  "BaseType": "Pages",
+  "States": [ { "Name": "Default", "Variables": [], "VariableLists": [] } ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

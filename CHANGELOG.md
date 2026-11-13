@@ -4,6 +4,76 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-13
+
+Game screens made in [Gum](https://docs.flatredball.com/gum), the free menu and screen designer, are now part of the main download. BED shows your Gum screens as your game will draw them, opens them in Gum with one button, and updates by itself when you save in Gum. Coming from 0.3.1? The two 0.3.9 previews below list everything Gum brings. **Please try to break it**, and tell us what goes wrong with **Help > Report a problem**.
+
+### Added
+
+- **Pick a part of a Gum screen:** click it in the picture, or choose it from the list (for the keyboard and screen readers). BED outlines it and shows its name and size, and Edit in Gum tells you which part to pick there.
+- **Names for copies** in **Options**: choose how a duplicated or pasted item is named: `Cube (1)`, `Cube.001`, `Cube_1`, `Cube2` or `Cube copy`, with a live example. Copies take the next free number and never stack: copying `Cube (1)` gives `Cube (2)`. AI assistants and the command line use the same rule.
+- Prefab copies can carry their own name.
+
+### Changed
+
+- **Preferences is now called Options**, as in other Windows programs.
+- BED uses Gum preview 7 (2026.11.13.2-preview.7).
+- BED's own test run is faster.
+
+### Fixed
+
+- The Gum screens check said "warnings" when every screen was fine but BED couldn't tell how your game draws text. It now says the check passed, with that note under it.
+- Everything fixed in the 0.3.9 previews below, including **Edit in Gum** opening the screen you were looking at.
+
+### Known issues
+
+- BED doesn't make a new Gum project for you yet. Make it in Gum, inside your project's folder.
+- Gum can't yet be told to select a part inside a screen, so Edit in Gum opens the screen and names the part for you to pick.
+- Builds and the download are Windows only.
+- Physics uses a Windows-only native library, and a game must opt in to it.
+- The OpenGL fallback view shows sprite outlines, not images.
+- A full walkthrough with a real screen reader has not been done yet.
+
+## [0.3.9-preview.2] - 2026-11-13
+
+An update to the Gum preview. BED now uses Gum's own fixes for the problems we reported, and Edit in Gum opens the screen you were looking at.
+
+### Changed
+
+- BED uses Gum preview 6 (2026.11.12.1-preview.6), which carries Gum's fixes for the problems BED reported. Several of BED's own workarounds are gone.
+- Games that use BED's window no longer carry BED's sound preview, model import or picture import. Only BED itself has them, so a game's download is smaller and its licence list shorter.
+
+### Fixed
+
+- **Edit in Gum** opened the whole project even when the Gum screens panel showed one screen. It now opens Gum on that screen. If Gum already has your screens open, BED brings it to the front and tells you which screen to pick there.
+- A Gum screen whose parts contain each other now shows the rest of the screen and says which parts form the loop. It keeps following saves while you fix the loop in Gum.
+- Live Gum pictures now use Gum preview 6's own reload setup, so saving in Gum updates the picture without BED arranging a separate watcher.
+- The Gum screens check now takes supported picture file types from Gum, keeping the check in step with the Gum version included in BED.
+
+## [0.3.9-preview] - 2026-11-12
+
+A preview to try. Game screens made in [Gum](https://docs.flatredball.com/gum), the free menu and screen designer: BED checks them, shows them, and opens them in Gum for you. The checkers sample now has its title and match screens made in Gum. See the [Gum screens guide](docs/guide/gum.md).
+
+### Added
+
+- **Gum screens panel** (**File > Show Gum screens**): each screen drawn by Gum itself, as your game will show it. When you save a screen in Gum, the picture updates by itself.
+- **Edit in Gum**: opens your screens in Gum. BED finds Gum on its own, brings it to the front if it's already open, and asks you to pick it only when it can't find it.
+- **Gum screens check** in the Checks panel: Gum's own checker looks at every screen and lists anything missing, such as a picture or a font, with what to do about it. It knows which fonts your game needs from how the game draws its text, and an AI assistant can run the same check.
+- **Options > Locations**: where Gum is, the folder new projects go in, and a folder of extra adapters, each with **Browse...** and **Back to normal**.
+- The checkers sample's title and match screens are made in Gum. They grow with the text size and fit the window, and a running game updates when you save them in Gum.
+
+### Fixed
+
+- The Checks panel called findings that are only for your information **Warning**. They are now labelled **Note**.
+
+### Known issues
+
+- BED doesn't make a new Gum project for you yet. Make it in Gum, inside your project's folder.
+- Builds and the download are Windows only.
+- Physics uses a Windows-only native library, and a game must opt in to it.
+- The OpenGL fallback view shows sprite outlines, not images.
+- A full walkthrough with a real screen reader has not been done yet.
+
 ## [0.3.1] - 2026-11-12
 
 Two fixes for the checkers sample in the download.
@@ -145,10 +215,10 @@ Release candidate for 0.3: everything since 0.2.1-rc.1.
 - **Go to the problem.** A check finding, or a message the game prints in a set format, can take you to the saved field it names. **Back** returns you to where you were.
 - **Recent projects.** Pin projects to the top of the list. A project that has moved stays listed until you remove it.
 - **Engine-style layout.** The Outliner sits on the left, the view in the centre, the Inspector on the right and Files and Assets at the bottom. Play, Pause, Step and Stop sit in the middle of the toolbar.
-- **Camera controls like other game editors.** Alt and the left button orbit, the middle button pans, Alt and the right button dolly, and holding the right button with W, A, S, D, Q and E flies. F frames the selection. An optional W/E/R keymap for move, rotate and scale is in Preferences.
+- **Camera controls like other game editors.** Alt and the left button orbit, the middle button pans, Alt and the right button dolly, and holding the right button with W, A, S, D, Q and E flies. F frames the selection. An optional W/E/R keymap for move, rotate and scale is in Options.
 - **A guided tour.** The first time you open a project, BED offers a short tour of a working example. You can skip it and reopen it from **Help > Take the tour**.
 - **Report a problem.** **Help > Report a problem** shows exactly what a report contains, with personal paths removed. Copy it, save it, or open the public new-issue page in your browser to submit it yourself. Nothing is sent automatically. `bed-cli report` prints the same report.
-- **Readability.** Choose 100%, 150% or 200% text and a high-contrast theme in Preferences; both are remembered. With the Windows theme setting, BED follows Windows high contrast.
+- **Readability.** Choose 100%, 150% or 200% text and a high-contrast theme in Options; both are remembered. With the Windows theme setting, BED follows Windows high contrast.
 - **Assistive tools.** Screen readers and other assistive tools can press buttons, tick boxes, choose items and set or step numbers, using the same checks as the keyboard and mouse.
 - Search the Outliner by property names and values, edit a transform value across several selected objects at once, and have tables remember column widths, order and sort for each file.
 

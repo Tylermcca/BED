@@ -54,7 +54,7 @@ Image defaults seed a new sprite once. Without explicit image defaults, density 
 
 ## Navigate and transform
 
-Focus the **Flat XY** canvas before using these keys. There are no depth moves or orbit controls here. With the optional **W/E/R** viewport keymap in Preferences, **E** rotates and **R** scales instead.
+Focus the **Flat XY** canvas before using these keys. There are no depth moves or orbit controls here. With the optional **W/E/R** viewport keymap in Options, **E** rotates and **R** scales instead.
 
 | Control | Action |
 | --- | --- |

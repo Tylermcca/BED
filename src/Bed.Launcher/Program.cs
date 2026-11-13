@@ -1,5 +1,6 @@
 using Bed.Data;
 using Bed.Editor.App;
+using Bed.Editor.Audio;
 using Bed.Editor.ImGui;
 using Bed.Editor.Text;
 
@@ -36,7 +37,7 @@ public static class Program
     {
         launcher.ProjectPlayHost ??= new ProjectPlayBridge();
         launcher.GameExportHost ??=new ExportBuildHost(8192,256,TimeSpan.FromMinutes(5));
-        launcher.AssetCatalogProvisioner ??= new AssetCatalogProvisioner();
+        launcher.AssetCatalogProvisioner ??= new AudioAssetCatalogProvisioner();
         launcher.SetUpWorkspace = workspace =>
         {
             workspace.AddTextPanel();
@@ -172,7 +173,9 @@ public static class Program
         if(shot is null)ProblemReportLog.Record(ReportEvent.Started);
         var launcher = new ProjectLauncher(new RecentProjects(Path.Combine(settings, "recent.json")),
             ProjectPaths.In(SampleFolder()));
-        var (loaded, problems) = Adapters.Load(Adapters.In(Path.Combine(AppContext.BaseDirectory, "adapters")).Concat(adapterDlls));
+        // BED's own adapters, then the person's extra adapters folder (Preferences > Locations), then any named here.
+        var extra = ProjectLauncher.AdaptersFolderIn(launcher.SettingsFile) is { } extras ? Adapters.In(extras) : [];
+        var (loaded, problems) = Adapters.Load(Adapters.In(Path.Combine(AppContext.BaseDirectory, "adapters")).Concat(extra).Concat(adapterDlls));
         SetUp(launcher);
         launcher.Loaded = loaded;
         launcher.AdapterProblems = problems;

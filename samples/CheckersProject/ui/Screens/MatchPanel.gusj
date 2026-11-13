@@ -1,0 +1,394 @@
+{
+  "Name": "MatchPanel",
+  "BaseType": "",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Bar.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 14
+        },
+        {
+          "Name": "Bar.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "Bar.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Bar.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "CountText.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 170
+        },
+        {
+          "Name": "CountText.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "CountText.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 205
+        },
+        {
+          "Name": "CountText.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "CountText.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "CountText.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "CountText.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Info"
+        },
+        {
+          "Name": "CountText.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 224
+        },
+        {
+          "Name": "CountText.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Dark 12   Light 12"
+        },
+        {
+          "Name": "CountText.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "CountText.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "CountText.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "CountText.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 4
+        },
+        {
+          "Name": "Info.ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Info.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Info.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "Info.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Row"
+        },
+        {
+          "Name": "Info.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Info.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "Info.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "Info.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 12
+        },
+        {
+          "Name": "NewGameButton.Label.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "New game"
+        },
+        {
+          "Name": "NewGameButton.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Row"
+        },
+        {
+          "Name": "NewGameButton.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "NewGameButton.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "Row.ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Row.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Row.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "Row.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Bar"
+        },
+        {
+          "Name": "Row.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Row.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Row.WrapsChildren",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Strip.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "Strip.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 30
+        },
+        {
+          "Name": "Strip.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 46
+        },
+        {
+          "Name": "Strip.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Strip.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Strip.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Strip.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Bar"
+        },
+        {
+          "Name": "Strip.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Strip.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Strip.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TurnText.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 215
+        },
+        {
+          "Name": "TurnText.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 28
+        },
+        {
+          "Name": "TurnText.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 235
+        },
+        {
+          "Name": "TurnText.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TurnText.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "TurnText.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TurnText.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Info"
+        },
+        {
+          "Name": "TurnText.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 245
+        },
+        {
+          "Name": "TurnText.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Dark to move"
+        },
+        {
+          "Name": "TurnText.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TurnText.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TurnText.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Bar",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "Strip",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Row",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "Info",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "TurnText",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "CountText",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "NewGameButton",
+      "BaseType": "Button"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

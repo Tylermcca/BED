@@ -11,7 +11,7 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 
-TEXT_SUFFIXES = frozenset(".cs .py .json .proposal .md .txt .props .targets .csproj .sln .slnx .yml .yaml .xml .html .css .js .ts .toml .cfg .ini .sh .ps1 .bat .cmd .svg .csv .editorconfig .gitignore .gitattributes .config .resx .nuspec".split())
+TEXT_SUFFIXES = frozenset(".cs .py .json .proposal .md .txt .props .targets .csproj .sln .slnx .yml .yaml .xml .html .css .js .ts .toml .cfg .ini .sh .ps1 .bat .cmd .svg .csv .editorconfig .gitignore .gitattributes .config .resx .nuspec .gumx .gusx .gucx .gutx .behx .gumj .gusj .gucj .gutj .behj .fnt .achx .ganx .ganj".split())
 TEXT_NAMES = frozenset({"README", "LICENSE", "LICENCE", "NOTICE", "COPYING", "Dockerfile", ".gitignore", ".gitattributes", ".editorconfig"})
 BINARY_SUFFIXES = frozenset(".png .jpg .jpeg .gif .ico .webp .bmp .ttf .otf .woff .woff2 .dll .exe .pdb .zip .nupkg .pdf .blend .glb .gltf .wav .mp3 .ogg .mp4 .xlsx".split())
 DRIVE = re.compile(r"(?<![A-Za-z0-9_])[A-Za-z]:[\\/]")

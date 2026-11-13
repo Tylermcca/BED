@@ -1,0 +1,20 @@
+{
+  "Name": "Looped",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "First",
+      "BaseType": "LoopA"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

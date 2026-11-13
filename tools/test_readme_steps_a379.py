@@ -145,10 +145,10 @@ class ReadmeStepsTests(unittest.TestCase):
         # The build must supply the adapter; the reader need not learn its assembly name.
         self.assertIn("SceneStarterAdapter/SceneStarterAdapter.csproj", launcher)
         self.assertIn("samples/SceneStarterProject", launcher)
-        self.assertIn("The current download is **0.3.1**", text)
-        self.assertIn("The download includes a level sample", text)
-        self.assertIn("samples\scene-starter", text)
-        self.assertIn("#build-from-source", text)
+        version = re.search(r"<Version>([^<]+)</Version>", (root/"Directory.Build.props").read_text(encoding="utf-8-sig"))[1]
+        self.assertIn(f"Download BED {version}", text)  # the README names the version being released
+        self.assertIn("A 3D level to build on** (`scene-starter`)", text)
+        self.assertIn("## Build from source", text)
         self.assertNotIn("next preview download", text)
         self.assertNotIn("Export build** is the next integration step", text)
 

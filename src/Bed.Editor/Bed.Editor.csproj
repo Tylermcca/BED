@@ -7,6 +7,16 @@
     <ProjectReference Include="..\Bed\Bed.csproj" />
     <ProjectReference Include="..\Bed.Data\Bed.Data.csproj" />
   </ItemGroup>
-  <ItemGroup><InternalsVisibleTo Include="Bed.Editor.ImGui" /></ItemGroup>
+  <ItemGroup>
+    <!-- Gum's own loader and walker read Gum projects (GumCatalog, GumDependencyCheck). -->
+    <PackageReference Include="FlatRedBall.GumCommon" />
+    <!-- Gum's own checker and loader (GumDependencyCheck), with its error codes and help pages. -->
+    <PackageReference Include="Gum.ProjectServices" />
+    <!-- Gum's own expression reader for linked values, which gumcli check turns on for GUM0002 (GumDependencyCheck). -->
+    <PackageReference Include="Gum.Expressions" />
+    <!-- Gum's own drawing on a CPU Skia surface (GumScreenPicture, the live Gum screen picture). -->
+    <PackageReference Include="Gum.SkiaSharp.Standalone" />
+  </ItemGroup>
+  <ItemGroup><InternalsVisibleTo Include="Bed.Editor.ImGui" /><InternalsVisibleTo Include="Bed.Tests" /></ItemGroup>
 </Project>
 

@@ -186,6 +186,12 @@
         },
         "parent": {
           "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "description": "Optional display name; no identity meaning. Omitted when unset."
         }
       },
       "required": [

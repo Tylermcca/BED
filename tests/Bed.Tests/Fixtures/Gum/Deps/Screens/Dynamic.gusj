@@ -1,0 +1,31 @@
+{
+  "Name": "Dynamic",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Label.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Verdana"
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Label",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "Slot",
+      "BaseType": ""
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

@@ -27,7 +27,7 @@ If your assistive tool cannot reach a control or read its result, use the [scree
 
 ## Text size: 100% to 200%
 
-On the start screen, open **Preferences**, then **UI scale** and choose **100%**, **150%** or **200%**. In a project, use **Edit > Preferences > UI scale** for the same choices. **Larger text**, **Smaller text** and **Normal text size** are also available there; the start screen has **Larger** and **Smaller** buttons.
+On the start screen, open **Options**, then **UI scale** and choose **100%**, **150%** or **200%**. In a project, use **Edit > Options > UI scale** for the same choices. **Larger text**, **Smaller text** and **Normal text size** are also available there; the start screen has **Larger** and **Smaller** buttons.
 
 BED's default text is larger than in earlier versions, and it follows the text size you set in Windows' accessibility settings and your display scaling. The UI scale you choose here applies on top. BED reads the Windows setting; it never changes it.
 
@@ -37,7 +37,7 @@ Scale is saved in your per-user settings and restored when BED reopens. It chang
 
 ## High contrast
 
-On the start screen choose **Preferences > Theme > High contrast**. In a project choose **Edit > Preferences > Theme > High contrast**. This uses dark opaque surfaces, white text and yellow focus and selection accents. The scene uses a dark background, a contrasting grid and yellow selected-object bounds. The choice is saved for the next launch and does not change Windows settings or project files. Choose Light, Dark or the Windows-setting choice to switch away.
+On the start screen choose **Options > Theme > High contrast**. In a project choose **Edit > Options > Theme > High contrast**. This uses dark opaque surfaces, white text and yellow focus and selection accents. The scene uses a dark background, a contrasting grid and yellow selected-object bounds. The choice is saved for the next launch and does not change Windows settings or project files. Choose Light, Dark or the Windows-setting choice to switch away.
 
 High contrast changes editor colours; it does not recolour imported textures or guarantee contrast inside a game's own Play window. Text contrast and built-in panel layouts have automated coverage; this is not a claim of complete accessibility conformance.
 

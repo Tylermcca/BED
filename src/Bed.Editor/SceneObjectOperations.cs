@@ -20,7 +20,14 @@ public static class SceneObjectOperations
         var copies=duplicate.Ids.Select(id=>map[id]).ToArray();
         var move=SceneTranslation.World(preview.Document!,copies,Vector3.UnitX);
         if(!move.Valid){why=string.Join(" ",move.Issues.Select(i=>i.Message));return false;}
-        if(!editor.ExecuteAt(revision,[resolved,..move.Commands],[..duplicate.Ids]))
+        var names=editor.Session.Current.Objects.Select(CopyNames.NameOf).ToList();
+        var labels=new List<ICommand<Scene>>();
+        foreach(var id in duplicate.Ids)
+        {
+            var label=CopyNames.Next(CopyNames.NameOf(editor.Session.Current.Find(id)!),names);names.Add(label);
+            labels.Add(new SetSceneProperty(map[id],"name",System.Text.Json.JsonSerializer.SerializeToElement(label)));
+        }
+        if(!editor.ExecuteAt(revision,[resolved,..labels,..move.Commands],[..duplicate.Ids]))
         {why=string.Join(" ",(editor.Refused.Count>0?editor.Refused:editor.Session.LastIssues).Select(i=>i.Message));return false;}
         editor.Select(copies);why=$"Duplicated {copies.Length} object(s); copies moved 1 metre along world X.";return true;
     }

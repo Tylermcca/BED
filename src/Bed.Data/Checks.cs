@@ -32,7 +32,9 @@ public sealed record CheckPlace(string File, string? Item = null, string? At = n
 /// <param name="Problem">The issue to report, including its severity and message.</param>
 /// <param name="Place">The known file, item or field, or null when no location is known.</param>
 /// <param name="Next">A plain next action for the person reading the finding.</param>
-public sealed record CheckFinding(Issue Problem, CheckPlace? Place, string Next);
+/// <param name="Code">The code another tool gives this kind of problem (Gum's GUM0004, say), or null when there is none.</param>
+/// <param name="Help">A web page that explains <paramref name="Code"/>, or null when there is none.</param>
+public sealed record CheckFinding(Issue Problem, CheckPlace? Place, string Next, string? Code = null, string? Help = null);
 
 /// <summary>What a check returns. <paramref name="Complete"/> is false when it couldn't look at everything; then no
 /// result is "clean", whatever it found.</summary>
@@ -453,7 +455,7 @@ public sealed class CheckRun
 
     /// <summary>Whether this run says the project, as it is now, has no problems: it completed, looked at everything,
     /// found no errors or warnings, and nothing has changed since.</summary>
-    public bool Clean(DataProject project) => State == CheckState.Completed && Report is { Complete: true, Findings.Count: 0 } && !IsStale(project);
+    public bool Clean(DataProject project) => State == CheckState.Completed && Report is { Complete: true } && Report.Findings.All(f => f.Problem.Severity == Severity.Info) && !IsStale(project);
 
     /// <summary>One word for people: running, clean, warnings, errors, incomplete, failed, cancelled or timed out; and
     /// "(stale)" when the project has changed since.</summary>
@@ -471,7 +473,7 @@ public sealed class CheckRun
             CheckState.TimedOut => "timed out",
             _ when !Report!.Complete => "incomplete",
             _ when Report.Findings.Any(f => f.Problem.Severity == Severity.Error) => "errors",
-            _ when Report.Findings.Count > 0 => "warnings",
+            _ when Report.Findings.Any(f => f.Problem.Severity != Severity.Info) => "warnings",
             _ => "clean",
         };
         return IsOver && (maxAge > TimeSpan.Zero ? IsStale(project, maxAge) : IsStale(project)) ? word + " (stale)" : word;

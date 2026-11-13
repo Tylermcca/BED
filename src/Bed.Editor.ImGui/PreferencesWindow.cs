@@ -15,10 +15,10 @@ internal sealed class PreferencesWindow
         if (!open) { HasKeyboardFocus = false; return; }
         var vp=ImGui.GetMainViewport();
         ImGui.SetNextWindowPos(vp.Pos+vp.Size*.5f,ImGuiCond.FirstUseEver,new float2(.5f,.5f));
-        ImGui.SetNextWindowSize(new float2(MathF.Min(vp.Size.X-32,ImGui.GetFontSize()*30),MathF.Min(vp.Size.Y-64,ImGui.GetFontSize()*15)),ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSize(new float2(MathF.Min(vp.Size.X-32,ImGui.GetFontSize()*30),MathF.Min(vp.Size.Y-64,ImGui.GetFontSize()*24)),ImGuiCond.FirstUseEver);
         if (focus) ImGui.SetNextWindowFocus();
         HasKeyboardFocus = false;
-        if (Ui.Begin("Preferences###bed.preferences"u8, ref open, ImGuiWindowFlags.NoDocking))
+        if (Ui.Begin("Options###bed.preferences"u8, ref open, ImGuiWindowFlags.NoDocking))
         {
             if (focus) { ImGui.SetKeyboardFocusHere(); focus = false; }
             if (Ui.BeginCombo("Theme"u8, EditorTheme.Label(EditorTheme.Preference)))
@@ -41,13 +41,26 @@ internal sealed class PreferencesWindow
                 }
                 Ui.EndCombo();
             }
+            DrawCopyNames();
             ViewportControls.DrawChoice();
+            Locations.Draw();
             HasKeyboardFocus = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
-            if (Ui.Button("Close preferences"u8)) open = false;
+            if (Ui.Button("Close options"u8)) open = false;
             if (HasKeyboardFocus && !popupOpen && ImGui.IsKeyPressed(ImGuiKey.Escape, false)
                 && !ImGui.IsPopupOpen(""u8, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel)) open = false;
         }
         popupOpen = ImGui.IsPopupOpen(""u8, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel);
         Ui.End();
     }
+    internal static void DrawCopyNames()
+    {
+            if(Ui.BeginCombo("Names for copies"u8,CopyNames.Example(CopyNames.Style)))
+            {
+                foreach(var style in Enum.GetValues<CopyNameStyle>())
+                    if(Ui.Selectable(CopyNames.Example(style),CopyNames.Style==style))CopyNames.Style=style;
+                Ui.EndCombo();
+            }
+            Ui.TextWrapped($"Example: Cube becomes {CopyNames.Next("Cube",["Cube"])}");
+    }
+
 }

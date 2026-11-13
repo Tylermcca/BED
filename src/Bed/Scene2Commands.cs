@@ -77,6 +77,12 @@ internal static class Scene2Commands
         }
         var target=origin.Kind==Scene2OriginKind.Placement?Instance(json,origin.InstanceKey!)["placement"]!.AsObject()
             :json["objects"]!.AsArray().OfType<JsonObject>().Single(o=>Text(o,"id")==id);
+        if(origin.Kind==Scene2OriginKind.Placement&&field=="/properties/name")
+        {
+            if(value is null)target.Remove("label");
+            else target["label"]=new Scene2Read(value.Value,origin.SourcePointer+"/label").Text(1,65536);
+            return;
+        }
         if(origin.Kind==Scene2OriginKind.Placement&&field is not("/position" or "/rotation" or "/scale"))Refuse("An instance placement owns only its transform; Break Link to edit content.");
         var segments=field.Split('/').Skip(1).Select(Unescape).ToArray();JsonObject parent=target;
         foreach(var segment in segments[..^1])

@@ -93,3 +93,7 @@ In **Physics**, **Bounds** shows collision bounds in the 3D or XY view. This per
 To see a finished example, open the download's **samples/prefab-physics** project ([its README](../../samples/PrefabPhysicsProject/README.md)). It has a static floor, a kinematic paddle and three dynamic crates, and its Play prints what the simulation did as text; it has no game window yet.
 
 The separate [saved physics sample](../../samples/PhysicsStarter/README.md) runs these bodies in a game, through Play and in an exported build. It opts in to physics in its project settings and uses a Windows-only native physics library. A game that hasn't opted in refuses a level with physics rather than ignoring the bodies. Reading a level never starts a simulation, and the simulation never changes the saved level.
+
+## Names for copies
+
+Choose **Names for copies** in **Options** to set the style for duplicated or pasted pieces. Both the wrapper and its inherited parts get new display names; IDs, bindings and references keep their existing rules. A wrapper stores its optional display name as `placement.label` in a scene-v2 file. Old files need no label and keep it absent when saved.

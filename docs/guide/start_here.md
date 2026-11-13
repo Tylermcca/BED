@@ -83,7 +83,7 @@ Your saved level never changes when the game runs. Both samples can also be copi
 ## If it doesn't look like this
 
 - **Some panels are missing:** choose **View** and turn the panel back on, or choose **View > Reset layout**.
-- **The text is too small or too large:** BED follows Windows' text size. You can also choose **View > Larger text** or **View > Smaller text**, or **Edit > Preferences > UI scale**.
+- **The text is too small or too large:** BED follows Windows' text size. You can also choose **View > Larger text** or **View > Smaller text**, or **Edit > Options > UI scale**.
 - **A message says something can't be saved:** read the message next to the field. It says what to change. Your draft is kept until you fix it or undo it.
 - **Something else went wrong:** choose **Help > Report a problem**. BED shows you exactly what the report contains before anything leaves your PC.
 

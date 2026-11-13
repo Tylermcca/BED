@@ -22,7 +22,8 @@ public sealed partial class DataWorkspace
         ownedProjectAssets = assets;
         sceneAssetPicker!.AudioPreview = assets.AudioPreview;
     }
-    internal void ReleaseProjectAssets() { ownedProjectAssets?.Dispose(); ownedProjectAssets = null; }
+    // Called when the project closes or another replaces it: its assets, and the Gum screen picture (Gum, its watcher).
+    internal void ReleaseProjectAssets() { ownedProjectAssets?.Dispose(); ownedProjectAssets = null; ReleaseGum(); }
     private AssetCatalog? sceneAssets;
     /// <summary>The host-admitted scene catalog, or null. Reading it grants no source or distribution permission.</summary>
     public AssetCatalog? SceneAssets => sceneAssets;

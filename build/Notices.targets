@@ -26,6 +26,28 @@
     </ItemGroup>
   </Target>
 
+  <!-- The own third-party notices of Gum's native drawing packages (libSkiaSharp, libHarfBuzzSharp) and of KernSmith (with
+       FreeType): Skia, HarfBuzz, FreeType, libpng, zlib, expat and others. Nothing copies them by default, so they go into
+       licenses/ beside the program, found the same way as BRUTAL's above. INVENTED: the target. -->
+  <Target Name="GumNativeLibrariesAndNotices" AfterTargets="ResolvePackageAssets">
+    <ItemGroup>
+      <_SkiaNative Include="@(NativeCopyLocalItems);@(RuntimeTargetsCopyLocalItems)" Condition="$([System.String]::Copy('%(NuGetPackageId)').StartsWith('SkiaSharp.NativeAssets.', System.StringComparison.OrdinalIgnoreCase)) Or $([System.String]::Copy('%(NuGetPackageId)').StartsWith('HarfBuzzSharp.NativeAssets.', System.StringComparison.OrdinalIgnoreCase))" />
+      <_GumNoticeAsset Include="@(_SkiaNative)" />
+      <_GumNoticeAsset Include="@(RuntimeCopyLocalItems)" Condition="'%(NuGetPackageId)' == 'KernSmith'" />
+      <_GumNoticeAsset Include="@(RuntimeCopyLocalItems)" Condition="'%(NuGetPackageId)' == 'Gum.ProjectServices'" />
+      <_GumPackageDir Condition="'%(_GumNoticeAsset.FullPath)' != ''" Include="$([System.String]::Copy('%(_GumNoticeAsset.FullPath)').Substring(0, $([MSBuild]::Add($([System.String]::Copy('%(_GumNoticeAsset.FullPath)').ToLowerInvariant().IndexOf($([System.String]::Copy('%(_GumNoticeAsset.NuGetPackageId)').ToLowerInvariant()))), $([System.String]::Copy('%(_GumNoticeAsset.NuGetPackageId)/%(_GumNoticeAsset.NuGetPackageVersion)').Length)))))" Prefix="$([System.String]::Copy('%(_GumNoticeAsset.NuGetPackageId)').Split('.')[0])" />
+      <_GumNotice Include="%(_GumPackageDir.Identity)/THIRD-PARTY-NOTICES.*;%(_GumPackageDir.Identity)/LICENSE.txt;%(_GumPackageDir.Identity)/BMFont-LICENSE.txt" Prefix="%(_GumPackageDir.Prefix)" />
+      <_GumNoticeFound Include="@(_GumNotice)" Condition="Exists('%(_GumNotice.FullPath)')" />
+      <_GumNoticeName Include="@(_GumNoticeFound->'%(Prefix)-%(Filename)%(Extension)')" Source="%(_GumNoticeFound.FullPath)" />
+    </ItemGroup>
+    <RemoveDuplicates Inputs="@(_GumNoticeName)">
+      <Output TaskParameter="Filtered" ItemName="_GumNoticeOnce" />
+    </RemoveDuplicates>
+    <ItemGroup>
+      <None Include="@(_GumNoticeOnce->'%(Source)')" Link="licenses/%(Identity)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+
   <!-- Keep the LGPL audio library replaceable beside the program, including single-file builds. -->
   <Target Name="KeepOpenAlExternal" AfterTargets="ComputeResolvedFilesToPublishList">
     <ItemGroup>

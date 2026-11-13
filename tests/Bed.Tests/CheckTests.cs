@@ -5,7 +5,7 @@ using Xunit;
 namespace Bed.Tests;
 
 /// <summary>Piece J, from A060's design: registered checks on a frozen snapshot, off the frame, with progress, cancel and
-/// a time limit; a result is clean only when complete, without findings, and still current.</summary>
+/// a time limit; a result is clean only when complete, without errors or warnings, and still current.</summary>
 public sealed class CheckTests : IDisposable
 {
     private readonly string root = Directory.CreateTempSubdirectory("checks-").FullName;
@@ -134,6 +134,22 @@ public sealed class CheckTests : IDisposable
         var partial = await Finished(checks.Start("partial", p, out _));
         Assert.Equal("incomplete", partial.Verdict(p));
         Assert.False(partial.Clean(p));
+    }
+
+    [Theory]
+    [InlineData(true)] [InlineData(false)]
+    public async Task Notes_stay_visible_and_only_a_complete_current_result_is_clean(bool complete)
+    {
+        var p=Project();
+        var run=await Finished(new Checks().Add(new Fake("note",(_,_,_)=>Task.FromResult(new CheckReport(complete,
+            [new CheckFinding(new Issue(Severity.Info,"A useful note."),null,"Read this note.")],"Checked.")))).Start("note",p,out _));
+        Assert.Equal(complete?"clean":"incomplete",run.Verdict(p));Assert.Equal(complete,run.Clean(p));
+        var note=Assert.Single(run.Report!.Findings);Assert.Equal(Severity.Info,note.Problem.Severity);Assert.Equal("A useful note.",note.Problem.Message);
+        if(complete)
+        {
+            File.AppendAllText(Path.Combine(Data,"wares.json")," ");
+            Assert.Equal("clean (stale)",run.Verdict(p));Assert.False(run.Clean(p));
+        }
     }
 
     [Fact]

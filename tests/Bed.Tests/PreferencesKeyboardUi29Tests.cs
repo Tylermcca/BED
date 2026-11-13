@@ -70,8 +70,8 @@ public sealed class PreferencesKeyboardUi29Tests
                             Key(role == UiRole.Menu ? ImGuiKey.RightArrow : ImGuiKey.Enter);
                         }
                     }
-                    Key(ImGuiKey.E, alt: true); Access("Preferences", UiRole.Menu);
-                    Access("Open preferences...", UiRole.MenuItem);
+                    Key(ImGuiKey.E, alt: true); Access("Options", UiRole.Menu);
+                    Access("Open options...", UiRole.MenuItem);
                 }
                 else Key(ImGuiKey.Comma, ctrl: true);
                 host.Frames(launcher.Draw, 3);

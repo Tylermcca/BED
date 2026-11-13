@@ -117,9 +117,10 @@ internal sealed class Scene2Read(JsonElement value,string path)
     }
     internal Scene2Object Object(bool placement=false)
     {
-        if(placement)Only("id","position","rotation","scale","parent");
+        if(placement)Only("id","position","rotation","scale","parent","label");
         else Only("id","position","rotation","scale","parent","asset","properties","references","sprite","body");
         var content=Content(Get("id").Id(),Has("parent")?Get("parent").Id():null);
+        if(placement&&Has("label"))content=content with{Properties=content.Properties.SetItem("name",JsonSerializer.SerializeToElement(Get("label").Text(1,65536)))};
         return new(content,Has("sprite")?Get("sprite").Sprite():null){Body=Has("body")?ScenePhysicsRules.ReadBody(Get("body")):null};
     }
     internal PrefabDefinition Definition()

@@ -1,0 +1,304 @@
+{
+  "Name": "Title",
+  "BaseType": "",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Backdrop.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "Backdrop.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 30
+        },
+        {
+          "Name": "Backdrop.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 46
+        },
+        {
+          "Name": "Backdrop.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Backdrop.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Backdrop.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Backdrop.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Backdrop.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Backdrop.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Heading.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 215
+        },
+        {
+          "Name": "Heading.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 72
+        },
+        {
+          "Name": "Heading.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 235
+        },
+        {
+          "Name": "Heading.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 90
+        },
+        {
+          "Name": "Heading.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Heading.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 245
+        },
+        {
+          "Name": "Heading.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Checkers"
+        },
+        {
+          "Name": "Heading.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Heading.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -40
+        },
+        {
+          "Name": "Heading.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Heading.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Heading.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Heading.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -120
+        },
+        {
+          "Name": "Heading.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Heading.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "NewGameButton.Label.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "New game"
+        },
+        {
+          "Name": "NewGameButton.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "NewGameButton.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "NewGameButton.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 30
+        },
+        {
+          "Name": "NewGameButton.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "NewGameButton.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Subtitle.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 170
+        },
+        {
+          "Name": "Subtitle.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 26
+        },
+        {
+          "Name": "Subtitle.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 205
+        },
+        {
+          "Name": "Subtitle.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 40
+        },
+        {
+          "Name": "Subtitle.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Subtitle.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 224
+        },
+        {
+          "Name": "Subtitle.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "English draughts"
+        },
+        {
+          "Name": "Subtitle.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Subtitle.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -40
+        },
+        {
+          "Name": "Subtitle.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Subtitle.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Subtitle.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Subtitle.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -55
+        },
+        {
+          "Name": "Subtitle.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Subtitle.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Backdrop",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Heading",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "Subtitle",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "NewGameButton",
+      "BaseType": "Button"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

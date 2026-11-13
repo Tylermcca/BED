@@ -64,7 +64,7 @@ To move the camera:
 | Wheel, or **+** / **-** | Zoom. |
 | **F** | Frame the selection. |
 
-Camera moves never change the level. If you prefer **W**, **E** and **R** for Move, Rotate and Scale, choose **Edit > Preferences > Open preferences...** (Ctrl+,) and set **Viewport keymap** to **W/E/R**.
+Camera moves never change the level. If you prefer **W**, **E** and **R** for Move, Rotate and Scale, choose **Edit > Options > Open options...** (Ctrl+,) and set **Viewport keymap** to **W/E/R**.
 
 **Snap (B)** toggles move and rotation snapping; press **B** while the canvas has focus for the same action. **Grid step (m)** offers 0.1, 0.25, 0.5 and 1 metre. Snapped arrow moves use the selected grid step. Rotation snaps to 15 degrees while Snap is on. Hold **Shift** while dragging to reverse snapping for that drag, or hold **Alt** to reverse it for arrow-key nudges.
 

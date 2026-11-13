@@ -82,7 +82,7 @@ public sealed class McpServer(AgentSession session, string name = "BED", Func<Js
                     ("required", new JsonArray("op", "at")), ("additionalProperties", false))))),
                 ("checks", Obj(("type", "array"), ("items", Obj(("type", "string")))))), "file", "session", "revision", "operations", "checks"),
         Tool("checks", "The project's checks (such as every link), each with its last verdict.", new JsonObject()),
-        Tool("check", "Run one check on the project as it is now, unsaved edits included, and wait: its verdict, whether that's clean, and every finding with its place and next step. A long list can come in pages: limit returns that many and nextFirst; pass the returned run id with first to pin later pages. Without run, first reads the latest result using legacy behavior.",
+        Tool("check", "Run one check on the project as it is now, unsaved edits included, and wait: its verdict, whether that's clean, and every finding with its place and next step (and, where another tool has one, such as Gum, its code and help page). A long list can come in pages: limit returns that many and nextFirst; pass the returned run id with first to pin later pages. Without run, first reads the latest result using legacy behavior.",
             Obj(("id", Str("A check's id, from checks, such as links.all")),
                 ("run", Str("Opaque completed-run id from this session; reads exactly that run, refusing stale or evicted ids")),
                 ("first", Obj(("type", "integer"), ("description", "Read the last run's findings from this one, counting from 0, without running it again"))),

@@ -39,8 +39,15 @@ internal sealed class Scene2Clipboard
             string Remap(string id)=>map.GetValueOrDefault(id,id);
             var fragment=JsonNode.Parse(new Scene2Format().Write(source))!.AsObject();
             foreach(var field in new[]{"objects","bases","instances"})if(fragment[field] is null)fragment[field]=new JsonArray();
-            void Object(JsonNode item)
+            var names=Scene2ViewProjection.For(destination).Resolved.Objects.Select(o=>CopyNames.NameOf(destination,o.Object)).ToList();
+            var assignedNames=new Dictionary<string,string>(StringComparer.Ordinal);
+            foreach(var id in included){var label=CopyNames.Next(CopyNames.NameOf(source,sourceView.ById[id].Object),names);names.Add(label);assignedNames[id]=label;}
+            void Object(JsonNode item,bool placement=false)
             {
+                var original=sourceView.ById[item["id"]!.GetValue<string>()].Object;
+                var name=assignedNames[original.Id];
+                if(placement)item["label"]=name;
+                else{item["properties"]??=new JsonObject();item["properties"]!["name"]=name;}
                 item["id"]=Remap(item["id"]!.GetValue<string>());
                 if(item["parent"] is {} parent)item["parent"]=Remap(parent.GetValue<string>());
                 if(item["references"] is JsonObject refs)foreach(var pair in refs.ToArray())refs[pair.Key]=Remap(pair.Value!.GetValue<string>());
@@ -50,9 +57,16 @@ internal sealed class Scene2Clipboard
             foreach(var instance in instances.ToArray())
             {
                 if(!chosen.Contains(instance!["placement"]!["id"]!.GetValue<string>())){instances.Remove(instance);continue;}
-                used.Add(instance["base"]!.GetValue<string>());instance["key"]=Guid.NewGuid().ToString("N");Object(instance["placement"]!);
+                var originalInstance=source.Instances.Single(i=>i.Key==instance["key"]!.GetValue<string>());
+                used.Add(instance["base"]!.GetValue<string>());instance["key"]=Guid.NewGuid().ToString("N");Object(instance["placement"]!,true);
                 foreach(var field in new[]{"nodeIds","bindings"})foreach(var pair in instance[field]!.AsObject().ToArray())instance[field]![pair.Key]=Remap(pair.Value!.GetValue<string>());
                 foreach(var edit in instance["overrides"]!.AsArray())if(edit!["field"]!.GetValue<string>().StartsWith("/references/",StringComparison.Ordinal)&&edit["value"]?["object"] is {} target)edit["value"]!["object"]=Remap(target.GetValue<string>());
+                var overrides=instance["overrides"]!.AsArray();
+                foreach(var node in originalInstance.NodeIds)
+                {
+                    foreach(var edit in overrides.ToArray())if(edit!["node"]!.GetValue<string>()==node.Key&&edit["field"]!.GetValue<string>()=="/properties/name")overrides.Remove(edit);
+                    overrides.Add(new JsonObject{{"node",node.Key},{"field","/properties/name"},{"op","set"},{"value",assignedNames[node.Value]}});
+                }
             }
             var bases=fragment["bases"]!.AsArray();var baseMap=new Dictionary<string,string>(StringComparer.Ordinal);var emitted=new HashSet<string>(StringComparer.Ordinal);
             foreach(var accepted in bases.ToArray())

@@ -82,6 +82,27 @@ public sealed class DroppedFileA453Tests
         Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label=="Cancel");
     }
 
+    [Theory]
+    [InlineData(CopyNameStyle.Parentheses,"items (1).json")]
+    [InlineData(CopyNameStyle.Dot,"items.001.json")]
+    [InlineData(CopyNameStyle.Underscore,"items_1.json")]
+    [InlineData(CopyNameStyle.Number,"items2.json")]
+    [InlineData(CopyNameStyle.Copy,"items copy.json")]
+    public void An_existing_file_gets_a_named_copy_without_replacing_the_original(CopyNameStyle style,string copy)
+    {
+        var previous=CopyNames.Style;
+        try
+        {
+            CopyNames.Style=style;using var r=new Rig();File.WriteAllText(r.Destination,"{\"count\":1}");r.Workspace.Project.Refresh();
+            r.Workspace.Project.SchemaFor=_=>"items.schema.json";
+            r.Drop();r.Click("Copy it");
+            Assert.Equal("{\"count\":1}",File.ReadAllText(r.Destination));
+            Assert.Equal(File.ReadAllText(r.Source),File.ReadAllText(Path.Combine(r.Root,"data",copy)));
+            Assert.Equal(copy,r.Workspace.Active!.Name);
+        }
+        finally{CopyNames.Style=previous;}
+    }
+
     [Fact]
     public void Unsupported_drop_has_no_confirmation_or_disk_effect()
     {

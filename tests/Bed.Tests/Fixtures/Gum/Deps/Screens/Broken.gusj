@@ -1,0 +1,20 @@
+{
+  "Name": "Broken",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Frame",
+      "BaseType": "NineSlice"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

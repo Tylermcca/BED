@@ -17,7 +17,7 @@ public sealed class ActionControlsA11y05Tests
             using var host=new HeadlessHost(1200,850){Drawing=false};EditorWindow<DataDocument>.Configure(ImGui.GetIO());
             using var launcher=new ProjectLauncher(new RecentProjects(Path.Combine(root,"recent.json")),projectsFolder:root);
             host.Frames(launcher.Draw,3);
-            foreach(var label in new[]{"New project...","Open project...","Try the example","Getting started","Preferences","About BED"})
+            foreach(var label in new[]{"New project...","Open project...","Try the example","Getting started","Options","About BED"})
             {var n=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button&&n.Label==label);Assert.True(n.Actions.HasFlag(UiActions.Invoke));Assert.False(n.Bounds.IsEmpty);}
             var open=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button&&n.Label=="Open project...");
             var ticket=Ui.RequestAction(open.Id,UiActions.Invoke);host.Frames(launcher.Draw,3);Assert.Equal(UiActionOutcome.Applied,ticket.Outcome);

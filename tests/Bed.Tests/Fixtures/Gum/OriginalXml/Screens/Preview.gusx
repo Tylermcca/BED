@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Preview</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="float" Name="Panel.X" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">260</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">120</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">20</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">90</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.Alpha" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="Glass.X" SetsValue="true">
+      <Value xsi:type="xsd:float">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Glass.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Glass.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">100</Value>
+    </Variable>
+    <Variable Type="float" Name="Glass.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">60</Value>
+    </Variable>
+    <Variable Type="int" Name="Glass.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">200</Value>
+    </Variable>
+    <Variable Type="int" Name="Glass.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">120</Value>
+    </Variable>
+    <Variable Type="int" Name="Glass.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">50</Value>
+    </Variable>
+    <Variable Type="int" Name="Glass.Alpha" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="float" Name="Alpha.X" SetsValue="true">
+      <Value xsi:type="xsd:float">285</Value>
+    </Variable>
+    <Variable Type="float" Name="Alpha.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="float" Name="Alpha.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="float" Name="Alpha.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">100</Value>
+    </Variable>
+    <Variable Type="int" Name="Alpha.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">200</Value>
+    </Variable>
+    <Variable Type="int" Name="Alpha.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">120</Value>
+    </Variable>
+    <Variable Type="int" Name="Alpha.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">50</Value>
+    </Variable>
+    <Variable Type="int" Name="Alpha.Alpha" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="float" Name="Title.X" SetsValue="true">
+      <Value xsi:type="xsd:float">30</Value>
+    </Variable>
+    <Variable Type="float" Name="Title.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">30</Value>
+    </Variable>
+    <Variable Type="float" Name="Title.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">240</Value>
+    </Variable>
+    <Variable Type="float" Name="Title.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">30</Value>
+    </Variable>
+    <Variable Type="string" Name="Title.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">BED GUM</Value>
+    </Variable>
+    <Variable Type="string" Name="Title.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/PressStart2P-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="Title.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">20</Value>
+    </Variable>
+    <Variable Type="int" Name="Title.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Title.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Title.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Title.Alpha" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+  </State>
+  <Instance Name="Panel" BaseType="ColoredRectangle" />
+  <Instance Name="Glass" BaseType="ColoredRectangle" />
+  <Instance Name="Alpha" BaseType="ColoredRectangle" />
+  <Instance Name="Title" BaseType="Text" />
+</ScreenSave>

@@ -1,0 +1,28 @@
+{
+  "Name": "Panel",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Pic.SourceFile",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Images/dot.png"
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Pic",
+      "BaseType": "Sprite"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

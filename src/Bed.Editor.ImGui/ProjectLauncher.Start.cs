@@ -11,7 +11,10 @@ public sealed partial class ProjectLauncher
     private enum StartPage { Home, New, Open }
     private StartPage startPage;
     private readonly ProjectCreator projectCreator;
-    private readonly string personalProjects;
+    private readonly string? chosenProjects;   // given by the host (tests, trials); otherwise Preferences > Locations decides
+    /// <summary>Where new projects go: the host's choice, else Preferences > Locations, else DocumentsBED Projects.</summary>
+    internal string NewProjectsFolder => personalProjects;
+    private string personalProjects => chosenProjects ?? (Locations.Projects.Length > 0 ? Locations.Projects : ProjectCreator.DefaultLocation ?? "");
     private ImInputString recentSearch = new(512, ""u8);
     private ImInputString projectName = new(256, "My project"u8);
     private ImInputString projectLocation;
@@ -92,9 +95,9 @@ public sealed partial class ProjectLauncher
         {
             var width=ImGui.GetContentRegionAvail().X;
             var footer=ImGui.GetFrameHeightWithSpacing()*2+ImGui.CalcTextSize(BrutalCredit.Copyright,false,width).Y+ImGui.CalcTextSize("Built with BRUTAL, a game development framework by Ahwoo Limited. See NOTICE.txt beside this program."u8,false,width).Y+ImGui.GetStyle().ItemSpacing.Y*4;
-            if(showPreferences)footer+=ImGui.GetFrameHeightWithSpacing()*7;
+            if(showPreferences)footer+=ImGui.GetFrameHeightWithSpacing()*18;
             if(showGuide)footer+=ImGui.GetFrameHeightWithSpacing()*10;
-            if(Ui.BeginChild("Start choices###launcher.choices"u8,new float2(0,MathF.Max(200,ImGui.GetContentRegionAvail().Y-footer)),ImGuiChildFlags.NavFlattened))DrawHome();
+            if(Ui.BeginChild("Start choices###launcher.choices"u8,new float2(0,MathF.Max(showPreferences?ImGui.GetFrameHeightWithSpacing()*2:200,ImGui.GetContentRegionAvail().Y-footer)),ImGuiChildFlags.NavFlattened))DrawHome();
             Ui.EndChild();
         }
         if (Workspace is not null && !projectChooser) startPage = StartPage.Home;
@@ -102,7 +105,7 @@ public sealed partial class ProjectLauncher
         if (focusGuideOpener) { ImGui.SetKeyboardFocusHere(); focusGuideOpener = false; }
         if (Ui.SmallButton("Getting started"u8)) showGuide = !showGuide;
         ImGui.SameLine();
-        if (Ui.SmallButton("Preferences"u8)) showPreferences = !showPreferences;
+        if (Ui.SmallButton("Options"u8)) showPreferences = !showPreferences;
         ImGui.SameLine();
         if (Ui.SmallButton("About BED"u8)) showAbout = !showAbout;
         if (showGuide)
@@ -115,6 +118,14 @@ public sealed partial class ProjectLauncher
         }
         if (showPreferences)
         {
+            var creditWidth=ImGui.GetContentRegionAvail().X;
+            var creditHeight=ImGui.CalcTextSize(BrutalCredit.Copyright,false,creditWidth).Y
+                +ImGui.CalcTextSize("Built with BRUTAL, a game development framework by Ahwoo Limited. See NOTICE.txt beside this program."u8,false,creditWidth).Y
+                +ImGui.GetStyle().ItemSpacing.Y*4;
+            // Options can scroll on a small display; keep the program's credits below it visible.
+            var optionsHeight=MathF.Max(ImGui.GetFrameHeightWithSpacing()*2,ImGui.GetContentRegionAvail().Y-creditHeight);
+            if(Ui.BeginChild("Options###launcher.options"u8,new float2(0,optionsHeight),ImGuiChildFlags.NavFlattened))
+            {
             ImGui.SetNextItemWidth(160);
             if (focusPreferences) { ImGui.SetKeyboardFocusHere(); focusPreferences = false; }
             if (Ui.BeginCombo("Theme"u8, EditorTheme.Label(EditorTheme.Preference)))
@@ -138,11 +149,15 @@ public sealed partial class ProjectLauncher
                 }
                 Ui.EndCombo();
             }
+            PreferencesWindow.DrawCopyNames();
             ViewportControls.DrawChoice();
+            Locations.Draw();
             Ui.Text($"Text size {EditorWindow<DataDocument>.TextScale:P0}");
             if (Ui.SmallButton("Smaller"u8)) EditorWindow<DataDocument>.SetTextScale(EditorWindow<DataDocument>.TextScale - EditorWindow<DataDocument>.TextStep);
             ImGui.SameLine();
             if (Ui.SmallButton("Larger"u8)) EditorWindow<DataDocument>.SetTextScale(EditorWindow<DataDocument>.TextScale + EditorWindow<DataDocument>.TextStep);
+            }
+            Ui.EndChild();
         }
         if (showAbout) Ui.TextWrapped(BedAbout.Heading + " is Copyright (c) 2026 Tyler McCauley, released under the MIT licence (LICENSE.txt).");
         Ui.TextWrapped(BrutalCredit.Copyright);

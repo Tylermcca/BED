@@ -137,7 +137,7 @@ public sealed class AssetCatalogProvisioner : IAssetCatalogProvisioner
                 reusable=new(root,projectRoot,files,new(pins,StringComparer.OrdinalIgnoreCase),inputs.ToArray(),problems.ToArray(),warnings.ToArray());
             }
             else reusable=null;
-            return new(browser, catalog, catalog, problems.AsReadOnly()) { Warnings = warnings.AsReadOnly(), AudioPreview = new OpenAlAssetAudioPreview() };
+            return new(browser, catalog, catalog, problems.AsReadOnly()) { Warnings = warnings.AsReadOnly() };
         }
         catch { catalog.Dispose(); throw; }
     }

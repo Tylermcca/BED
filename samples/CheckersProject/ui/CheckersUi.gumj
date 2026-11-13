@@ -1,0 +1,92 @@
+{
+  "FontRanges": "32-126,160-255",
+  "FontSpacingVertical": 1,
+  "FontSpacingHorizontal": 1,
+  "UseFontCharacterFile": false,
+  "AutoSizeFontOutputs": false,
+  "FontGenerator": 1,
+  "Version": 7,
+  "DefaultCanvasWidth": 720,
+  "DefaultCanvasHeight": 800,
+  "CustomCanvasSizes": [],
+  "ShowOutlines": true,
+  "ShowCanvasOutline": true,
+  "ShowRuler": true,
+  "ShowCheckerBackground": true,
+  "TextureFilter": "Point",
+  "ConvertVariablesOnUnitTypeChange": false,
+  "RestrictToUnitValues": true,
+  "SnapToGrid": false,
+  "GridSize": 16,
+  "RestrictFileNamesForAndroid": false,
+  "Guides": [],
+  "FavoriteComponents": [],
+  "ParentProjectRoot": "",
+  "LocalizationFiles": [],
+  "ShowLocalizationInGum": true,
+  "CurrentLanguageIndex": 0,
+  "ScreenReferences": [
+    {
+      "Name": "MatchPanel",
+      "ElementType": 0,
+      "LinkType": 0
+    },
+    {
+      "Name": "Title",
+      "ElementType": 0,
+      "LinkType": 0
+    }
+  ],
+  "ComponentReferences": [
+    {
+      "Name": "Button",
+      "ElementType": 1,
+      "LinkType": 0
+    }
+  ],
+  "StandardElementReferences": [
+    {
+      "Name": "Circle",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Component",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Container",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "NineSlice",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Polygon",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Rectangle",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Sprite",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Text",
+      "ElementType": 2,
+      "LinkType": 0
+    }
+  ],
+  "BehaviorReferences": [],
+  "SinglePixelTextureFile": "",
+  "CustomProperties": []
+}

@@ -58,8 +58,10 @@ public static class Scene2Resolver
             {if(!slotMap.ContainsKey(binding.Key))throw Bad(at+"/bindings","unknown exposed slot");Scene2Read.Id(binding.Value,at+"/bindings/"+binding.Key);boundTargets.Add((binding.Value,at+"/bindings/"+binding.Key));}
             foreach(var slot in definition.Slots)if(slot.Required&&!instance.Bindings.ContainsKey(slot.Key))throw Bad(at+"/bindings/"+slot.Key,"required slot is unbound");
             var placement=instance.Placement;
-            if(placement.Asset is not null||placement.Properties.Count!=0||placement.References.Count!=0)throw Bad(at+"/placement","placement must be an empty transform wrapper");
-            var wrapper=new Scene2Object(placement,null);Add(wrapper,new(Scene2OriginKind.Placement,instance.Key,null,at+"/placement",Fields(wrapper,at+"/placement")));
+            if(placement.Asset is not null||placement.Properties.Any(p=>p.Key!="name"||p.Value.ValueKind!=JsonValueKind.String||p.Value.GetString() is not {Length:>0})||placement.References.Count!=0)throw Bad(at+"/placement","placement must be an empty transform wrapper with only an optional display label");
+            var wrapper=new Scene2Object(placement,null);var placementFields=Fields(wrapper,at+"/placement");
+            if(placement.Properties.ContainsKey("name"))placementFields=placementFields.SetItem("/properties/name",at+"/placement/label");
+            Add(wrapper,new(Scene2OriginKind.Placement,instance.Key,null,at+"/placement",placementFields));
             if(instance.Overrides.IsDefault||instance.Overrides.Length>10000)throw Bad(at+"/overrides","override budget exceeded");
             var nodes=definition.Nodes.ToDictionary(n=>n.Key,StringComparer.Ordinal);var groups=new Dictionary<string,List<(PrefabOverride Item,int Index)>>(StringComparer.Ordinal);var addresses=new HashSet<(string,string)>();var wholeBodies=new HashSet<string>(StringComparer.Ordinal);var bodyChildren=new HashSet<string>(StringComparer.Ordinal);
             for(var j=0;j<instance.Overrides.Length;j++)

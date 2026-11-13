@@ -56,7 +56,7 @@ This writes the sample file. Without `--save`, a one-shot CLI edit is lost when 
 ./bed-cli.exe --data samples/recipes/data --schemas samples/recipes/schemas --map samples/recipes/reference_map.json check links.all
 ```
 
-This checks references, not every possible game rule. `checks` lists available checks; `problems` reports schema problems. Replies are JSON; exit 0 means success, 1 means a refusal or failed check, and 2 means bad arguments or a project that could not open.
+This checks references, not every possible game rule. `checks` lists available checks; `problems` reports schema problems. Replies are JSON; exit 0 means success, 1 means a refusal or failed check, and 2 means bad arguments or a project that could not open. A finding from a check built on another tool, such as the Gum screens check, also carries `code` (Gum's GUM0004, say) and `help`, a link to that tool's page for the code.
 
 ## Connect an assistant through MCP
 

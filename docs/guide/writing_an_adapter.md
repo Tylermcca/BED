@@ -266,7 +266,7 @@ $adapterDll = Join-Path $env:ArtifactsPath 'bin/LanternYardAdapter/debug/Lantern
 if ($LASTEXITCODE -ne 0) { throw 'Explicit adapter open failed.' }
 ```
 
-For folder discovery, put your adapter under the host's `adapters/` directory, alongside its private dependencies. Discovery is recursive and looks for `*Adapter.dll`, so `LanternYard.dll` would be missed. An explicitly supplied DLL does not need that suffix. Here only the adapter and its dependency description are copied; the development host already supplies the tools assemblies. Do not replace those host assemblies with incompatible copies. When your adapter has additional private libraries, ship those too and keep host and adapter versions compatible.
+For folder discovery, put your adapter under the host's `adapters/` directory, alongside its private dependencies, or in a folder of your own that you choose in **Options > Locations**, next to **Extra adapters**. Discovery is recursive and looks for `*Adapter.dll`, so `LanternYard.dll` would be missed. An explicitly supplied DLL does not need that suffix. Here only the adapter and its dependency description are copied; the development host already supplies the tools assemblies. Do not replace those host assemblies with incompatible copies. When your adapter has additional private libraries, ship those too and keep host and adapter versions compatible.
 
 ```powershell
 # P04 - The folder loader searches recursively for *Adapter.dll.

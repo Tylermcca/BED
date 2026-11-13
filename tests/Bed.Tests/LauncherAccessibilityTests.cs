@@ -237,7 +237,7 @@ public sealed class LauncherAccessibilityTests
         public Ui(Action draw,float scale,IEnumerable<string> captions,int width=1600,int height=900,bool wrappedRecentPath=false)
         {
             Scale=scale;
-            var extra=new List<string>{"Preferences","Beacon workshop","Remove from list","Open project..."};
+            var extra=new List<string>{"Options","Beacon workshop","Remove from list","Open project..."};
             // Only wrapped-path oracles consume these unique-path substring references.
             // Build them before the test host, as HeadlessHost permits only one context at a time.
             if(wrappedRecentPath && draw.Target is ProjectLauncher launcher)
@@ -249,7 +249,7 @@ public sealed class LauncherAccessibilityTests
             EditorWindow<DataDocument>.Configure(ImGui.GetIO());ImGui.GetStyle().FontScaleMain=scale;
             Host.MoveMouse(Draw,-100,-100);Host.Frames(Draw,5);
             if(draw.Target is ProjectLauncher && captions.Any(x=>x is "Data folder" or "Schema folder" or "Link map (optional)" or "Open" or "Browse...")){var opener=Find("Open project...",LauncherWindow);Assert.NotNull(opener);Host.Click(Draw,(opener.Rect.X0+opener.Rect.X1)/2,(opener.Rect.Y0+opener.Rect.Y1)/2);Host.Frames(Draw,2);}
-            if(draw.Target is ProjectLauncher && captions.Contains("Larger")){Reach("Preferences",window:LauncherWindow);Key(ImGuiKey.Enter);}
+            if(draw.Target is ProjectLauncher && captions.Contains("Larger")){Reach("Options",window:LauncherWindow);Key(ImGuiKey.Enter);}
             if(draw.Target is ProjectLauncher && captions.Contains("Remove"))
             {
                 Reach("Beacon workshop",wide:true,window:LauncherWindow);Key(ImGuiKey.F10,shift:true);Host.Frames(Draw,2);recentMenuWindow=ObserveFocus().Window;
@@ -726,7 +726,7 @@ public sealed class LauncherAccessibilityTests
     }
     private sealed class PlayRig : IDisposable
     {
-        public CheckersPlay.Play Play {get;}=new(Game.Opening());
+        public CheckersPlay.Play Play {get;}=new(Game.Opening(),plain:true);   // ImGui's own words, which these checks read; the Gum strip has its own (CheckersGumTests)
         public Ui Ui {get;}
         public PlayRig(float scale,params string[] captions)=>Ui=new Ui(Play.Draw,scale,captions,720,800);
         public void MoveWithKeys(){Ui.Reach("Computer move",window:PlayWindow);Ui.Key(ImGuiKey.Enter);Assert.Equal(Side.Light,Play.Match.Current.ToMove);}

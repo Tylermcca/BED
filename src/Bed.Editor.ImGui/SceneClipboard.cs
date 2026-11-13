@@ -35,7 +35,9 @@ internal sealed class SceneClipboard
         var basis=new Scene(destination.Objects.AddRange(selected.Where(id=>!existing.Contains(id)).Select(id=>source.Find(id)!)));
         var map=LinkPlans.PlanDuplicate(new SceneLinks(),basis,selected,(id,n)=>n==1?"copy_"+id:$"copy_{id}_{n}");
         string In(string id)=>map.TryGetValue(id,out var copy)?copy:id;
-        var copies=selected.Select(id=>source.Find(id)!).Select(o=>o with{Id=map[o.Id],Parent=o.Parent is {} parent?In(parent):null,
+        var names=destination.Objects.Select(CopyNames.NameOf).ToList();
+        SceneObject Named(SceneObject item){var name=CopyNames.Next(CopyNames.NameOf(item),names);names.Add(name);return item with{Properties=item.Properties.SetItem("name",System.Text.Json.JsonSerializer.SerializeToElement(name))};}
+        var copies=selected.Select(id=>Named(source.Find(id)!)).Select(o=>o with{Id=map[o.Id],Parent=o.Parent is {} parent?In(parent):null,
             References=o.References.ToImmutableSortedDictionary(p=>p.Key,p=>In(p.Value),StringComparer.Ordinal)}).ToArray();
         var candidate=new Scene(destination.Objects.AddRange(copies));var ids=copies.Select(o=>o.Id).ToArray();
         var move=SceneTranslation.World(candidate,ids,Vector3.UnitX);

@@ -406,6 +406,10 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
     public Func<(bool Success, string Message)>? SaveAction { get; set; }
     /// <summary>Optional workspace-owned export command, shown only for declared adapters.</summary>
     public Action? ExportBuildAction {get;set;}
+    /// <summary>Opens the project's Gum screens in the person's own Gum tool; null hides File > Edit screens in Gum.</summary>
+    public Action? OpenGumAction {get;set;}
+    /// <summary>Opens the Gum screen panel, a live picture of one of the project's Gum screens; null hides File > Show Gum screens.</summary>
+    public Action? ShowGumScreenAction {get;set;}
     internal Action? RecentProjectsMenu {get;set;}
     /// <summary>Workspace-owned project Play settings, independent of adapter availability.</summary>
     public Action? PlaySettingsAction {get;set;}
@@ -1129,6 +1133,8 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
             Item("Save as...", "editor.file_save_as");
             Item("Save all", PanelCommandAction + "project.files/save_all");
             if(ExportBuildAction is {} export&&Choice("Export build...","",false,true))export();
+            if(OpenGumAction is {} gum&&Choice("Edit screens in Gum","",false,true))gum();
+            if(ShowGumScreenAction is {} gumScreen&&Choice("Show Gum screens","",false,true))gumScreen();
             ImGui.Separator();
             Item("Close", "editor.close");
             Item("Close project", PanelCommandAction + "project.files/close_project");
@@ -1160,9 +1166,9 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
             Missing("Select all", "Use selection controls in the current panel.");
             Missing("Find...", "Use the find field in Properties.");
             Item("Fill column...", PanelCommandAction + "editor.table/fill");
-            if (Begin("Preferences", true))
+            if (Begin("Options", true))
             {
-                if (Choice("Open preferences...", "Ctrl+,", false, true)) preferences.Open();
+                if (Choice("Open options...", "Ctrl+,", false, true)) preferences.Open();
                 Panel("Keyboard shortcuts", KeysPanel.Id);
                 Item("Larger text", "editor.text_larger");
                 Item("Smaller text", "editor.text_smaller");

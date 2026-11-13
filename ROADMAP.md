@@ -18,9 +18,10 @@ There are no dates. A release ships when everything in it works from start to fi
 ## Done so far
 
 - **0.2 (0.2.1-rc.1):** a data editor that works like a normal Windows program; 3D levels with handles, snapping and undo; model and texture assets with licence records; Play from saved files; tested Windows builds and Export build.
-- **0.3 (0.3.1, out now):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them. Details below.
+- **0.3 (0.3.1):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them.
+- **0.4 (0.4.0, out now):** game screens made in Gum, part picking, names for copies. Details below.
 
-## 0.3: prefabs, 2D and physics (out now as 0.3.1)
+## 0.3: prefabs, 2D and physics (0.3.1)
 
 The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and play and export it.
 
@@ -71,12 +72,29 @@ The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and 
 - **Samples for the new features.** Two small original samples ship in the download: a flat sprite level with a prefab placed twice, and a 3D level with a crate prefab, a floor and a paddle, all with physics bodies. The Start here guide walks through both. Both are small games that play in their own window: a garden to run and jump through, and an island to drop crates on.
 - **Small fixes from the first real-window checks.** The welcome and tour boxes no longer cover the Files panel or **Used by** when a level opens.
 
-## Next, 0.4: one thing done well: the running game
+### Gum screens in the 0.3.9 preview: done
+- **Game screens made in Gum**, the free menu and screen designer. BED shows each screen as the game will draw it, opens it in Gum with one button, and updates the picture, and a running game, when you save in Gum.
+- **A Gum screens check** that lists anything a screen needs and is missing, such as a picture or a font.
+- **Gum preview 6:** screens with a loop between parts still show the rest and name the loop. Gum follows saves itself; supported picture types also come from Gum.
+- **Options > Locations** for where Gum is, where new projects go and a folder of extra adapters.
+- The checkers sample's title and match screens are made in Gum.
 
-0.4 starts small, with one game and a handful of values, and grows only once that works every time.
+## 0.4: Gum screens (out now as 0.4.0), then fixes
+
+0.4.0 makes the Gum screens work from the 0.3.9 previews the main download, adds picking a part of a screen and a choice of names for copies, and renames Preferences to Options. 0.4.x releases are fixes from real use.
+
+## Then, 0.5: one thing done well: the running game
+
+0.5 starts small, with one game and a handful of values, and grows only once that works every time.
 
 - **See and try values in the running game.** While the game runs, see a few of an object's values as they change, try a different value, and see the game respond. Your saved files don't change unless you choose to keep the new value.
 - **Open your game's code.** Open the game's code in your own code editor from BED, and see build errors in BED in plain words, with a click that takes you to the right line.
+- **Work well with your own AI app.** BED brings no AI of its own and sends nothing anywhere; it makes the AI you already use a better pair of hands:
+  - **Connect in one click.** BED finds Claude, Codex or Cursor on your PC, shows the exact change, and makes it only when you click.
+  - **The AI knows the framework.** A short guide is handed to the AI when it connects, and every new project gets a setup file for it.
+  - **The AI can build and fix code.** One build command returns errors in plain words, so the AI can fix its own mistakes.
+  - **The AI can see the game.** It can ask for a picture of the running game, or press keys and then take one.
+- **Ready to sell.** Export adds the credits and notices the framework asks for, lists every asset's licence, and drafts Steam's AI-content disclosure for you to check.
 - **Fixes from real use.**
 
 ## Later
@@ -89,7 +107,7 @@ Driven by what games built with BED actually need. Roughly in order of priority:
 - Nested prefabs.
 - Animation preview.
 - A basic profiler for the running game.
-- Particles and game-UI layout.
+- Particles. (Game screens and menus are made in Gum; see the 0.3.9 preview.)
 - Code changes while the game is running (hot reload).
 - More rendering backends alongside Vulkan.
 

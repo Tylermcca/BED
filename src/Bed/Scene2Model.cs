@@ -121,7 +121,7 @@ public sealed record PrefabOverride(string Node, string Field, PrefabOverrideOpe
 /// <param name="Key">Immutable instance key.</param>
 /// <param name="Source">Definition GUID.</param>
 /// <param name="Base">Accepted base id.</param>
-/// <param name="Placement">Empty wrapper transform and optional parent.</param>
+/// <param name="Placement">Wrapper transform, optional parent and optional display name in Properties["name"].</param>
 /// <param name="NodeIds">Exact accepted-node to scene-id map.</param>
 /// <param name="Bindings">Slot to final scene-id bindings.</param>
 /// <param name="Overrides">Explicit local atomic fields.</param>

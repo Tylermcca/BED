@@ -80,7 +80,7 @@ public sealed class HighContrastQa26Tests
     [Fact]
     public void Start_screen_and_preferences_keep_actual_high_contrast_vertices_and_native_focus()
     {
-        using var r=new Rig();r.CheckWindow("BED###launcher");r.Reach("Preferences");r.Host.Press(r.Launcher.Draw,ImGuiKey.Enter);r.Frames();
+        using var r=new Rig();r.CheckWindow("BED###launcher");r.Reach("Options");r.Host.Press(r.Launcher.Draw,ImGuiKey.Enter);r.Frames();
         Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label=="Theme"&&n.Role==UiRole.Combo);
         r.Reach("Theme");r.CheckPalette();
         Assert.Contains(Ui.Snapshot().Nodes,n=>n.Focused&&n.Label=="Theme");

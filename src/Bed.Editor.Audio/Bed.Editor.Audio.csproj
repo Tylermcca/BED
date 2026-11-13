@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- BED-only sound playback; game window hosts do not reference this project. -->
+  <ItemGroup>
+    <ProjectReference Include="../Bed.Editor.Assets/Bed.Editor.Assets.csproj" />
+    <ProjectReference Include="../Bed.Editor.App/Bed.Editor.App.csproj" />
+    <PackageReference Include="Ahwoo.Brutal.OpenAl" />
+    <PackageReference Include="NVorbis" />
+    <InternalsVisibleTo Include="Bed.Launcher" />
+    <InternalsVisibleTo Include="Bed.Tests" />
+  </ItemGroup>
+</Project>
