@@ -25,3 +25,11 @@ Headless runs never open a window: `SceneStarter.exe --project . --seconds 0` lo
 4. After Build and Play has prepared the current saved level, choose File > Export build..., Build saved files, then Copy build to folder.... Keep the whole exported folder together. Its README explains how to run the checked copied runtime.
 
 The download includes its game program. In a source checkout, build SceneStarter and copy its runtime output into this project's game folder before Play. Regenerate art and saved sample files with `python samples/SpriteLevelProject/generate_assets.py`; use `--check` to compare without writing. All eight PNGs and rights records are self-authored and reproducible; no outside art is used.
+
+## Try live values in BED
+
+Build the saved garden, stop ordinary Play, and select `round_friend`. In **Live values**, choose **Try live values (no game window)**. This uses one owned game process without opening a window. Five values show its touch-box X/Y, X/Y speed and jump strength. The game advances fixed ticks while BED updates and pauses between requests; this is a separate Play mode, not an attachment to another game window.
+
+Type a jump strength from 1 to 25 metres per second. The game confirms the value and uses it on its next jump. The quarter-second buttons try movement, jumping and restarting. Nothing is written by these trials. **Keep this value** saves only the confirmed jump strength as the existing `round_friend` custom property `jumpStrength`, using BED's checked level-save path. Save other drafts first; outside file changes refuse the save. Rebuild before the next ordinary Play or export. Stop program ends that game.
+
+The garden opts in through the shared [live-values adapter hook](../../docs/live_values_adapter.md); other games supply their own values and trial ranges.

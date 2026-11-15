@@ -12,6 +12,8 @@ public static class Program
     {
         try
         {
+            if(Environment.GetEnvironmentVariable("BED_AI_OBSERVE")=="1")
+                return Bed.Runtime.LiveValuesHost.Target is not null ? PhysicsLiveValues.Run(output,error) : PhysicsAgentPlay.Run(Console.In,output,error);
             if(args is ["--compile-scene2",var compile]){Scene2Compiler.Compile(compile,true);output.WriteLine("PhysicsStarter generated saved physics.");return 0;}
             if(args is ["--build",var input,var destination]){PhysicsExportBuild.Create(input,destination,AppContext.BaseDirectory);output.WriteLine("PhysicsStarter copied the checked physics build.");return 0;}
             string? root=null;double seconds=1;int? frames=null;int drops=0;string? shot=null;var headless=false;var seen=new HashSet<string>(StringComparer.Ordinal);

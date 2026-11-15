@@ -11,6 +11,7 @@ public sealed partial class ProjectLauncher
     private bool rememberedWer;
     private CopyNameStyle rememberedCopyNames;
     private string rememberedGum = "", rememberedProjects = "", rememberedAdapters = "";
+    private string rememberedCodeEditor="windows",rememberedCodeEditorProgram="";
     private string keymapNote = "Using the default viewport keymap; choose a keymap to remember it.";
     private static readonly object preferencesGate = new();
 
@@ -47,6 +48,8 @@ public sealed partial class ProjectLauncher
             if (root.TryGetProperty("gumProgram"u8, out var gum) && gum.ValueKind == JsonValueKind.String) rememberedGum = gum.GetString() ?? "";
             if (root.TryGetProperty("projectsFolder"u8, out var projects) && projects.ValueKind == JsonValueKind.String) rememberedProjects = projects.GetString() ?? "";
             if (root.TryGetProperty("adaptersFolder"u8, out var adapters) && adapters.ValueKind == JsonValueKind.String) rememberedAdapters = adapters.GetString() ?? "";
+            if(root.TryGetProperty("codeEditor"u8,out var editor)&&editor.ValueKind==JsonValueKind.String&&editor.GetString() is "windows" or "vscode" or "visualstudio" or "rider")rememberedCodeEditor=editor.GetString()!;
+            if(root.TryGetProperty("codeEditorProgram"u8,out var program)&&program.ValueKind==JsonValueKind.String)rememberedCodeEditorProgram=program.GetString()??"";
             if (root.TryGetProperty("textScale"u8, out var size) && size.ValueKind == JsonValueKind.Number && size.TryGetSingle(out var value))
                 textScale = value;
             if (root.TryGetProperty("theme"u8, out var theme) && theme.ValueKind == JsonValueKind.String)
@@ -73,6 +76,7 @@ public sealed partial class ProjectLauncher
             textScale = EditorWindow<DataDocument>.TextScale;
             EditorTheme.Preference = rememberedTheme;
             Locations.Gum = rememberedGum; Locations.Projects = rememberedProjects; Locations.Adapters = rememberedAdapters;
+            Locations.CodeEditor=rememberedCodeEditor;Locations.CodeEditorProgram=rememberedCodeEditorProgram;
             EditorTheme.Refresh(); // Colours only: retain DPI metrics and both text scales.
             return;
         }
@@ -80,11 +84,13 @@ public sealed partial class ProjectLauncher
         var theme = EditorTheme.Preference;
         var sizeChanged = size != textScale; var themeChanged = theme != rememberedTheme;
         var keymapChanged = ViewportControls.Changed || ViewportControls.Wer != rememberedWer;
+        var codeEditorChanged=Locations.CodeEditor!=rememberedCodeEditor||Locations.CodeEditorProgram!=rememberedCodeEditorProgram;
         var gumChanged = Locations.Gum != rememberedGum;
         var copyNamesChanged=CopyNames.Style!=rememberedCopyNames;
         var projectsChanged = Locations.Projects != rememberedProjects; var adaptersChanged = Locations.Adapters != rememberedAdapters;
-        if (!sizeChanged && !themeChanged && !keymapChanged && !gumChanged && !projectsChanged && !adaptersChanged && !copyNamesChanged) return;
+        if (!sizeChanged && !themeChanged && !keymapChanged && !gumChanged && !projectsChanged && !adaptersChanged && !copyNamesChanged && !codeEditorChanged) return;
         rememberedGum = Locations.Gum; rememberedProjects = Locations.Projects; rememberedAdapters = Locations.Adapters;
+        rememberedCodeEditor=Locations.CodeEditor;rememberedCodeEditorProgram=Locations.CodeEditorProgram;
         if (projectsChanged) projectLocation = new ImInputString(2048, personalProjects);
         textScale = size; rememberedTheme = theme; rememberedWer = ViewportControls.Wer;
         if (keymapChanged) { ViewportControls.Note = ""; ViewportControls.Changed = false; }
@@ -102,6 +108,7 @@ public sealed partial class ProjectLauncher
                 if(copyNamesChanged){rememberedCopyNames=CopyNames.Style;settings["copyNames"]=rememberedCopyNames.ToString();}
                 if (sizeChanged) settings["textScale"] = size;
                 if (themeChanged) settings["theme"] = theme.ToString();
+                if(codeEditorChanged){settings["codeEditor"]=rememberedCodeEditor;settings["codeEditorProgram"]=rememberedCodeEditorProgram;}
                 if (gumChanged) settings["gumProgram"] = rememberedGum;
                 if (projectsChanged) settings["projectsFolder"] = rememberedProjects;
                 if (adaptersChanged) settings["adaptersFolder"] = rememberedAdapters;

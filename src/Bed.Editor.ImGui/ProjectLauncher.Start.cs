@@ -25,9 +25,15 @@ public sealed partial class ProjectLauncher
     private bool showPreferences, showGuide, showAbout, exampleGuideShown;
     private bool rootPicker, locationPicker, focusNewName, focusGuideOpener, focusOpenFolder;
 
+    private string RowName(ProjectPaths project)
+    {
+        var name=Name(project);
+        if(!string.Equals(Path.GetDirectoryName(ProjectFolder(project)),SamplesRoot,StringComparison.OrdinalIgnoreCase))return name;
+        return name switch{"checkers"=>"Checkers","first-task"=>"First task","new-game"=>"New game starter","prefab-physics"=>"Physics island","recipes"=>"Recipes","scene-starter"=>"3D scene","sprite-2d"=>"2D garden",_=>name};
+    }
     /// <summary>The matching recent rows, pinned first and newest first within each group.</summary>
     public IReadOnlyList<ProjectPaths> SearchRecent(string text) => Recent.Items.Concat(InstalledSamples()).Where(p =>
-        text.Length == 0 || Name(p).Contains(text, StringComparison.OrdinalIgnoreCase)
+        text.Length == 0 || RowName(p).Contains(text,StringComparison.OrdinalIgnoreCase) || Name(p).Contains(text, StringComparison.OrdinalIgnoreCase)
         || (p.Folder ?? p.Data).Contains(text, StringComparison.OrdinalIgnoreCase)
         || RowKind(p).Contains(text, StringComparison.OrdinalIgnoreCase)).ToArray();
 
@@ -59,6 +65,13 @@ public sealed partial class ProjectLauncher
         if (result.Status != ProjectCreationStatus.Created) return Say(false, result.Reason);
         if (!Open(result.Paths!)) return Say(false, $"Created {result.Folder}, but it couldn't open: {Said}");
         return Say(true, $"Created your project in {result.Folder}.");
+    }
+
+    private bool ChooseNewGame()
+    {
+        templateIndex=ProjectTemplates.All.ToList().FindIndex(t=>t.Id=="game");
+        if(Workspace is null){startPage=StartPage.New;focusNewName=true;return true;}
+        return ChooseProject(StartPage.New);
     }
 
     private void DrawStart()
@@ -198,8 +211,8 @@ public sealed partial class ProjectLauncher
                 ImGui.PushID(System.Text.Json.JsonSerializer.Serialize(p)); Ui.TableNextRow(); Ui.TableNextColumn();
                 var at = ImGui.GetCursorScreenPos();
                 var width = Math.Max(50, ImGui.GetContentRegionAvail().X);
-                var rowHeight = Math.Max(ImGui.CalcTextSize(Name(p), false, width).Y + ((openReason is null ? 0 : 1) + (Recent.IsPinned(p) ? 1 : 0)) * ImGui.GetTextLineHeightWithSpacing(), ImGui.CalcTextSize(WrapFolder(folder, width), false, width).Y);
-                Ui.NameNextItem("##recent"u8, Name(p));
+                var rowHeight = Math.Max(ImGui.CalcTextSize(RowName(p), false, width).Y + ((openReason is null ? 0 : 1) + (Recent.IsPinned(p) ? 1 : 0)) * ImGui.GetTextLineHeightWithSpacing(), ImGui.CalcTextSize(WrapFolder(folder, width), false, width).Y);
+                Ui.NameNextItem("##recent"u8, RowName(p));
                 var activated = Ui.Selectable("##recent"u8, selectedRecent == p,
                     ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick, new float2(0, rowHeight));
                 var enter = ImGui.IsItemFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter, false);
@@ -225,7 +238,7 @@ public sealed partial class ProjectLauncher
                     if (Ui.MenuItem("Remove from list"u8)) { RemoveFromList(p); selectedRecent = null; Say(true, "Removed from the list; files aren't deleted."); }
                     Ui.EndPopup();
                 }
-                var after = ImGui.GetCursorScreenPos(); ImGui.SetCursorScreenPos(at); Ui.TextWrapped(Name(p)); if (Recent.IsPinned(p)) Ui.TextWrapped("Pinned"u8); if (openReason is not null) Ui.TextWrapped("Folder not found"u8); ImGui.SetCursorScreenPos(after); ImGui.Dummy(new float2(0, 0));
+                var after = ImGui.GetCursorScreenPos(); ImGui.SetCursorScreenPos(at); Ui.TextWrapped(RowName(p)); if (Recent.IsPinned(p)) Ui.TextWrapped("Pinned"u8); if (openReason is not null) Ui.TextWrapped("Folder not found"u8); ImGui.SetCursorScreenPos(after); ImGui.Dummy(new float2(0, 0));
                 Ui.TableNextColumn(); Ui.TextWrapped(WrapFolder(folder, Math.Max(50, ImGui.GetContentRegionAvail().X)));
                 Ui.TableNextColumn(); Ui.TextWrapped(metadata.LastOpenedUtc?.ToLocalTime().ToString("g") ?? (IsListedSample(p) ? "Not opened yet" : "Not recorded"));
                 Ui.TableNextColumn(); Ui.TextWrapped(RowKind(p));
@@ -237,6 +250,7 @@ public sealed partial class ProjectLauncher
         ImGui.SeparatorText("Get started"u8);
         var size = new float2(-1, MathF.Ceiling(ImGui.GetFrameHeight()*1.4f/2)*2);
         ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, new float2(0, 0.5f));
+        if (Ui.Button("New game..."u8, size)) ChooseNewGame();
         if (Ui.Button("New project..."u8, size)) { startPage = StartPage.New; focusNewName = true; }
         Ui.TextWrapped("Create a folder for a new project."u8);
         if (Ui.Button("Open project..."u8, size)) BeginOpenProject();

@@ -3,10 +3,10 @@ using ImGui = Brutal.ImGuiApi.ImGui;
 
 public sealed partial class DataWorkspace
 {
-    private Func<bool>? newProject, openProject;
+    private Func<bool>? newProject, openProject, newGameProject;
     private bool focusFileList, scrollFileFocus;
-    internal void BindProjectMenus(Func<bool> create, Func<bool> open)
-    { newProject=create;openProject=open; }
+    internal void BindProjectMenus(Func<bool> create, Func<bool> open, Func<bool>? game = null)
+    { newProject=create;openProject=open;newGameProject=game; }
 
     // An approval belongs to these exact drafts, never to a later session or edit.
     internal object?[] TransitionState()

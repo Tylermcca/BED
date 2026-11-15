@@ -14,4 +14,6 @@
   <Target Name="CopyPublicAppHostName" AfterTargets="Build" Condition="Exists('$(TargetDir)Bed.Agent.Cli.exe')">
     <Copy SourceFiles="$(TargetDir)Bed.Agent.Cli.exe" DestinationFiles="$(TargetDir)bed-cli.exe" SkipUnchangedFiles="true" />
   </Target>
+  <ItemGroup><InternalsVisibleTo Include="Bed.Tests" /></ItemGroup>
+  <Import Project="../../build/StarterGame.targets" />
 </Project>

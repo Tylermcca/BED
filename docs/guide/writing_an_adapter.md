@@ -908,3 +908,7 @@ public static Panel TextPanel(DataFile file, EditorModel<DataDocument> editor)
 
 
 Run the compiled sample behaviors with `dotnet test tests/Bed.Tests -c Release --filter FullyQualifiedName~ManagedSourceHooksDoc19Tests`. They use temporary self-authored sources and a headless host. `python -B -m pytest tools/test_adapter_hooks_doc19.py -q -p no:cacheprovider` checks that these five published snippets stay identical to the compiled sample regions and still name the real hook declarations.
+
+## Optional live values
+
+A game can opt in to a small readout of named values and bounded trials through `IProjectAdapter.LiveValues(ProjectPaths)`. Games that omit the hook show a plain note. See [the live-values adapter hook](../live_values_adapter.md) for the declaration, shared game-side helper, sample implementations and the separate checked Keep route.

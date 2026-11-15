@@ -136,7 +136,14 @@ public interface IObjectType<TDoc> where TDoc : class
 /// <param name="CanRemove">True for a list item, or an entry in an object of named entries, that can be removed.</param>
 /// <param name="NamedEntries">True for an object whose entries are named by whoever adds them, rather than fixed by its schema.</param>
 public sealed record InspectorRow(string Id, string Label, PropertyKind Kind, object? Value, bool Mixed, bool Editable, bool Overridden,
-    bool HasDefault, IReadOnlyList<string> Choices, string Help, NumberRange? Range = null, bool CanAdd = false, bool CanRemove = false, bool NamedEntries = false);
+    bool HasDefault, IReadOnlyList<string> Choices, string Help, NumberRange? Range = null, bool CanAdd = false, bool CanRemove = false, bool NamedEntries = false)
+{
+    internal IReadOnlyDictionary<string, string>? ChoiceLabels { get; init; }
+    internal string ChoiceLabel(string value) => ChoiceLabels?.GetValueOrDefault(value) ?? value;
+    internal string? ChoiceCurrent { get; init; }
+    internal string ChoiceValue => ChoiceCurrent ?? Value?.ToString() ?? "";
+    internal object? DisplayValue => Kind == PropertyKind.Choice && Value is not null ? ChoiceLabel(ChoiceValue) : Value;
+}
 
 /// <summary>The numbers a field allows: a lowest and a highest, each either included or not; null for no limit.</summary>
 /// <param name="Min">The lower bound, or null for no lower bound.</param>

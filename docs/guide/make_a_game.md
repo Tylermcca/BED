@@ -11,7 +11,7 @@ The examples below quote the live sample and tests, including the new Board, Mat
 A saved position is just an immutable board and whose turn it is. Keeping that state separate from UI makes validation, save/reload, undo and replay possible without a display.
 
 <!-- excerpt E01 -->
-Source: [Game.cs:25](../../samples/Checkers/Game.cs#L25), lines 25-29.
+Source: [Game.cs:25](../../samples/Checkers.Rules/Game.cs#L25), lines 25-29.
 
 ~~~csharp
 public sealed record Game(ImmutableArray<string> Rows, Side ToMove)
@@ -42,7 +42,7 @@ This is an authoring tool plus a sample game, not a new engine hidden inside the
 Rows run from the top of the board downwards. a1 is the bottom-left dark square. "-" is unplayable, "." empty, d/l men and D/L kings. The opening helper authors a starter; it does not lock the document to that position.
 
 <!-- excerpt E02 -->
-Source: [Game.cs:31](../../samples/Checkers/Game.cs#L31), lines 31-37.
+Source: [Game.cs:31](../../samples/Checkers.Rules/Game.cs#L31), lines 31-37.
 
 ~~~csharp
     public static Game Opening(int size = 8)
@@ -57,7 +57,7 @@ Source: [Game.cs:31](../../samples/Checkers/Game.cs#L31), lines 31-37.
 GameFormat owns the versioned checkers.game JSON format:
 
 <!-- excerpt E03 -->
-Source: [Game.cs:78](../../samples/Checkers/Game.cs#L78), lines 78-84.
+Source: [Game.cs:78](../../samples/Checkers.Rules/Game.cs#L78), lines 78-84.
 
 ~~~csharp
 public sealed class GameFormat : IDocumentFormat<Game>
@@ -72,7 +72,7 @@ public sealed class GameFormat : IDocumentFormat<Game>
 GameValidator accepts square even boards from 4 to 16, with legal characters/parity and no uncrowned man on its crowning row:
 
 <!-- excerpt E04 -->
-Source: [Game.cs:128](../../samples/Checkers/Game.cs#L128), lines 128-135.
+Source: [Game.cs:128](../../samples/Checkers.Rules/Game.cs#L128), lines 128-135.
 
 ~~~csharp
 public sealed class GameValidator : IValidator<Game>
@@ -92,7 +92,7 @@ That size range is the sample's data capability. The official English draughts t
 The validator checks whether a document is structurally sound. Rules.LegalMoves supplies the current side's complete move paths. It gathers captures separately and returns those whenever any exist.
 
 <!-- excerpt E05 -->
-Source: [Game.cs:167](../../samples/Checkers/Game.cs#L167), lines 167-180.
+Source: [Game.cs:167](../../samples/Checkers.Rules/Game.cs#L167), lines 167-180.
 
 ~~~csharp
     public static IReadOnlyList<IReadOnlyList<string>> LegalMoves(Game g)
@@ -114,7 +114,7 @@ Source: [Game.cs:167](../../samples/Checkers/Game.cs#L167), lines 167-180.
 A capture branch ends at crowning, or is extended until no further jump can be made:
 
 <!-- excerpt E06 -->
-Source: [Game.cs:201](../../samples/Checkers/Game.cs#L201), lines 201-211.
+Source: [Game.cs:201](../../samples/Checkers.Rules/Game.cs#L201), lines 201-211.
 
 ~~~csharp
             var landing = g.At(lr, lc) == '.' || (lr, lc) == start;   // the moving piece has left its start
@@ -133,7 +133,7 @@ Source: [Game.cs:201](../../samples/Checkers/Game.cs#L201), lines 201-211.
 Having no legal move gives the other side the win:
 
 <!-- excerpt E07 -->
-Source: [Game.cs:234](../../samples/Checkers/Game.cs#L234), lines 234-234.
+Source: [Game.cs:234](../../samples/Checkers.Rules/Game.cs#L234), lines 234-234.
 
 ~~~csharp
     public static Side? Winner(Game g) => LegalMoves(g).Count > 0 ? null : g.ToMove == Side.Dark ? Side.Light : Side.Dark;
@@ -142,7 +142,7 @@ Source: [Game.cs:234](../../samples/Checkers/Game.cs#L234), lines 234-234.
 MovePiece is the supported edit. It checks the proposed whole path against Rules.LegalMoves before applying the effects.
 
 <!-- excerpt E08 -->
-Source: [Game.cs:243](../../samples/Checkers/Game.cs#L243), lines 243-250.
+Source: [Game.cs:243](../../samples/Checkers.Rules/Game.cs#L243), lines 243-250.
 
 ~~~csharp
 public sealed record MovePiece(IReadOnlyList<string> Path) : ICommand<Game>
@@ -162,7 +162,7 @@ Rules.Apply itself assumes a legal move; it is not a replacement for the command
 A refusal should explain what the player can do next. The sample distinguishes moving the wrong side, stopping a capture early and ignoring a forced capture, using the relevant square as the issue target.
 
 <!-- excerpt E09 -->
-Source: [Game.cs:255](../../samples/Checkers/Game.cs#L255), lines 255-263.
+Source: [Game.cs:255](../../samples/Checkers.Rules/Game.cs#L255), lines 255-263.
 
 ~~~csharp
         if (Game.Owner(piece) != g.ToMove)
@@ -183,7 +183,7 @@ CheckersTests also checks the exact messages for an empty square, an impossible 
 SetSquare authors data. It can place or clear a piece without pretending that this is a legal turn of play; the session's validator still checks the resulting board.
 
 <!-- excerpt E10 -->
-Source: [Game.cs:269](../../samples/Checkers/Game.cs#L269), lines 269-275.
+Source: [Game.cs:269](../../samples/Checkers.Rules/Game.cs#L269), lines 269-275.
 
 ~~~csharp
 public sealed record SetSquare(string Square, char Piece) : ICommand<Game>
@@ -265,7 +265,7 @@ The host checks and stages registrations together. The Board panel supports the 
 Computer.Choose returns a MovePiece. It uses deterministic short look-ahead with a material/advancement score; this is a simple sample opponent, not a claim of strong play.
 
 <!-- excerpt E14 -->
-Source: [Game.cs:290](../../samples/Checkers/Game.cs#L290), lines 290-300.
+Source: [Game.cs:290](../../samples/Checkers.Rules/Game.cs#L290), lines 290-300.
 
 ~~~csharp
     public static MovePiece? Choose(Game g, int depth = 4)

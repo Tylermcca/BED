@@ -53,7 +53,7 @@ internal sealed class DataTableModel
     /// tune aren't pushed off to the right.</summary>
     public IReadOnlyList<InspectorRow> Columns()
     {
-        if (columnsFor is { } k && ReferenceEquals(k.Doc, Editor.Session.Current) && k.List == Shown) return columnsCache;
+        if (columnsGeneration == Editor.Outline.Version && columnsFor is { } k && ReferenceEquals(k.Doc, Editor.Session.Current) && k.List == Shown) return columnsCache;
         var seen = new Dictionary<string, InspectorRow>(StringComparer.Ordinal);
         var doc = Editor.Session.Current;
         // Every field any item has (found by A206: only the first 500 were read, so a field first seen below them had no column). Each
@@ -66,12 +66,13 @@ internal sealed class DataTableModel
                 seen.TryAdd(row.Id, row);
         }
         columnsCache = seen.Values.OrderBy(r => r.Editable ? 0 : 1).ToList();   // stable: schema order within each group
-        columnsFor = (Editor.Session.Current, Shown);
+        columnsGeneration = Editor.Outline.Version; columnsFor = (Editor.Session.Current, Shown);
         return columnsCache;
     }
 
     // What's been worked out for one version of the document, kept until it changes (found by A033: recomputing every
     // item's rows each frame made a 10,000-row table unusable).
+    private long? columnsGeneration, visibleGeneration, rowsGeneration;
     private (DataDocument Doc, string? List)? columnsFor;
     private IReadOnlyList<InspectorRow> columnsCache = [];
     private (DataDocument Doc, string? List, string Filter, (string, bool)? Sort)? visibleFor;
@@ -82,7 +83,7 @@ internal sealed class DataTableModel
     // An item's rows by field, for the current document; worked out once per item per document version.
     internal Dictionary<string, InspectorRow> RowsOf(string item)
     {
-        if (!ReferenceEquals(rowsFor, Editor.Session.Current)) { rowsCache.Clear(); rowsFor = Editor.Session.Current; }
+        if (rowsGeneration != Editor.Outline.Version || !ReferenceEquals(rowsFor, Editor.Session.Current)) { rowsCache.Clear(); rowsFor = Editor.Session.Current; rowsGeneration = Editor.Outline.Version; }
         if (!rowsCache.TryGetValue(item, out var rows))
             rowsCache[item] = rows = Type.Rows(Editor.Session.Current, [item]).ToDictionary(r => r.Id, StringComparer.Ordinal);
         return rows;
@@ -95,11 +96,11 @@ internal sealed class DataTableModel
     public IReadOnlyList<string> Visible()
     {
         var doc = Editor.Session.Current;
-        if (visibleFor is { } k && ReferenceEquals(k.Doc, doc) && k.List == Shown && k.Filter == Filter && Equals(k.Sort, Sort)) return visibleCache;
+        if (visibleGeneration == Editor.Outline.Version && visibleFor is { } k && ReferenceEquals(k.Doc, doc) && k.List == Shown && k.Filter == Filter && Equals(k.Sort, Sort)) return visibleCache;
         var items = Items().ToList();
         if (Filter.Trim() is { Length: > 0 } f)
             items = items.Where(i => (Editor.Outline.Label(doc, i) ?? "").Contains(f, StringComparison.OrdinalIgnoreCase)
-                || RowsOf(i).Values.Any(r => r.Value?.ToString()?.Contains(f, StringComparison.OrdinalIgnoreCase) == true)).ToList();
+                || RowsOf(i).Values.Any(r => r.Value?.ToString()?.Contains(f, StringComparison.OrdinalIgnoreCase) == true || r.ChoiceLabels is not null && r.DisplayValue?.ToString()?.Contains(f, StringComparison.OrdinalIgnoreCase) == true)).ToList();
         if (Sort is { } s)
         {
             // Missing values sort last either way; numbers by value, everything else as text; ties keep file order.
@@ -123,7 +124,7 @@ internal sealed class DataTableModel
             items = ordered.Concat(keyed.Where(k => k.V is null)).Select(k => k.Item).ToList();
         }
         visibleCache = items;
-        visibleFor = (doc, Shown, Filter, Sort);
+        visibleGeneration = Editor.Outline.Version; visibleFor = (doc, Shown, Filter, Sort);
         return items;
     }
 

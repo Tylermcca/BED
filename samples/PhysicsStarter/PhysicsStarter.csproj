@@ -11,4 +11,5 @@
     <None Include="../../LICENSE.txt" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <Import Project="../../build/Notices.targets" />
+  <ItemGroup><EmbeddedResource Include="../../src/Bed.Editor.ImGui/Branding/LOGO_BRUTAL_WHT.png" LogicalName="LOGO_BRUTAL_WHT.png" /></ItemGroup>
 </Project>

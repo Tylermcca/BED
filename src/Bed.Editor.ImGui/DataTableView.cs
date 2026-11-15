@@ -646,7 +646,7 @@ public sealed partial class DataTableView
             if (Ui.SmallButton($"->##go{item}/{cell.Id}")) Follow(item, cell.Id);
             Tooltips.Show("Follow reference");
         }
-        if (!cell.Editable) { Ui.TextDisabled(cell.Value?.ToString() ?? "-"); Arrow(); return; }
+        if (!cell.Editable) { Ui.TextDisabled(cell.DisplayValue?.ToString() ?? "-"); Arrow(); return; }
         if (cell.Value is null && cell.Kind != PropertyKind.Toggle) { Ui.TextDisabled("(not set)"u8); return; }
         switch (cell.Kind)
         {
@@ -670,11 +670,11 @@ public sealed partial class DataTableView
             }
             case PropertyKind.Choice:
             {
-                var current = cell.Value?.ToString() ?? "";
-                if (Ui.BeginCombo(id, current))
+                var current = cell.ChoiceValue;
+                if (Ui.BeginCombo(id, cell.ChoiceLabel(current)))
                 {
                     foreach (var choice in cell.Choices)
-                        if (Ui.Selectable(choice, choice == current) && choice != current) SetCell(item, cell.Id, choice);
+                        if (ChoiceLabelUi.Selectable(cell, choice, current) && choice != current) SetCell(item, cell.Id, choice);
                     Ui.EndCombo();
                 }
                 break;

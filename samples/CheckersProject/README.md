@@ -7,3 +7,5 @@ Try the standard opening or a small checkers endgame.
 3. Use Match to play inside the editor.
 
 "Play in its own window" starts the game itself on the position you are editing.
+
+The standalone player loads the same saved positions through `Checkers.Rules`, without the BED editor. Click a piece and its landing squares; arrows move the highlighted square and Enter or Space chooses it. N starts the saved position again, C plays a computer move, U takes back the last move, and Escape closes the player. `play-checkers position.json --shot picture.png` draws without opening a window.

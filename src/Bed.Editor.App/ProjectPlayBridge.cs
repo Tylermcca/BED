@@ -2,10 +2,13 @@ using Bed.Editor.ImGui;
 namespace Bed.Editor.App;
 
 /// <summary>App facade for the common saved-files process owner. No process starts at construction.</summary>
-public sealed class ProjectPlayBridge : IProjectPlayHost
+public sealed class ProjectPlayBridge : IProjectPlayHost, ILivePlayHost, IGamePictureHost
 {
+    internal Func<byte[],(int Width,int Height,byte[] Rgba)>? DecodePicture {get;set;}
     /// <inheritdoc />
     public IProjectPlaySession Start(PlayLaunch launch)=>new Session(launch);
+    IProjectPlaySession ILivePlayHost.StartLive(PlayLaunch launch,PlayApprovals approvals,LiveValueTarget target)=>new ProjectLiveSession(launch,approvals,target);
+    IProjectPlaySession IGamePictureHost.StartPictures(PlayLaunch launch,PlayApprovals approvals)=>new ProjectPictureSession(launch,approvals,DecodePicture??throw new InvalidOperationException("This BED installation cannot read game pictures."));
     private sealed class Session(PlayLaunch launch) : IProjectPlaySession, IProjectFrameControlSession
     {
         private readonly ProjectPlayHost host=new(launch,TimeProvider.System,TimeSpan.FromMinutes(5));

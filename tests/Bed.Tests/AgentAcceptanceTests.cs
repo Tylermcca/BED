@@ -110,7 +110,8 @@ public sealed class AgentAcceptanceTests(ITestOutputHelper output)
     private static JsonObject Rpc(McpServer server,string method,JsonObject? parameters=null) => Assert.IsType<JsonObject>(server.Handle(Request(method,parameters).ToJsonString()));
     private static JsonObject Args(string tool) => tool switch
     {
-        "ui_snapshot" or "describe" or "problems" or "save" => new JsonObject(),
+        "ui_snapshot" or "build" or "play_start" or "play_screenshot" or "play_stop" or "describe" or "problems" or "save" => new JsonObject(),
+        "play_hold_key" => new JsonObject { ["key"]="right",["seconds"]=1 },
         "find" => new JsonObject { ["file"]="catalog.json",["list"]="/items" },
         "get" => new JsonObject { ["file"]="catalog.json",["at"]="/items/0/name" },
         "set" => new JsonObject { ["file"]="catalog.json",["at"]="/items/0/amount",["value"]="9" },
@@ -313,7 +314,7 @@ public sealed class AgentAcceptanceTests(ITestOutputHelper output)
     // Claude, 2026-11-01: refs and repair joined the tools (the user's gap list), then create, rename, delete and restore, so
     // the documented set is fifteen; then checks and check, seventeen.
     [Fact] public void Mcp_tools_list_has_all_described_tools_and_schemas()
-    { using var f=new Fixture(); var a=Rpc(new McpServer(f.Agent),"tools/list"); var tools=Assert.IsType<JsonArray>(a["result"]!["tools"]); Assert.Equal(23,tools.Count); foreach(var name in new[]{"ui_snapshot","describe","find","get","problems","refs","repair","set","insert","remove","undo","save","create","rename","delete","restore","checks","check","proposal_submit","proposal_list","proposal_show","proposal_accept","proposal_reject"}) { var t=Assert.Single(tools.OfType<JsonObject>(),x=>x["name"]!.GetValue<string>()==name); Assert.False(string.IsNullOrWhiteSpace(t["description"]!.GetValue<string>())); Assert.IsType<JsonObject>(t["inputSchema"]); } }
+    { using var f=new Fixture(); var a=Rpc(new McpServer(f.Agent),"tools/list"); var tools=Assert.IsType<JsonArray>(a["result"]!["tools"]); Assert.Equal(28,tools.Count); foreach(var name in new[]{"ui_snapshot","build","play_start","play_screenshot","play_hold_key","play_stop","describe","find","get","problems","refs","repair","set","insert","remove","undo","save","create","rename","delete","restore","checks","check","proposal_submit","proposal_list","proposal_show","proposal_accept","proposal_reject"}) { var t=Assert.Single(tools.OfType<JsonObject>(),x=>x["name"]!.GetValue<string>()==name); Assert.False(string.IsNullOrWhiteSpace(t["description"]!.GetValue<string>())); Assert.IsType<JsonObject>(t["inputSchema"]); } }
     [Fact] public void Mcp_tool_input_schemas_are_checked_with_JsonSchemas()
     {
         using var f=new Fixture(); var tools=Assert.IsType<JsonArray>(Rpc(new McpServer(f.Agent),"tools/list")["result"]!["tools"]);

@@ -110,3 +110,45 @@ Add `--read-only` before `mcp` for a plain-data session that refuses writes. It 
 To load your game's rules and registered checks, add `--adapter` followed by the full path to its DLL before the call or `mcp`. For example, the zip includes `adapters/starter/StarterAdapter.dll`. Only load adapters you trust: they are programs running on your computer. Review adapter errors and confirm the expected checks are listed before relying on them; loading an adapter is not proof that every check ran.
 
 Check run IDs last only within the current MCP session and may become stale or be evicted. A new CLI invocation cannot reuse one; `--run` is refused by the one-shot CLI. In MCP the check tool uses a `run` field, not a command-line flag. Restarting the assistant's BED server loses that session's unsaved drafts and run history.
+
+## Build the game
+
+Choose **Tools > Build game** in BED to build saved files without starting Play. Set the command in **Tools > Play settings** first. BED shows an unapproved command and its working folder; only the person's **Allow this exact command and build** action stores approval. Save edits and stop Play before building.
+
+The AI connection's `build` tool and `bed-cli --data <data-folder> --schemas <schema-folder> build` use the same build runner. They never grant approval or save edits. A missing approval, read-only session or data-only project returns a reason. CLI/MCP use the normal BED personal settings folder; approvals from a separate trial `--settings` folder stay separate.
+
+Each compiler error includes its actual file, line, column, message and a suggestion. Errors without a source location leave that location empty. Build output is bounded to 512 lines and a five-minute deadline; exceeding either stops the owned build. Exit code zero reports only that the build finished; gameplay has not been tested.
+
+## Look at a running sample game
+
+The `bed-cli ... mcp` connection offers `play_start`, `play_screenshot`, `play_hold_key` and `play_stop`. Start loads saved files with the project's Play command. Build the game first; the ordinary local Play approval still applies to external commands. The 2D sprite sample and the 3D physics island support this mode without a visible window.
+
+Call `play_start`, then `play_screenshot`. To move, call `play_hold_key` with `{"key":"right","seconds":0.5}`. For the sprite game, the keys are `left`, `right`, `jump` and `restart`. For the physics island, `left` and `right` orbit the real game camera, `jump` lifts the first saved crate once per request, and `restart` resets the saved bodies. Hold for more than zero and at most five simulation seconds per call. Each observation frame covers 1/60 second; the island runs its saved Jolt fixed steps within those frames (the sample uses 0.01-second physics steps). Keys are released after each hold and the game returns a PNG. Simulation pauses between calls; screenshots keep the same loaded game state. This is simulation time, not a wall-clock wait.
+
+Results include the game description, observation-frame counter, actual advanced frames, process identity and image hash. The island description also reports its physics ticks and step size; resetting the island does not rewind the observation counter. The image is MCP image content, so the assistant can inspect it. Describe what the picture and counters show; they are observations, never a gameplay test verdict. Stop this session with `play_stop` or close its MCP connection. Restart Play after changing saved game content.
+
+This optional observation mode currently works with the 2D sprite sample and the 3D physics island. The island keeps one hidden OpenGL renderer and the same live Jolt world between calls; screenshots are encoded in memory and never saved into the project. Its separate selected-object live-values mode still shares gravity and mass through the adapter. Other games, including a plain scene without either sample runtime, cannot be seen through these commands until their runtime implements this observation mode: they return an unavailable/invalid-reply reason and their owned process is stopped. It uses the owned game's private standard input/output, never desktop capture or global key events. Replies have a ten-second deadline; PNGs are limited to one MiB and at most 1920x1080 pixels.
+
+
+## A small rules file for your project
+
+MIXED: BED's typed commands and existing preview/save workflow, written here for a project's own instructions. Copy this block into `AGENTS.md` beside your project README. A `CLAUDE.md` can contain the single line `Read AGENTS.md before changing this project.` Existing project rules still apply.
+
+```markdown
+# Working on this game
+
+- Read the project's README and use its actual paths, tools and game target.
+- Change game data through bed-cli or the BED connection, not by editing data files by hand.
+- Read the current value, schema and references before an edit. Preserve identities and links.
+- Preview a typed command, inspect its result, then apply and save within the person's request.
+- Keep each edit undoable. Never bypass a refusal or weaken a check to force a save.
+- If a query lacks an input, say "couldn't check: <what was missing>". Never invent an answer or report missing data as zero findings.
+- Report what a check read, its findings, and anything it could not check. A clean result covers that check only; the person decides whether the game is ready.
+- Run scoped checks for the change. Build output and screenshots are observations, not a gameplay verdict.
+- Do not run arbitrary code through an editor tool. Use only listed typed commands.
+- Do not delete work, discard history, force-push, publish, or install dependencies without authorization.
+```
+
+For your assistant's command controls, these are examples to block until explicitly authorized: recursive deletion (`Remove-Item -Recurse`, `rm -rf`), `git reset --hard`, `git clean -fd`, `git push --force`, publishing commands, and shell commands that download and immediately execute a script. Review the actual command and its paths; a short deny list is not a sandbox and cannot cover aliases or every spelling. Keep ordinary BED preview/edit/save commands available within your request. These examples describe a policy, not a configuration for a particular assistant.
+
+BED says **couldn't check** when an input or host is unavailable. A genuine empty search is still a result. A check's operational status and findings describe its captured inputs; they do not decide whether a game is good or ready to release.

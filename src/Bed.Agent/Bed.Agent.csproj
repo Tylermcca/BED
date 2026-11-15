@@ -6,4 +6,5 @@
     <ProjectReference Include="..\Bed.Data\Bed.Data.csproj" />
     <ProjectReference Include="..\Bed.Editor\Bed.Editor.csproj" />
   </ItemGroup>
+  <ItemGroup><InternalsVisibleTo Include="Bed.Agent.Cli" /><InternalsVisibleTo Include="Bed.Tests" /></ItemGroup>
 </Project>

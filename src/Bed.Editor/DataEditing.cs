@@ -162,7 +162,7 @@ public static class DataEditing
         // Schema descriptions repeat across thousands of alike rows. Cache only immutable schema
         // identities, never values or active-branch decisions; discovery still runs for each object.
         private sealed record RowShape(PropertyKind Kind,IReadOnlyList<string> Choices,bool DeclaredKind,
-            bool List,bool Map,JsonElement? Default,string? Title,string Help,NumberRange? Range);
+            bool List,bool Map,JsonElement? Default,string? Title,string Help,NumberRange? Range,IReadOnlyDictionary<string,string>? ChoiceLabels,IReadOnlyList<JsonElement> Schemas);
         private sealed class SchemaSequence : IEqualityComparer<IReadOnlyList<JsonElement>>
         {
             public bool Equals(IReadOnlyList<JsonElement>? x,IReadOnlyList<JsonElement>? y)=>ReferenceEquals(x,y)||x is not null&&y is not null&&x.SequenceEqual(y);
@@ -179,7 +179,7 @@ public static class DataEditing
             var (kind,choices)=KindOf(fieldSchemas);
             shape=new(kind,choices,Pick(fieldSchemas,"enum") is not null||Pick(fieldSchemas,"type") is not null,
                 IsList(fieldSchemas),IsMap(fieldSchemas),Pick(fieldSchemas,"default"),Pick(fieldSchemas,"title")?.GetString(),
-                Pick(fieldSchemas,"description")?.GetString()??"",RangeOf(fieldSchemas,PropertyKind.Number));
+                Pick(fieldSchemas,"description")?.GetString()??"",RangeOf(fieldSchemas,PropertyKind.Number),Bed.Data.ChoiceLabels.Read(fieldSchemas,choices),fieldSchemas);
             rowShapes[fieldSchemas]=shape;return shape;
         }
         private static PropertyKind KindFor(RowShape shape,JsonElement? value)=>shape.DeclaredKind?shape.Kind:value?.ValueKind switch
@@ -244,7 +244,7 @@ public static class DataEditing
                     shape.Choices, shape.Help, kind is PropertyKind.Number or PropertyKind.Integer ? shape.Range : null,
                     CanAdd: unsetList || actual is { ValueKind: JsonValueKind.Array },
                     CanRemove: plan.Entries && !field.Fixed && actual is not null,
-                    NamedEntries: shape.Map && actual is null or { ValueKind: JsonValueKind.Object }));
+                    NamedEntries: shape.Map && actual is null or { ValueKind: JsonValueKind.Object }) { ChoiceLabels = shape.ChoiceLabels, ChoiceCurrent = shape.ChoiceLabels is null ? null : Bed.Data.ChoiceLabels.Current(shape.Schemas, actual) });
             }
             return rows;
         }
@@ -269,8 +269,11 @@ public static class DataEditing
                 var fieldSchemas = bySchema[field];
                 var values = objects.Select(o => o!.Value.TryGetProperty(field, out var v) ? v : (JsonElement?)null).ToList();
                 var (kind, choices) = KindOf(fieldSchemas, values);
+                var choiceLabels = Bed.Data.ChoiceLabels.Read(fieldSchemas, choices);
                 var shown = values.Select(v => Show(v, kind)).ToList();
-                var same = shown.All(v => Equals(v, shown[0]));
+                var same = kind == PropertyKind.Choice && choiceLabels is not null
+                    ? values.Skip(1).All(v => v is null ? values[0] is null : values[0] is { } first && JsonSchemas.Same(v.Value, first))
+                    : shown.All(v => Equals(v, shown[0]));
                 // An explicit null is shown as "null" and not edited in place, so it isn't confused with a field that
                 // isn't there ("(not set)"), which can be (A032).
                 var scalar = values.All(v => v is null || v.Value.ValueKind is not (JsonValueKind.Object or JsonValueKind.Array or JsonValueKind.Null));
@@ -286,7 +289,7 @@ public static class DataEditing
                     dflt is not null, choices, Pick(fieldSchemas, "description")?.GetString() ?? "", RangeOf(fieldSchemas, kind),
                     CanAdd: ids.Count == 1 && (unsetList || values[0] is { ValueKind: JsonValueKind.Array }),
                     CanRemove: ids.Count == 1 && entries && !fixedFields.Contains(field) && values[0] is not null,
-                    NamedEntries: ids.Count == 1 && IsMap(fieldSchemas) && values[0] is null or { ValueKind: JsonValueKind.Object }));
+                    NamedEntries: ids.Count == 1 && IsMap(fieldSchemas) && values[0] is null or { ValueKind: JsonValueKind.Object }) { ChoiceLabels = choiceLabels, ChoiceCurrent = choiceLabels is null || !same ? null : Bed.Data.ChoiceLabels.Current(fieldSchemas, values[0]) });
             }
             return rows;
         }
@@ -321,9 +324,10 @@ public static class DataEditing
             {
                 var itemSchemas = schemas.At(d.Root, schema, $"{list}/{i}");
                 var (kind, choices) = KindOf(itemSchemas, [item]);
+                var choiceLabels = Bed.Data.ChoiceLabels.Read(itemSchemas, choices);
                 var plain = item.ValueKind is not (JsonValueKind.Object or JsonValueKind.Array or JsonValueKind.Null);
                 rows.Add(new InspectorRow($"{NestedMark}{place}/{i}", ItemLabel(item, i), kind, Show(item, kind), false, plain, false, false,
-                    choices, Pick(itemSchemas, "description")?.GetString() ?? "", RangeOf(itemSchemas, kind), CanAdd: item.ValueKind == JsonValueKind.Array, CanRemove: true));   // with its help (found by A129)
+                    choices, Pick(itemSchemas, "description")?.GetString() ?? "", RangeOf(itemSchemas, kind), CanAdd: item.ValueKind == JsonValueKind.Array, CanRemove: true) { ChoiceLabels = choiceLabels, ChoiceCurrent = choiceLabels is null ? null : Bed.Data.ChoiceLabels.Current(itemSchemas, item) });   // with its help (found by A129)
                 i++;
             }
             return rows;

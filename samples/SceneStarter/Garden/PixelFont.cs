@@ -83,6 +83,11 @@ public static class PngWriter
 {
     public static void Write(string path,uint[] argb,int width,int height)
     {
+        var directory=Path.GetDirectoryName(Path.GetFullPath(path));if(directory is not null)Directory.CreateDirectory(directory);
+        File.WriteAllBytes(path,Encode(argb,width,height));
+    }
+    internal static byte[] Encode(uint[] argb,int width,int height)
+    {
         var raw=new byte[(width*3+1)*height];
         for(int y=0,o=0;y<height;y++)
         {
@@ -95,10 +100,10 @@ public static class PngWriter
         System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header,width);
         System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4),height);
         header[8]=8;header[9]=2;   // 8-bit RGB
-        var directory=Path.GetDirectoryName(Path.GetFullPath(path));if(directory is not null)Directory.CreateDirectory(directory);
-        using var file=File.Create(path);
+        using var file=new MemoryStream();
         file.Write([0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A]);
         Chunk(file,"IHDR"u8,header);Chunk(file,"IDAT"u8,compressed.ToArray());Chunk(file,"IEND"u8,[]);
+        return file.ToArray();
     }
 
     private static void Chunk(Stream stream,ReadOnlySpan<byte> kind,byte[] data)

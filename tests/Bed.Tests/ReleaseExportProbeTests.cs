@@ -28,7 +28,7 @@ public sealed class ReleaseExportProbeTests
         Assert.Equal("",errors.ToString());using var json=JsonDocument.Parse(output.ToString());var result=json.RootElement;
         Assert.Equal("passed",result.GetProperty("status").GetString());Assert.True(result.GetProperty("verified").GetBoolean());Assert.True(result.GetProperty("copied").GetBoolean());
         Assert.Equal("level.json",result.GetProperty("document").GetString());Assert.Equal(destination,result.GetProperty("destination").GetString());
-        Assert.Equal(17,result.GetProperty("fileCount").GetInt32());Assert.Equal(17,result.GetProperty("files").GetArrayLength()); // EX13 adds README.txt
+        Assert.Equal(23,result.GetProperty("fileCount").GetInt32());Assert.Equal(23,result.GetProperty("files").GetArrayLength()); // EX13 adds README.txt; EXPORT-SELL01 adds the BRUTAL logo, licence, notice, release checklist, credits and the AI-disclosure worksheet
         var assets=ProjectAssets.Open(destination);var part=Assert.Single(assets.ReadMesh("c8a7e000000000000000000000000001").Parts);
         var texture=assets.ReadTexture(part.Material!.Texture!.Value);Assert.Equal(8,texture.Width);Assert.Equal(8,texture.Height);
         foreach(var file in result.GetProperty("files").EnumerateArray())

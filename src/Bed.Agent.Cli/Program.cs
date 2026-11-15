@@ -13,6 +13,7 @@ public static class Program
 {
     private const string Usage = """
         --help                                  print usage without opening a project or window; use alone
+        new <full-folder> [--preview]            create a playable game with data, Gum screens and source
         report                                  print a redacted problem report; no project, files or browser opened
         --version                               print the BED build version without opening a project or window
         usage: bed-cli --data <folder> --schemas <folder> [--map <reference_map.json>] [--adapter <game adapter dll>] [--assets <folder> [--own-name <name>]...] [--read-only] <call> [args]
@@ -21,6 +22,7 @@ public static class Program
           ui [--json] [--script <json array>]          read/action only its own headless instance, never a live window; max32 steps
           scene <file> <action> <args-json> [--preview] [--save]
                                                     typed scene v1 edits; v2 also supports prefab/sprite actions; previews by default
+          build                                     build saved game files with the command approved locally in BED; returns structured errors
           describe                                  start here: files, what can be saved, lists, problems, calls
           find <file> <list> [text] [--limit N]     items in a list, by label or field text (50 shown unless --limit)
           get <file> <at>                           a value, its label, and where an id leads
@@ -59,6 +61,7 @@ public static class Program
     /// arguments, or a folder or map that can't be read.</summary>
     public static int Run(string[] args, TextReader input, TextWriter output, TextWriter errors)
     {
+        if(args is ["new","--help"]){output.WriteLine("bed-cli new <full-folder> [--preview] creates an original playable game, Gum screens and source. An existing destination is refused.");return 0;}
         if (args.Contains("--help", StringComparer.Ordinal))
         {
             if (args.Length != 1) { errors.WriteLine("--help must be used alone."); return 2; }
@@ -76,6 +79,7 @@ public static class Program
             if(args.Length!=1){errors.WriteLine("usage: bed-cli report");return 2;}
             output.Write(Bed.Editor.ImGui.ProblemReport.Format(new(),log:Bed.Editor.ImGui.ProblemReportLog.Read()));return 0;
         }
+        if(args.Length>0&&args[0]=="new") return NewGameCommand.Run(args,output,errors);
         var rest = new List<string>();
         string? data = null, schemas = null, mapPath = null, adapterPath = null, assets = null, licence = null, source = null, author = null, ai = null;
         var limit = 50;
@@ -177,39 +181,51 @@ public static class Program
             }
             return UiSnapshotCommand.Run(data, schemas, mapPath, adapterPath, rest.Contains("--json", StringComparer.Ordinal), output, errors, uiScript);
         }
-        if (data is null || schemas is null || rest.Count == 0) { errors.Write(Usage); return 2; }
+        var queryCall=rest.Count>0 && rest[0] is "describe" or "find" or "get" or "problems" or "refs" or "checks" or "check";
+        void ProjectError(string message)=>errors.WriteLine((queryCall?"couldn't check: ":"")+message);
+        if (data is null || schemas is null || rest.Count == 0) { if(queryCall) ProjectError("Both --data and --schemas are needed."); errors.Write(Usage); return 2; }
+        if(Bed.Editor.AssetAiAccess.Refusal(Bed.Editor.AssetAiAccess.RootFor(data),data,schemas,mapPath,assets,adapterPath) is {} denied)
+        { output.WriteLine(denied.ToJsonString());return 1; }
         AgentSession session;
+        Func<Bed.Editor.PlaySettings?>? buildDefaults=null;
+        string? adapterAssets=null;
         try
         {
             var map = mapPath is null ? null : ReferenceMap.Read(File.ReadAllText(mapPath));
             // With a game adapter, the AI gets the game's own rules and checks, as a person does in the editor (found by A188).
             if (adapterPath is not null)
             {
-                if (readOnly) { errors.WriteLine("--read-only with --adapter isn't supported yet: an adapter opens its own project, and its contract has no read-only option"); return 2; }
-                if (!Directory.Exists(data)) { errors.WriteLine($"there's no data folder at {data}. Check --data."); return 2; }
-                if (!Directory.Exists(schemas)) { errors.WriteLine($"there's no schema folder at {schemas}. Check --schemas."); return 2; }
+                if (readOnly) { ProjectError("--read-only with --adapter isn't supported yet: an adapter opens its own project, and its contract has no read-only option"); return 2; }
+                if (!Directory.Exists(data)) { ProjectError($"there's no data folder at {data}. Check --data."); return 2; }
+                if (!Directory.Exists(schemas)) { ProjectError($"there's no schema folder at {schemas}. Check --schemas."); return 2; }
                 var paths = new Bed.Editor.ImGui.ProjectPaths(data, schemas, mapPath);
                 if (CliAdapterSelection.Load(adapterPath, paths, errors) is not {} adapter) return 2;
+                adapterAssets=adapter.AssetsFolder(paths with {Root=AgentBuildCommand.RootFor(data)});
+                if(Bed.Editor.AssetAiAccess.Refusal(adapterAssets) is {} assetDenied)
+                {output.WriteLine(assetDenied.ToJsonString());return 1;}
                 DataProject? project;
                 try { project = adapter.Open(new Bed.Editor.ImGui.ProjectPaths(data, schemas, mapPath)); }
-                catch (Exception e) { errors.WriteLine($"{adapter.Name} couldn't open the project: {e.Message}. That's a fault in the adapter, not your data: fix it, or leave --adapter out to work on the plain data."); return 2; }
-                if (project is null) { errors.WriteLine($"{adapter.Name} gave back no project from Open. That's a fault in the adapter, not your data: fix it, or leave --adapter out to work on the plain data."); return 2; }
+                catch (Exception e) { ProjectError($"{adapter.Name} couldn't open the project: {e.Message}. That's a fault in the adapter, not your data: fix it, or leave --adapter out to work on the plain data."); return 2; }
+                if (project is null) { ProjectError($"{adapter.Name} gave back no project from Open. That's a fault in the adapter, not your data: fix it, or leave --adapter out to work on the plain data."); return 2; }
                 try { Bed.Editor.ImGui.Adapters.ApplyProtectedNames(adapter, project); }
-                catch (Exception e) { errors.WriteLine($"{adapter.Name}'s protected names couldn't be read: {e.Message}. That's a fault in the adapter: fix it, or leave --adapter out."); return 2; }
+                catch (Exception e) { ProjectError($"{adapter.Name}'s protected names couldn't be read: {e.Message}. That's a fault in the adapter: fix it, or leave --adapter out."); return 2; }
                 session = new AgentSession(project, map);
+                buildDefaults=()=>adapter.DefaultPlay(paths with {Root=AgentBuildCommand.RootFor(data)});
                 try { ownNames.AddRange(adapter.OwnNames); }
-                catch (Exception e) { errors.WriteLine($"{adapter.Name}'s own names couldn't be read: {e.Message}. That's a fault in the adapter: fix it, or leave --adapter out."); return 2; }
+                catch (Exception e) { ProjectError($"{adapter.Name}'s own names couldn't be read: {e.Message}. That's a fault in the adapter: fix it, or leave --adapter out."); return 2; }
                 // All or none, as in the editor: a duplicate id costs the adapter's checks, never the session, and it's said (found by A200).
                 try { session.Checks.Add([.. adapter.Checks]); }
-                catch (Exception e) { errors.WriteLine($"{adapter.Name}'s checks weren't added: {e.Message}. The project is open without them."); }
+                catch (Exception e) { ProjectError($"{adapter.Name}'s checks weren't added: {e.Message}. The project is open without them."); }
             }
             else session = new AgentSession(DataProject.Open(data, schemas, readOnly), map);
         }
         catch (Exception e) when (e is IOException or JsonException or InvalidDocumentException or UnauthorizedAccessException)
         {
-            errors.WriteLine($"can't open the project: {e.Message}");
+            ProjectError($"can't open the project: {e.Message}");
             return 2;
         }
+        session.ProtectAiPaths(mapPath,adapterPath,adapterAssets);
+        assets??=adapterAssets;
         if (assets is not null)
         {
             if (!Directory.Exists(assets)) { errors.WriteLine($"there's no asset folder at {assets}. Check --assets."); return 2; }
@@ -224,14 +240,43 @@ public static class Program
             catch(ArgumentException error){errors.WriteLine(error.Message);errors.Write(Usage);return 2;}
             catch(Exception error)when(error is IOException or UnauthorizedAccessException or DocumentFormatException or InvalidDocumentException)
             {sceneResult=new(){["error"]="The scene command was refused: "+error.Message,["next"]="Resolve the file or validation error before trying again."};}
+            sceneResult=session.AiRefusal()??sceneResult;
             output.WriteLine(sceneResult.ToJsonString(new JsonSerializerOptions{WriteIndented=true}));
             return sceneResult.ContainsKey("error")?1:0;
         }
+        JsonObject BuildGame()=>AgentBuildCommand.Run(session,AgentBuildCommand.RootFor(data),buildDefaults,
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"BED"));
+        if(rest[0]=="build" && (rest.Count!=1||preview||save||givenLimit is not null||first is not null||checkOptions is not null))
+        {errors.WriteLine("build takes no arguments or edit/check flags.");return 2;}
         if (rest[0] == "mcp")
         {
+            using var observation=new AgentPlayObservation();
+            JsonObject Observe(string tool,JsonObject arguments)
+            {
+                try
+                {
+                    if(session.Project.ReadOnly)return new(){["error"]="This connection can only read files, so it cannot try game controls."};
+                    return tool switch
+                    {
+                        "play_start"=>StartObservation(),
+                        "play_screenshot"=>observation.Request("shot"),
+                        "play_hold_key"=>observation.Request("hold",arguments["key"]!.GetValue<string>(),arguments["seconds"]!.GetValue<double>()),
+                        _=>observation.Request("stop")
+                    };
+                }
+                catch(Exception e)when(e is not OutOfMemoryException){return new(){["error"]=e.Message,["next"]="Use a saved game that shares pictures with BED. Build it and approve its Play command in BED first; BED sends controls only to that game."};}
+            }
+            JsonObject StartObservation()
+            {
+                var root=AgentBuildCommand.RootFor(data);var settings=Bed.Editor.PlaySettingsStore.Load(root,buildDefaults?.Invoke());
+                if(settings is null||!Bed.Editor.PlaySettingsResolver.TryResolve(root,settings,out var launch,out _))throw new InvalidOperationException("Set the saved game's Play command in BED first.");
+                return observation.Start(launch!,new Bed.Editor.PlayApprovals(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"BED")),session.Project.Files.Any(f=>f.Dirty));
+            }
+            var server=new McpServer(session,build:BuildGame){PlayObservation=Observe};
+
             // Stdin as bytes, read as strict UTF-8, when it's the real console: never decoded through the console's code page (A207).
-            if (ReferenceEquals(input, Console.In)) new McpServer(session).Run(Console.OpenStandardInput(), output);
-            else new McpServer(session).Run(input, output);
+            if (ReferenceEquals(input, Console.In)) server.Run(Console.OpenStandardInput(), output);
+            else server.Run(input, output);
             return 0;
         }
         string A(int n) => n < rest.Count ? rest[n] : throw new ArgumentException($"'{rest[0]}' needs more arguments");
@@ -240,6 +285,7 @@ public static class Program
         {
             result = rest[0] switch
             {
+                "build" => BuildGame(),
                 "describe" => session.Describe(),
                 "find" => session.Find(A(1), A(2), rest.Count > 3 ? rest[3] : null, limit),
                 "get" => session.Get(A(1), A(2)),
@@ -262,7 +308,8 @@ public static class Program
         }
         catch (Exception e) when (e is ArgumentException or FormatException)
         {
-            errors.WriteLine(e.Message);
+            var query=rest[0] is "describe" or "find" or "get" or "problems" or "refs" or "checks" or "check";
+            errors.WriteLine((query?"couldn't check: ":"")+e.Message);
             errors.Write(Usage);
             return 2;
         }
@@ -279,6 +326,7 @@ public static class Program
         else if (!preview && result["applied"] is not null)
             // A command line run ends here, so its edit isn't kept: say how to keep it (there's no separate save call).
             result["next"] = "nothing was written: run the same command again with --save to keep it";
+        result=session.AiRefusal()??result;
         output.WriteLine(result.ToJsonString(new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
         var failed = result.ContainsKey("error") || result.ContainsKey("refused")
             || rest[0] == "problems" && result["count"]?.GetValue<int>() > 0   // found problems (found by A045)

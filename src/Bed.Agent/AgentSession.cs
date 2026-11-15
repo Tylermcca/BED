@@ -15,7 +15,7 @@ namespace Bed.Agent;
 /// </para>
 /// INVENTED: the self-describing calls and the hints; they sit over goal 2's commands and journal.
 /// </summary>
-public sealed class AgentSession
+public sealed partial class AgentSession
 {
     /// <summary>Creates an ordinary standalone session, without proposal hosting.</summary>
     public AgentSession(DataProject project, ReferenceMap? map = null)
@@ -28,6 +28,11 @@ public sealed class AgentSession
         Project = project; Map = map; Checks = proposals.Checks; this.proposals = proposals;
     }
     private readonly EditProposals? proposals;
+    private readonly List<string?> aiExtraPaths=[];
+    internal void ProtectAiPaths(params string?[] paths)=>aiExtraPaths.AddRange(paths);
+    private string?[] AiPaths()=>[AssetAiAccess.RootFor(Project.DataFolder),Project.DataFolder,Project.SchemaFolder,AssetFolder,..aiExtraPaths];
+    internal JsonObject? AiRefusal() => AssetAiAccess.Refusal(AiPaths());
+    private JsonObject Guard(Func<JsonObject> action) => AssetAiAccess.Guard(action,AiPaths());
 
     /// <summary>The project being worked.</summary>
     public DataProject Project { get; }
@@ -40,15 +45,20 @@ public sealed class AgentSession
 
     private static JsonObject NoProposalHost() => new() { ["error"] = "Proposals need a running editor; host dispatch is required." };
     /// <summary>Lists proposals and optionally the file session/revision for submission. Passive; hosted only.</summary>
-    public JsonObject ListProposals(string? file = null) => proposals?.List(file) ?? NoProposalHost();
+    public JsonObject ListProposals(string? file = null) => Guard(() => ListProposalsCore(file));
+    private JsonObject ListProposalsCore(string? file = null) => Query(() => proposals?.List(file) ?? NoProposalHost());
     /// <summary>Reads an existing proposal and its candidate check receipt without executing it.</summary>
-    public JsonObject ShowProposal(string id) => proposals?.Show(id) ?? NoProposalHost();
+    public JsonObject ShowProposal(string id) => Guard(() => ShowProposalCore(id));
+    private JsonObject ShowProposalCore(string id) => Query(() => proposals?.Show(id) ?? NoProposalHost());
     /// <summary>Rejects exactly an id/digest; no document edit.</summary>
-    public JsonObject RejectProposal(string id, string digest) => proposals?.Reject(id, digest) ?? NoProposalHost();
+    public JsonObject RejectProposal(string id, string digest) => Guard(() => RejectProposalCore(id, digest));
+    private JsonObject RejectProposalCore(string id, string digest) => proposals?.Reject(id, digest) ?? NoProposalHost();
     /// <summary>Remote acceptance is always refused. Only the person's host-owned editor action accepts.</summary>
-    public JsonObject AcceptProposal(string id, string digest) => new() { ["error"] = "Remote proposal acceptance is disabled; review and accept in the editor." };
+    public JsonObject AcceptProposal(string id, string digest) => Guard(() => AcceptProposalCore(id, digest));
+    private JsonObject AcceptProposalCore(string id, string digest) => new() { ["error"] = "Review and accept proposed changes in BED; this connection cannot accept them." };
     /// <summary>Submits only explicit set/insert/remove operations and explicit check ids, never arbitrary catalog commands.</summary>
-    public JsonObject SubmitProposal(string file, string session, long revision, string operations, string checkIds)
+    public JsonObject SubmitProposal(string file, string session, long revision, string operations, string checkIds) => Guard(() => SubmitProposalCore(file, session, revision, operations, checkIds));
+    private JsonObject SubmitProposalCore(string file, string session, long revision, string operations, string checkIds)
     {
         if (proposals is null) return NoProposalHost();
         try
@@ -76,7 +86,9 @@ public sealed class AgentSession
     // ---- checks ----
 
     /// <summary>The checks there are, each with its last verdict.</summary>
-    public JsonObject ListChecks()
+    public JsonObject ListChecks() => Guard(() => ListChecksCore());
+    private JsonObject ListChecksCore() => Query(() => ListChecksRead());
+    private JsonObject ListChecksRead()
     {
         var list = new JsonArray();
         foreach (var d in Checks.Registered)
@@ -113,7 +125,9 @@ public sealed class AgentSession
     /// schema). Options start a run, so they can't go with <paramref name="first"/>, which reads one.</summary>
     /// <param name="runId">Optional terminal-run id in this session. Reads only that run, refuses stale/evicted ids,
     /// and never starts work. Without it the legacy latest-run behavior is unchanged.</param>
-    public JsonObject RunCheck(string id, int? first = null, int? limit = null, string? options = null, string? runId = null)
+    public JsonObject RunCheck(string id, int? first = null, int? limit = null, string? options = null, string? runId = null) => Guard(() => RunCheckCore(id, first, limit, options, runId));
+    private JsonObject RunCheckCore(string id, int? first = null, int? limit = null, string? options = null, string? runId = null) => Query(() => RunCheckRead(id, first, limit, options, runId));
+    private JsonObject RunCheckRead(string id, int? first = null, int? limit = null, string? options = null, string? runId = null)
     {
         if (runId is not null && (string.IsNullOrWhiteSpace(runId) || options is not null))
             return Fail("run needs a nonempty id and cannot be combined with options", "options start a new run; run reads an existing one");
@@ -142,7 +156,7 @@ public sealed class AgentSession
         };
         if (run.RunId is { } completedId) result["run"] = completedId;
         if (run.Captured is { } captured && captured.Options.EnumerateObject().Any()) result["options"] = JsonNode.Parse(captured.Options.GetRawText());
-        if (run.Problem is { } problem) result["problem"] = problem;
+        if (run.Problem is { } problem) result["problem"] = "couldn't check: " + problem;
         if (run.Report is { } report)
         {
             result["summary"] = report.Summary;
@@ -175,9 +189,9 @@ public sealed class AgentSession
             return Fail("That run is stale; run the check again for current findings.", "start a new check without run");
         result["next"] = result["nextFirst"] is { } more
             ? (stale ? "the project has changed since this run, so this is an old result: check again without first for a current one, or " : "") + $"check again with {(runId is null ? "" : $"run={runId} and ")}first={more} to read on in this same run"
-            : run.Clean(Project) ? "nothing to fix"
+            : run.Clean(Project) ? "This check reported no errors. Other checks and play may find more."
             : stale ? "the project has changed since this run: check again without first for a current result"
-            : run.Report is { Findings.Count: > 0 } ? "get each finding's place, fix it with set, then check again" : "see problem";
+            : run.Report is { Findings.Count: > 0 } ? "Read each finding and its place, decide what to change, then check the changed data." : "see problem";
         return result;
     }
 
@@ -194,7 +208,9 @@ public sealed class AgentSession
     /// saved (and why not), its top-level lists with item counts, and how many problems it has; then the calls that
     /// edit, and where to start. Opening a file to count it doesn't change it.
     /// </summary>
-    public JsonObject Describe()
+    public JsonObject Describe() => Guard(() => DescribeCore());
+    private JsonObject DescribeCore() => Query(() => DescribeRead());
+    private JsonObject DescribeRead()
     {
         var files = new JsonArray();
         foreach (var f in Project.Files)
@@ -210,7 +226,7 @@ public sealed class AgentSession
             if (f.ReadOnlyReason is { } why) entry["readOnly"] = why;
             if (!opened)
             {
-                entry["cantOpen"] = string.Join(" ", f.Problems.Select(p => p.Message));
+                entry["cantOpen"] = "couldn't check: " + string.Join(" ", f.Problems.Select(p => p.Message));
                 files.Add(entry);
                 continue;
             }
@@ -262,7 +278,9 @@ public sealed class AgentSession
 
     /// <summary>The items of the list at <paramref name="list"/> in <paramref name="file"/> whose label, or any scalar
     /// field, contains <paramref name="text"/> (ignoring case), or all of them; at most <paramref name="limit"/>.</summary>
-    public JsonObject Find(string file, string list, string? text = null, int limit = 50)
+    public JsonObject Find(string file, string list, string? text = null, int limit = 50) => Guard(() => FindCore(file, list, text, limit));
+    private JsonObject FindCore(string file, string list, string? text = null, int limit = 50) => Query(() => FindRead(file, list, text, limit));
+    private JsonObject FindRead(string file, string list, string? text = null, int limit = 50)
     {
         if (NotAPlace(list) is { } bad) return bad;
         if (Open(file, out var f) is { } refused) return refused;
@@ -289,7 +307,9 @@ public sealed class AgentSession
 
     /// <summary>The value at <paramref name="at"/>, with its label when it's a list item, and, when the map says it's an
     /// id, where it leads.</summary>
-    public JsonObject Get(string file, string at)
+    public JsonObject Get(string file, string at) => Guard(() => GetCore(file, at));
+    private JsonObject GetCore(string file, string at) => Query(() => GetRead(file, at));
+    private JsonObject GetRead(string file, string at)
     {
         if (NotAPlace(at) is { } bad) return bad;
         if (Open(file, out var f) is { } refused) return refused;
@@ -301,7 +321,7 @@ public sealed class AgentSession
             var r = m.Resolve(Project, file, at, value);
             if (r.Outcome != ReferenceOutcome.NotAReference)
             {
-                result["link"] = new JsonObject { ["outcome"] = r.Outcome.ToString(), ["file"] = r.Target?.File, ["at"] = r.Target?.Pointer, ["note"] = r.Note };
+                result["link"] = new JsonObject { ["outcome"] = r.Outcome.ToString(), ["file"] = r.Target?.File, ["at"] = r.Target?.Pointer, ["note"] = CannotResolve(r.Outcome) ? "couldn't check: "+(r.Note ?? r.Outcome.ToString()) : r.Note };
             }
         }
         result["next"] = "set(file, at, value, preview=true) to change it";
@@ -309,23 +329,29 @@ public sealed class AgentSession
     }
 
     /// <summary>What the schemas find wrong: in one file, or in every file of the project.</summary>
-    public JsonObject Problems(string? file = null)
+    public JsonObject Problems(string? file = null) => Guard(() => ProblemsCore(file));
+    private JsonObject ProblemsCore(string? file = null) => Query(() => ProblemsRead(file));
+    private JsonObject ProblemsRead(string? file = null)
     {
+        if (file is not null && Project.Find(file) is null) return Fail($"there's no file called {file}", "describe lists the files");
         var list = new JsonArray();
         foreach (var f in Project.Files.Where(f => file is null || f.Name == file))
         {
-            if (!f.Open()) { foreach (var p in f.Problems) list.Add(Problem(f.Name, p)); continue; }
+            if (!f.Open()) { foreach (var p in f.Problems) { var finding=Problem(f.Name,p);finding["message"]="couldn't check: "+p.Message;list.Add(finding); } continue; }
             foreach (var p in f.Session!.Validator.Validate(f.Session.Current).Where(i => i.Severity == Severity.Error)) list.Add(Problem(f.Name, p));
         }
-        return new JsonObject { ["count"] = list.Count, ["problems"] = list, ["next"] = list.Count == 0 ? "nothing to fix" : "get the place, then set it right" };
+        return new JsonObject { ["count"] = list.Count, ["problems"] = list, ["next"] = list.Count == 0 ? "No errors were found in the file structure. Other checks and play may find more." : "Read the findings and their places, then decide what to change." };
     }
 
     /// <summary>Everything in the project that refers to the item at <paramref name="at"/> in <paramref name="file"/>,
     /// through the reference map: each place, with its item's label. Needs a map.</summary>
-    public JsonObject Refs(string file, string at)
+    public JsonObject Refs(string file, string at) => Guard(() => RefsCore(file, at));
+    private JsonObject RefsCore(string file, string at) => Query(() => RefsRead(file, at));
+    private JsonObject RefsRead(string file, string at)
     {
         if (NotAPlace(at) is { } bad) return bad;
         if (Map is null) return Fail("this project has no reference map, so links aren't known", "start the tool with a map");
+        if (ReferenceInputs() is {} missing) return missing;
         if (Open(file, out var f) is { } refused) return refused;
         if (f.Session!.Current.At(at) is null) return Fail($"nothing is at {at} in {file}", "find lists a list's items and their places");
         var from = new JsonArray();
@@ -346,7 +372,8 @@ public sealed class AgentSession
 
     /// <summary>Opens a file that doesn't fit its schema for repair: its problems are listed, and edits that add none
     /// are accepted until none are left.</summary>
-    public JsonObject Repair(string file)
+    public JsonObject Repair(string file) => Guard(() => RepairCore(file));
+    private JsonObject RepairCore(string file)
     {
         if (Project.Find(file) is not { } f) return Fail($"there's no file called {file}", "describe lists the files");
         if (!f.Repair()) return Fail($"{file} can't be repaired here: {string.Join(" ", f.Problems.Select(p => p.Message))}", "fix it outside the editor first");
@@ -362,7 +389,8 @@ public sealed class AgentSession
 
     /// <summary>Makes a new file from a schema (<see cref="DataProject.Create"/>), on disk at once; preview shows what it
     /// would hold.</summary>
-    public JsonObject Create(string file, string schema, bool preview = false)
+    public JsonObject Create(string file, string schema, bool preview = false) => Guard(() => CreateCore(file, schema, preview));
+    private JsonObject CreateCore(string file, string schema, bool preview = false)
     {
         if (!Project.Create(file, schema, out var why, preview)) return Fail(why, Project.SchemaNames.Count > 0 ? "schemas: " + string.Join(", ", Project.SchemaNames) : "the schema folder is empty");
         return new JsonObject { ["file"] = file, ["schema"] = schema, [preview ? "wouldDo" : "done"] = why, ["next"] = preview ? "create without preview to make it" : "insert items into its lists; save(file) after edits" };
@@ -370,7 +398,8 @@ public sealed class AgentSession
 
     /// <summary>Renames a file (<see cref="DataProject.Rename"/>), on disk at once; says how many links point into it,
     /// since the reference map names files.</summary>
-    public JsonObject Rename(string file, string to, bool preview = false)
+    public JsonObject Rename(string file, string to, bool preview = false) => Guard(() => RenameCore(file, to, preview));
+    private JsonObject RenameCore(string file, string to, bool preview = false)
     {
         var links = Map?.LinksInto(Project, file) ?? 0;
         if (!Project.Rename(file, to, out var why, preview)) return Fail(why, "describe lists the files and what can be saved");
@@ -381,7 +410,8 @@ public sealed class AgentSession
 
     /// <summary>Deletes a file (<see cref="DataProject.Delete"/>), on disk at once; restore(file) puts it back while this
     /// session lasts. Preview first: it says how many links would be left naming nothing.</summary>
-    public JsonObject Delete(string file, bool preview = false)
+    public JsonObject Delete(string file, bool preview = false) => Guard(() => DeleteCore(file, preview));
+    private JsonObject DeleteCore(string file, bool preview = false)
     {
         var links = Map?.LinksInto(Project, file) ?? 0;
         if (!Project.Delete(file, out var why, preview)) return Fail(why, "describe lists the files and what can be saved");
@@ -394,7 +424,8 @@ public sealed class AgentSession
     }
 
     /// <summary>Puts back a file deleted in this session (<see cref="DataProject.Restore"/>).</summary>
-    public JsonObject Restore(string file) =>
+    public JsonObject Restore(string file) => Guard(() => RestoreCore(file));
+    private JsonObject RestoreCore(string file) =>
         Project.Restore(file, out var why) ? new JsonObject { ["file"] = file, ["done"] = why, ["next"] = "describe shows it" }
             : Fail(why, Project.Deleted.Count > 0 ? "deleted here: " + string.Join(", ", Project.Deleted) : "nothing was deleted in this session");
 
@@ -403,7 +434,8 @@ public sealed class AgentSession
     /// <summary>Sets the value at <paramref name="at"/> to <paramref name="json"/> (any JSON; <c>null</c> as text
     /// removes the field). With <paramref name="preview"/>, shows what would change and whether the schema accepts it,
     /// changing nothing.</summary>
-    public JsonObject Set(string file, string at, string json, bool preview = false)
+    public JsonObject Set(string file, string at, string json, bool preview = false) => Guard(() => SetCore(file, at, json, preview));
+    private JsonObject SetCore(string file, string at, string json, bool preview = false)
     {
         JsonElement? value;
         try { value = json.Trim() == "null" ? null : JsonDocument.Parse(json).RootElement.Clone(); }
@@ -413,7 +445,8 @@ public sealed class AgentSession
 
     /// <summary>Inserts <paramref name="json"/> into the list at <paramref name="list"/> before <paramref name="index"/>
     /// (the list's length appends).</summary>
-    public JsonObject Insert(string file, string list, int index, string json, bool preview = false)
+    public JsonObject Insert(string file, string list, int index, string json, bool preview = false) => Guard(() => InsertCore(file, list, index, json, preview));
+    private JsonObject InsertCore(string file, string list, int index, string json, bool preview = false)
     {
         JsonElement value;
         try { value = JsonDocument.Parse(json).RootElement.Clone(); }
@@ -422,10 +455,12 @@ public sealed class AgentSession
     }
 
     /// <summary>Removes the list item at <paramref name="at"/>.</summary>
-    public JsonObject Remove(string file, string at, bool preview = false) => Edit(file, new RemoveItem(at), at, preview);
+    public JsonObject Remove(string file, string at, bool preview = false) => Guard(() => RemoveCore(file, at, preview));
+    private JsonObject RemoveCore(string file, string at, bool preview = false) => Edit(file, new RemoveItem(at), at, preview);
 
     /// <summary>Undoes the last edit to <paramref name="file"/>.</summary>
-    public JsonObject Undo(string file)
+    public JsonObject Undo(string file) => Guard(() => UndoCore(file));
+    private JsonObject UndoCore(string file)
     {
         if (Open(file, out var f) is { } refused) return refused;
         return f.Session!.Undo()
@@ -435,7 +470,8 @@ public sealed class AgentSession
 
     /// <summary>Saves one file, or every file with unsaved edits. Refused for a read-only file, or one changed outside
     /// since it was opened; the edits stay either way.</summary>
-    public JsonObject Save(string? file = null)
+    public JsonObject Save(string? file = null) => Guard(() => SaveCore(file));
+    private JsonObject SaveCore(string? file = null)
     {
         var targets = file is null ? Project.Dirty : Project.Find(file) is { } one ? [one] : [];
         if (file is not null && targets.Count == 0) return Fail($"there's no file called {file}", "describe lists the files");
@@ -532,7 +568,8 @@ public sealed class AgentSession
     /// with <paramref name="source"/>. Refused, with exactly what was found, when the file's own rights tags contradict the
     /// declaration (see <see cref="AssetImport.Import"/>). Writes the sidecar at once, unless the project is read-only or its
     /// <see cref="DataProject.FileCheck"/> refuses the write (<see cref="FileChangeKind.Replace"/>).</summary>
-    public JsonObject Import(string file, string origin, string? licence = null, string? source = null, string? author = null, string? aiUse = null)
+    public JsonObject Import(string file, string origin, string? licence = null, string? source = null, string? author = null, string? aiUse = null) => Guard(() => ImportCore(file, origin, licence, source, author, aiUse));
+    private JsonObject ImportCore(string file, string origin, string? licence = null, string? source = null, string? author = null, string? aiUse = null)
     {
         if (AssetPath(file, out var path) is { } no) return no;
         if (!AssetOrigins.TryParse(origin, out var declared))
@@ -562,7 +599,8 @@ public sealed class AgentSession
     /// <summary>Changes an imported asset's declared origin through its <see cref="DeclareAssetOrigin"/> command, judged
     /// against the tags found at import as an import is. With <paramref name="preview"/> nothing is written; otherwise the
     /// sidecar is saved at once.</summary>
-    public JsonObject Declare(string file, string origin, string? licence = null, string? source = null, bool preview = false)
+    public JsonObject Declare(string file, string origin, string? licence = null, string? source = null, bool preview = false) => Guard(() => DeclareCore(file, origin, licence, source, preview));
+    private JsonObject DeclareCore(string file, string origin, string? licence = null, string? source = null, bool preview = false)
     {
         if (AssetPath(file, out var path) is { } no) return no;
         if (!File.Exists(AssetRecord.SidecarFor(path))) return Fail($"{file} isn't imported yet", "import it with its origin declared");

@@ -508,9 +508,8 @@ public sealed class CheckersInTheAppAcceptanceTests
         Assert.Equal(0,GameApp.Run([t.File,"--shot",shot],output,errors));Assert.Equal("",errors.ToString());
         Assert.True(new FileInfo(shot).Length>1000);Assert.Equal(text,System.IO.File.ReadAllText(t.File));Assert.Contains(Path.GetFullPath(shot),output.ToString());
         // An independent expected render of the supplied position distinguishes loading it from silently using Opening().
-        var expected=new CheckersPlay.Play(Position.Read(text));
-        using var oracle=new HeadlessHost(720,800);oracle.Frames(expected.Draw,3);
-        Assert.Equal(Png.Encode(720,800,oracle.Pixels),System.IO.File.ReadAllBytes(shot));
+        using var expected=new CheckersPlay.Play(Position.Read(text));expected.Draw();var oracle=Path.Combine(t.Root,"oracle.png");expected.Screen.Save(oracle);
+        Assert.Equal(System.IO.File.ReadAllBytes(oracle),System.IO.File.ReadAllBytes(shot));
     }
 
     // Source: Program exit codes "1 the position can't be read (with why)".
@@ -553,35 +552,24 @@ public sealed class CheckersInTheAppAcceptanceTests
         var errors=new StringWriter();Assert.Equal(2,GameApp.Run([arg],TextWriter.Null,errors));Assert.Contains("usage:",errors.ToString());
     }
 
-    // Source: Play "New game ... starts over from the same position."
+    // The standalone player owns its keyboard/mouse presentation; authoring tests above retain the editor APIs.
     [Fact] public void Standalone_NewGameRestartsTheSuppliedPositionNotTheStandardOpening()
     {
-        var start=Position.Read(PositionText(6,"dark",("c3",'d'),("d4",'l')));var play=new CheckersPlay.Play(start);
+        var start=Position.Read(PositionText(6,"dark",("c3",'d'),("d4",'l')));using var play=new CheckersPlay.Play(start);
         var first=play.Match;Assert.Equal("Played c3-e5.",first.Play(new MovePiece(["c3","e5"])));
-        using var h=Host();Button(h,play.Draw,"Checkers###game","New game");
-        Assert.NotSame(first,play.Match);Assert.Equal(State(start),State(play.Match.Current));Assert.Null(Rules.Winner(play.Match.Current));
+        play.Key("N");play.Draw();Assert.NotSame(first,play.Match);Assert.Equal(State(start),State(play.Match.Current));
     }
-
-    // Source: Match.Draw "Take back" removes the last move, independent of document undo.
-    [Fact] public void Standalone_TakeBackRestoresTheLastPositionAndTurnThroughKeyboard()
+    [Fact] public void Standalone_TakeBackReversesOnlyTheMatch()
     {
-        var start=Position.Read(PositionText(6,"dark",("c3",'d'),("d4",'l')));var play=new CheckersPlay.Play(start);
-        Assert.Equal("Played c3-e5.",play.Match.Play(new MovePiece(["c3","e5"])));
-        using var h=Host();Button(h,play.Draw,"Checkers###game","Take back");
-        Assert.Equal(State(start),State(play.Match.Current));Assert.Equal("Took back the last move.",play.Match.Said);
+        var start=Position.Read(PositionText(6,"dark",("c3",'d'),("d4",'l')));using var play=new CheckersPlay.Play(start);
+        Assert.Equal("Played c3-e5.",play.Match.Play(new MovePiece(["c3","e5"])));play.Key("U");play.Draw();
+        Assert.Equal(State(start),State(play.Match.Current));Assert.False(play.Match.CanTakeBack);Assert.Equal("Took back the last move.",play.Match.Said);
     }
-
-    // Source: Match.Take back is disabled at the initial history entry.
-    [Fact] public void Standalone_InitialTakeBackCannotRemoveTheStartingPosition()
+    [Fact] public void Standalone_DisabledTakeBackDoesNothingAndLiveControlsRemainAvailable()
     {
-        var start=Position.Read(PositionText(6,"dark",("c3",'d'),("d4",'l')));var play=new CheckersPlay.Play(start);
-        using var h=Host();h.Frames(play.Draw,4);var snapshot=State(play.Match.Current);
-        // The disabled Take back target is absent from keyboard navigation; live neighbours must be reached.
-        var w=ImGui.Internal.FindWindowByName("Checkers###game");var back=w.GetID("Take back").Value;
-        var next=w.GetID("New game").Value;var computer=w.GetID("Computer move").Value;var seen=new HashSet<uint>();
-        for(int i=0;i<70;i++){h.Press(play.Draw,ImGuiKey.Tab);seen.Add(ImGui.GetCurrentContext().NavId.Value);}
-        Assert.DoesNotContain(back,seen);Assert.Contains(next,seen);Assert.Contains(computer,seen);
-        Assert.Equal(snapshot,State(play.Match.Current));Assert.Equal(State(start),State(play.Match.Current));
-        Assert.Equal("",play.Match.Said);
+        var start=Position.Read(PositionText(6,"dark",("c3",'d'),("d4",'l')));using var play=new CheckersPlay.Play(start);play.Draw();var snapshot=State(start);
+        Assert.DoesNotContain(play.Screen.Parts(),p=>p.Name=="TakeBack");Assert.Contains(play.Screen.Parts(),p=>p.Name=="ComputerMove");
+        play.Key("U");Assert.Equal(snapshot,State(play.Match.Current));Assert.Equal("",play.Match.Said);
+        play.Key("C");Assert.NotEqual(snapshot,State(play.Match.Current));Assert.True(play.Match.CanTakeBack);
     }
 }

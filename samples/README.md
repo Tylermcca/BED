@@ -13,12 +13,15 @@ Library and adapter samples build a component for a host; they are not standalon
 | ImportCheck | The import-check command-line sample; build with `dotnet build samples/ImportCheck/ImportCheck.csproj -c Release` (no import workload is part of this index smoke check). |
 | Ladder | Describe a document, add a one-class tool, then an extension; library sample, `dotnet build samples/Ladder/Ladder.csproj -c Release`, then read its Rung1/Rung2/Rung3 sources. |
 | LightsPlugin | Scene lights supplied by a plug-in manifest; library sample, `dotnet build samples/LightsPlugin/LightsPlugin.csproj -c Release`, then load the built plug-in through a matching host. |
+| Checkers.Rules | Runtime board format, validation and moves with no editor dependency; `dotnet build samples/Checkers.Rules/Checkers.Rules.csproj -c Release`. |
 | Checkers | Shared board rules, commands and editor plug-in; library sample, `dotnet build samples/Checkers/Checkers.csproj -c Release`; use Checkers.App to try it. |
 | Checkers.App | Checkers inside the editor; `dotnet run --project samples/Checkers.App/Checkers.App.csproj` opens a window. |
 | Checkers.Game | The same checkers rules in a standalone player; `dotnet run --project samples/Checkers.Game/Checkers.Game.csproj` opens a window. |
 | CheckersAdapter | Checkers project integration for the general host; `dotnet build samples/CheckersAdapter/CheckersAdapter.csproj -c Release`, then use the host's adapter-loading route with CheckersProject. |
 | CheckersProject | Two editable checkers positions; open `samples/CheckersProject` in the host with CheckersAdapter loaded; see [its README](CheckersProject/README.md). |
 | StarterAdapter | A minimal project adapter with a game rule beyond the schema, plus [compiled managed-source hooks](StarterAdapter/ManagedSourceHooks.cs) for admission, saved events, owner ticks, background checks and multiline text; `dotnet build samples/StarterAdapter/StarterAdapter.csproj -c Release`, then load it in the matching host for StarterProject. |
+| StarterGame | Original tiny game with Menu and Play in Gum; `dotnet build samples/StarterGame/StarterGame.csproj -c Release`, then use `--project samples/NewGameProject --headless`. Its source is copied into each new game. |
+| NewGameProject | Data, rules and two Gum screens for the New game template; see [its README](NewGameProject/README.md). |
 | StarterProject | Small generic data and a reference map; open `samples/StarterProject` in the host; see [its README](StarterProject/README.md). |
 | RoutePuzzle | Runtime-only route model/loader; `dotnet build samples/RoutePuzzle/RoutePuzzle.csproj -c Release`; use its authoring companion to play, as [documented](RoutePuzzle/README.md). |
 | RoutePuzzle.Game | Saved-files console player with cooperative Pause/Step/Resume; `dotnet build samples/RoutePuzzle.Game/RoutePuzzle.Game.csproj`; run with `--project samples/RoutePuzzle --seconds 5 --route brook,summit`. No window/audio in automated tests. |

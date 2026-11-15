@@ -3,7 +3,7 @@ using Brutal.ImGuiApi;
 namespace Bed.Editor.ImGui;
 using ImGui = Brutal.ImGuiApi.ImGui;
 
-// Preferences > Locations: where BED finds things on this computer (Gum, the usual folder for new projects, a folder of
+// Options > Locations: where BED finds things on this computer (Gum, the usual folder for new projects, a folder of
 // extra adapters). Kept with the person's other preferences, never in a project. Empty means BED's normal place.
 internal static class Locations
 {
@@ -13,12 +13,14 @@ internal static class Locations
     internal static string Projects { get; set; } = "";
     /// <summary>A folder of extra adapters BED loads as well as its own, or empty for none.</summary>
     internal static string Adapters { get; set; } = "";
+    internal static string CodeEditor {get;set;}="windows";
+    internal static string CodeEditorProgram {get;set;}="";
     /// <summary>The ordinary Windows file pickers, when the app has them.</summary>
     internal static Func<IFileDialogs?> Dialogs { get; set; } = () => null;
     /// <summary>Where BED looks for Gum when asked to find it; tests replace it.</summary>
     internal static Func<IEnumerable<string>> GumPlaces { get; set; } = GumTool.UsualPlaces;
 
-    private static readonly Row gum = new("Gum", "Gum.exe"), projects = new("New projects go in", null), adapters = new("Extra adapters", null);
+    private static readonly Row gum = new("Gum", "Gum.exe"), projects = new("New projects go in", null), adapters = new("Extra adapters", null), codeEditor=new("Code editor program","*.exe");
 
     internal static void Draw()
     {
@@ -32,6 +34,14 @@ internal static class Locations
             return found;
         });
         if (Gum.Length > 0 && !File.Exists(Gum)) Ui.TextWrapped("There's no Gum.exe there. Check the folder and the spelling, or press Find it for me."u8);
+        if(Ui.BeginCombo("Code editor"u8,CodeEditorTool.Label(CodeEditor)))
+        {
+            foreach(var kind in new[]{"windows","vscode","visualstudio","rider"})
+                if(Ui.Selectable(CodeEditorTool.Label(kind),CodeEditor==kind)){CodeEditor=kind;CodeEditorProgram="";}
+            Ui.EndCombo();
+        }
+        if(CodeEditor!="windows")CodeEditorProgram=codeEditor.Draw(CodeEditorProgram,"Leave empty to use an installed editor, or choose its .exe.",()=>CodeEditorTool.Places().FirstOrDefault(p=>p.Kind==CodeEditor)?.Program);
+        else Ui.TextWrapped("Windows opens the solution or folder with its usual app. For source links that jump to a line, choose VS Code, Visual Studio or Rider."u8);
         Projects = projects.Draw(Projects, $"Normally {ProjectCreator.DefaultLocation ?? "your Documents folder"}.", null);
         if (Projects.Length > 0 && !Directory.Exists(Projects)) Ui.TextWrapped("That folder isn't there yet. BED makes it when you create a project there."u8);
         Adapters = adapters.Draw(Adapters, "Adapters teach BED about a game. BED always uses the ones that come with it; put more in a folder of your own and choose it here. BED loads them the next time it starts.", null);

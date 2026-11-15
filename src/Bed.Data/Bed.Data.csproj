@@ -8,4 +8,5 @@
     <!-- The reference map's format, kept once in docs/spec and embedded so a map can be checked without the docs. -->
     <EmbeddedResource Include="..\..\docs\spec\schemas\reference_map.schema.json" LogicalName="reference_map.schema.json" />
   </ItemGroup>
+  <ItemGroup><InternalsVisibleTo Include="Bed.Editor" /></ItemGroup>
 </Project>

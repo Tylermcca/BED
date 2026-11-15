@@ -58,7 +58,7 @@ public sealed class ProjectCreator
     /// <summary>Validates and lists the exact files, including installed-template availability, without any write.</summary>
     public ProjectCreationPreview Preview(string templateId, string location, string name)
     {
-        var prepared = Prepare(templateId, location, name, out _, out var why);
+        var prepared = Prepare(templateId, location, name, out _, out var why, readContents:false);
         return prepared is null ? new(false, why, null, Array.Empty<string>())
             : new(true, "", prepared.Folder, prepared.Template.Files);
     }
@@ -204,6 +204,7 @@ public sealed class ProjectCreator
                 if (bytes.LongLength != length) throw new IOException("Installed scene example changed while copying; try again.");
                 contents.Add(relative, bytes);
             }
+            ProjectTemplates.AddInstructions(contents);
             var template = new ProjectTemplate("scene-example", "3D example", "A personal copy of the bundled level and game.", Array.AsReadOnly(contents.Keys.ToArray()));
             return new(template, target.Location, target.Folder, contents);
         }
@@ -213,13 +214,13 @@ public sealed class ProjectCreator
 
     private sealed record Prepared(ProjectTemplate Template, string Location, string Folder, IReadOnlyDictionary<string, byte[]> Contents);
 
-    private Prepared? Prepare(string id, string location, string name, out ProjectCreationStatus status, out string why)
+    private Prepared? Prepare(string id, string location, string name, out ProjectCreationStatus status, out string why, bool readContents = true)
     {
         status = ProjectCreationStatus.Refused;
         why = NameProblem(name) ?? "";
         if (why.Length != 0) return null;
         var template = ProjectTemplates.Find(id);
-        if (template is null) { why = "Choose Empty project or Recipes example."; return null; }
+        if (template is null) { why = "Choose a template listed by New project."; return null; }
         if (string.IsNullOrWhiteSpace(location) || !Path.IsPathFullyQualified(location))
         { why = "Choose a full path for the project location."; return null; }
         try
@@ -236,7 +237,7 @@ public sealed class ProjectCreator
                 if (File.Exists(parent)) { why = "The project location contains a file where a folder is needed. Choose another location."; return null; }
             }
             // Read all source bytes before the first destination/parent write; the copy uses this in-memory snapshot.
-            var contents = ProjectTemplates.Contents(template, recipes);
+            var contents = ProjectTemplates.Contents(template, recipes,readContents);
             return new(template, location, folder, contents);
         }
         catch (Exception e) when (FileProblem(e))

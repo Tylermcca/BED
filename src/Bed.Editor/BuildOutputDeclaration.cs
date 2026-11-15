@@ -34,6 +34,20 @@ public sealed class BuildOutputDeclaration
         _=ExportStaging.Create(Guid.NewGuid(),graph,null,notices,true);
         Paths=items.Select(i=>i.Mapping.Destination).Concat(notices.Select(n=>n.Output.Destination)).Order(StringComparer.Ordinal).ToImmutableArray();
     }
+    // App-owned release files are pinned notices, never an open-ended output wildcard.
+    internal BuildOutputDeclaration WithReleaseFiles(IReadOnlyDictionary<string,byte[]> files) => new(this, files);
+    private BuildOutputDeclaration(BuildOutputDeclaration original, IReadOnlyDictionary<string,byte[]> files)
+    {
+        Source=original.Source; Profile=original.Profile; items=original.items;
+        var added=files.Select((file,index)=>new GameContentNode(new("bed-release-"+index,file.Key,"bed.release-notice"),file.Value,
+            Convert.ToHexStringLower(SHA256.HashData(file.Value)),[],true,ExportSource.BuiltFrom(Source.Hash))).ToArray();
+        notices=original.notices.AddRange(added);
+        var hash=Convert.ToHexStringLower(SHA256.HashData(Array.Empty<byte>()));
+        var graph=GameContentManifest.Create(Profile,Source.InventoryOwner,Source.InventoryRevision,true,
+            items.Select(i=>new GameContentNode(i.Mapping,[],hash,i.Dependencies,true,ExportSource.BuiltFrom(Source.Hash))),Source.Hash);
+        _=ExportStaging.Create(Guid.NewGuid(),graph,null,notices,true);
+        Paths=original.Paths.Concat(files.Keys).Order(StringComparer.Ordinal).ToImmutableArray();
+    }
     /// <summary>Admitted source inputs, including the hash to which admission receipts were bound.</summary>
     public GameContentManifest Source {get;}
     /// <summary>Exact declared output profile.</summary>

@@ -515,13 +515,14 @@ public sealed class ProtectedNamesAndRightsCheckTests : IDisposable
     [Fact]
     public void The_check_lists_assets_and_flags_undeclared_unimported_and_contradicted_ones()
     {
+        // These synthetic fixtures explicitly allow the AI check to read their tags.
         var empty = JsonDocument.Parse("{}").RootElement;
-        AssetRecord.Create(Put("old.png", RightsFixtures.Png()), "png", 1, empty, new Provenance("t", "self-authored", "t"), AiUse.Unknown);
+        AssetRecord.Create(Put("old.png", RightsFixtures.Png()), "png", 1, empty, new Provenance("t", "self-authored", "t"), AiUse.Allowed);
         Put("loose.png", RightsFixtures.Png());
-        Assert.True(AssetImport.Import(Put("ok.glb", RightsFixtures.Glb(null)), "glb", 1, empty, new Provenance("", "", "", "", AssetOrigin.Ours), AiUse.Unknown).Ok);
-        Assert.True(AssetImport.Import(Put("lic.ttf", RightsFixtures.Font((0, "Type Holder"))), "ttf", 1, empty, new Provenance("", "OFL-1.1", "a shop", "", AssetOrigin.Licensed), AiUse.Unknown).Ok);
+        Assert.True(AssetImport.Import(Put("ok.glb", RightsFixtures.Glb(null)), "glb", 1, empty, new Provenance("", "", "", "", AssetOrigin.Ours), AiUse.Allowed).Ok);
+        Assert.True(AssetImport.Import(Put("lic.ttf", RightsFixtures.Font((0, "Type Holder"))), "ttf", 1, empty, new Provenance("", "OFL-1.1", "a shop", "", AssetOrigin.Licensed), AiUse.Allowed).Ok);
         var swapped = Put("swap.png", RightsFixtures.Png());
-        Assert.True(AssetImport.Import(swapped, "png", 1, empty, new Provenance("", "", "", "", AssetOrigin.Ours), AiUse.Unknown).Ok);
+        Assert.True(AssetImport.Import(swapped, "png", 1, empty, new Provenance("", "", "", "", AssetOrigin.Ours), AiUse.Allowed).Ok);
         File.WriteAllBytes(swapped, RightsFixtures.Png(RightsFixtures.Text("Copyright", "Swapped In Holder")));   // changed after import
 
         var agent = new AgentSession(DataProject.Open(Data, Schemas)).UseAssets(Assets);
@@ -549,7 +550,7 @@ public sealed class ProtectedNamesAndRightsCheckTests : IDisposable
         Assert.Contains("Big Holder", o.ToString());
         Assert.False(File.Exists(Path.Combine(Assets, "tagged.png.asset.json")));
         Assert.Equal(1, Bed.Agent.Cli.Program.Run([.. common, "import", "mine.png", "licensed"], TextReader.Null, new StringWriter(), TextWriter.Null));
-        Assert.Equal(0, Bed.Agent.Cli.Program.Run([.. common, "import", "mine.png", "ours"], TextReader.Null, new StringWriter(), TextWriter.Null));
+        Assert.Equal(0, Bed.Agent.Cli.Program.Run([.. common, "import", "mine.png", "ours", "--ai", "allowed"], TextReader.Null, new StringWriter(), TextWriter.Null));
         Assert.True(File.Exists(Path.Combine(Assets, "mine.png.asset.json")));
         Assert.Equal(1, Bed.Agent.Cli.Program.Run([.. common, "import", "../data/cards.json", "ours"], TextReader.Null, new StringWriter(), TextWriter.Null));
 
@@ -559,7 +560,7 @@ public sealed class ProtectedNamesAndRightsCheckTests : IDisposable
         Assert.Contains("declare", tools);
         var refused = mcp.Handle("""{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"import","arguments":{"file":"tagged.png","origin":"publicDomain","source":"somewhere"}}}""")!;
         Assert.Contains("Big Holder", refused["result"]!["content"]![0]!["text"]!.GetValue<string>());
-        var licensed = mcp.Handle("""{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"import","arguments":{"file":"tagged.png","origin":"licensed","licence":"CC-BY-4.0","source":"https://example.invalid"}}}""")!;
+        var licensed = mcp.Handle("""{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"import","arguments":{"file":"tagged.png","origin":"licensed","licence":"CC-BY-4.0","source":"https://example.invalid","aiUse":"allowed"}}}""")!;
         Assert.Contains("imported", licensed["result"]!["content"]![0]!["text"]!.GetValue<string>());
         var declare = mcp.Handle("""{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"declare","arguments":{"file":"tagged.png","origin":"ours"}}}""")!;
         Assert.Contains("Big Holder", declare["result"]!["content"]![0]!["text"]!.GetValue<string>());
@@ -674,7 +675,7 @@ public sealed class ContentRightsHardeningTests : IDisposable
         var (checkedAgent, _) = Agent(fileCheck: c => { asked.Add(c); return c.Text!.Contains("\"licensed\"") ? "licensed art needs a sign-off" : null; });
         Assert.Contains("sign-off", checkedAgent.Import("a.png", "licensed", "CC-BY-4.0", "a site")["refused"]!.ToJsonString());
         Assert.False(File.Exists(Path.Combine(assets, "a.png.asset.json")));
-        Assert.NotNull(checkedAgent.Import("a.png", "ours")["imported"]);
+        Assert.NotNull(checkedAgent.Import("a.png", "ours", aiUse:"allowed")["imported"]);
         Assert.Contains("sign-off", checkedAgent.Declare("a.png", "licensed", "CC-BY-4.0", "a site")["refused"]!.ToJsonString());
         Assert.Contains("\"ours\"", File.ReadAllText(Path.Combine(assets, "a.png.asset.json")));
         Assert.All(asked, c => Assert.Equal((FileChangeKind.Replace, "a.png.asset.json"), (c.Kind, c.Name)));
@@ -692,7 +693,7 @@ public sealed class ContentRightsHardeningTests : IDisposable
         var o = new StringWriter();
         Assert.Equal(1, Bed.Agent.Cli.Program.Run([.. common, "import", "mine.png", "ours"], TextReader.Null, o, TextWriter.Null));
         Assert.Contains("--own-name", o.ToString());
-        Assert.Equal(0, Bed.Agent.Cli.Program.Run([.. common, "--own-name", "Our Studio", "import", "mine.png", "ours"], TextReader.Null, new StringWriter(), TextWriter.Null));
+        Assert.Equal(0, Bed.Agent.Cli.Program.Run([.. common, "--own-name", "Our Studio", "import", "mine.png", "ours", "--ai", "allowed"], TextReader.Null, new StringWriter(), TextWriter.Null));
     }
 
     [Fact]

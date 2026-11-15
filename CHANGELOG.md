@@ -4,6 +4,52 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.5.0-preview.1] - 2026-11-15
+
+A preview to try. The stable download remains 0.4.0.
+
+### Added
+
+- **File > New game** creates a small playable game with editable data, a Gum menu and play screen, and its C# source. The Windows player is included. Saving data or a screen updates the running game. A [first-game guide](docs/guide/first_game_with_ai.md) walks from a new folder to changing a rule and rebuilding it.
+- AI tools refuse requests for data, files, game pictures and live values when an asset is forbidden for AI use, or its permission is unknown or cannot be checked. The reply asks the owner to review the [asset record in BED](docs/guide/content_rights.md).
+- The bundled checkers sample has a standalone player that loads its saved board without BED's editor libraries.
+- The physics island's **jump** input lifts a crate upward: press **Space** in its player, or use **jump** in AI picture requests and **Live values**.
+- A [future-ideas register](docs/future.md) records later requests, their origins, what support they need and their current status.
+- Each new game includes rules for an AI assistant: use BED's checked data tools, preview changes, make one undoable edit and save explicitly. The [AI guide](docs/guide/using_bed_with_ai.md) also has a copyable rules file for existing projects.
+- **Help > Connect an AI app** adds the open project to your chosen assistant after you review the change. Existing settings are backed up; the connection can be removed.
+- **Tools > Build game** builds saved files without starting Play. Its errors include a source line when supplied and something to try.
+- **View > Game picture** shows pictures from games that share them with BED, including games made with **File > New game**. Stop ordinary Play, choose **Start picture run**, then **Take picture** or **Stop picture run**. The game runs without a window and pauses between requests. See [game pictures](docs/guide/see_the_game.md).
+- An AI assistant can receive pictures from the running garden and physics island without opening a game window. It can try short key holds, see what changed and move the island's camera.
+- **Live values** shows values from games that choose to share them: position, speed and jump strength in the garden; body height, vertical speed, gravity and mass on the physics island. Trial changes affect the current run; **Keep this value** writes a confirmed setting to saved data.
+- **Tools > Open game code** uses your own editor, remembered in **Options > Locations**. Build error links open the reported source line in a named editor.
+- Export adds asset credits, BRUTAL notices, licence and logo files, a release checklist and an AI-content disclosure worksheet for the person to review before selling.
+- [New guide pages](docs/guide/README.md) cover connecting an assistant, building, seeing the game, live values, opening code and preparing an export.
+
+### Changed
+
+- Panel tabs and edges are easier to see in every theme, with clearer selected tabs, drag grips and drop targets.
+- A game can ask for a large preview in a middle tab. A person's saved panel layout still takes priority.
+- Pick lists and table cells show friendly choice labels supplied by a game's maker while saving the same underlying values. Checks and undo text use those labels too.
+
+### Fixed
+
+- Pressing **Edit in Gum** while the Gum instance BED started is still opening no longer starts another copy. BED says that Gum is still opening.
+- AI read tools say **couldn't check** and name the missing input when they cannot read a file or complete a reference check, instead of implying there are no findings.
+- Automated read checks now match the **couldn't check** wording used for missing or unreadable inputs.
+- **New game...** on the start screen opens the chooser before any project is open. Sample rows show plain names such as **2D garden** and **Physics island**, including when reached by keyboard or a screen reader.
+- **Start live values** fits in a narrower window, with the explanation that no game window opens beside it.
+- **Live values** stays out of the standard layout for games that do not share values.
+- Build and live-value controls are available as soon as a file opens, including through the command palette.
+- Windows app and test builds can run in either order without losing the libraries' documentation files.
+
+### Known issues
+
+- This is a preview for Windows x64; the stable download remains 0.4.0.
+- Your assistant app and Gum are installed separately. Changing the starter's C# code needs the .NET 10 SDK; trying its included player does not.
+- Live values and AI game pictures need support from the game. They do not attach to arbitrary running games.
+- Export's checklist and notices still need a person's review before release.
+- The OpenGL fallback view shows sprite outlines, not images. A full walkthrough with a real screen reader has not been done yet.
+
 ## [0.4.0] - 2026-11-13
 
 Game screens made in [Gum](https://docs.flatredball.com/gum), the free menu and screen designer, are now part of the main download. BED shows your Gum screens as your game will draw them, opens them in Gum with one button, and updates by itself when you save in Gum. Coming from 0.3.1? The two 0.3.9 previews below list everything Gum brings. **Please try to break it**, and tell us what goes wrong with **Help > Report a problem**.

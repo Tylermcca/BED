@@ -11,7 +11,7 @@ namespace PhysicsStarter;
 /// a 4x multisampled framebuffer. The same drawing renders a hidden window's frame to a PNG for checks.</summary>
 internal static unsafe class ToyWindow
 {
-    internal const string Title="Crate drop - click: drop a crate | right-drag or A/D: orbit | wheel: zoom | R: reset | Esc: quit";
+    internal const string Title="Crate drop - click: drop a crate | right-drag or A/D: orbit | wheel: zoom | Space: jump crate | R: reset | Esc: quit";
     private static GlGetProcAddressFunc? loader;   // kept rooted: GLAD keeps the pointer (BRUTAL T35)
 
     /// <summary>Opens the window and plays until it is closed. Returns false when no OpenGL 4.1 window could be made.</summary>
@@ -38,17 +38,23 @@ internal static unsafe class ToyWindow
                     {
                         Glfw.PollEvents();
                         var now=clock.Elapsed.TotalSeconds;var seconds=Math.Min(now-last,.25);last=now;
+                        var pixels=window.FramebufferSize;
+                        if(now < 2.5)
+                        {
+                            if(pixels.X>0&&pixels.Y>0){DrawBranding(pixels.X,pixels.Y,default);Glfw.PInvoke.SwapBuffers(window);}
+                            continue;
+                        }
                         foreach(var (command,at) in controls.Update((float)seconds))
                             switch(command)
                             {
                                 case ToyCommand.Quit:window.ShouldClose=true;break;
                                 case ToyCommand.Reset:toy.Reset();break;
+                                case ToyCommand.Jump:toy.Jump();break;
                                 case ToyCommand.DropCrate:
                                     var size=window.Size;var (origin,direction)=controls.Camera.Ray(at.X,at.Y,MathF.Max(1,size.X),MathF.Max(1,size.Y));
                                     toy.Drop(toy.DropPoint(origin,direction));break;
                             }
                         toy.Advance(seconds);
-                        var pixels=window.FramebufferSize;
                         if(pixels.X<=0||pixels.Y<=0){Glfw.WaitEventsTimeout(.1);continue;}   // minimised
                         if(target is null||target.Width!=pixels.X||target.Height!=pixels.Y){target?.Dispose();target=new Target(pixels.X,pixels.Y);}
                         renderer.Draw(toy.Drawables(),controls.Camera,pixels.X,pixels.Y,target.Frame);
@@ -64,6 +70,45 @@ internal static unsafe class ToyWindow
         finally{Glfw.Terminate();}
     }
 
+    // The owned observation child keeps its real renderer/context; screenshots never create files or show a window.
+    internal sealed class ObservationFrames : IDisposable
+    {
+        private GlfwWindow? window;
+        private ToyRenderer? renderer;
+        private Target? target;
+        private bool initialized;
+        internal ObservationFrames(Scene2RuntimeAssets assets)
+        {
+            if (!Glfw.Init()) throw new InvalidOperationException("The island could not start its picture drawing system.");
+            initialized = true;
+            try
+            {
+                window = Create(true, 64, 64) ?? throw new InvalidOperationException("The island cannot draw pictures without a window on this computer.");
+                renderer = new ToyRenderer(assets.Meshes, assets.Textures);
+                target = new Target(1280, 720);
+            }
+            catch { Dispose(); throw; }
+        }
+        internal byte[] Draw(CrateToy toy, OrbitCamera camera)
+        {
+            if (target is null || renderer is null) throw new ObjectDisposedException(nameof(ObservationFrames));
+            renderer.Draw(toy.Drawables(), camera, target.Width, target.Height, target.Frame);
+            return EncodePng(target.Width, target.Height, target.Read());
+        }
+        public void Dispose()
+        {
+            try { target?.Dispose(); target = null; }
+            finally
+            {
+                try { renderer?.Dispose(); renderer = null; }
+                finally
+                {
+                    if (window is { } owned) { owned.Dispose(); window = null; }
+                    if (initialized) { Glfw.Terminate(); initialized = false; }
+                }
+            }
+        }
+    }
     /// <summary>Renders the toy's current state through a hidden window into a PNG; nothing appears on screen.</summary>
     internal static void Shot(CrateToy toy,Scene2RuntimeAssets assets,string path,int width,int height,OrbitCamera camera)
     {
@@ -82,6 +127,40 @@ internal static unsafe class ToyWindow
         finally{Glfw.Terminate();}
     }
 
+    internal static void ShotBranding(string path,int width,int height)
+    {
+        if(!Glfw.Init())throw new InvalidOperationException("GLFW could not start.");
+        try
+        {
+            var window=Create(true,64,64)??throw new InvalidOperationException("No hidden OpenGL context is available.");
+            try
+            {
+                using var target=new Target(width,height);
+                DrawBranding(width,height,target.Frame);
+                WritePng(path,width,height,target.Read());
+            }
+            finally{window.Dispose();}
+        }
+        finally{Glfw.Terminate();}
+    }
+    // Draw the unaltered official pixels on black. Scissored clears avoid adding a texture/shader dependency.
+    private static void DrawBranding(int width,int height,GlFramebuffer target)
+    {
+        GL.glBindFramebuffer(OpenGl.GL_FRAMEBUFFER,target);GL.glViewport(0,0,width,height);
+        GL.glDisable(GlCapability.ScissorTest);GL.glClearColor(0,0,0,1);GL.glClear(OpenGl.GL_COLOR_BUFFER_BIT);
+        var image=BrutalLogo.Image;var scale=MathF.Min(width*.65f/image.Width,height*.65f/image.Height);
+        var left=(width-image.Width*scale)/2;var top=(height-image.Height*scale)/2;
+        GL.glEnable(GlCapability.ScissorTest);
+        foreach(var (y,x0,x1,rgba) in image.Runs)
+        {
+            var a=(rgba>>24)/255f;
+            GL.glClearColor((rgba&255)/255f*a,((rgba>>8)&255)/255f*a,((rgba>>16)&255)/255f*a,1);
+            var x=(int)MathF.Round(left+x0*scale);var right=(int)MathF.Round(left+x1*scale);
+            var bottom=(int)MathF.Round(top+y*scale);var end=(int)MathF.Round(top+(y+1)*scale);
+            GL.glScissor(x,height-end,right-x,end-bottom);GL.glClear(OpenGl.GL_COLOR_BUFFER_BIT);
+        }
+        GL.glDisable(GlCapability.ScissorTest);
+    }
     private static GlfwWindow? Create(bool hidden,int width,int height)
     {
         Glfw.WindowHint(GlfwWindowHint.ClientApi,Glfw.Constants.GLFW_OPENGL_API);
@@ -95,7 +174,7 @@ internal static unsafe class ToyWindow
         if(!Glad.Initialize(loader)){window.Dispose();return null;}
         return window;
     }
-    private static ToyKey Map(GlfwKey key)=>key switch{GlfwKey.A=>ToyKey.A,GlfwKey.D=>ToyKey.D,GlfwKey.Left=>ToyKey.Left,GlfwKey.Right=>ToyKey.Right,GlfwKey.R=>ToyKey.R,GlfwKey.Escape=>ToyKey.Escape,_=>ToyKey.Other};
+    private static ToyKey Map(GlfwKey key)=>key switch{GlfwKey.A=>ToyKey.A,GlfwKey.D=>ToyKey.D,GlfwKey.Left=>ToyKey.Left,GlfwKey.Right=>ToyKey.Right,GlfwKey.Space=>ToyKey.Space,GlfwKey.R=>ToyKey.R,GlfwKey.Escape=>ToyKey.Escape,_=>ToyKey.Other};
 
     /// <summary>A 4x multisampled colour and depth framebuffer, resolved by a blit.</summary>
     private sealed class Target:IDisposable
@@ -139,6 +218,11 @@ internal static unsafe class ToyWindow
     /// <summary>An RGBA PNG with zlib-compressed rows; no image library needed.</summary>
     internal static void WritePng(string path,int width,int height,byte[] rgba)
     {
+        var directory=Path.GetDirectoryName(Path.GetFullPath(path));if(directory is not null)Directory.CreateDirectory(directory);
+        File.WriteAllBytes(path,EncodePng(width,height,rgba));
+    }
+    internal static byte[] EncodePng(int width,int height,byte[] rgba)
+    {
         using var raw=new MemoryStream();
         using(var z=new ZLibStream(raw,CompressionLevel.Optimal,true))
             for(var y=0;y<height;y++){z.WriteByte(0);z.Write(rgba,y*width*4,width*4);}
@@ -151,8 +235,7 @@ internal static unsafe class ToyWindow
         }
         var header=new byte[13];System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header,width);System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4),height);
         header[8]=8;header[9]=6;Chunk("IHDR",header);Chunk("IDAT",raw.ToArray());Chunk("IEND",[]);
-        var directory=Path.GetDirectoryName(Path.GetFullPath(path));if(directory is not null)Directory.CreateDirectory(directory);
-        File.WriteAllBytes(path,file.ToArray());
+        return file.ToArray();
     }
     private static uint Crc(ReadOnlySpan<byte> data)
     {

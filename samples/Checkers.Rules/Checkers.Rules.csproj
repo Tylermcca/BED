@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The unchanged board format, validation and moves, shared by authoring and the standalone player. -->
+  <PropertyGroup><RootNamespace>Checkers</RootNamespace></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../src/Bed/Bed.csproj" /></ItemGroup>
+</Project>

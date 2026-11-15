@@ -42,6 +42,27 @@ public sealed class PhysicsToyTests
     }
 
     [Fact]
+    public void Space_jumps_once_per_press_and_moves_only_the_chosen_body_without_saving()
+    {
+        var controls=new ToyControls(new OrbitCamera());
+        controls.Key(ToyKey.Space,true);controls.Key(ToyKey.Space,true);
+        Assert.Equal(ToyCommand.Jump,Assert.Single(controls.Update(.1f)).Command);Assert.Empty(controls.Update(.1f));
+        controls.Key(ToyKey.Space,false);controls.Key(ToyKey.Space,true);
+        Assert.Equal(ToyCommand.Jump,Assert.Single(controls.Update(.1f)).Command);
+        var scene=Island();using var toy=new CrateToy(scene);for(var i=0;i<100;i++)toy.Step();
+        var saved=toy.World.Saved("crate_box");var before=toy.World.Pose("crate_box").Position;
+        var other=toy.Drop(new(1,1))!;var otherVelocity=toy.World.LinearVelocity(other);
+        toy.World.Velocity("crate_box",new(1,-2,2),Vector3.Zero);
+        Assert.True(toy.Jump());Assert.Equal(new Vector3(1,5,2),toy.World.LinearVelocity("crate_box"));
+        Assert.Equal(otherVelocity,toy.World.LinearVelocity(other));
+        for(var i=0;i<10;i++)toy.Step();Assert.True(toy.World.Pose("crate_box").Position.Y>before.Y+.3f);
+        Assert.True(toy.Jump(other));Assert.Equal(5,toy.World.LinearVelocity(other).Y);
+        Assert.False(toy.Jump("floor"));Assert.False(toy.Jump("missing"));
+        Assert.Equal(saved,toy.World.Saved("crate_box"));toy.Reset();Assert.Equal(saved,toy.World.Saved("crate_box"));
+        Assert.Equal(Vector3.Zero,toy.World.LinearVelocity("crate_box"));
+    }
+
+    [Fact]
     public void The_wheel_zooms_within_limits_and_pitch_stays_above_the_ground()
     {
         var camera=new OrbitCamera();var controls=new ToyControls(camera);var start=camera.Distance;

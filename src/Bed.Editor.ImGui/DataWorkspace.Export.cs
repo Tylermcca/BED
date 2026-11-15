@@ -18,6 +18,7 @@ public sealed partial class DataWorkspace
     private void RequestExport()
     {
         if(exportDialog is null)return;
+        if(projectBuild?.Busy==true){Said="Wait for the build to finish or cancel it before exporting.";return;}
         if(!ExportOwnerCurrent()){Said="This workspace is closed or no longer current; use the current project.";return;}
         if(ExportPlayRunning()){Said="Stop Play before exporting a build.";return;}
         if(exportDialog.Busy){exportDialog.Open=true;return;}

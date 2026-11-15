@@ -7,19 +7,22 @@ namespace Bed.Tests;
 [Collection(ImGuiCollection.Name)]
 public sealed class SpriteSampleTests
 {
-    private sealed class Copy:IDisposable
+    internal sealed class Copy:IDisposable
     {
         internal readonly string Root=Directory.CreateTempSubdirectory("sprite-sample-").FullName;
         internal readonly string Settings=Directory.CreateTempSubdirectory("sprite-settings-").FullName;
-        internal Copy()
+        private readonly bool physics;
+        internal Copy(bool physics=false)
         {
+            this.physics=physics;
             var repo=new DirectoryInfo(AppContext.BaseDirectory);while(repo is not null&&!File.Exists(Path.Combine(repo.FullName,"Bed.slnx")))repo=repo.Parent;
-            var source=Path.Combine(repo!.FullName,"samples/SpriteLevelProject");
+            var source=Path.Combine(repo!.FullName,physics?"samples/PrefabPhysicsProject":"samples/SpriteLevelProject");
             foreach(var file in Directory.GetFiles(source,"*",SearchOption.AllDirectories))
             {var relative=Path.GetRelativePath(source,file);if(relative.StartsWith("game"+Path.DirectorySeparatorChar)||relative.Contains("__pycache__")||relative.StartsWith(".bed"+Path.DirectorySeparatorChar+"cache"))continue;var target=Path.Combine(Root,relative);Directory.CreateDirectory(Path.GetDirectoryName(target)!);File.Copy(file,target);}
-            var game=Directory.CreateDirectory(Path.Combine(Root,"game")).FullName;var runtime=Path.Combine(AppContext.BaseDirectory,"samples/SceneStarter");
-            foreach(var name in SceneStarter.ExportInventory.RuntimeFiles)File.Copy(Path.Combine(runtime,name),Path.Combine(game,name));
-            var export=Directory.CreateDirectory(Path.Combine(game,"export")).FullName;foreach(var name in SceneStarter.ExportInventory.RuntimeFiles)File.Copy(Path.Combine(runtime,name),Path.Combine(export,name));
+            var game=Directory.CreateDirectory(Path.Combine(Root,"game")).FullName;var runtime=Path.Combine(AppContext.BaseDirectory,physics?"samples/PhysicsStarter":"samples/SceneStarter");
+            var files=physics?SceneStarter.PhysicsRuntimeInventory.Files:SceneStarter.ExportInventory.RuntimeFiles;
+            foreach(var name in files){var target=Path.Combine(game,name);Directory.CreateDirectory(Path.GetDirectoryName(target)!);File.Copy(Path.Combine(runtime,name),target);}
+            var export=Directory.CreateDirectory(Path.Combine(game,"export")).FullName;foreach(var name in files){var target=Path.Combine(export,name);Directory.CreateDirectory(Path.GetDirectoryName(target)!);File.Copy(Path.Combine(runtime,name),target);}
         }
         public void Dispose(){Directory.Delete(Root,true);Directory.Delete(Settings,true);}
         internal void OpenAndCompile()
@@ -27,7 +30,7 @@ public sealed class SpriteSampleTests
             using var output=new StringWriter();using var error=new StringWriter();
             Assert.Equal(0,Bed.Launcher.Program.Run([Root,"--settings",Settings,"--shot",Path.Combine(Settings,"sample.png")],output,error,Settings));Assert.Empty(error.ToString());
             Assert.True(File.Exists(Path.Combine(Settings,"sample.png")));Assert.True(File.Exists(Path.Combine(Root,".bed/cache/current.json")));
-            Assert.Equal(0,SceneStarter.Program.Run(["--compile-scene2",Root],output,error));Assert.Empty(error.ToString());
+            Assert.Equal(0,physics?PhysicsStarter.Program.Run(["--compile-scene2",Root],output,error):SceneStarter.Program.Run(["--compile-scene2",Root],output,error));Assert.Empty(error.ToString());
         }
     }
     [Fact]

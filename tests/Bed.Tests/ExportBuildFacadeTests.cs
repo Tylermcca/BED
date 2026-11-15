@@ -59,7 +59,7 @@ public sealed class ExportBuildFacadeTests
             Assert.True(receipt.Succeeded,receipt.Reason);Assert.Equal(0,receipt.ExitCode);Assert.Equal(plan.Admission.SnapshotHash,receipt.SavedRevision);
             var manifest=Assert.IsType<GameContentManifest>(operation.OutputManifest);Assert.Equal(plan.Admission.Source.Hash,manifest.SourceManifestHash);Assert.Equal(manifest.Hash,receipt.ManifestHash);
             Assert.Equal(plan.Admission.SavedInput.CopyPayload(),File.ReadAllBytes(Path.Combine(receipt.OutputDirectory,"result.bin")));
-            Assert.Equal("result.bin",Assert.Single(receipt.Outputs).Path);
+            Assert.Equal(plan.Outputs.Paths.Concat(ExportReleaseFiles.Create(plan).Keys).Order(),receipt.Outputs.Select(o=>o.Path).Order());
             Assert.Contains(operation.DrainLogs(),line=>line.Error&&line.Text=="Synthetic diagnostic");Assert.Empty(operation.DrainLogs());
             Assert.Equal("Build outputs verified; not published.",receipt.Reason);
             operation.Dispose();operation.Dispose();Assert.True(File.Exists(Path.Combine(receipt.OutputDirectory,"result.bin")));

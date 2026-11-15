@@ -9,10 +9,11 @@ namespace StarterAdapter;
 /// <summary>
 /// The sample project's game adapter: a worked example of what a game adds to the general app. It recognises the sample
 /// by its link map's game name, and adds a rule no schema can state: a recipe can't use up the ware it makes. It also
-/// lists a name the game must never use (<see cref="ProtectedNames"/>). Without
+/// lists a name the game must never use (<see cref="ProtectedNames"/>). The playable starter also uses this adapter
+/// to declare its live score and result. Without
 /// it the sample still opens; with it, that edit is refused with the game's own message.
 /// </summary>
-public sealed class StarterAdapter : IProjectAdapter
+public sealed partial class StarterAdapter : IProjectAdapter
 {
     /// <inheritdoc />
     public string Name => "Starter (sample game)";
@@ -22,7 +23,7 @@ public sealed class StarterAdapter : IProjectAdapter
     {
         if (project.Map is not { } map || !File.Exists(map)) return false;
         using var doc = JsonDocument.Parse(File.ReadAllText(map));
-        return doc.RootElement.TryGetProperty("game"u8, out var game) && game.GetString() == "Starter";
+        return doc.RootElement.TryGetProperty("game"u8, out var game) && game.GetString() is "Starter" or "StarterGame";
     }
 
     /// <inheritdoc />

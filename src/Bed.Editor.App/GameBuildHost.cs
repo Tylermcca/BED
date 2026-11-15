@@ -6,6 +6,7 @@ namespace Bed.Editor.App;
 /// Caller supplies the captured saved revision; this host does not save drafts or infer live freshness.</summary>
 public sealed class GameBuildHost : IDisposable
 {
+    internal Action<string>? AfterBuild {get;init;}
     internal string? OwnedExportFolder {get;init;}
     internal Action<GameBuildLog>? PersistentLog {get;init;}
     private readonly object gate=new();
@@ -95,6 +96,7 @@ public sealed class GameBuildHost : IDisposable
                 if(code!=0)throw new InvalidOperationException("The build stopped with error code "+code+".");
             }
             if(exportPlan is not null)BuildInputStaging.Verify(input!,exportPlan.Admission);
+            AfterBuild?.Invoke(output);
             var outputs=Inspect(output);
             lock(gate)
             {

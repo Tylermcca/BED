@@ -187,6 +187,10 @@ public sealed partial class ProjectLauncher : IDisposable
     /// <summary>What the last action did, or why it didn't.</summary>
     public string Said { get; private set; } = "";
 
+    internal bool AiObservation {get;set;}
+    private string? AiOpenRefusal(ProjectPaths project) => AiObservation
+        ? AssetAiAccess.Refusal(project.Root??project.Folder??AssetAiAccess.RootFor(project.Data),project.Data,project.Schemas,project.Map,project.AdapterPath,Using?.AssetsFolder(project),Adapter?.AssetsFolder(project))?["error"]?.GetValue<string>() : null;
+
     /// <summary>Opens a project and shows its workspace, adding it to the recent list. Returns false, saying what's
     /// wrong and what to do, when a folder is missing, the schema folder holds no schemas, a schema or the map can't be
     /// read, or a project is already open with unsaved edits.</summary>
@@ -195,6 +199,7 @@ public sealed partial class ProjectLauncher : IDisposable
     /// <summary>Reopens a recent entry with its exact remembered adapter. Missing/failed adapters open plain only when standard or explicit paths are available; otherwise opening is refused.</summary>
     public bool OpenRecent(ProjectPaths project)
     {
+        if(AiOpenRefusal(project) is {} denied)return Say(false,denied);
         if (RecentOpenRefusal(project) is { } missing) return Say(false, missing + " Remove it from the list or restore the folder.");
         // Do not load code merely to discover that dirty drafts prevent changing projects.
         if (!ConfirmBefore(() => OpenRecent(project), projectReplacement: true)) return false;
@@ -232,6 +237,7 @@ public sealed partial class ProjectLauncher : IDisposable
     private bool OpenWith(ProjectPaths project, bool noAdapter, IProjectAdapter? selected,
         IReadOnlyList<IProjectAdapter> candidates, ProjectPaths? remembered = null, string? initialNotice = null)
     {
+        if(AiOpenRefusal(project) is {} denied)return Say(false,denied);
         if (!ConfirmBefore(() => OpenWith(project, noAdapter, selected, candidates, remembered, initialNotice), projectReplacement: true)) return false;
         if (ProjectLoader.Open(project, noAdapter, selected, candidates, out var refusal) is not { } prepared)
             return Say(false, refusal);
@@ -248,7 +254,7 @@ public sealed partial class ProjectLauncher : IDisposable
         {
             // The adapter's per-file setup is given the workspace and file too (IProjectAdapter's default passes them by).
             workspace = pendingWorkspace = new DataWorkspace(data,shortcuts:shortcuts,map:map) { CloseProject = () => Close(), TypedProjectCloseConnected=true, Scene2OwnerCurrent=candidate=>ReferenceEquals(Workspace,candidate), RecentProjectsMenu=DrawRecentMenu, ConfigureFile = adapter is { } a ? a.Configure : null };
-            workspace.BindProjectMenus(()=>ChooseProject(StartPage.New),()=>ChooseProject(StartPage.Open));
+            workspace.BindProjectMenus(()=>ChooseProject(StartPage.New),()=>ChooseProject(StartPage.Open),ChooseNewGame);
             try
             {
                 var admitted = new ProjectPaths(data.DataFolder, data.SchemaFolder, full.Map){Root=projectRoot,Folder=full.Folder};
@@ -259,6 +265,7 @@ public sealed partial class ProjectLauncher : IDisposable
             workspace.BindPlaySettings(projectRoot,
                 adapter?.DefaultPlay(new ProjectPaths(data.DataFolder,data.SchemaFolder,full.Map){Root=projectRoot,Folder=full.Folder}),
                 Path.GetDirectoryName(SettingsFile)!,()=>FileDialogs);
+            workspace.BindLiveValues(adapter?.LiveValues(new ProjectPaths(data.DataFolder,data.SchemaFolder,full.Map){Root=projectRoot,Folder=full.Folder})??[]);
             if(ProjectPlayHost is {} projectPlay)workspace.BindProjectPlay(projectPlay);
             // Capture actual opened folders and resolved map, not recent-entry guesses or adapter-sidecar inference.
             // Panel availability follows the existing per-file editor: an empty workspace has no file panel yet.
@@ -269,6 +276,8 @@ public sealed partial class ProjectLauncher : IDisposable
                     new ProjectPaths(data.DataFolder, data.SchemaFolder, full.Map) { AdapterPath = adapterFile },
                     adapter is not null && adapterFile is null ? AiSetupPanel.BuiltInReason : null);
                 workspace.FilePanels.Add((_, _) => ai.AsPanel());
+                var connect = new AiConnectPanel(ai.Snippets, ai.Unavailable, AiConnectionLocations.Current);
+                workspace.FilePanels.Add((_, _) => connect.AsPanel());
             }
             catch (Exception e) { notes.Add($"AI setup examples are unavailable: {e.Message}"); }
             // The host's own setup is guarded too: a fault in it costs that setup, never the project (found by A188).
@@ -372,6 +381,7 @@ public sealed partial class ProjectLauncher : IDisposable
     private bool OpenFolderWith(string folder, string? explicitMap, bool noAdapter, IProjectAdapter? selected,
         IReadOnlyList<IProjectAdapter> candidates, ProjectPaths? remembered = null, string? notice = null)
     {
+        if(AiObservation&&AssetAiAccess.Refusal(folder,explicitMap) is {} denied)return Say(false,denied["error"]!.GetValue<string>());
         if (!ConfirmBefore(() => OpenFolderWith(folder, explicitMap, noAdapter, selected, candidates, remembered, notice), projectReplacement: true)) return false;
         if (FolderProjects.Find(folder, explicitMap, noAdapter, selected, candidates, out var why) is not { } found)
             return Say(false, why);
@@ -591,6 +601,8 @@ public interface IProjectAdapter
     IEnumerable<ICheck> Checks => [];
     /// <summary>Optional defaults for project-owned saved-files Play settings; project fields override them individually.</summary>
     PlaySettings? DefaultPlay(ProjectPaths project) => null;
+    /// <summary>Optional immutable live-value declarations. Empty means no live sharing; this hook starts no process.</summary>
+    IEnumerable<LiveValueTarget> LiveValues(ProjectPaths project) => [];
     /// <summary>Optional game-owned build command accepting explicit captured Saved input.</summary>
     GameBuildSpec? Build(DataWorkspace workspace) => null;
     /// <summary>Optional game-owned Saved source/check/origin/output and smoke declarations.</summary>

@@ -7,7 +7,12 @@ namespace SceneStarter;
 
 public static class Program
 {
-    public static int Main(string[] args) => args is ["--linked-play"] ? LinkedScene.Run(Console.In,Console.Out,Console.Error) : Run(args, Console.Out, Console.Error);
+    public static int Main(string[] args)
+    {
+        if(Environment.GetEnvironmentVariable("BED_AI_OBSERVE")=="1")
+            return Garden.GardenAgentPlay.Run(Environment.GetEnvironmentVariable("BED_PROJECT")??"",Console.In,Console.Out,Console.Error);
+        return args is ["--linked-play"] ? LinkedScene.Run(Console.In,Console.Out,Console.Error) : Run(args,Console.Out,Console.Error);
+    }
 
     // Same entry logic for the owner-run executable and focused headless tests; no editor session or repair.
     public static int Run(string[] args, TextWriter output, TextWriter error)

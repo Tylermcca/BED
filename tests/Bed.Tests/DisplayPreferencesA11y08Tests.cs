@@ -33,6 +33,26 @@ public sealed class DisplayPreferencesA11y08Tests
             }
             Assert.Fail("Native keyboard did not reach "+label);
         }
+        // Enters a panel the way a keyboard user does: from another panel, hold Ctrl and press Tab until the panel is
+        // the target, then release. Ctrl+Tab puts the keyboard on the panel's first item, so the next Tab moves on.
+        // A focus set only from code leaves no item to start from, and Dear ImGui's Tab then does nothing while the
+        // keyboard cursor is showing: the check used to pass only through whichever panel last kept an item.
+        public void EnterPanel(string name,Brutal.ImGuiApi.Internal.ImGuiWindowPtr window,string from)
+        {
+            Im.SetWindowFocus(from);Frames();
+            var io=Im.GetIO();io.AddKeyEvent(ImGuiKey.Mod_Ctrl,true);
+            try
+            {
+                for(var i=0;i<40;i++)
+                {
+                    Key(ImGuiKey.Tab);
+                    var target=Im.GetCurrentContext().NavWindowingTarget;
+                    if(!target.IsNull()&&target.Equals(window))break;
+                }
+            }
+            finally{io.AddKeyEvent(ImGuiKey.Mod_Ctrl,false);Frames();}
+            Assert.True(Im.GetCurrentContext().NavWindow.RootWindow.Equals(window),"Ctrl+Tab did not reach "+name);
+        }
         public void Choose(string label,int index)
         {Reach(label);Key(ImGuiKey.Space);Key(ImGuiKey.Home);for(var i=0;i<index;i++)Key(ImGuiKey.DownArrow);Key(ImGuiKey.Enter);Frames();}
         public void Dispose(){Launcher.Dispose();Host.Dispose();}
@@ -122,6 +142,7 @@ public sealed class DisplayPreferencesA11y08Tests
                 Assert.Equal(scale,Im.GetStyle().FontScaleMain);Assert.Equal(EditorThemePreference.HighContrast,EditorTheme.Preference);
                 var innerHeight=window.InnerRect.Max.Y-window.InnerRect.Min.Y;
                 Assert.True(window.ContentSize.Y<=innerHeight+2*Im.GetStyle().WindowPadding.Y+1||window.ScrollbarY,$"{name} overflows without a scrollbar");
+                r.EnterPanel(name,window,names.First(n=>n!=name));
                 for(var i=0;i<12;i++)
                 {
                     r.Key(ImGuiKey.Tab); // Press already supplies key-down, key-up and a settling frame.

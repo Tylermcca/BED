@@ -49,7 +49,29 @@ public sealed class JsonSchemas
     public JsonElement? Find(string name) => keywords.Find(name);
 
     /// <summary>Ordered errors at JSON paths for the named schema; empty when valid.</summary>
-    public IReadOnlyList<Issue> Validate(JsonElement instance, string schema) => keywords.Validate(instance, schema);
+    public IReadOnlyList<Issue> Validate(JsonElement instance, string schema)
+    {
+        var issues = keywords.Validate(instance, schema);
+        List<Issue>? labelled = null;
+        for (var i = 0; i < issues.Count; i++)
+        {
+            var issue = issues[i];
+            if (!issue.Message.StartsWith("must be one of ", StringComparison.Ordinal) || issue.Path is not { } path || Pointer.FromPath(path) is not { } pointer) continue;
+            var at = At(instance, schema, pointer);
+            var enums = at.Where(s => s.ValueKind == JsonValueKind.Object && s.TryGetProperty("enum"u8, out var e) && e.ValueKind == JsonValueKind.Array)
+                .Select(s => s.GetProperty("enum"u8)).ToArray();
+            var labels = ChoiceLabels.Read(at, enums.SelectMany(e => e.EnumerateArray()).Select(ChoiceLabels.Key));
+            if (labels is null) continue;
+            foreach (var values in enums)
+            {
+                var original = "must be one of " + string.Join(", ", values.EnumerateArray().Select(v => v.GetRawText()));
+                if (issue.Message != original) continue;
+                var message = "must be one of " + string.Join(", ", values.EnumerateArray().Select(v => labels.TryGetValue(ChoiceLabels.Key(v), out var label) ? $"\"{label}\"" : v.GetRawText()));
+                labelled ??= issues.ToList(); labelled[i] = issue with { Message = message }; break;
+            }
+        }
+        return labelled ?? issues;
+    }
 
     /// <summary>The schemas applying at a JSON Pointer, including references and the instance's active branches.</summary>
     public IReadOnlyList<JsonElement> At(JsonElement instance, string schema, string pointer) =>

@@ -1,0 +1,33 @@
+<Project>
+  <!-- Original playable starter. A single existing Gum runtime is bundled once, not on every project preview. -->
+  <PropertyGroup>
+    <StarterGameProject>$(MSBuildThisFileDirectory)..\samples\StarterGame\StarterGame.csproj</StarterGameProject>
+    <StarterGameBundle>$(MSBuildThisFileDirectory)..\samples\StarterGame\bin\$(Configuration)\starter-bundle\</StarterGameBundle>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(StarterGameProject)" ReferenceOutputAssembly="false" />
+    <None Include="$(MSBuildThisFileDirectory)..\samples\NewGameProject\**\*" LinkBase="samples/new-game" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(MSBuildThisFileDirectory)..\samples\StarterGame\*.cs;$(StarterGameProject)" LinkBase="samples/new-game/source" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE.txt" Link="samples/new-game/LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\guide\first_game_with_ai.md" Link="samples/new-game/FIRST_GAME.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(MSBuildThisFileDirectory)..\src\Bed.Runtime\LiveValuesHost.cs" Link="samples/new-game/source/LiveValuesHost.cs" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <StarterGameSource Include="$(MSBuildThisFileDirectory)..\src\Bed.Runtime\LiveValuesHost.cs" />
+    <StarterGameSource Include="$(MSBuildThisFileDirectory)..\samples\StarterGame\*.cs;$(StarterGameProject)" />
+  </ItemGroup>
+  <Target Name="BundleStarterGame" Inputs="@(StarterGameSource);$(MSBuildThisFileDirectory)StarterGame.targets" Outputs="$(StarterGameBundle)StarterGame.exe">
+    <MSBuild Projects="$(StarterGameProject)" Targets="Publish" Properties="Configuration=$(Configuration);PublishDir=$(StarterGameBundle);SelfContained=true;NoRestore=true" />
+  </Target>
+  <Target Name="CopyStarterGame" AfterTargets="Build" DependsOnTargets="BundleStarterGame">
+    <MakeDir Directories="$(OutDir)samples/new-game/game" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)..\LICENSE.txt" DestinationFolder="$(OutDir)samples/new-game" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(StarterGameBundle)StarterGame.exe" DestinationFolder="$(OutDir)samples/new-game/game" SkipUnchangedFiles="true" />
+    <ItemGroup><StarterGameNotices Include="$(StarterGameBundle)licenses/*.txt;$(StarterGameBundle)LICENSE.txt;$(StarterGameBundle)NOTICE.txt;$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" /></ItemGroup>
+    <ReadLinesFromFile File="%(StarterGameNotices.Identity)"><Output TaskParameter="Lines" ItemName="StarterGameNoticeLines" /></ReadLinesFromFile>
+    <WriteLinesToFile File="$(OutDir)samples/new-game/game/THIRD-PARTY-NOTICES.txt" Lines="@(StarterGameNoticeLines)" Overwrite="true" Encoding="UTF-8" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(OutDir)samples/new-game/LICENSE.txt" RelativePath="samples/new-game/LICENSE.txt" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+      <ResolvedFileToPublish Include="$(OutDir)samples/new-game/game/StarterGame.exe" RelativePath="samples/new-game/game/StarterGame.exe" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+      <ResolvedFileToPublish Include="$(OutDir)samples/new-game/game/THIRD-PARTY-NOTICES.txt" RelativePath="samples/new-game/game/THIRD-PARTY-NOTICES.txt" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    </ItemGroup>
+  </Target>
+</Project>

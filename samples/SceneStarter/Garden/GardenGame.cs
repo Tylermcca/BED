@@ -12,6 +12,8 @@ public sealed class GardenGame
 {
     public const float Step=1f/60f;
     public const float RunSpeed=4.5f,GroundAccel=45f,AirAccel=28f,Gravity=32f,JumpSpeed=10.6f,MaxFall=15f;
+    internal float JumpStrength {get;private set;}=JumpSpeed;
+    internal void TuneJump(float value){if(!float.IsFinite(value)||value<1||value>25)throw new ArgumentOutOfRangeException(nameof(value));JumpStrength=value;}
     private const float CoyoteTime=0.1f,JumpBufferTime=0.12f;
     private readonly Box start;      // player's touch box at the start
     private readonly float pictureDx,pictureDy;  // picture offset from the touch box
@@ -41,6 +43,7 @@ public sealed class GardenGame
     public GardenGame(GardenLevel level)
     {
         Level=level;start=level.Player.Touch;
+        TuneJump(level.JumpStrength);
         pictureDx=level.Player.Picture.X0-start.X0;pictureDy=level.Player.Picture.Y0-start.Y0;
         solids=level.Sprites.Where(s=>s.Role==GardenRole.Solid).ToArray();
         coins=level.Sprites.Where(s=>s.Role==GardenRole.Coin).ToArray();
@@ -63,6 +66,7 @@ public sealed class GardenGame
         OnGround=Touching(Player.Offset(0,-0.02f));
     }
 
+    internal void ReleaseKeys()=>previous=GardenInput.None;
     public void Update(GardenInput input)
     {
         Frame++;
@@ -76,8 +80,8 @@ public sealed class GardenGame
 
         coyote=OnGround?CoyoteTime:MathF.Max(0,coyote-Step);
         jumpBuffer=jumpPressed&&!Won?JumpBufferTime:MathF.Max(0,jumpBuffer-Step);
-        if(jumpBuffer>0&&coyote>0){VelocityY=JumpSpeed;jumpBuffer=coyote=0;OnGround=false;}
-        else if(!input.Jump&&VelocityY>JumpSpeed*0.4f)VelocityY=JumpSpeed*0.4f;   // short hop when the key is let go early
+        if(jumpBuffer>0&&coyote>0){VelocityY=JumpStrength;jumpBuffer=coyote=0;OnGround=false;}
+        else if(!input.Jump&&VelocityY>JumpStrength*0.4f)VelocityY=JumpStrength*0.4f;   // short hop when the key is let go early
         VelocityY=MathF.Max(-MaxFall,VelocityY-Gravity*Step);
 
         MoveX(VelocityX*Step);

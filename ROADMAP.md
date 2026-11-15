@@ -99,7 +99,7 @@ The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and 
 
 ## Later
 
-Driven by what games built with BED actually need. Roughly in order of priority:
+Driven by what games built with BED actually need. The [future-ideas register](docs/future.md) records each idea’s origin, required support and current status. Roughly in order of priority:
 
 - Material and lighting previews.
 - Showing the running game inside BED's window.

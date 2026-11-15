@@ -234,7 +234,7 @@ public sealed partial class DataWorkspace : IDisposable
 
     /// <summary>Stops any running game (<see cref="StopPlay"/>). A host calls it when it closes or replaces the project, or shuts
     /// down. The project and its drafts are untouched: disposing doesn't save, close files or discard edits.</summary>
-    public void Dispose() { scene2WorkspaceClosed=true; pendingMixedSave?.Dispose();pendingMixedSave=null; ReleaseObjectClipboard(); exportDialog?.Dispose(); StopPlay(); Proposals.Dispose(); ReleaseProjectAssets(); }
+    public void Dispose() { gamePictureTexture.Dispose(); projectBuild?.Dispose(); scene2WorkspaceClosed=true; pendingMixedSave?.Dispose();pendingMixedSave=null; ReleaseObjectClipboard(); exportDialog?.Dispose(); StopPlay(); Proposals.Dispose(); ReleaseProjectAssets(); }
 
     // Stops a game running in the window shown for name, before its file is renamed, deleted or its window forgotten. What
     // failed while stopping, to say with the action's own message (" ..."), or "".
@@ -414,6 +414,7 @@ public sealed partial class DataWorkspace : IDisposable
             AttachSceneFiles(sceneWindows[name].Editor);
             BindLinked(sceneWindows[name],name);
             Active = file;
+            BindShownProjectControls();
             AdapterProblem = null;
             shownFaults = stopped + SaveInterruptionNotice(file.Path);
             Said = $"Showing {name}." + shownFaults;
@@ -426,6 +427,7 @@ public sealed partial class DataWorkspace : IDisposable
         var made = !windows.TryGetValue(name, out var kept) || !ReferenceEquals(kept.Editor.Session, file.Session);
         if (made) windows[name] = Make(file);
         Active = file;
+        BindShownProjectControls();
         shownFaults = (made && AdapterProblem is { } problem ? " " + problem : "") + stopFault + SaveInterruptionNotice(file.Path);
         Said = $"Showing {name}." + shownFaults;
         return true;
@@ -443,6 +445,7 @@ public sealed partial class DataWorkspace : IDisposable
         var made = !windows.TryGetValue(name, out var kept) || !ReferenceEquals(kept.Editor.Session, file.Session);
         if (made) windows[name] = Make(file);
         Active = file;
+        BindShownProjectControls();
         var fault = (made && AdapterProblem is { } problem ? " " + problem : "") + stopFault + SaveInterruptionNotice(file.Path);
         Said = (file.Session!.Repairing ? $"Repairing {name}: {file.Session.Problems.Count} problem(s) to fix; edits that add none are allowed." : $"Showing {name}.") + fault;
         return true;
@@ -668,8 +671,9 @@ public sealed partial class DataWorkspace : IDisposable
     public Panel FilesPanel => new("project.files", "Files", DrawFiles, Width: 260, Height: 420,
         Commands:
         [
-            new("new_project", "New project...", () => newProject?.Invoke()??false, () => newProject is null?"This editor has no project host.":null),
-            new("open_project", "Open project...", () => openProject?.Invoke()??false, () => openProject is null?"This editor has no project host.":null),
+            new("new_game", "New game...", () => newGameProject?.Invoke()??false, () => newGameProject is null?"This BED installation cannot create projects.":null),
+            new("new_project", "New project...", () => newProject?.Invoke()??false, () => newProject is null?"This BED installation cannot create projects.":null),
+            new("open_project", "Open project...", () => openProject?.Invoke()??false, () => openProject is null?"This BED installation cannot open project folders.":null),
             new("open_file", "Open file...", OpenProjectFile),
             new("save_all", "Save all files", SaveAll, () => Project.ReadOnly ? "the project is open read-only" : TransitionDraftCount == 0 ? "nothing to save" : null),
             new("refresh", "Refresh files", () => { Refresh(); return true; }),

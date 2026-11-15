@@ -1,0 +1,55 @@
+{
+  "FontRanges": "32-126,160-255",
+  "FontSpacingVertical": 1,
+  "FontSpacingHorizontal": 1,
+  "UseFontCharacterFile": false,
+  "AutoSizeFontOutputs": false,
+  "FontGenerator": 1,
+  "Version": 7,
+  "DefaultCanvasWidth": 800,
+  "DefaultCanvasHeight": 600,
+  "ShowOutlines": true,
+  "ShowCanvasOutline": true,
+  "ShowRuler": true,
+  "ShowCheckerBackground": true,
+  "TextureFilter": "Point",
+  "ConvertVariablesOnUnitTypeChange": false,
+  "RestrictToUnitValues": true,
+  "SnapToGrid": false,
+  "GridSize": 16,
+  "RestrictFileNamesForAndroid": false,
+  "Guides": [],
+  "FavoriteComponents": [],
+  "ParentProjectRoot": "",
+  "LocalizationFiles": [],
+  "ShowLocalizationInGum": true,
+  "CurrentLanguageIndex": 0,
+  "ScreenReferences": [
+    {
+      "Name": "Menu",
+      "ElementType": 0,
+      "LinkType": 0
+    },
+    {
+      "Name": "Play",
+      "ElementType": 0,
+      "LinkType": 0
+    }
+  ],
+  "ComponentReferences": [],
+  "StandardElementReferences": [
+    {
+      "Name": "ColoredRectangle",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Text",
+      "ElementType": 2,
+      "LinkType": 0
+    }
+  ],
+  "BehaviorReferences": [],
+  "SinglePixelTextureFile": "",
+  "CustomProperties": []
+}

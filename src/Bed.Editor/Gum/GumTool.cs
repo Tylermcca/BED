@@ -5,7 +5,7 @@ namespace Bed.Editor.Gum;
 
 /// <summary>Starts the person's own Gum tool on a project or one of its screens. BORROWED: Gum's own command line, which
 /// takes a project file, or a screen file saved directly in the project's Screens folder and selects that screen.</summary>
-public static class GumTool
+public static partial class GumTool
 {
     /// <summary>What to start: the program and its one argument, plus a note when Gum can't select the screen itself.
     /// <see cref="Problem"/> is set instead when nothing can be started.</summary>
@@ -36,16 +36,22 @@ public static class GumTool
     }
 
     /// <summary>Starts what <see cref="Plan"/> worked out, without a shell, so the path is passed exactly as it is.
-    /// Returns the note to show, or the problem. When Gum already has the project open, that Gum is brought to the front instead of opening a second one.</summary>
+    /// Returns the note to show, or the problem. When Gum already has the project open, that Gum is brought to the front instead of opening a second one.
+    /// While a Gum BED started is still loading this project, repeated requests wait for that process instead of starting another.</summary>
     public static (bool Started, string Message) Start(Launch launch, Func<ProcessStartInfo, bool>? start = null, Func<string, bool>? showOpen = null)
     {
+        return start is null ? ownStarts.Start(launch, showOpen ?? ShowOpen) : StartUntracked(launch, start, showOpen ?? ShowOpen);
+    }
+
+    internal static (bool Started, string Message) StartUntracked(Launch launch, Func<ProcessStartInfo, bool> start, Func<string, bool> showOpen)
+    {
         if (launch.Problem is { } problem) return (false, problem);
-        if (launch.Project is { } project && (showOpen ?? ShowOpen)(project))
+        if (launch.Project is { } project && showOpen(project))
             return (true, "Gum already has these screens open, so BED brought it to the front."
                 + (launch.ScreenName is { } name ? $" Pick {name} from the screen list there." : ""));
         var info = new ProcessStartInfo(launch.Program!) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(launch.Argument!)! };
         info.ArgumentList.Add(launch.Argument!);
-        try { return (start ?? (i => Process.Start(i) is not null))(info) ? (true, launch.Note) : (false, "Gum didn't start. Try opening Gum on its own to check it works."); }
+        try { return start(info) ? (true, launch.Note) : (false, "Gum didn't start. Try opening Gum on its own to check it works."); }
         catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
         { return (false, "Windows couldn't start Gum. Try opening Gum on its own to check it works. You can change which Gum.exe BED uses in Options."); }
     }

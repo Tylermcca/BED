@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "play": {
+    "program": "game/StarterGame.exe",
+    "arguments": [
+      "--project",
+      "."
+    ],
+    "workingFolder": ".",
+    "build": {
+      "command": "dotnet",
+      "arguments": [
+        "publish",
+        "source/StarterGame.csproj",
+        "-c",
+        "Release",
+        "--self-contained",
+        "true",
+        "-o",
+        "game"
+      ],
+      "inputs": [
+        "source/StarterGame.csproj",
+        "source/Program.cs",
+        "source/Game.cs",
+        "source/GameScreen.cs",
+        "source/GameWindow.cs",
+        "source/LiveValuesHost.cs"
+      ]
+    }
+  }
+}

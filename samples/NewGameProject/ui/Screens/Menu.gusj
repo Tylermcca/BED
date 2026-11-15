@@ -1,0 +1,325 @@
+{
+  "Name": "Menu",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Title.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Catch the lights"
+        },
+        {
+          "Name": "Title.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 40
+        },
+        {
+          "Name": "Title.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 60
+        },
+        {
+          "Name": "Title.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 720
+        },
+        {
+          "Name": "Title.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 80
+        },
+        {
+          "Name": "Title.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 44
+        },
+        {
+          "Name": "Title.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 245
+        },
+        {
+          "Name": "Title.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 244
+        },
+        {
+          "Name": "Title.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 235
+        },
+        {
+          "Name": "Title.Alpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Help.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Catch the bright squares. Click Play or press Enter."
+        },
+        {
+          "Name": "Help.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 40
+        },
+        {
+          "Name": "Help.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 155
+        },
+        {
+          "Name": "Help.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 720
+        },
+        {
+          "Name": "Help.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 80
+        },
+        {
+          "Name": "Help.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 28
+        },
+        {
+          "Name": "Help.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 245
+        },
+        {
+          "Name": "Help.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 244
+        },
+        {
+          "Name": "Help.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 235
+        },
+        {
+          "Name": "Help.Alpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "PlayButton.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 40
+        },
+        {
+          "Name": "PlayButton.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 275
+        },
+        {
+          "Name": "PlayButton.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 300
+        },
+        {
+          "Name": "PlayButton.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 74
+        },
+        {
+          "Name": "PlayButton.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 45
+        },
+        {
+          "Name": "PlayButton.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 165
+        },
+        {
+          "Name": "PlayButton.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 190
+        },
+        {
+          "Name": "PlayButton.Alpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "PlayWords.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Play"
+        },
+        {
+          "Name": "PlayWords.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 65
+        },
+        {
+          "Name": "PlayWords.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 292
+        },
+        {
+          "Name": "PlayWords.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 720
+        },
+        {
+          "Name": "PlayWords.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 80
+        },
+        {
+          "Name": "PlayWords.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 32
+        },
+        {
+          "Name": "PlayWords.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 245
+        },
+        {
+          "Name": "PlayWords.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 244
+        },
+        {
+          "Name": "PlayWords.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 235
+        },
+        {
+          "Name": "PlayWords.Alpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Tip.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Change this menu in Gum, save, and see it update here."
+        },
+        {
+          "Name": "Tip.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 40
+        },
+        {
+          "Name": "Tip.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 430
+        },
+        {
+          "Name": "Tip.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 720
+        },
+        {
+          "Name": "Tip.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 80
+        },
+        {
+          "Name": "Tip.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 24
+        },
+        {
+          "Name": "Tip.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 245
+        },
+        {
+          "Name": "Tip.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 244
+        },
+        {
+          "Name": "Tip.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 235
+        },
+        {
+          "Name": "Tip.Alpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Title",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "Help",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "PlayButton",
+      "BaseType": "ColoredRectangle"
+    },
+    {
+      "Name": "PlayWords",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "Tip",
+      "BaseType": "Text"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

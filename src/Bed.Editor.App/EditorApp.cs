@@ -16,8 +16,9 @@ using ImGui = Brutal.ImGuiApi.ImGui;
 /// <param name="Width">The window's width in screen pixels.</param>
 /// <param name="Height">The window's height in screen pixels.</param>
 /// <param name="LayoutPath">Optional app-owned docking settings path; null uses local app data.</param>
+/// <param name="PopOutWindows">Let panels be dragged out into windows of their own (on for the editor). A game that draws one full-window page turns it off, so the page stays inside its window and keeps the title bar.</param>
 /// <param name="Validation">Turn on Vulkan's validation layers (when installed), for finding rendering mistakes.</param>
-public sealed record EditorAppOptions(string Title = "BED", int Width = 1600, int Height = 900, bool Validation = false, bool OpenGl = false, string? LayoutPath = null);
+public sealed record EditorAppOptions(string Title = "BED", int Width = 1600, int Height = 900, bool Validation = false, bool OpenGl = false, string? LayoutPath = null, bool PopOutWindows = true);
 
 /// <summary>
 /// Runs an ImGui editor in a real window: GLFW for the window and input, Vulkan to draw, and BRUTAL's ImGui backends
@@ -85,7 +86,7 @@ public static class EditorApp
             }
             try
             {
-                using (renderer) Loop(window, renderer, configure, draw, fileDialogs, close, title, options.Title, accessibility, drop, options.LayoutPath);
+                using (renderer) Loop(window, renderer, configure, draw, fileDialogs, close, title, options.Title, accessibility, drop, options.LayoutPath, options.PopOutWindows);
             }
             finally
             {
@@ -206,7 +207,7 @@ public static class EditorApp
                     {
                         var windowTitle = new WindowTitle(options.Title);
                         configure(io);
-                        io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+                        if (options.PopOutWindows) io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
                         var layout = new EditorLayoutStore(options.LayoutPath);
                         layout.LoadCurrent();
                         if (accessibility is not null) secondary = new AccessKitPlatformWindows(options.Title);
@@ -272,7 +273,7 @@ public static class EditorApp
     }
 
     // ImGui's context and backends live inside the renderer's lifetime and are freed before it.
-    private static void Loop(GlfwWindow window, WindowRenderer renderer, Action<ImGuiIOPtr> configure, Action draw, Action<IFileDialogs?>? fileDialogs, Func<bool, bool>? close, Func<string>? title, string initialTitle, AccessKitWindowBridge? accessibility, Action<WindowDrop, UiSnapshot>? drop, string? layoutPath)
+    private static void Loop(GlfwWindow window, WindowRenderer renderer, Action<ImGuiIOPtr> configure, Action draw, Action<IFileDialogs?>? fileDialogs, Func<bool, bool>? close, Func<string>? title, string initialTitle, AccessKitWindowBridge? accessibility, Action<WindowDrop, UiSnapshot>? drop, string? layoutPath, bool popOutWindows = true)
     {
         using var themeNotifications = WindowsThemeNotifications.Attach(window);
         var context = ImGui.CreateContext();
@@ -304,7 +305,7 @@ public static class EditorApp
                     return new SpriteImage(selection,filter,image.Resource.Texture,()=>renderer.SceneOwner.SpriteCurrent(image,filter));
                 });
                 configure(io);
-                io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+                if (popOutWindows) io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
                 var layout = new EditorLayoutStore(layoutPath);
                 layout.LoadCurrent();
                 if (accessibility is not null) secondary = new AccessKitPlatformWindows(initialTitle);

@@ -15,6 +15,8 @@ internal sealed class PhysicsWorld:IDisposable
     private ObjectLayerPairFilterTable pairs;private ObjectVsBroadPhaseLayerFilterTable filter;private PhysicsSystem system;private BodyInterface bodies;
     private readonly Dictionary<string,(uint Id,SceneBodyMotion Motion)> owned=new(StringComparer.Ordinal);
     private readonly SceneSpace space;
+    private Vector3 gravity;
+    internal float GravityY=>gravity.Y;
     internal float StepSeconds{get;}
     internal int Count=>owned.Count;
     private readonly Dictionary<string,(Vector3 Position,Quaternion Rotation)> saved=new(StringComparer.Ordinal);
@@ -35,7 +37,7 @@ internal sealed class PhysicsWorld:IDisposable
             broad=BroadPhaseLayerInterfaceTable.Create(2,2);hasBroad=true;broad.MapObjectToBroadPhaseLayer(0,0);broad.MapObjectToBroadPhaseLayer(1,1);
             pairs=ObjectLayerPairFilterTable.Create(2);hasPairs=true;pairs.EnableCollision(0,1);pairs.EnableCollision(1,1);
             filter=ObjectVsBroadPhaseLayerFilterTable.Create(broad,2,pairs,2);hasFilter=true;system=PhysicsSystem.Create();hasSystem=true;system.Init(4096,0,16384,16384,broad,filter,pairs);
-            system.SetGravity(F(scene.Physics.Gravity));bodies=system.GetBodyInterface();
+            gravity=scene.Physics.Gravity;system.SetGravity(F(gravity));bodies=system.GetBodyInterface();
             var objects=scene.Objects.ToDictionary(o=>o.Object.Id,o=>o.Object,StringComparer.Ordinal);var worlds=new Dictionary<string,Matrix4x4>(StringComparer.Ordinal);
             Matrix4x4 World(string id)
             {
@@ -113,6 +115,20 @@ internal sealed class PhysicsWorld:IDisposable
     /// <summary>Removes and destroys one owned body.</summary>
     internal void Remove(string name){Check();var entry=owned[name];bodies.RemoveBody(entry.Id);bodies.DestroyBody(entry.Id);owned.Remove(name);saved.Remove(name);}
     internal float Mass(string name){Check();var entry=owned[name];if(entry.Motion!=SceneBodyMotion.Dynamic)throw new InvalidOperationException("Only dynamic bodies own authored mass.");var body=system.GetBodyLockInterfaceNoLock().TryGetBody(entry.Id);var mass=1/body.GetMotionProperties().GetInverseMass();if(!float.IsFinite(mass)||mass<=0)throw new InvalidOperationException("Native mass is invalid.");return mass;}
+    internal Vector3 LinearVelocity(string name){Check();var v=bodies.GetLinearVelocity(owned[name].Id);return new(v.X,v.Y,v.Z);}
+    internal void Jump(string name)
+    {
+        Check();var entry=owned[name];if(entry.Motion!=SceneBodyMotion.Dynamic)throw new ArgumentException("Choose an object that can move.");
+        var velocity=LinearVelocity(name);velocity.Y=5;
+        bodies.SetLinearVelocity(entry.Id,F(velocity));
+    }
+    internal void TryGravity(float y){Check();if(!float.IsFinite(y)||y < -30||y>0)throw new ArgumentOutOfRangeException(nameof(y));gravity=gravity with{Y=y};system.SetGravity(F(gravity));}
+    internal void TryMass(string name,float mass)
+    {
+        Check();if(!float.IsFinite(mass)||mass<.1f||mass>100||owned[name].Motion!=SceneBodyMotion.Dynamic)throw new ArgumentOutOfRangeException(nameof(mass));
+        // Jolt scales inertia together with mass, preserving the current pose, velocities and allowed axes.
+        system.GetBodyLockInterfaceNoLock().TryGetBody(owned[name].Id).GetMotionProperties().ScaleToMass(mass);
+    }
     internal (Vector3 Position,Quaternion Rotation) Pose(string name){Check();bodies.GetPositionAndRotation(owned[name].Id,out var p,out var q);return(new(p.X,p.Y,p.Z),new(q.X,q.Y,q.Z,q.W));}
     internal void Velocity(string name,Vector3 linear,Vector3 angular)
     {Check();if(!Finite(linear)||!Finite(angular)||space==SceneSpace.TwoDXY&&(linear.Z!=0||angular.X!=0||angular.Y!=0))throw new ArgumentException("Use finite permitted-axis velocities.");bodies.SetLinearAndAngularVelocity(owned[name].Id,F(linear),F(angular));}

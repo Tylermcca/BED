@@ -80,6 +80,8 @@ Your saved level never changes when the game runs. Both samples can also be copi
 1. Choose **File > Close project**. If anything is unsaved, BED asks whether to **Save**, **Don't Save** or **Cancel**.
 2. Next time, your projects are listed under **Open recent** on the start screen.
 
+Drag a panel's tab to move it. The outlined tabs highlight under the pointer; the selected tab has a coloured top edge. While you drag, the highlighted target shows where the panel will land. Drag the border between panels to resize them. BED remembers your layout; **View > Reset layout** restores the starting arrangement.
+
 ## If it doesn't look like this
 
 - **Some panels are missing:** choose **View** and turn the panel back on, or choose **View > Reset layout**.

@@ -31,3 +31,9 @@ The crate model is slightly larger than its 1 m body (1.08 m), so the 1 m box BE
 Run `python samples/PrefabPhysicsProject/generate_assets.py` from the repository root to reproduce every sample file: the models, materials, textures and sidecars, the crate prefab, the level, the schema, the reference map and `.bed/project.json`. Add `--check` to compare the committed files without changing them.
 
 BED keeps its prepared assets in `.bed/cache` and the built level in `.bed/generated`. Neither is part of the sample; BED makes them again when you open and build the project.
+
+## Try values without a game window
+
+Build the saved island, stop ordinary Play, and select a dynamic body such as `crate_3_box`, or choose it in **Live object** in the **Live values** panel. Choose **Try live values (no game window)**. Height, vertical speed, world gravity and mass come from the owned physics game. Try gravity from -30 to 0 metres per second squared and mass from 0.1 to 100 kg. Gravity affects the whole island; mass affects the selected body, including its inertia. Trials keep its current pose and speed.
+
+Trials change no saved files. **Keep this value** saves only the confirmed mass to that body's existing local field or prefab override. Gravity is a trial only. Rebuild before ordinary Play or Export uses a kept mass; **Stop program** ends the live run. The [adapter hook](../../docs/live_values_adapter.md) is the same one the garden uses.

@@ -17,6 +17,6 @@
     <!-- Gum's own drawing on a CPU Skia surface (GumScreenPicture, the live Gum screen picture). -->
     <PackageReference Include="Gum.SkiaSharp.Standalone" />
   </ItemGroup>
-  <ItemGroup><InternalsVisibleTo Include="Bed.Editor.ImGui" /><InternalsVisibleTo Include="Bed.Tests" /></ItemGroup>
+  <ItemGroup><InternalsVisibleTo Include="Bed.Editor.ImGui" /><InternalsVisibleTo Include="Bed.Agent" /><InternalsVisibleTo Include="Bed.Tests" /><InternalsVisibleTo Include="Bed.Editor.App" /><InternalsVisibleTo Include="Bed.Agent.Cli" /></ItemGroup>
 </Project>
 

@@ -43,4 +43,5 @@
   <Target Name="CopyPublicAppHostName" AfterTargets="Build" Condition="Exists('$(TargetDir)Bed.Launcher.exe')">
     <Copy SourceFiles="$(TargetDir)Bed.Launcher.exe" DestinationFiles="$(TargetDir)BED.exe" SkipUnchangedFiles="true" />
   </Target>
+  <Import Project="../../build/StarterGame.targets" />
 </Project>

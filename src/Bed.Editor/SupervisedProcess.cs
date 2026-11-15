@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using System.Text;
-namespace Bed.Editor.App;
+namespace Bed.Editor;
 
 // Shared owned child; protocols stay in consumers. Native start is the unchanged PL05 suspended Job path.
 internal sealed class SupervisedProcess : IDisposable

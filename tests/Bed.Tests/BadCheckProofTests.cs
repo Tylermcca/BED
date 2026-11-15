@@ -74,7 +74,9 @@ public sealed class BadCheckProofTests(ITestOutputHelper output) : IDisposable
             Assert.Contains("Results are out of date", panel);
         }
         else Assert.Contains("Bad probe: " + verdict, panel);
-        if (run.Problem is { } problem) { Assert.Equal(problem, result["problem"]!.GetValue<string>()); Assert.Contains(problem, panel); }
+        // AI queries explicitly mark unanswered checks (AiGuideRulesTests); the panel keeps the raw diagnostic.
+        // Compare the entire diagnostic on both routes, including exactly one agent marker.
+        if (run.Problem is { } problem) { Assert.Equal("couldn't check: " + problem, result["problem"]!.GetValue<string>()); Assert.Contains(problem, panel); }
         Assert.Same(other, a.Checks.Last(Id));
     }
     [Theory]
@@ -252,7 +254,7 @@ public sealed class BadCheckProofTests(ITestOutputHelper output) : IDisposable
                 Assert.Equal("TimedOut", answer["state"]!.GetValue<string>()); Assert.Equal(i + 1, a.Checks.LingeringRuns(Id));
             }
             Assert.False(w.RunCheck(Id)); Assert.Contains("still working", w.Said);
-            var refused = Call(a); Assert.Equal(w.Said, refused["error"]!.GetValue<string>()); Assert.False(string.IsNullOrWhiteSpace(refused["next"]!.GetValue<string>()));
+            var refused = Call(a); Assert.Equal("couldn't check: " + w.Said, refused["error"]!.GetValue<string>()); Assert.False(string.IsNullOrWhiteSpace(refused["next"]!.GetValue<string>()));
             using var host = new HeadlessHost(1100, 900) { Drawing = false }; host.Frames(() => Draw(w), 5);
             var times = new List<double>(); for (int i = 0; i < 20; ++i) { var timer = Stopwatch.StartNew(); host.Frame(() => Draw(w)); times.Add(timer.Elapsed.TotalMilliseconds); }
             times.Sort(); output.WriteLine($"Lingering panel: median={times[10]:F3}ms; p95={times[18]:F3}ms; 20 headless logic frames, no rasterisation.");
@@ -270,7 +272,7 @@ public sealed class BadCheckProofTests(ITestOutputHelper output) : IDisposable
         ICheck[] Batch() => kind == "duplicate" ? [Good(), Good()] : [Good(), new Probe((_, _, _) => Task.FromResult(Clean()), id: "probe.other", label: "")];
         var we = Assert.Throws<ArgumentException>(() => w.Checks.Add(Batch())); var ae = Assert.Throws<ArgumentException>(() => a.Checks.Add(Batch()));
         Assert.Equal(we.Message, ae.Message); Assert.DoesNotContain(w.Checks.Registered, d => d.Id == Id); Assert.DoesNotContain(a.Checks.Registered, d => d.Id == Id);
-        Assert.False(w.RunCheck(Id)); Assert.Equal(w.Said, Call(a)["error"]!.GetValue<string>());
+        Assert.False(w.RunCheck(Id)); Assert.Equal("couldn't check: " + w.Said, Call(a)["error"]!.GetValue<string>());
         using var host = new HeadlessHost(1100, 900) { Drawing = false }; host.Frames(() => Draw(w), 3);
     }
 }

@@ -11,8 +11,9 @@
     <NoWarn>$(NoWarn);BRUTALCORE0011</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Checkers\Checkers.csproj" />
-    <ProjectReference Include="..\..\src\Bed.Editor.App\Bed.Editor.App.csproj" />
+    <ProjectReference Include="../Checkers.Rules/Checkers.Rules.csproj" />
+    <PackageReference Include="Gum.SkiaSharp.Standalone" />
+    <None Include="../CheckersProject/ui/**/*" Exclude="../CheckersProject/ui/.gitignore" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" LinkBase="ui" />
   </ItemGroup>
   <Import Project="..\..\build\Notices.targets" />
 </Project>

@@ -413,6 +413,7 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
     internal Action? RecentProjectsMenu {get;set;}
     /// <summary>Workspace-owned project Play settings, independent of adapter availability.</summary>
     public Action? PlaySettingsAction {get;set;}
+    internal Action? OpenGameCodeAction {get;set;}
     /// <summary>Workspace-owned saved-files Play request. Null retains the legacy host route.</summary>
     public Func<bool>? ProjectPlayAction {get;set;}
     /// <summary>Workspace-owned stop request.</summary>
@@ -1123,8 +1124,9 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
         if (Begin("File", true))
         {
             Item("New file...", PanelCommandAction + "project.files/new_file");
-            Item("New project...", PanelCommandAction + "project.files/new_project", "This editor has no project host.");
-            Item("Open project...", PanelCommandAction + "project.files/open_project", "This editor has no project host.");
+            Item("New game...", PanelCommandAction + "project.files/new_game", "This BED installation cannot create projects.");
+            Item("New project...", PanelCommandAction + "project.files/new_project", "This BED installation cannot create projects.");
+            Item("Open project...", PanelCommandAction + "project.files/open_project", "This BED installation cannot open project folders.");
             Item("Open file...", PanelCommandAction + "project.files/open_file", "This editor has no project file list.");
             if(RecentProjectsMenu is {} recent&&Begin("Recent projects")){recent();End();}
             else if(RecentProjectsMenu is null)Missing("Recent projects", "This host has no recent-project list.");
@@ -1201,6 +1203,7 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
             Panel("Checks and output", "project.checks");
             Panel("Table", "editor.table");
             Panel("Text", "editor.text");
+            if(Editor.Panels.Any(p=>p.Id=="project.picture"))Panel("Game picture","project.picture");
             if(Editor.Panels.Any(p=>p.Id=="scene2.physics"))Panel("Physics","scene2.physics");
             Item("Compare with saved", PanelCommandAction + "editor.compare/editor.compare.saved");
             Item("Command palette...", "editor.palette");
@@ -1218,6 +1221,8 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
         if (Begin("Tools", true))
         {
             if(PlaySettingsAction is {} settings&&Choice("Play settings...","",false,true))settings();
+            if(OpenGameCodeAction is {} code&&Choice("Open game code","",false,true))code();
+            Panel("Build game", ProjectBuildPanel.Id);
             Panel("Checks", "project.checks");
             Panel("Suggested changes", "project.proposals");
             var checks = UiActions().Where(a => a.Id.StartsWith(PanelCommandAction + "project.checks/run.", StringComparison.Ordinal)).ToArray();
@@ -1247,6 +1252,7 @@ public sealed partial class EditorWindow<TDoc> where TDoc : class
             Panel("Getting started", GettingStartedPanel.Id);
             Panel("Keyboard shortcuts", KeysPanel.Id);
             Panel("Use with an AI assistant", AiSetupPanel.Id);
+            Panel("Connect an AI app", AiConnectPanel.Id);
             Panel("About BED", "bed.about");
             if(Ui.MenuItem("Report a problem"u8))ProblemReport.Open();
             End();

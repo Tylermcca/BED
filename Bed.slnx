@@ -19,12 +19,14 @@
     <Project Path="third_party/ImCode/src/ImCode/ImCode.csproj" />
   </Folder>
   <Folder Name="/samples/">
+    <Project Path="samples/StarterGame/StarterGame.csproj" />
     <Project Path="samples/Toy/Toy.csproj" />
     <Project Path="samples/SceneTool/SceneTool.csproj" />
     <Project Path="samples/DataCheck/DataCheck.csproj" />
     <Project Path="samples/ImportCheck/ImportCheck.csproj" />
     <Project Path="samples/LightsPlugin/LightsPlugin.csproj" />
     <Project Path="samples/Checkers/Checkers.csproj" />
+    <Project Path="samples/Checkers.Rules/Checkers.Rules.csproj" />
     <Project Path="samples/Checkers.App/Checkers.App.csproj" />
     <Project Path="samples/Checkers.Game/Checkers.Game.csproj" />
     <Project Path="samples/StarterAdapter/StarterAdapter.csproj" />

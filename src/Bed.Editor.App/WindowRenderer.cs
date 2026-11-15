@@ -176,7 +176,7 @@ internal sealed unsafe class WindowRenderer : IDisposable
         MinImageCount = 2,
         ImageCount = Math.Max(2, swapImages.Length),
         SampleCount = VkSampleCountFlags._1Bit,
-        DescriptorPoolSize = 16,
+        DescriptorPoolSize = 1024,   // one per picture shown at once; a Gum-heavy game page shows many (16 ran out in a card game)
     }); SceneOwner.Attach(backend); return backend; }
 
     /// <summary>Waits until the GPU has finished everything it was given (before freeing anything it may still use).</summary>

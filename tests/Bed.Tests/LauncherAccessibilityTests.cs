@@ -178,7 +178,6 @@ public sealed class LauncherAccessibilityTests
 
     private const string LauncherWindow="BED###launcher";
     private const string BoardWindow="Board###a067.board";
-    private const string PlayWindow="Checkers###game";
     private const string CreditMore="Built with BRUTAL, a game development framework by Ahwoo Limited. See NOTICE.txt beside this program.";
     private static readonly Dictionary<(string,float),GlyphPattern> Patterns=[];
     private static GlyphPattern Glyph(string text,float scale)
@@ -724,29 +723,44 @@ public sealed class LauncherAccessibilityTests
         var candidates=crown.Where(p=>p.Value>=16&&Contrast(p.Key,body)>=3).ToArray();
         Assert.True(candidates.Length>0,$"{Game.Describe(king)} crown has no sustained >=3:1 mark against actual body {Rgb(body)}; maximum {crown.Keys.Max(c=>Contrast(c,body)):R}:1.");
     }
+    // The standalone player has its own native input and pixel surface; authoring rigs above are unchanged.
     private sealed class PlayRig : IDisposable
     {
-        public CheckersPlay.Play Play {get;}=new(Game.Opening(),plain:true);   // ImGui's own words, which these checks read; the Gum strip has its own (CheckersGumTests)
-        public Ui Ui {get;}
-        public PlayRig(float scale,params string[] captions)=>Ui=new Ui(Play.Draw,scale,captions,720,800);
-        public void MoveWithKeys(){Ui.Reach("Computer move",window:PlayWindow);Ui.Key(ImGuiKey.Enter);Assert.Equal(Side.Light,Play.Match.Current.ToMove);}
-        public void Dispose()=>Ui.Dispose();
+        public CheckersPlay.Play Play {get;}
+        public PlayRig(float scale){Play=new(Game.Opening(),plain:true){Scale=scale};Play.Draw();}
+        public CheckersPlay.ScreenPart Part(string caption)=>Assert.Single(Play.Screen.Parts(),p=>p.Words==caption);
+        public void Reach(string caption)
+        {for(var i=0;i<20&&Play.Focus!=caption;i++){Play.Key("Tab");Play.Draw();}Assert.Equal(caption,Play.Focus);}
+        public void MoveWithKeys(){Reach("Computer move");Play.Key("Enter");Play.Draw();Assert.Equal(Side.Light,Play.Match.Current.ToMove);}
+        public void Dispose()=>Play.Dispose();
+    }
+    private static uint PlayerPixel(CheckersPlay.GameScreen screen,int x,int y)
+    {var i=(y*screen.Width+x)*4;var p=screen.Pixels;return (uint)(p[i+2]|p[i+1]<<8|p[i]<<16|255<<24);}
+    private static void PlayerBounds(CheckersPlay.GameScreen screen,CheckersPlay.ScreenPart part)
+    {Assert.True(part.X>=0&&part.Y>=0&&part.X+part.Width<=screen.Width&&part.Y+part.Height<=screen.Height,part.ToString());}
+    private static void PlayerAA(CheckersPlay.GameScreen screen,CheckersPlay.ScreenPart part)
+    {
+        PlayerBounds(screen,part);var counts=new Dictionary<uint,int>();
+        for(var y=(int)part.Y+6;y<(int)(part.Y+part.Height)-6;y++)for(var x=(int)part.X+6;x<(int)(part.X+part.Width)-6;x++)
+        {var color=PlayerPixel(screen,x,y);counts[color]=counts.GetValueOrDefault(color)+1;}
+        var background=counts.MaxBy(p=>p.Value).Key;
+        Assert.True(counts.Where(p=>p.Value>=8).Max(p=>Contrast(background,p.Key))>=4.5,part.Words);
     }
     [Theory] [InlineData(1f)] [InlineData(1.5f)] [InlineData(2f)]
     public void Play_KeyboardComputerButtonPlaysAnActualMove(float scale)
     {
-        using var r=new PlayRig(scale,"Computer move");var before=string.Join("/",r.Play.Match.Current.Rows);r.MoveWithKeys();Assert.NotEqual(before,string.Join("/",r.Play.Match.Current.Rows));
+        using var r=new PlayRig(scale);var before=string.Join("/",r.Play.Match.Current.Rows);r.MoveWithKeys();Assert.NotEqual(before,string.Join("/",r.Play.Match.Current.Rows));
     }
     [Theory] [InlineData(1f)] [InlineData(1.5f)] [InlineData(2f)]
     public void Play_KeyboardTakeBackUndoesTheMove(float scale)
     {
-        using var r=new PlayRig(scale,"Computer move","Take back");var before=string.Join("/",r.Play.Match.Current.Rows);r.MoveWithKeys();
-        r.Ui.Reach("Take back",window:PlayWindow);r.Ui.Key(ImGuiKey.Enter);Assert.Equal(before,string.Join("/",r.Play.Match.Current.Rows));Assert.Equal(Side.Dark,r.Play.Match.Current.ToMove);
+        using var r=new PlayRig(scale);var before=string.Join("/",r.Play.Match.Current.Rows);r.MoveWithKeys();r.Reach("Take back");r.Play.Key("Enter");r.Play.Draw();
+        Assert.Equal(before,string.Join("/",r.Play.Match.Current.Rows));Assert.Equal(Side.Dark,r.Play.Match.Current.ToMove);
     }
     [Theory] [InlineData(1f)] [InlineData(1.5f)] [InlineData(2f)]
     public void Play_KeyboardNewGameResetsTheMatch(float scale)
     {
-        using var r=new PlayRig(scale,"Computer move","New game");var match=r.Play.Match;r.MoveWithKeys();r.Ui.Reach("New game",window:PlayWindow);r.Ui.Key(ImGuiKey.Enter);
+        using var r=new PlayRig(scale);var match=r.Play.Match;r.MoveWithKeys();r.Reach("New game");r.Play.Key("Enter");
         Assert.NotSame(match,r.Play.Match);Assert.Equal(string.Join("/",Game.Opening().Rows),string.Join("/",r.Play.Match.Current.Rows));
     }
     [Theory] [InlineData("New game","idle")] [InlineData("New game","hover")] [InlineData("New game","pressed")] [InlineData("New game","focus")]
@@ -754,32 +768,36 @@ public sealed class LauncherAccessibilityTests
     [InlineData("Take back","idle")] [InlineData("Take back","hover")] [InlineData("Take back","pressed")] [InlineData("Take back","focus")]
     public void Play_EnabledButtonTextHasMeasuredAAContrastInEveryState(string caption,string state)
     {
-        using var r=new PlayRig(1,"Computer move",caption);if(caption=="Take back")r.MoveWithKeys();r.Ui.TextAA(caption,state,PlayWindow);
+        using var r=new PlayRig(1);if(caption=="Take back")r.MoveWithKeys();var part=r.Part(caption);
+        if(state=="focus")r.Reach(caption);
+        if(state is "hover" or "pressed")r.Play.Screen.Pointer=(part.X+part.Width/2,part.Y+part.Height/2);
+        r.Play.Screen.PointerDown=state=="pressed";r.Play.Draw();PlayerAA(r.Play.Screen,part);
     }
     [Theory] [InlineData("New game")] [InlineData("Computer move")] [InlineData("Take back")]
     public void Play_KeyboardFocusHasAnActualVisiblePixelCue(string caption)
     {
-        using var r=new PlayRig(1,"Computer move",caption);if(caption=="Take back")r.MoveWithKeys();r.Ui.VisibleFocus(caption,PlayWindow);
+        using var r=new PlayRig(1);if(caption=="Take back")r.MoveWithKeys();r.Play.Key("Tab");r.Play.Draw();
+        if(r.Play.Focus==caption){r.Play.Key("Tab");r.Play.Draw();}
+        var before=r.Play.Screen.Pixels.ToArray();r.Reach(caption);r.Play.Draw();var part=r.Part(caption);var changed=0;
+        for(var y=(int)part.Y;y<(int)(part.Y+part.Height);y++)for(var x=(int)part.X;x<(int)(part.X+part.Width);x++)
+        {var i=(y*r.Play.Screen.Width+x)*4;var old=(uint)(before[i+2]|before[i+1]<<8|before[i]<<16|255<<24);if(Contrast(old,PlayerPixel(r.Play.Screen,x,y))>=3)changed++;}
+        Assert.True(changed>12,"The focused control has no visible pixel cue.");
     }
     [Theory] [InlineData(1f)] [InlineData(1.5f)] [InlineData(2f)]
     public void Play_AllEnabledButtonsFitAtEveryTextSize(float scale)
     {
-        using var r=new PlayRig(scale,"New game","Computer move","Take back");r.MoveWithKeys();
-        foreach(var caption in new[]{"New game","Computer move","Take back"}){var item=r.Ui.Reach(caption,window:PlayWindow);Within(item.Rect,item.Clip,caption);}
+        using var r=new PlayRig(scale);r.MoveWithKeys();foreach(var caption in new[]{"New game","Computer move","Take back"})
+        {r.Reach(caption);PlayerBounds(r.Play.Screen,r.Part(caption));}
     }
     [Theory] [InlineData(1f)] [InlineData(1.5f)] [InlineData(2f)]
     public void Play_CopyrightIsCompleteAndLegibleAtEveryTextSize(float scale)
     {
-        var words=BrutalCredit.Copyright.Split(' ',StringSplitOptions.RemoveEmptyEntries);
-        var lines=Enumerable.Range(0,words.Length).SelectMany(first=>Enumerable.Range(1,words.Length-first)
-            .Select(count=>string.Join(' ',words.Skip(first).Take(count)))).ToArray();
-        using var r=new PlayRig(scale,lines);r.Ui.WrappedStaticTextAA(BrutalCredit.Copyright,PlayWindow);
+        using var r=new PlayRig(scale);var lines=r.Play.Screen.Parts().Where(p=>p.Name.StartsWith("Copyright.",StringComparison.Ordinal)).ToArray();
+        Assert.Equal(BrutalCredit.Copyright,string.Join(' ',lines.Select(p=>p.Words)));foreach(var part in lines)PlayerAA(r.Play.Screen,part);
     }
     [Theory] [InlineData(1f)] [InlineData(1.5f)] [InlineData(2f)]
     public void Play_StatusIsCompleteAndLegibleAtEveryTextSize(float scale)
-    {
-        using var r=new PlayRig(scale,"Move 1: Dark to play.");r.Ui.StaticTextAA("Move 1: Dark to play.",PlayWindow);
-    }
+    {using var r=new PlayRig(scale);PlayerAA(r.Play.Screen,r.Part("Move 1: Dark to play."));}
     [Theory] [InlineData(ImGuiKey.Escape)] [InlineData(ImGuiKey.Enter)] [InlineData(ImGuiKey.Space)]
     public void Splash_KeyboardSkipWorksAfterOneSecond(ImGuiKey key)
     {

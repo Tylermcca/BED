@@ -24,6 +24,8 @@ public sealed class VerifiedGameBuild:Bed.Editor.ImGui.IVerifiedGameBuild
         try
         {
             cancellation.ThrowIfCancellationRequested();
+            if(!receipt.Outputs.Select(o=>o.Path).Order(StringComparer.Ordinal).SequenceEqual(plan.Outputs.Paths))
+                plan=ExportReleaseFiles.AddToPlan(plan,ExportReleaseFiles.Create(plan));
             if(!receipt.Succeeded||receipt.SavedRevision!=plan.Admission.SnapshotHash||outputs.SourceManifestHash!=plan.Admission.Source.Hash||outputs.Hash!=receipt.ManifestHash)
                 throw new InvalidOperationException("Smoke requires this exact successful Saved build and output manifest.");
             Recheck(plan,receipt,cancellation);

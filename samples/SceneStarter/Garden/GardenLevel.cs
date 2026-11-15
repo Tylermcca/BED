@@ -29,6 +29,7 @@ public sealed class GardenLevel
     public IReadOnlyList<GardenSprite> Sprites {get;}
     public IReadOnlyDictionary<string,BedTexture> Textures {get;}
     public Box Bounds {get;}
+    internal float JumpStrength {get;private set;}=GardenGame.JumpSpeed;
     public GardenSprite Player {get;}
     private GardenLevel(List<GardenSprite> sprites,IReadOnlyDictionary<string,BedTexture> textures)
     {
@@ -92,7 +93,11 @@ public sealed class GardenLevel
         }
         if(sprites.Count==0)throw new InvalidDataException("The level has no sprites.");
         sprites.Sort((a,b)=>a.Order!=b.Order?a.Order.CompareTo(b.Order):a.Ordinal.CompareTo(b.Ordinal));
-        return new(sprites,textures);
+        var level=new GardenLevel(sprites,textures);
+        var player=all.Single(o=>o.Object.Id==PlayerId).Object;
+        if(player.Properties.TryGetValue("jumpStrength",out var value))
+        {if(!value.TryGetSingle(out var strength)||!float.IsFinite(strength)||strength<1||strength>25)throw new InvalidDataException("round_friend jumpStrength must be from 1 to 25.");level.JumpStrength=strength;}
+        return level;
     }
 
     /// <summary>The part of a picture that is filled, as fractions of its size (y up). With <paramref name="fill"/> 0 it is

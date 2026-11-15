@@ -29,9 +29,9 @@ public sealed class ProjectTemplateTests : IDisposable
         foreach (var (name, bytes) in before) Assert.Equal(bytes, after[name]);
     }
 
-    [Fact] public void Manifest_has_only_the_two_approved_templates_and_safe_unique_paths()
+    [Fact] public void Manifest_has_the_three_approved_templates_and_safe_unique_paths()
     {
-        Assert.Equal(new[] { "empty", "recipes" }, ProjectTemplates.All.Select(t => t.Id));
+        Assert.Equal(new[] { "empty", "recipes", "game" }, ProjectTemplates.All.Select(t => t.Id));
         foreach (var t in ProjectTemplates.All)
         {
             Assert.NotEmpty(t.Name); Assert.NotEmpty(t.Description); Assert.NotEmpty(t.Files);
@@ -112,12 +112,18 @@ public sealed class ProjectTemplateTests : IDisposable
         Assert.Equal(ProjectCreationStatus.Refused, creator.Create("recipes", At("projects"), "Acme").Status);
         Assert.False(Directory.Exists(root));
     }
-    [Fact] public void Example_copies_every_declared_byte_and_never_changes_its_installed_source()
+    [Fact] public void Example_copies_declared_bytes_generates_current_agent_notes_and_preserves_source()
     {
         InstallInventedExample(); var before = Snapshot(Installed);
         var result = new ProjectCreator(Installed).TryExampleAt(At("projects"));
         Assert.Equal(ProjectCreationStatus.Created, result.Status);
-        Assert.Equal("Example", Path.GetFileName(result.Folder)); Same(before, Snapshot(result.Folder!));
+        Assert.Equal("Example", Path.GetFileName(result.Folder));
+        var expected = new Dictionary<string, byte[]>(before)
+        {
+            ["AGENTS.md"] = System.Text.Encoding.UTF8.GetBytes(Bed.Editor.AgentIndex.Text),
+            ["CLAUDE.md"] = System.Text.Encoding.UTF8.GetBytes(Bed.Editor.AgentIndex.ClaudeInstructions)
+        };
+        Same(expected, Snapshot(result.Folder!));
         Same(before, Snapshot(Installed));
     }
     [Fact] public void Numbering_skips_existing_directories_and_files_without_overwriting_them()

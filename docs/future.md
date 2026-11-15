@@ -1,0 +1,35 @@
+# Future ideas
+
+Reviewed against BED main `911f8687`, 15 November 2026. These ideas have no delivery dates. Review this page at each milestone; take work up through an agreed card. **Done** means the described part exists, **partly done** names what remains, and **later** means it has no implementation commitment.
+
+Origins: **R** is the [roadmap’s Later list](../ROADMAP.md#later). **F** is the 31 October 2026 planning sheet, `worksheet_r2_future.md`, rows FUT-001–009; its decisions and source research are also described in the public [architecture research](research/editor_architecture.md). **S** is the [0.5 status review](release/0.5_status.md). The planning sheet is not part of the public checkout. Provenance labels describe where an idea came from; they do not imply copied code or content.
+
+## Later workflows
+
+| Idea | Origin and provenance | What it would need | Status |
+|---|---|---|---|
+| Preview materials and lighting | R; MIXED: existing model previews and the roadmap request | Material and light settings a game can share, with a preview that matches its renderer | Later. Existing model pictures and the island’s lighting do not provide a general material or lighting editor. |
+| Show the running game inside BED | R; MIXED: existing Play connection and dockable views | A game-owned picture surface, input routing, resizing and safe shutdown | Later. Picture requests and live values work for the included samples; an interactive game surface inside BED remains separate work. |
+| Build for more platforms | R; MIXED: existing checked export and platform-specific players | A runtime and packaging path for each platform, notices and checks on that platform | Later. Bundled builds target Windows today. |
+| Put prefabs inside prefabs | R; MIXED: existing prefabs and the composition request | Nested resolution, cycle checks, clear override ownership and updates that preserve local edits | Later. Ordinary prefab copies and overrides already work. |
+| Preview animation | R; MIXED: existing asset previews and the roadmap request | Supported animation files, a clock, playback controls and matching game-side loading | Later. The request is a preview; a full animation editor is outside the roadmap. |
+| See where running-game time goes | R; MIXED: existing game connection and the profiler request | Game-supplied timing samples, bounded storage and a view that identifies slow work | Later. Current live values are selected readouts, not a general profiler. |
+| Preview particles | R; MIXED: existing view extension points and the roadmap request | Particle data a game can share, repeatable playback and a matching rendering path | Later. Game screens and menus already use Gum; particles are a separate workflow. |
+| Change code while a game runs | R; MIXED: existing build diagnostics and the hot-reload request | Runtime support for applying code safely, clear failure messages and a restart path | Later. Opening code, rebuilding it and refreshing Gum screens already work; changing running C# code is not implemented. |
+| Offer more ways to render views | R; MIXED: the roadmap request and existing rendering boundaries | A shared drawing boundary, resource ownership and checks for each supported renderer | Later. Some samples have their own renderers; that does not make BED’s views switchable between renderers. |
+
+## Foundations and earlier future requests
+
+| Idea | Origin and provenance | What it would need | Status |
+|---|---|---|---|
+| FUT-001: every edit through the same checked action list | F, S; MIXED: the architecture research’s command and undo designs | Named actions, typed arguments, checks, undo, repeat merging and replay across every tool | Partly done. Data commands, undo and replay work; some tools still use separate action paths. |
+| FUT-002: easier add-ons | F, S; MIXED: researched plug-in manifests and BED’s existing extension points | Stable public interfaces, licence and permission records, compatible package selection and clear handling of a failed add-on | Partly done. Trusted extensions register commands, panels and types with version checks. Package installation and compatible-version selection remain later work; downloads need an explicit user action. |
+| FUT-003: optional network access for local AI tools | F, S; MIXED: researched local bridges and BED’s checked commands | A disabled-by-default local listener, tokens, approval of each client and the same edit/undo rules | Partly done. The existing local connection lets a separate AI app use checked commands. The older network-server and per-client approval plan is not implemented. This is an editor feature, never a player dependency. |
+| FUT-004: an assistant inside BED | F, S; MIXED: local or cloud model connections and existing proposal review | A common provider interface, keys outside projects, asset permission checks and edits accepted by the user | Later. BED supplies no model or built-in assistant. A separate AI app can already propose edits for review. |
+| FUT-005: honour asset AI permissions | F, S; MIXED: licence records and the user’s permission decision | Permission records checked before every supported AI read, picture or live-value reply | Done for BED’s supported AI paths on this main. Forbidden, unknown or unreadable asset permissions block the reply in plain words. This checks BED’s connection, not arbitrary external programs. See [content rights](guide/content_rights.md). |
+| FUT-006: keep a register of future ideas | F, S; INVENTED: the user’s request to retain ideas without adding them to the current milestone | One maintained page with origins, required support and status | Done: this page. Recheck it at each milestone. |
+| FUT-007: players ship without editor code | F, S; MIXED: researched runtime/editor separation and the existing project layers | Runtime loaders, game-side adapters and a check of player dependencies | Done for the bundled players on this main. Checkers now uses shared rules without the editor app; [the packaging check](../tools/check_player_dependencies.py) rejects editor references in any bundled player. Keep that check as samples grow. |
+| FUT-008: find actions by name | F, S; BORROWED: Blender’s command search, adapted to BED’s action list | Searchable action names, sensible defaults and hidden internal actions | Done. The command palette finds available actions and leaves internal ones out. |
+| FUT-009: lasting asset identities | F, S; MIXED: researched asset identifiers and rebuildable import records | Stable ids, records beside assets, deterministic imports and a disposable cache | Done. Imported assets keep their ids when moved with their records; caches can be rebuilt. |
+
+The [0.5 status page](release/0.5_status.md) tracks release work such as the public package and screen-reader walkthrough. Those are release tasks, separate from the later workflows above. The roadmap’s **Not planned** list still applies: visual scripting, terrain tools, a shader graph, a full animation editor and built-in team collaboration have not been added to this register as promises.

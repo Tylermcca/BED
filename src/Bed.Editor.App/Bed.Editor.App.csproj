@@ -40,8 +40,14 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Bed.Tests" />
+    <InternalsVisibleTo Include="Bed.Launcher" />
     <InternalsVisibleTo Include="Bed.Editor.Audio" />
     <InternalsVisibleTo Include="Bed.Editor.Assets" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../Bed.Editor.ImGui/Branding/NOTICE.txt" LogicalName="BRUTAL-NOTICE" />
+    <EmbeddedResource Include="../Bed.Editor.ImGui/Branding/LOGO_BRUTAL_WHT.png" LogicalName="BRUTAL-LOGO" />
+    <EmbeddedResource Include="Release/BRUTAL-LICENSE.txt" LogicalName="BRUTAL-LICENSE" />
   </ItemGroup>
 </Project>
 

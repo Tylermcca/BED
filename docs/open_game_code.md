@@ -1,0 +1,9 @@
+# Open game code
+
+Choose **Tools > Open game code** to open the project folder (or its one top-level solution) in your own editor. Choose **Options > Locations > Code editor** for Windows choice, VS Code, Visual Studio or Rider. Leave the program empty to find an installed editor in the usual locations, or browse to its `.exe`. BED remembers this choice in your local settings, outside the game. It does not install an editor.
+
+Build with **Tools > Build game**. Its output also appears in the **Play console**. Click an error's **Open … at line …** link to open the existing source file in the same selected editor. Relative compiler paths start in the build's working folder; source links must remain inside the project. Missing locations, outside files and executable paths are refused with an explanation. The editor opens current source on disk; an old build's line can move after an edit.
+
+VS Code receives `--goto file:line:column` ([official command-line guide](https://code.visualstudio.com/docs/configure/command-line)). Rider receives `--line` and `--column` ([official guide](https://www.jetbrains.com/help/rider/Opening_Files_from_Command_Line.html)). Visual Studio receives `/Edit file` and `/Command` with `Edit.GoTo line` ([switches](https://learn.microsoft.com/en-us/visualstudio/ide/reference/devenv-command-line-switches?view=visualstudio), [Go To command](https://learn.microsoft.com/en-us/visualstudio/ide/reference/go-to-command?view=visualstudio)). These are separate process arguments; compiler text is never a command.
+
+Windows choice uses the normal file association. Windows has no shared line-number argument for those associations, so BED opens the file and shows the line to visit yourself. Choose a named editor for line navigation. A missing custom program is reported rather than silently choosing another app. Opening code does not save, build or run the game, and BED contains no code editor.

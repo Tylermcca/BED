@@ -12,17 +12,19 @@ public static class UiSnapshotCommand
     {
         if ((data is null) != (schemas is null) || data is null && (map is not null || adapterPath is not null))
         {
-            errors.WriteLine("ui needs both --data and --schemas, or neither for the start screen.");
+            errors.WriteLine("couldn't check: ui needs both --data and --schemas, or neither for the start screen.");
             return 2;
         }
         try { if (script is not null) UiScript.Validate(script); }
         catch (Exception e) when (e is ArgumentException or System.Text.Json.JsonException or InvalidOperationException)
-        { errors.WriteLine("Invalid ui script: " + e.Message); return 2; }
+        { errors.WriteLine("couldn't check: Invalid ui script: " + e.Message); return 2; }
+        if(data is not null&&Bed.Editor.AssetAiAccess.Refusal(Bed.Editor.AssetAiAccess.RootFor(data),data,schemas,map,adapterPath) is {} denied)
+        {errors.WriteLine(denied["error"]!.GetValue<string>());return 1;}
         var settings = Path.Combine(Path.GetTempPath(), "bed-ui-" + Guid.NewGuid().ToString("N"));
         try
         {
             using var launcher = new ProjectLauncher(new RecentProjects(Path.Combine(settings, "recent.json")),
-                ProjectPaths.In(Path.Combine(AppContext.BaseDirectory, "samples", "recipes")));
+                ProjectPaths.In(Path.Combine(AppContext.BaseDirectory, "samples", "recipes"))) {AiObservation=true};
             if (adapterPath is not null)
             {
                 if (CliAdapterSelection.Load(adapterPath, new ProjectPaths(data!, schemas!, map), errors) is not {} adapter) return 2;
@@ -30,23 +32,28 @@ public static class UiSnapshotCommand
             }
             if (data is not null && !launcher.Open(new ProjectPaths(data, schemas!, map)))
             {
-                errors.WriteLine(launcher.Said);
+                errors.WriteLine("couldn't check: "+launcher.Said);
                 return 2;
             }
             using var host = new HeadlessHost(1280, 800) { Drawing = false };
             EditorWindow<DataDocument>.Configure(ImGui.GetIO());
             host.Frames(launcher.Draw, 4);
-            void Emit(UiSnapshot snapshot) => output.WriteLine(json
+            void Emit(UiSnapshot snapshot)
+            {
+                if(data is not null)Bed.Editor.AssetAiAccess.Require(Bed.Editor.AssetAiAccess.RootFor(data),data,schemas,map,adapterPath);
+                if(launcher.Current is {} current)Bed.Editor.AssetAiAccess.Require(current.Root??current.Folder??Bed.Editor.AssetAiAccess.RootFor(current.Data),current.Data,current.Schemas,current.Map,current.AdapterPath,launcher.Using?.AssetsFolder(current));
+                output.WriteLine(json
                 ? script is null ? snapshot.Json : System.Text.Json.Nodes.JsonNode.Parse(snapshot.Json)!.ToJsonString()
                 : snapshot.Text);
+            }
             Emit(Ui.Snapshot());
             if (script is not null) UiScript.Run(script, host, launcher.Draw, Emit);
             errors.WriteLine("UI snapshots include only recorded controls; an empty or partial tree does not prove an empty screen.");
             return 0;
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidDocumentException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidDocumentException or InvalidOperationException)
         {
-            errors.WriteLine("Cannot read the headless UI: " + e.Message);
+            errors.WriteLine("couldn't check: Cannot read the editor controls: " + e.Message);
             return 2;
         }
         finally

@@ -102,6 +102,7 @@ Set, insert and remove without --save end without writing the data file; the res
 | `ai-setup [--json]` | Print setup examples without opening the project, loading an adapter or writing configuration. Requires data and schema paths; a supplied adapter file must exist. |
 | `ui [--json] [--script <json array>]` | Draw a separate headless instance and print recorded controls. With no data/schema paths it draws the start screen. |
 | `scene <file> <action> <args-json> [--preview] [--save]` | Preview or save typed scene edits; version two also supports prefab and sprite actions. |
+| `build` | Build the saved game files with the command already approved in BED, and return any errors with their file and line; see [build the game](build_game.md). It takes no arguments and cannot grant that approval. |
 | `describe` | List files, lists, problems and available calls. |
 | `find <file> <list> [text] [--limit N]` | Find items by label or field text. |
 | `get <file> <at>` | Read a value, label and the target of an ID. |

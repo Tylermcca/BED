@@ -26,7 +26,7 @@ public class GumToolTests
         var b = GumTool.Plan(exe, project, nested);
         Assert.Equal(proj, b.Argument); Assert.Contains("Shop/Cart", b.Note);
         ProcessStartInfo? seen = null;
-        var (ok, message) = GumTool.Start(a, i => { seen = i; return true; });
+        var (ok, message) = GumTool.Start(a, i => { seen = i; return true; }, _ => false); // fake window lookup too: never focus a real Gum
         Assert.True(ok); Assert.Equal("Gum is opening the screen Menu.", message);
         Assert.False(seen!.UseShellExecute); Assert.Equal([flat.File], seen.ArgumentList); // a path with spaces stays one argument
     }

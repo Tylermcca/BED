@@ -1,0 +1,206 @@
+{
+  "Name": "ColoredRectangle",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "X",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "XUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Y",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "YUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "XOrigin",
+          "Type": "HorizontalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "YOrigin",
+          "Type": "VerticalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Parent",
+          "Type": "string",
+          "Category": "Parent",
+          "SetsValue": true
+        },
+        {
+          "Name": "IgnoredByParentSize",
+          "Type": "bool",
+          "Category": "Parent",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 50
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "MinWidth",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MaxWidth",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 50
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "MinHeight",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MaxHeight",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "Rotation",
+          "Type": "float",
+          "Category": "Flip and Rotation",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Visible",
+          "Type": "bool",
+          "Category": "States and Visibility",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Alpha",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Red",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Green",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Blue",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Blend",
+          "Type": "Blend",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "HasEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "ExposeChildrenEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "RaiseChildrenEventsOutsideOfBounds",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": []
+        }
+      ]
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

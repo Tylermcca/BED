@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Bed.Data;
+using Bed.Editor;
 
 namespace Bed.Agent;
 
@@ -12,8 +13,22 @@ namespace Bed.Agent;
 /// An optional UI provider must return an owned completed snapshot safely on the calling thread.
 /// It must not draw, dispatch input, or read a different thread's thread-local recorder.
 /// </summary>
-public sealed class McpServer(AgentSession session, string name = "BED", Func<JsonObject>? uiSnapshot = null)
+public sealed class McpServer
 {
+    /// <summary>Optional host-owned headless Play observation provider; never targets an unrelated desktop window.</summary>
+    public Func<string,JsonObject,JsonObject>? PlayObservation {get;init;}
+
+    private readonly AgentSession session;
+    private readonly string name;
+    private readonly Func<JsonObject>? uiSnapshot,build;
+    /// <summary>Creates the existing data/UI server without a build provider.</summary>
+    public McpServer(AgentSession session,string name="BED",Func<JsonObject>? uiSnapshot=null):this(session,name,uiSnapshot,null) { }
+    /// <summary>Creates a server with the host's approved build-only provider.</summary>
+    public McpServer(AgentSession session,Func<JsonObject> build):this(session,"BED",null,build) { }
+    /// <summary>Creates a server with independently supplied UI and build providers.</summary>
+    public McpServer(AgentSession session,string name,Func<JsonObject>? uiSnapshot,Func<JsonObject>? build)
+    {this.session=session;this.name=name;this.uiSnapshot=uiSnapshot;this.build=build;}
+
     private const string Protocol = "2025-06-18";
 
     private static JsonObject Obj(params (string Key, JsonNode? Value)[] props)
@@ -36,10 +51,29 @@ public sealed class McpServer(AgentSession session, string name = "BED", Func<Js
         return tool;
     }
 
+    private static JsonObject BuildTool()
+    {
+        var tool=Tool("build","Build saved game files using the project build command already approved locally in BED. Does not save, approve a command, launch Play or test gameplay. Returns file/line, what is wrong and what to try.",new JsonObject());
+        tool["inputSchema"]!["additionalProperties"]=false;return tool;
+    }
+
+    private static JsonObject ObserveTool(string name,string description,JsonObject? properties=null,params string[] required)
+    {
+        var tool=Tool(name,description,properties??new JsonObject(),required);
+        tool["inputSchema"]!["additionalProperties"]=false;return tool;
+    }
+
     /// <summary>The tools it offers.</summary>
     public static JsonArray Tools() =>
     [
         SnapshotTool(),
+        BuildTool(),
+        ObserveTool("play_start","Start one game that shares pictures with BED, using the saved Play command already approved in BED. Runs without a window and does not build the game."),
+        ObserveTool("play_screenshot","Take a picture of the game started by this connection. The game pauses between requests. A picture does not prove the game works."),
+        ObserveTool("play_hold_key","Hold a supported game key for the requested seconds of play, release it, then take a picture of the same game. Reports how far the game advanced; this does not prove the game works.",
+            Obj(("key",Obj(("type","string"),("enum",new JsonArray("left","right","jump","restart")))),
+                ("seconds",Obj(("type","number"),("exclusiveMinimum",0),("maximum",5)))),"key","seconds"),
+        ObserveTool("play_stop","Stop only the game started by this connection."),
         Tool("describe", "Start here: every file with its title, whether it can be saved and why not, its lists and item counts, its problems, and the calls that edit.", new JsonObject()),
         Tool("find", "Items in a list whose label or fields contain text (or all of them), with each item's place.",
             Obj(("file", Str("A file's name, such as wares.json")), ("list", Str("The list's JSON Pointer, such as /wares")),
@@ -197,7 +231,7 @@ public sealed class McpServer(AgentSession session, string name = "BED", Func<Js
                 ("protocolVersion", p["protocolVersion"] is JsonValue pv && pv.GetValueKind() == JsonValueKind.String ? pv.GetValue<string>() : Protocol),
                 ("capabilities", Obj(("tools", new JsonObject()), ("prompts", new JsonObject()))),
                 ("serverInfo", Obj(("name", name), ("version", BuildVersion.Current))),
-                ("instructions", "Call describe first: it lists every file, what can be saved, and the calls that edit. Preview edits before applying; save when right."))),
+                ("instructions", AgentIndex.Text))),
             "ping" => Result(id!, new JsonObject()),
             "prompts/list" => Result(id!, Obj(("prompts", Prompts()))),
             "prompts/get" => PromptGet(id!, p),
@@ -277,7 +311,16 @@ public sealed class McpServer(AgentSession session, string name = "BED", Func<Js
     private static readonly JsonSchemas ArgumentSchemas = Tools().Concat(AssetTools()).Aggregate(new JsonSchemas(),
         (s, t) => s.Add(t!["name"]!.GetValue<string>() + ".schema.json", t["inputSchema"]!.ToJsonString()));
 
+    private static bool ReadQuery(string tool) => tool is "ui_snapshot" or "play_screenshot" or "describe" or "find" or "get" or "problems" or "refs" or "checks" or "check" or "proposal_list" or "proposal_show";
+
     private JsonObject Call(string tool, JsonObject a)
+    {
+        if(session.AiRefusal() is {} before)return PrivacyResult(before);
+        var result=CallAllowed(tool,a);
+        return session.AiRefusal() is {} after?PrivacyResult(after):result;
+    }
+    private static JsonObject PrivacyResult(JsonObject refusal)=>Obj(("content",new JsonArray(Obj(("type","text"),("text",refusal.ToJsonString())))),("isError",true));
+    private JsonObject CallAllowed(string tool, JsonObject a)
     {
         if (ArgumentSchemas.Find(tool + ".schema.json") is not null)
         {
@@ -289,6 +332,7 @@ public sealed class McpServer(AgentSession session, string name = "BED", Func<Js
                     ["error"] = $"{tool}'s arguments don't fit: " + string.Join("; ", problems.Select(p => $"{p.Path}: {p.Message}")),
                     ["next"] = "tools/list shows each tool's arguments and their types",
                 };
+                if(ReadQuery(tool)) refused=AgentSession.Query(()=>refused);
                 return Obj(("content", new JsonArray(Obj(("type", "text"), ("text", refused.ToJsonString())))), ("isError", true));
             }
         }
@@ -301,7 +345,10 @@ public sealed class McpServer(AgentSession session, string name = "BED", Func<Js
         {
             result = tool switch
             {
-                "ui_snapshot" => uiSnapshot is null ? new JsonObject { ["error"] = "UI snapshot unavailable: no hosted UI provider." } : uiSnapshot().DeepClone().AsObject(),
+                "ui_snapshot" => AgentSession.Query(() => uiSnapshot is null ? new JsonObject { ["error"] = "This connection cannot read the editor controls." } : uiSnapshot().DeepClone().AsObject()),
+                "build" => build is null ? new JsonObject { ["error"] = "This connection cannot build the game.", ["next"] = "Use BED or bed-cli with the game project and approve its build command in BED first." } : build(),
+                "play_start" or "play_screenshot" or "play_hold_key" or "play_stop" => PlayObservation is null
+                    ? new JsonObject { ["error"]="This connection cannot start a game to take pictures." } : tool=="play_screenshot" ? AgentSession.Query(()=>PlayObservation(tool,a)) : PlayObservation(tool,a),
                 "describe" => session.Describe(),
                 "find" => session.Find(S("file"), S("list"), O("text"), I("limit", 50)),
                 "get" => session.Get(S("file"), S("at")),
@@ -333,9 +380,14 @@ public sealed class McpServer(AgentSession session, string name = "BED", Func<Js
         {
             result = new JsonObject { ["error"] = e.Message, ["next"] = "tools/list shows each tool's arguments" };
         }
+        if(ReadQuery(tool)) result=AgentSession.Query(()=>result);
         // A refusal is an error result too: an edit the schema refuses, a save that didn't happen (found by A207).
         var refusedAny = result["refused"] is JsonArray r && r.Count > 0;
-        return Obj(("content", new JsonArray(Obj(("type", "text"), ("text", result.ToJsonString())))), ("isError", result.ContainsKey("error") || refusedAny));
+        var image=result["imageData"]?.GetValue<string>();
+        if(tool is "play_screenshot" or "play_hold_key")result.Remove("imageData");else image=null;
+        var content=new JsonArray(Obj(("type","text"),("text",result.ToJsonString())));
+        if(image is not null&&!result.ContainsKey("error"))content.Add(Obj(("type","image"),("mimeType","image/png"),("data",image)));
+        return Obj(("content",content),("isError",result.ContainsKey("error")||refusedAny));
     }
 
     private static JsonObject Result(JsonNode id, JsonObject result) => Obj(("jsonrpc", "2.0"), ("id", id), ("result", result));

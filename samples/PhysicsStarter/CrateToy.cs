@@ -5,9 +5,9 @@ namespace PhysicsStarter;
 // The interactive toy's rules, free of window and GPU types so tests drive them directly.
 
 /// <summary>What the player asked for this frame.</summary>
-internal enum ToyCommand{DropCrate,Reset,Quit}
+internal enum ToyCommand{DropCrate,Jump,Reset,Quit}
 /// <summary>The keys the toy listens to, mapped from the window library by the window layer.</summary>
-internal enum ToyKey{Other,A,D,Left,Right,R,Escape}
+internal enum ToyKey{Other,A,D,Left,Right,Space,R,Escape}
 internal enum ToyButton{Left,Right,Other}
 
 /// <summary>An orbit camera around the island: yaw and pitch in radians, distance in metres.</summary>
@@ -37,7 +37,7 @@ internal sealed class OrbitCamera
 }
 
 /// <summary>Turns window events into camera moves and commands. Left click drops a crate, right-drag or A/D (or the
-/// arrow keys) orbits, the wheel zooms, R resets and Esc quits. A left press that moves more than a few pixels is a
+/// arrow keys) orbits, the wheel zooms, Space jumps the first crate, R resets and Esc quits. A left press that moves more than a few pixels is a
 /// drag, not a click.</summary>
 internal sealed class ToyControls(OrbitCamera camera)
 {
@@ -49,8 +49,9 @@ internal sealed class ToyControls(OrbitCamera camera)
     internal void Key(ToyKey key,bool down)
     {
         if(!down){held.Remove(key);return;}
-        held.Add(key);
+        if(!held.Add(key))return;
         if(key==ToyKey.R)pending.Add((ToyCommand.Reset,cursor));
+        else if(key==ToyKey.Space)pending.Add((ToyCommand.Jump,cursor));
         else if(key==ToyKey.Escape)pending.Add((ToyCommand.Quit,cursor));
     }
     internal void Button(ToyButton button,bool down)
@@ -130,6 +131,14 @@ internal sealed class CrateToy:IDisposable
         // A small repeatable turn per crate so a pile looks tumbled, not stacked.
         var rotation=Quaternion.CreateFromYawPitchRoll(serial*.9f,(serial%3-1)*.12f,(serial%2-.5f)*.16f);
         world.Spawn(name,template.Body,new(at.X,DropHeight,at.Y),rotation,template.Scale);dropped.Add(name);return name;
+    }
+    /// <summary>Give the selected dynamic body an upward speed of 5 m/s. Ordinary play uses the first saved crate.
+    /// One press gives one jump; it can be used again in the air. Nothing in the saved scene changes.</summary>
+    internal bool Jump(string? target=null)
+    {
+        target??=Template?.Id;
+        if(target is null||!world.Named(SceneBodyMotion.Dynamic).Contains(target,StringComparer.Ordinal))return false;
+        world.Jump(target);return true;
     }
     /// <summary>Back to the saved level: a fresh world from the saved scene, no dropped crates, time zero.</summary>
     internal void Reset()

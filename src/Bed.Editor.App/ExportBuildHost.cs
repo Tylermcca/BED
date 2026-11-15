@@ -27,12 +27,14 @@ public sealed class ExportBuildHost:IGameExportHost
         if(hasUnsavedChanges)throw new InvalidOperationException("Save changes before building.");
         if(plan.Outputs.Source.Hash!=plan.Admission.Source.Hash||plan.Outputs.Source.InventoryRevision!=plan.Admission.SnapshotHash)
             throw new InvalidOperationException("The output plan is stale for Saved input.");
+        var releaseFiles=ExportReleaseFiles.Create(plan);
+        var releasePlan=ExportReleaseFiles.AddToPlan(plan,releaseFiles);
         var log=runs.Begin(projectRoot);var run=Path.GetDirectoryName(log.Path)!;
         GameBuildHost? host=null;var output=Path.Combine(run,"output");
         try
         {
             log.Phase("Project: "+Path.GetFullPath(projectRoot));log.Phase("Build command: "+spec.Executable+" "+System.Text.Json.JsonSerializer.Serialize(spec.Arguments));
-            host=new GameBuildHost(spec,projectRoot,hasUnsavedChanges,plan,maxLine,maxLogs,timeout){OwnedExportFolder=run,PersistentLog=log.Output};
+            host=new GameBuildHost(spec,projectRoot,hasUnsavedChanges,releasePlan,maxLine,maxLogs,timeout){OwnedExportFolder=run,PersistentLog=log.Output,AfterBuild=folder=>ExportReleaseFiles.Write(folder,plan,releaseFiles)};
             logs[output]=log;host.Start();return new Operation(host,log);
         }
         catch(Exception e)

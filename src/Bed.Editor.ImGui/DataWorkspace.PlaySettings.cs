@@ -4,9 +4,11 @@ namespace Bed.Editor.ImGui;
 using ImGui=Brutal.ImGuiApi.ImGui;
 public sealed partial class DataWorkspace
 {
+    private ProjectBuildPanel? projectBuild;
     private IProjectPlayHost? projectPlayHost;
     private IProjectPlaySession? projectPlay;
     private PlayLaunch? pendingLaunch;
+    private bool requestingLive,pendingLive;
     private bool pendingBuild,playSavePrompt,playApprovalPrompt,playFocus;
     private Func<bool>? playCurrent;
     /// <summary>Project Play configuration, available for plain projects as well as adapters.</summary>
@@ -19,7 +21,10 @@ public sealed partial class DataWorkspace
     public bool ProjectPlayApprovalPending=>playApprovalPrompt;
     /// <summary>Binds project settings without starting a process or changing any document.</summary>
     public void BindPlaySettings(string root,global::Bed.Editor.PlaySettings? defaults,string localPreferences,Func<IFileDialogs?>? dialogs=null)
-    { statusProjectRoot=root;reportDialogs=dialogs;reportPreferences=localPreferences;PlaySettings=new(root,defaults,localPreferences,dialogs);BindSceneViewPreferences(localPreferences); }
+    { statusProjectRoot=root;reportDialogs=dialogs;reportPreferences=localPreferences;PlaySettings=new(root,defaults,localPreferences,dialogs);BindSceneViewPreferences(localPreferences);
+        var firstBuildPanel=projectBuild is null;projectBuild?.Dispose();projectBuild=new(PlaySettings,new PlayApprovals(localPreferences),ProjectDirty,()=>projectPlay is {HasCompleted:false});
+        projectBuild.Completed=AcceptBuildOutput;projectBuild.OpenSource=OpenCodeDiagnostic;
+        if(firstBuildPanel)FilePanels.Add((_,_)=>projectBuild.AsPanel()); }
     /// <summary>Binds the common factory; no settings are approved and no process starts.</summary>
     public void BindProjectPlay(IProjectPlayHost host){ArgumentNullException.ThrowIfNull(host);projectPlayHost=host;}
 
@@ -56,11 +61,12 @@ public sealed partial class DataWorkspace
     /// <summary>Requests the same saved-files launch from toolbar, palette or host. Dirty drafts require a decision.</summary>
     public bool RequestProjectPlay(bool buildAndPlay=false)
     {
+        if(projectBuild?.Busy==true){Said="Wait for the build to finish or cancel it before Play.";return false;}
         if(projectPlayHost is null||PlaySettings is null){Said="No project Play host is available.";return false;}
         if(projectPlay is {HasCompleted:false}){Said="Stop the running program first.";return false;}
         if(!PlaySettings.TryLaunch(out var launch,out var why))
         {PlaySettings.Open=true;Said=why=="Choose a program in Play settings."?"Set the program in Tools > Play settings":why!;return false;}
-        pendingLaunch=launch;pendingBuild=buildAndPlay;playCurrent=CapturePlayDocuments();playApprovalPrompt=false;
+        pendingLaunch=launch;pendingBuild=buildAndPlay;pendingLive=requestingLive;pendingPicture=requestingPicture;playCurrent=CapturePlayDocuments();playApprovalPrompt=false;
         if(ProjectDirty()){playSavePrompt=true;playFocus=true;Said="Play runs saved files. Save changes before Play?";return true;}
         playSavePrompt=false;return ContinueProjectPlay();
     }
@@ -102,7 +108,7 @@ public sealed partial class DataWorkspace
         projectPlay?.Dispose();projectPlay=null;
         try
         {
-            projectPlay=projectPlayHost.Start(launch);ClearProjectConsole();focusProjectConsole=true;
+            projectPlay=pendingPicture&&projectPlayHost is IGamePictureHost pictures?pictures.StartPictures(launch,new PlayApprovals(reportPreferences!)):pendingLive&&projectPlayHost is ILivePlayHost live?live.StartLive(launch,new PlayApprovals(reportPreferences!),pendingLiveTarget!):projectPlayHost.Start(launch);buildInConsole=false;codeWorkingFolder=launch.Run.WorkingDirectory;ClearProjectConsole();focusProjectConsole=true;
             projectDiagnosticRoot=launch.ProjectRoot;projectDiagnosticSignature=ProjectDirty()?null:Bed.Data.CheckSnapshot.SignatureOf(Project);projectDiagnosticNote="";
             projectPlayWasBuilding=pendingBuild;projectPlayStopRequested=false;
             var ok=projectPlay.Start(false,pendingBuild);Said=projectPlay.Status;
@@ -127,6 +133,10 @@ public sealed partial class DataWorkspace
     private void DisposeProjectPlay(){CancelProjectPlay();var owned=projectPlay;projectPlay=null;owned?.Dispose();}
     private void BindProjectControls<T>(EditorWindow<T> window) where T:class
     {
+        if(projectBuild is {} build&&window.Editor.Panels.All(p=>p.Id!=ProjectBuildPanel.Id))window.Editor.Add(build.AsPanel());
+        if(window.Editor.Panels.All(p=>p.Id is not("scene2.live" or "project.live")))window.Editor.Add(new Panel("project.live","Live values",()=>DrawLiveValues(Active?.Name??"",null),OpenAtStart:false,Width:420,Height:400));
+        if(window.Editor.Panels.All(p=>p.Id!="project.picture"))window.Editor.Add(new Panel("project.picture","Game picture",DrawGamePicture,OpenAtStart:false,Width:600,Height:500));
+        window.OpenGameCodeAction=()=>OpenGameCode();
         window.PlaySettingsAction=()=>PlaySettings!.Open=true;
         if(projectPlayHost is null)return;
         window.ProjectFrames=()=>projectPlay is {HasCompleted:false} ? projectPlay as IProjectFrameControlSession : null;
@@ -141,23 +151,30 @@ public sealed partial class DataWorkspace
             return build&&launch!.Build is null?"Set a build command in Tools > Play settings":null;
         };
     }
-    private void PreparePlaySettingsUi()
+    // Called when a file is shown as well as on each frame, so Build game and Live values are registered (palette,
+    // menus, scripted panel commands) from the moment a level or data editor exists, not only after its first frame.
+    private void BindShownProjectControls()
     {
-        if(PlaySettings is not {} form)return;
+        if(PlaySettings is null)return;
         if(SceneWindow is {} scene)BindProjectControls(scene);
         if(Scene2Window is {} scene2)BindProjectControls(scene2);
         if(Window is {} data)BindProjectControls(data);
-        projectPlay?.Update();
-        if(projectPlay is {} session)
+    }
+    private void PreparePlaySettingsUi()
+    {
+        if(PlaySettings is not {} form)return;
+        BindShownProjectControls();
+        projectBuild?.Update();projectPlay?.Update();
+        if(projectPlay is not null||buildInConsole)
         {
-            CollectProjectOutput(session.DrainLogs());
+            var session=projectPlay;if(session is not null)CollectProjectOutput(session.DrainLogs());
             if(focusProjectConsole)ImGui.SetNextWindowFocus();
             var files=ImGui.Internal.FindWindowByName(Scene2Window is not null?"Prefab and images###panel.scene2.prefabs"u8:"Files###panel.project.files"u8);
             if(!files.IsNull()&&files.DockId.Value!=0)ImGui.SetNextWindowDockID(files.DockId,ImGuiCond.FirstUseEver);
             if(Ui.Begin("Play console###project.play.console"u8,ImGuiWindowFlags.HorizontalScrollbar|ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
-                if(!session.HasCompleted&&Ui.Button("Stop program"u8))StopProjectPlay();
-                if(session.CanBuildAndPlay&&Ui.Button("Build and Play"u8))RequestProjectPlay(true);
+                if(session is {HasCompleted:false}&&Ui.Button("Stop program"u8))StopProjectPlay();
+                if(session?.CanBuildAndPlay==true&&Ui.Button("Build and Play"u8))RequestProjectPlay(true);
                 DrawProjectConsole();
             }
             Ui.End();

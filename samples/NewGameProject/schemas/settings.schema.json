@@ -1,0 +1,23 @@
+{
+  "title": "Your game",
+  "type": "object",
+  "required": [
+    "title",
+    "goal"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "title": "Game title",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "goal": {
+      "title": "Lights to catch",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    }
+  }
+}

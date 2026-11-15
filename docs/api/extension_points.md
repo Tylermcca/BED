@@ -97,6 +97,8 @@ public static class SavingExample
 
 ## Panels
 
+Use `Side: PanelSide.Centre` for a large picture or map preview: it opens as a tab beside Table in the broad middle area. `PanelSide.Right` is for a small tool above Inspector. Width and Height are initial floating-size hints. The request supplies a first layout only; a saved dock or floating placement wins, including when the adapter changes its request. **View > Reset layout** reapplies the requested placement. Panels opened after another file built the layout can request the centre too.
+
 `Panel`/`PanelCommand`: `src/Bed.Editor/EditorModel.cs:88`/`:110`; `DataFilePanel`: `src/Bed.Editor.ImGui/DataWorkspace.cs:17`, `FilePanels`: `:144`; `SetUpWorkspace`: `src/Bed.Editor.ImGui/ProjectLauncher.cs:254`. Install factories before the first file is shown: they run once per editor, before adapter Configure; existing editors retain their panels. SetUpWorkspace runs before the launcher shows a file. A throwing host setup is reported and the project stays open, though panels/settings from that setup may be missing. Keep hooks bounded and compose an existing hook rather than erase it.
 
 The host owns ImGui context/frame and view state. Draw reads state; edits use `editor.Execute` and normal validated commands. Give stable unique panel/local-command ids, a truthful Unavailable reason and visible failure guidance. A panel command opens its panel before running and refuses edits during play. Setup/draw fault isolation does not make arbitrary extension code a sandbox. Build against Editor.ImGui (the example draws only when a real host calls it):

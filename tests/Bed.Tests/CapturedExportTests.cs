@@ -112,7 +112,7 @@ public sealed class CapturedExportTests
         using var process=Process.Start(start)!;var output=process.StandardOutput.ReadToEndAsync();var error=process.StandardError.ReadToEndAsync();
         try{await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(8));Assert.Equal(0,process.ExitCode);Assert.Contains($"SceneStarter loaded saved level: 1 objects, {(assets?1:0)} meshes.",await output);Assert.Equal("",await error);}
         finally{if(!process.HasExited){process.Kill(true);await process.WaitForExitAsync();}}
-        Assert.Equal(plan.Outputs.Paths.Order(),receipt.Outputs.Select(item=>item.Path).Order());
+        Assert.Equal(plan.Outputs.Paths.Concat(ExportReleaseFiles.Create(plan).Keys).Order(),receipt.Outputs.Select(item=>item.Path).Order());
     }
     [Fact] public async Task Deployed_runtime_without_a_canned_scene_builds_only_the_admitted_saved_files()
     {
@@ -125,6 +125,6 @@ public sealed class CapturedExportTests
         Assert.Equal("edited",Assert.Single(SceneStarter.SavedScene.Open(receipt.OutputDirectory).Level.Scene.Objects).Id);
         Assert.False(File.Exists(Path.Combine(runtime,"scene.json")));Assert.False(File.Exists(Path.Combine(receipt.OutputDirectory,"scene.json")));
         Assert.Equal(SceneStarter.ExportInventory.RuntimeFiles.Order(),Directory.GetFiles(runtime).Select(Path.GetFileName).Order());
-        Assert.Equal(plan.Outputs.Paths.Order(),receipt.Outputs.Select(item=>item.Path).Order());
+        Assert.Equal(plan.Outputs.Paths.Concat(ExportReleaseFiles.Create(plan).Keys).Order(),receipt.Outputs.Select(item=>item.Path).Order());
     }
 }

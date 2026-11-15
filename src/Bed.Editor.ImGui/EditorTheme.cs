@@ -119,6 +119,13 @@ public static class EditorTheme
         style.ScrollbarRounding = 4;
         style.GrabRounding = 3;
         style.TabRounding = 3;
+        // Dock chrome stays visible at rest, with a stronger selected edge and a usable splitter target.
+        // These are logical sizes; the host's DpiScale scales them once, and Refresh changes colours only.
+        style.WindowBorderSize = 1;
+        style.TabBorderSize = 1;
+        style.TabBarBorderSize = 1;
+        style.TabBarOverlineSize = 3;
+        style.DockingSeparatorSize = 4;
         style.FrameBorderSize = 1;
     }
 
@@ -186,13 +193,13 @@ public static class EditorTheme
         style.Colors[(int)ImGuiCol.ResizeGripActive] = accent;
         style.Colors[(int)ImGuiCol.InputTextCursor] = accent;
         style.Colors[(int)ImGuiCol.Tab] = chrome;
-        style.Colors[(int)ImGuiCol.TabHovered] = hovered;
+        style.Colors[(int)ImGuiCol.TabHovered] = pressed;
         style.Colors[(int)ImGuiCol.TabSelected] = selected;
         style.Colors[(int)ImGuiCol.TabSelectedOverline] = accent;
         style.Colors[(int)ImGuiCol.TabDimmed] = chrome;
         style.Colors[(int)ImGuiCol.TabDimmedSelected] = selected;
-        style.Colors[(int)ImGuiCol.TabDimmedSelectedOverline] = boundary;
-        style.Colors[(int)ImGuiCol.DockingPreview] = new float4(accent.X, accent.Y, accent.Z, 0.7f);
+        style.Colors[(int)ImGuiCol.TabDimmedSelectedOverline] = accent;
+        style.Colors[(int)ImGuiCol.DockingPreview] = new float4(accent.X, accent.Y, accent.Z, high ? 1f : 0.85f);
         style.Colors[(int)ImGuiCol.DockingEmptyBg] = window;
         style.Colors[(int)ImGuiCol.PlotLines] = accent;
         style.Colors[(int)ImGuiCol.PlotLinesHovered] = accent;

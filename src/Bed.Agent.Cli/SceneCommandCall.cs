@@ -9,6 +9,8 @@ internal static class SceneCommandCall
 {
     private static JsonObject Refused(string why)=>new(){["error"]=why,["next"]="Resolve the refusal before trying the scene command again; nothing was saved."};
     internal static JsonObject Run(AgentSession agent,IReadOnlyList<string> args,bool preview,bool save)
+    => Bed.Editor.AssetAiAccess.Guard(()=>RunAllowed(agent,args,preview,save),Bed.Editor.AssetAiAccess.RootFor(agent.Project.DataFolder),agent.Project.DataFolder,agent.Project.SchemaFolder,agent.AssetFolder);
+    private static JsonObject RunAllowed(AgentSession agent,IReadOnlyList<string> args,bool preview,bool save)
     {
         if(args.Count!=4)throw new ArgumentException("scene needs a file, an action and one JSON argument object.");
         var name=args[1];var action=args[2];

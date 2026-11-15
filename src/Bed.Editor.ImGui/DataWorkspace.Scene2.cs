@@ -15,7 +15,7 @@ public sealed partial class DataWorkspace
     private bool ShowScene2(Data.DataFile file,Scene2DocumentEntry entry)
     {
         StopPlayFor(file);var view=nativeScene2.GetValue(entry,e=>new NativeScene2(this,file.Name,e));view.Owner=this;view.BindFlatCamera();scene2Windows[file.Name]=view;BindScene2Clipboard(view);
-        Active=file;AdapterProblem=null;Said=$"Showing {file.Name}.";return true;
+        Active=file;BindShownProjectControls();AdapterProblem=null;Said=$"Showing {file.Name}.";return true;
     }
     private bool GoToScene2(Data.ReferenceTarget target)
     {
@@ -84,6 +84,9 @@ public sealed partial class DataWorkspace
             entry.Editor.Add(new Panel("scene2.prefabs","Prefab and images",DrawActions,Width:420,Height:450,Side:PanelSide.Right));
             if(entry.Session.Current.Space==SceneSpace.ThreeD)entry.Editor.Add(viewport.AsPanel());
             else {flatView=new Scene2FlatView(entry.Editor,Guard,()=>Owner.SceneAssets){DropTarget=at=>Owner.scenePlacement?.DrawTargetAt(at),BoundsOverlay=DrawBodyBounds,IsCurrent=()=>!Owner.scene2WorkspaceClosed&&Owner.Scene2OwnerCurrent?.Invoke(Owner)!=false&&ReferenceEquals(Owner.Scene2Window,Window)};entry.Editor.Add(new Panel("scene2.flat","Flat XY",flatView.Draw,Width:640,Height:450));}
+            // Open at start only for a game that shares live values; for any other game it would only say so while taking
+            // the top of the right column from the inspector (at 1280x720 and double text, the inspector was left one line tall).
+            entry.Editor.Add(new Panel("scene2.live","Live values",()=>Owner.DrawLiveValues(Name,Entry),OpenAtStart:owner.liveTargets.Length>0,Width:420,Height:400,Side:PanelSide.Right));
             entry.Editor.Add(new Panel("scene2.physics","Physics",DrawPhysics,OpenAtStart:false,Width:420,Height:450,Side:PanelSide.Right));
             RefreshPrefabs();RefreshImages();
         }

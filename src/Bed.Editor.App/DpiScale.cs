@@ -29,7 +29,8 @@ public sealed unsafe class DpiScale
         // Copy dimensions only. Theme colors, alignment, alpha, timing and the person's FontScaleMain stay live.
         style.WindowPadding = scaled.WindowPadding;
         style.WindowRounding = scaled.WindowRounding;
-        style.WindowBorderSize = scaled.WindowBorderSize;
+        // ImGui leaves thin borders unscaled; BED keeps dock outlines at their logical display size.
+        style.WindowBorderSize = baseline.WindowBorderSize * scale;
         style.WindowBorderHoverPadding = scaled.WindowBorderHoverPadding;
         style.WindowMinSize = scaled.WindowMinSize;
         style.ChildRounding = scaled.ChildRounding;
@@ -52,13 +53,13 @@ public sealed unsafe class DpiScale
         style.LogSliderDeadzone = scaled.LogSliderDeadzone;
         style.ImageBorderSize = scaled.ImageBorderSize;
         style.TabRounding = scaled.TabRounding;
-        style.TabBorderSize = scaled.TabBorderSize;
+        style.TabBorderSize = baseline.TabBorderSize * scale;
         style.TabMinWidthBase = scaled.TabMinWidthBase;
         style.TabMinWidthShrink = scaled.TabMinWidthShrink;
         style.TabCloseButtonMinWidthSelected = scaled.TabCloseButtonMinWidthSelected;
         style.TabCloseButtonMinWidthUnselected = scaled.TabCloseButtonMinWidthUnselected;
-        style.TabBarBorderSize = scaled.TabBarBorderSize;
-        style.TabBarOverlineSize = scaled.TabBarOverlineSize;
+        style.TabBarBorderSize = baseline.TabBarBorderSize * scale;
+        style.TabBarOverlineSize = baseline.TabBarOverlineSize * scale;
         style.TreeLinesSize = scaled.TreeLinesSize;
         style.TreeLinesRounding = scaled.TreeLinesRounding;
         style.SeparatorTextBorderSize = scaled.SeparatorTextBorderSize;

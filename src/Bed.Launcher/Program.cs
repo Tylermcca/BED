@@ -36,6 +36,11 @@ public static class Program
     public static ProjectLauncher SetUp(ProjectLauncher launcher)
     {
         launcher.ProjectPlayHost ??= new ProjectPlayBridge();
+        if(launcher.ProjectPlayHost is ProjectPlayBridge bridge)bridge.DecodePicture??=bytes=>
+        {
+            if(!AssetImageDecoder.TryDecode(bytes,"png",out var image,out var why))throw new InvalidDataException(why);
+            return(image!.Width,image.Height,image.Rgba);
+        };
         launcher.GameExportHost ??=new ExportBuildHost(8192,256,TimeSpan.FromMinutes(5));
         launcher.AssetCatalogProvisioner ??= new AudioAssetCatalogProvisioner();
         launcher.SetUpWorkspace = workspace =>

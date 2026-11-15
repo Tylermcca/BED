@@ -1428,3 +1428,22 @@ To discard a bare DataFile session deliberately, call Close: it drops unsaved ed
 Newly generated portions use two-space indentation and literal Unicode. Output keeps the file's line endings (LF for a new file; a file read with CRLF keeps CRLF on every line) and ends with a final newline, so an input without one gains it. Adding or removing a property/item can also change a neighbouring comma or container boundary; replacing a whole container can change that container's lines. Source preservation is not a promise that every structural edit changes one line, nor that other line-ending styles remain byte-identical.
 
 Use the session for atomic writing; use DataFile/DataWorkspace for project read-only policy and outside-edit refusal. See [DataDocument and DataFormat](../../src/Bed.Data/DataDocument.cs), [JsonSchemas](../../src/Bed.Data/JsonSchemas.cs), [DataEditing](../../src/Bed.Editor/DataEditing.cs) and the [datacheck entry point](../../samples/DataCheck/Program.cs) for the current contracts.
+
+## Plain labels for fixed choices
+
+A schema's `enum` supplies the stored values. Add `x-choices` to show friendlier labels in the inspector, table cells and validation messages:
+
+```json
+{
+  "title": "Status",
+  "enum": ["draft", "ready"],
+  "x-choices": {
+    "draft": "Draft copy",
+    "ready": "Ready to use"
+  }
+}
+```
+
+Picking **Ready to use** stores `"ready"`. Save, reopen, Undo and Redo keep working with those original values; the controls show their labels again. Data copied for interchange and command arguments still use stored values. Existing Undo messages name the operation rather than printing a choice value.
+
+The note can cover just some choices; missing entries show the stored value. A missing note preserves the existing display. Unknown keys, non-string or blank labels, labels over 1,024 characters and labels containing control characters are ignored. The note never adds allowed values. Numeric enum keys use their JSON spelling, for example `"10": "Small"`; the saved value stays a number. A note can sit beside a `$ref` to the enum. Labels need not be unique: each menu choice keeps the identity of its stored value.

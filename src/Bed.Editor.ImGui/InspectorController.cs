@@ -452,7 +452,7 @@ internal sealed class InspectorController<TDoc> where TDoc : class
             &&(row.Id.StartsWith("position.",StringComparison.Ordinal)||row.Id.StartsWith("rotation.",StringComparison.Ordinal)||row.Id.StartsWith("scale.",StringComparison.Ordinal));
         if (!row.Editable || row.Mixed&&!sharedTransform)
         {
-            Ui.FieldCaption($"{label}: {(row.Mixed ? "(mixed)" : row.Value)}", "inspector.value." + row.Id);
+            Ui.FieldCaption($"{label}: {(row.Mixed ? "(mixed)" : row.DisplayValue)}", "inspector.value." + row.Id);
             return;
         }
         if (row.Kind != PropertyKind.Toggle) label = Fit(row, label);
@@ -463,12 +463,12 @@ internal sealed class InspectorController<TDoc> where TDoc : class
         {
             case PropertyKind.Choice:   // a dropdown of the allowed values (an enum, say)
             {
-                var current = row.Value?.ToString() ?? "";
-                if (Ui.BeginCombo(label, current))
+                var current = row.ChoiceValue;
+                if (Ui.BeginCombo(label, row.ChoiceLabel(current)))
                 {
                     foreach (var choice in row.Choices)
                     {
-                        if (Ui.Selectable(choice, choice == current) && choice != current)
+                        if (ChoiceLabelUi.Selectable(row, choice, current) && choice != current)
                             ReportField(row, Inspector!.Set(row.Id, choice), null);
                         // Keyboard navigation in the open list starts on the current value, not the first item.
                         if (choice == current) ImGui.SetItemDefaultFocus();

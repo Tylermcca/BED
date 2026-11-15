@@ -114,6 +114,14 @@ def validate(root, text):
     return len(commands), len(images)
 
 
+def published_download_version(changelog):
+    # /releases/latest is the published stable download. A build version, an
+    # undated candidate or a dated prerelease must not rename that download.
+    release = re.search(r"^## \[(\d+\.\d+\.\d+)\] - \d{4}-\d{2}-\d{2}\s*$", changelog, re.M)
+    need(release is not None, "CHANGELOG: no dated stable release for the download")
+    return release[1]
+
+
 def repository():
     for root in Path(__file__).resolve().parents:
         if (root/"Bed.slnx").is_file():
@@ -122,6 +130,18 @@ def repository():
 
 
 class ReadmeStepsTests(unittest.TestCase):
+    def test_download_ignores_pending_builds_and_published_prereleases(self):
+        changelog = "\n".join(("## [Unreleased]", "## [0.5.0-preview.1] - Not published",
+            "## [0.4.1-preview.1] - 2026-11-15", "## [0.4.0] - 2026-11-13"))
+        self.assertEqual("0.4.0", published_download_version(changelog))
+
+    def test_download_follows_a_later_stable_publish(self):
+        changelog = "\n".join(("## [Unreleased]", "## [0.6.0-preview.1] - Not published",
+            "## [0.5.0] - 2026-11-16", "## [0.4.0] - 2026-11-13"))
+        self.assertEqual("0.5.0", published_download_version(changelog))
+        with self.assertRaisesRegex(AssertionError, "no dated stable release"):
+            published_download_version("## [0.5.0] - Not published")
+
     def test_repository_readme(self):
         root = repository()
         validate(root, (root/"README.md").read_text(encoding="utf-8-sig"))
@@ -145,8 +165,8 @@ class ReadmeStepsTests(unittest.TestCase):
         # The build must supply the adapter; the reader need not learn its assembly name.
         self.assertIn("SceneStarterAdapter/SceneStarterAdapter.csproj", launcher)
         self.assertIn("samples/SceneStarterProject", launcher)
-        version = re.search(r"<Version>([^<]+)</Version>", (root/"Directory.Build.props").read_text(encoding="utf-8-sig"))[1]
-        self.assertIn(f"Download BED {version}", text)  # the README names the version being released
+        version = published_download_version((root/"CHANGELOG.md").read_text(encoding="utf-8-sig"))
+        self.assertIn(f"[Download BED {version}](../../releases/latest)", text)
         self.assertIn("A 3D level to build on** (`scene-starter`)", text)
         self.assertIn("## Build from source", text)
         self.assertNotIn("next preview download", text)

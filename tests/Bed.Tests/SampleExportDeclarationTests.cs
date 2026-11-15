@@ -65,7 +65,7 @@ public sealed class SampleExportDeclarationTests
         var receipt=await operation.Completion.WaitAsync(TimeSpan.FromSeconds(12));Assert.True(receipt.Succeeded,receipt.Reason);Assert.Equal(0,receipt.ExitCode);
         foreach(var node in plan.Admission.Source.Nodes)
         {var expected=new byte[node.Length];node.CopyTo(expected);Assert.Equal(expected,File.ReadAllBytes(Path.Combine(receipt.OutputDirectory,node.Output.Destination)));}
-        Assert.Equal(plan.Outputs.Paths.Order(),receipt.Outputs.Select(o=>o.Path).Order());
+        Assert.Equal(plan.Outputs.Paths.Concat(ExportReleaseFiles.Create(plan).Keys).Order(),receipt.Outputs.Select(o=>o.Path).Order());
         var smoke=await VerifiedGameBuild.SmokeAsync(plan,receipt,operation.OutputManifest!,rig.Declaration.Smoke(receipt.OutputDirectory,operation.OutputManifest!),TimeSpan.FromSeconds(8));
         Assert.NotNull(smoke.Build);Assert.Contains(smoke.Logs,line=>line.Text=="SceneStarter loaded saved level: 1 objects, 1 meshes.");
         var destination=Path.Combine(rig.Root,"standalone");Assert.True(smoke.Build.CopyTo(destination,out var why),why);

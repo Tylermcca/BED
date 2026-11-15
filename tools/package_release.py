@@ -12,6 +12,7 @@ doesn't run is never reported as built. Prints the zip's path and size, or why i
 from __future__ import annotations
 
 import argparse
+import check_player_dependencies
 import json
 import os
 import shutil
@@ -357,7 +358,54 @@ def verify_sprite_sample(unpacked: Path) -> str:
     return "Packaged XY sample opens, Plays and exports seventeen original sprites; copied game exits 0."
 
 
+REQUIRED += ["guides/first_game_with_ai.md", "samples/new-game/game/StarterGame.exe", "samples/new-game/FIRST_GAME.md", "samples/new-game/ui/Game.gumj", "samples/new-game/data/settings.json", "samples/new-game/game/THIRD-PARTY-NOTICES.txt"]
+
+
+def copy_new_game(stage: Path, app: Path) -> None:
+    """The build owns the fixed playable starter inventory; publish only its complete template."""
+    source=app / "samples/new-game"
+    template=json.loads((ROOT / "src/Bed.Editor.ImGui/ProjectTemplates.cs").read_text(encoding="utf-8").split('private const string Manifest = """',1)[1].split('""";',1)[0])
+    files=next(item["files"] for item in template["templates"] if item["id"]=="game")
+    destination=stage / "samples/new-game"
+    for name in files:
+        if name in ("AGENTS.md","CLAUDE.md"): continue  # ProjectCreator writes the current shared instructions.
+        target=destination / name
+        target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(source / name,target)
+    target=stage / "guides/first_game_with_ai.md"
+    target.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(ROOT / "docs/guide/first_game_with_ai.md",target)
+
+
+def verify_new_game(unpacked: Path) -> str:
+    """Follow the new-game guide from the packaged CLI; the game is always headless."""
+    def execute(argv, cwd):
+        completed=subprocess.run(list(map(str,argv)),cwd=cwd,capture_output=True,text=True,encoding="utf-8",timeout=30,
+                                 creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
+        if completed.returncode!=0:
+            raise RuntimeError("The packaged new-game step failed: "+completed.stdout[-1200:]+completed.stderr[-1200:])
+        return json.loads(completed.stdout)
+    with tempfile.TemporaryDirectory(prefix="bed-new-game-check-") as scratch:
+        game=Path(scratch)/"Your first game"
+        cli=unpacked/"bed-cli.exe"
+        preview=execute([cli,"new",game,"--preview"],unpacked)
+        if not preview["canCreate"] or game.exists(): raise RuntimeError("The new-game preview did not stay read-only.")
+        execute([cli,"new",game],unpacked)
+        for name in preview["files"]:
+            if not (game/name).is_file(): raise RuntimeError("The new game is missing "+name)
+        args=[cli,"--data",game/"data","--schemas",game/"schemas"]
+        execute([*args,"set","settings.json","/goal","3","--save"],unpacked)
+        problems=execute([*args,"problems","settings.json"],unpacked)
+        played=execute([game/"game/StarterGame.exe","--project",game,"--headless","--script","start,collect,collect,collect"],game)
+        if problems["count"]!=0 or not played["Won"] or played["Score"]!=3:
+            raise RuntimeError("The packaged new game did not play its saved goal.")
+    return "New game creates, checks and plays from a fresh folder."
+
+
 def build(stage: Path, rid: str) -> None:
+    editor_dependencies = check_player_dependencies.check(ROOT)
+    if editor_dependencies:
+        raise RuntimeError("A bundled player references the editor: " + "; ".join(editor_dependencies))
     if rid != "win-x64":
         raise RuntimeError("AccessKit C 0.23.2 is vendored only for win-x64")
     with tempfile.TemporaryDirectory(prefix="bed-publish-") as tmp:
@@ -386,6 +434,7 @@ def build(stage: Path, rid: str) -> None:
         copy_scene_sample(stage, scene, export_runtime)
         copy_prefab_physics_sample(stage, build_physics_runtime())
         copy_sprite_sample(stage, scene, export_runtime)
+        copy_new_game(stage, app)
     # Adapters keep only what BED.exe doesn't already carry: it holds BRUTAL and these tools' own libraries, which
     # adapters share; the checkers rules are the checkers adapter's own.
     for name, folder, project, own in [("starter", "StarterAdapter", "StarterAdapter", ["StarterAdapter."]),
@@ -703,9 +752,10 @@ def verify(zip_path: Path) -> str:
         exported = verify_scene_export(unpacked)
         physics = verify_prefab_physics(unpacked, settings, Path(tmp) / "prefab-physics.png")
         sprites = verify_sprite_sample(unpacked)
+        new_game = verify_new_game(unpacked)
         mcp = verify_mcp(unpacked)
         ai_setup = verify_ai_setup(unpacked, guide)
-        return f"{said} {checkers.stdout.strip().splitlines()[0]} {first.stdout.strip().splitlines()[0]} play-checkers starts. {scene} {exported} {physics} {sprites} {mcp} {ai_setup}"
+        return f"{said} {checkers.stdout.strip().splitlines()[0]} {first.stdout.strip().splitlines()[0]} play-checkers starts. {scene} {exported} {physics} {sprites} {new_game} {mcp} {ai_setup}"
 
 
 def main(argv: list[str] | None = None) -> int:

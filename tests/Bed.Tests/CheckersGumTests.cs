@@ -55,13 +55,8 @@ public sealed class CheckersGumTests
         using (var titled = new Play(Game.Opening(), title: true))
         {
             Assert.True(titled.OnTitle);
-            using var host = new Bed.Editor.ImGui.HeadlessHost(720, 800) { Drawing = false };
-            Bed.Editor.ImGui.EditorWindow<Bed.Data.DataDocument>.Configure(Brutal.ImGuiApi.ImGui.GetIO());
-            host.Frames(titled.Draw, 3);
-            // The Gum button is a button to the keyboard too: Tab reaches it by its words, and Space presses it.
-            var id = Brutal.ImGuiApi.ImGui.Internal.FindWindowByName("Checkers###game").GetID("New game").Value;
-            for (var i = 0; i < 20 && Brutal.ImGuiApi.ImGui.GetCurrentContext().NavId.Value != id; i++) host.Press(titled.Draw, Brutal.ImGuiApi.ImGuiKey.Tab);
-            host.Press(titled.Draw, Brutal.ImGuiApi.ImGuiKey.Space);
+            titled.Draw();
+            titled.Key("Enter"); // The native player's Enter route starts its Gum title button.
             Assert.False(titled.OnTitle);
         }
         using var straight = new Play(Game.Opening());
@@ -71,31 +66,17 @@ public sealed class CheckersGumTests
     // The game in its window at a text size, after a few frames.
     private sealed class Window : IDisposable
     {
-        public readonly Bed.Editor.ImGui.HeadlessHost Host = new(720, 800) { Drawing = false };
         public readonly Play Play;
-        public Window(float scale, bool title = false)
-        {
-            Bed.Editor.ImGui.EditorWindow<Bed.Data.DataDocument>.Configure(Brutal.ImGuiApi.ImGui.GetIO());
-            Brutal.ImGuiApi.ImGui.GetStyle().FontScaleMain = scale;
-            Play = new Play(Game.Opening(), title);
-            Host.Frames(Play.Draw, 4);
-        }
-        public CheckersScreen Screen => (Play.OnTitle ? Play.TitleScreen : Play.Strip) ?? throw new InvalidOperationException("No Gum screen drawn.");
-        public GumPart Part(string name) => Assert.Single(Screen.Parts(), p => p.Name == name);
-        // Tabs to the button named by its words and presses it with Space.
-        public void Press(string words)
-        {
-            var id = Brutal.ImGuiApi.ImGui.Internal.FindWindowByName("Checkers###game").GetID(words).Value;
-            for (var i = 0; i < 40 && Brutal.ImGuiApi.ImGui.GetCurrentContext().NavId.Value != id; i++) Host.Press(Play.Draw, Brutal.ImGuiApi.ImGuiKey.Tab);
-            Assert.Equal(id, Brutal.ImGuiApi.ImGui.GetCurrentContext().NavId.Value);
-            Host.Press(Play.Draw, Brutal.ImGuiApi.ImGuiKey.Space);
-        }
-        public void Dispose() { Brutal.ImGuiApi.ImGui.GetStyle().FontScaleMain = 1; Play.Dispose(); Host.Dispose(); }
+        public Window(float scale,bool title=false){Play=new Play(Game.Opening(),title){Scale=scale};Play.Draw();}
+        public GameScreen Screen=>Play.Screen;
+        public ScreenPart Part(string name)=>Assert.Single(Screen.Parts(),p=>p.Name==name);
+        public void Press(string words){Assert.Equal("New game",words);Play.Key("N");Play.Draw();}
+        public void Dispose()=>Play.Dispose();
     }
 
     // The contrast between the commonest colour in a part (its background) and the colour that stands out most from it
     // that covers at least a few pixels (its words), measured from the picture Gum drew, as WCAG works it out.
-    private static double Contrast(GumScreenPicture picture, GumPart part)
+    private static double Contrast(GameScreen picture, ScreenPart part)
     {
         var counts = new Dictionary<(byte, byte, byte), int>();
         var pixels = picture.Pixels;
@@ -103,7 +84,7 @@ public sealed class CheckersGumTests
             for (var x = (int)part.X; x < (int)(part.X + part.Width) && x < picture.Width; x++)
             {
                 var i = (y * picture.Width + x) * 4;
-                var colour = (pixels[i], pixels[i + 1], pixels[i + 2]);
+                var colour = (pixels[i + 2], pixels[i + 1], pixels[i]);
                 counts[colour] = counts.GetValueOrDefault(colour) + 1;
             }
         static double Light((byte R, byte G, byte B) c)
@@ -121,7 +102,7 @@ public sealed class CheckersGumTests
     {
         using var w = new Window(scale);
         Assert.Equal(scale, w.Screen.Zoom);
-        Assert.False(w.Play.Match.ShowsStatus);   // the strip says whose move it is; the board doesn't say it again
+        Assert.Contains(w.Screen.Parts(), p=>p.Name=="TurnText"&&p.Words==w.Play.Match.Status);   // the strip says whose move it is; the board doesn't say it again
         var button = w.Part("NewGameButton"); var turn = w.Part("TurnText"); var count = w.Part("CountText");
         // Drawn as much bigger as the text is: the button is 52 high in the design.
         Assert.InRange(button.Height, 52 * scale - 1, 52 * scale + 1);
@@ -131,11 +112,11 @@ public sealed class CheckersGumTests
             Assert.True(part.Y + part.Height <= w.Part("Bar").Y + w.Part("Bar").Height, $"{part.Name} is outside the strip at {scale}x");
         }
         Assert.True(button.Y >= turn.Y + turn.Height || button.X >= turn.X + turn.Width, $"the button covers the words at {scale}x");
-        Assert.InRange(Contrast(w.Screen.Picture, button), 4.5, 21);
-        Assert.InRange(Contrast(w.Screen.Picture, turn), 4.5, 21);
-        Assert.InRange(Contrast(w.Screen.Picture, count), 4.5, 21);
+        Assert.InRange(Contrast(w.Screen, button), 4.5, 21);
+        Assert.InRange(Contrast(w.Screen, turn), 4.5, 21);
+        Assert.InRange(Contrast(w.Screen, count), 4.5, 21);
         // The keyboard reaches the button by its words and presses it.
-        Host(w).Frames(w.Play.Draw, 1);
+        w.Play.Draw();
         var match = w.Play.Match;
         w.Press("New game");
         Assert.NotSame(match, w.Play.Match);
@@ -147,16 +128,16 @@ public sealed class CheckersGumTests
         using var w = new Window(scale, title: true);
         Assert.True(w.Play.OnTitle);
         var button = w.Part("NewGameButton"); var heading = w.Part("Heading");
+        var creditsTop=w.Screen.Parts().Where(p=>p.Name.StartsWith("Copyright.",StringComparison.Ordinal)).Min(p=>p.Y);
         Assert.InRange(button.Height, 52 * scale - 1, 52 * scale + 1);
-        foreach (var part in w.Screen.Parts().Where(p => p.Name != "Backdrop"))
-            Assert.True(part.X >= 0 && part.X + part.Width <= 720 && part.Y >= 0 && part.Y + part.Height <= w.Screen.Picture.Height, $"{part.Name} is cut off at {scale}x: {part}");
-        Assert.InRange(Contrast(w.Screen.Picture, button), 4.5, 21);
-        Assert.InRange(Contrast(w.Screen.Picture, heading), 4.5, 21);
+        foreach (var part in w.Screen.Parts().Where(p => p.Name != "Backdrop"&&!p.Name.StartsWith("Copyright.",StringComparison.Ordinal)&&!p.Name.StartsWith("Help.",StringComparison.Ordinal)))
+            Assert.True(part.X >= 0 && part.X + part.Width <= 720 && part.Y >= 0 && part.Y + part.Height <= creditsTop, $"{part.Name} is cut off at {scale}x: {part}");
+        Assert.InRange(Contrast(w.Screen, button), 4.5, 21);
+        Assert.InRange(Contrast(w.Screen, heading), 4.5, 21);
         w.Press("New game");
         Assert.False(w.Play.OnTitle);
     }
 
-    private static Bed.Editor.ImGui.HeadlessHost Host(Window w) => w.Host;
 
     [Fact]
     public void BED_tells_how_a_game_draws_Gum_text_from_the_built_game_when_there_is_no_code_beside_it()

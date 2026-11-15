@@ -84,3 +84,9 @@ Over MCP, the `import` and `declare` tools are listed only when the server has a
 - Names that aren't on your list, look-alike spellings ("Meega Mouse"), and names inside images.
 - Whether a licence permits your use. The record holds the licence's name; reading its terms is still your job, and none of this is legal advice.
 - `AssetRecord.Create` is the low-level record writer, kept for existing callers and marked obsolete. It takes no declaration, so use `AssetImport.Import` for imports.
+
+## AI connections
+
+BED checks asset AI-use records before sending project content through an AI connection. If any record says **forbidden**, the request is refused. If a record says **unknown**, or cannot be checked, BED says that plainly and sends no project content. Review the terms and record your decision in BED; an AI connection cannot give itself permission.
+
+This applies to data and file queries, checks, proposals and edit replies, build output, UI snapshots, game pictures, and live values. Pictures and checks may include several assets, so one forbidden or unknown asset blocks the project's request, even when it asks about something else. BED checks again before returning a reply, including during an active Play session. This protects assets with recorded permissions; it cannot identify undeclared copies or content a separate program sends outside BED.

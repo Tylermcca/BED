@@ -134,7 +134,7 @@ public sealed class AgentTests : IDisposable
         Assert.Contains("describe", init["result"]!["instructions"]!.GetValue<string>());
         Assert.Null(server.Handle("""{"jsonrpc":"2.0","method":"notifications/initialized"}"""));
         var tools = server.Handle("""{"jsonrpc":"2.0","id":2,"method":"tools/list"}""")!["result"]!["tools"]!.AsArray();
-        Assert.Equal(["ui_snapshot", "describe", "find", "get", "problems", "refs", "repair", "set", "insert", "remove", "undo", "save", "create", "rename", "delete", "restore", "proposal_list", "proposal_show", "proposal_accept", "proposal_reject", "proposal_submit", "checks", "check"], tools.Select(t => t!["name"]!.GetValue<string>()));
+        Assert.Equal(["ui_snapshot", "build", "play_start", "play_screenshot", "play_hold_key", "play_stop", "describe", "find", "get", "problems", "refs", "repair", "set", "insert", "remove", "undo", "save", "create", "rename", "delete", "restore", "proposal_list", "proposal_show", "proposal_accept", "proposal_reject", "proposal_submit", "checks", "check"], tools.Select(t => t!["name"]!.GetValue<string>()));
         var call = server.Handle("""{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"set","arguments":{"file":"wares.json","at":"/wares/1/price","value":"4","preview":true}}}""")!;
         var text = JsonNode.Parse(call["result"]!["content"]![0]!["text"]!.GetValue<string>())!;
         Assert.Equal(4, text["after"]!.GetValue<double>());

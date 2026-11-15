@@ -5,7 +5,7 @@ using ImGui=Brutal.ImGuiApi.ImGui;
 public sealed partial class DataWorkspace
 {
     private const int ProjectConsoleLineLimit=256;
-    private sealed record ConsoleLine(bool Error,string Text,long Key,PlayDiagnostic? Diagnostic);
+    private sealed record ConsoleLine(bool Error,string Text,long Key,PlayDiagnostic? Diagnostic,ProjectBuildError? Source);
     private readonly Queue<ConsoleLine> projectOutput=new();
     private long projectLineKey;
     private string? projectDiagnosticRoot,projectDiagnosticSignature;
@@ -18,7 +18,7 @@ public sealed partial class DataWorkspace
     {
         foreach(var line in lines)
         {
-            projectOutput.Enqueue(new(line.Error,line.Text.Length>4096?line.Text[..4096]:line.Text,++projectLineKey,PlayDiagnostic.Read(line.Text)));
+            projectOutput.Enqueue(new(line.Error,line.Text.Length>4096?line.Text[..4096]:line.Text,++projectLineKey,PlayDiagnostic.Read(line.Text),ProjectBuildCommand.ReadError(line.Text)));
             if(projectOutput.Count>ProjectConsoleLineLimit)
             {projectOutput.Dequeue();if(projectLinesDropped<long.MaxValue)projectLinesDropped++;}
         }
@@ -51,13 +51,21 @@ public sealed partial class DataWorkspace
         }
         Ui.Checkbox("Show game output"u8,ref showProjectStdout);
         ConsoleSameLineIfFits("Show game errors", button:false);Ui.Checkbox("Show game errors"u8,ref showProjectStderr);
-        if(projectPlay is {} current)DrawProjectPlayStatus(current);
+        if(buildInConsole)Ui.Status(buildConsoleStatus,"project.build.status");
+        else if(projectPlay is {} current)DrawProjectPlayStatus(current);
         if(projectLinesDropped>0)Ui.TextWrapped(ProjectDropNote,semanticId:"project.play.dropped");
+        var shownSources=new HashSet<ProjectBuildError>();
         foreach(var line in projectOutput)
         {
             if(line.Error?showProjectStderr:showProjectStdout)
             {
-                if(line.Diagnostic is {} diagnostic)
+                if(line.Source is {File:not null,Line:>0} source)
+                {
+                    if(!shownSources.Add(source))continue;
+                    Ui.TextWrapped(source.What+" Try: "+source.Try,semanticId:"project.play.output."+line.Key);
+                    if(Ui.TextLinkWrapped("Open "+source.File.Replace("##","# #").Replace('\r',' ').Replace('\n',' ')+" at line "+source.Line,"source."+line.Key))OpenCodeDiagnostic(source);
+                }
+                else if(line.Diagnostic is {} diagnostic)
                 {
                     Ui.TextWrapped((line.Error?"error: ":"")+diagnostic.Message,semanticId:"project.play.output."+line.Key);
                     var label=("Open "+diagnostic.File+" "+diagnostic.Pointer).Replace("##","# #",StringComparison.Ordinal).Replace('\r',' ').Replace('\n',' ');

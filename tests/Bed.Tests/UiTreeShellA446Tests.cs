@@ -33,7 +33,7 @@ public sealed class UiTreeShellA446Tests
             var file = Assert.Single(nodes,n => n.Role == UiRole.Menu && n.Label == "File");
             host.Click(window.DrawDocked,file.Bounds.X+5,file.Bounds.Y+5);
             var missing = Assert.Single(Ui.Snapshot().Nodes,n => n.Role == UiRole.MenuItem && n.Label == "New project...");
-            Assert.False(missing.Enabled); Assert.Equal("This editor has no project host.",missing.DisabledReason);
+            Assert.False(missing.Enabled); Assert.Equal("This BED installation cannot create projects.",missing.DisabledReason);
             Assert.Empty(window.Editor.Session.Journal); Assert.Equal(theme,EditorTheme.Preference);
         }
         finally { EditorTheme.Preference = beforeTheme; }
