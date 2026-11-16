@@ -1,4 +1,4 @@
-BED 0.5.0-preview.1 - START HERE
+BED 0.5.0 - START HERE
 ================================
 
 BED edits game data and 3D levels. Data files use JSON and JSON Schema; level

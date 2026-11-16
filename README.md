@@ -6,24 +6,31 @@ BED edits a game's data, its 2D and 3D levels and its Gum screens, checks every 
 
 It's made for games written in C# on the [BRUTAL framework](https://github.com/ahwootech/BRUTAL), but the data editor works on any folder of JSON files.
 
-**[Download BED 0.4.0](../../releases/latest)** (Windows) · **[Start here](docs/guide/start_here.md)** (ten minutes, no programming) · **[What's changed](CHANGELOG.md)**
+**[Download BED 0.5.0](../../releases/latest)** (Windows) · **[Start here](docs/guide/start_here.md)** (ten minutes, no programming) · **[What's changed](CHANGELOG.md)**
+
+## New in 0.5: start a game, and see inside it while it runs
+
+- **Start a game in one step:** **File > New game** makes a small game you can play straight away, with Gum screens, settings and C# code. The [first-game guide](docs/guide/first_game_with_ai.md) walks you through changing it.
+- **Work with your own AI app:** **Help > Connect an AI app** connects Claude, Codex or Cursor to your project after showing you the change.
+- **See and try values while the game runs:** **Live values** shows a running game's values and lets you try new ones. **Keep this value** saves one.
+- **See the game without its window:** **View > Game picture** takes a picture of the running game whenever you ask, and so can your AI app.
+- **Build and open your code:** **Tools > Build game** builds it, and a build error takes you to the right line in your own editor.
+- **Get ready to sell:** Export adds credits, licence notices and a checklist to review.
+
+| | |
+|---|---|
+| ![BED showing the live values of a character in the 2D garden while the game runs, with a new jump strength being tried](docs/images/bed-live-values.png) | ![BED's Game picture panel showing a picture of the running physics island](docs/images/bed-game-picture.png) |
+| Live values: try a new jump strength while the garden runs. | Game picture: the running island, with no game window open. |
+
+![A new game made with File > New game, showing its menu screen made in Gum and its settings](docs/images/bed-new-game.png)
+
+Live values and game pictures work in games set up for them, such as the included garden and physics island. **Please try to break it,** and tell us what goes wrong with **Help > Report a problem**.
+
+### From 0.4: game screens made in Gum
+
+[Gum](https://docs.flatredball.com/gum) is a free designer for game menus and screens. BED shows your Gum screens as your game draws them, opens them in Gum with one button, and updates by itself when you save in Gum. See [Gum screens](docs/guide/gum.md).
 
 ![BED and Gum side by side: BED's Gum screens panel shows a game's title screen exactly as Gum shows it](docs/images/bed-gum-side-by-side.png)
-
-## New in 0.4: game screens made in Gum
-
-[Gum](https://docs.flatredball.com/gum) is a free designer for game menus and screens. BED now works alongside it:
-
-- **See your game's screens in BED,** drawn as your game will draw them (**File > Show Gum screens**).
-- **Edit in Gum** opens the screen you're looking at in Gum.
-- **Save in Gum, and BED updates by itself,** and so does your game if it's running. No restart, no export step.
-- **Pick a part** of a screen by clicking it, or from a list for the keyboard and screen readers.
-- **A Gum screens check** lists anything a screen needs and is missing, such as a picture or a font.
-- **Names for copies:** choose how duplicates are named in **Options** (formerly Preferences): `Cube (1)`, `Cube.001`, `Cube_1`, `Cube2` or `Cube copy`.
-
-![A change typed in Gum, "Changed in Gum, seen in BED", shows up in BED as soon as it is saved](docs/images/bed-gum-live-change.png)
-
-**Please try to break it.** Tell us what goes wrong with **Help > Report a problem**, which shows exactly what a report contains before you share it. See [Gum screens](docs/guide/gum.md) for the details.
 
 ## Try it (Windows, 2 minutes)
 
@@ -48,6 +55,8 @@ Move things in BED, save, play again, and the game changes with them. [Start her
 
 ## What BED does
 
+- **A new game in one step,** with screens, settings and code ready to change.
+- **The running game:** see and try its values, and take pictures of it, in games set up for it.
 - **Game screens made in Gum:** see them, open them in Gum, check nothing they need is missing.
 - **Levels in 2D and 3D:** place models or sprites, move, rotate and resize them, group them, and undo anything. The camera works like other game editors.
 - **Prefabs:** make a reusable piece, place it many times, and change one copy without touching the others.
@@ -56,7 +65,7 @@ Move things in BED, save, play again, and the game changes with them. [Start her
 - **Tables and forms** for your data, with errors shown next to the field, and links between files you can click through.
 - **Play and Export:** run the game from your saved files, pause and step it, and export a copy that runs without BED.
 - **Your game's own rules:** a small C# adapter adds checks, panels or a playable preview. See [Writing an adapter](docs/guide/writing_an_adapter.md).
-- **Works with your AI assistant:** a command line (`bed-cli.exe`) and an AI connection make the same checked edits you make by hand. BED has no AI inside and sends nothing anywhere.
+- **Works with your AI app:** connect Claude, Codex or Cursor in one click, or use the command line (`bed-cli.exe`). Your assistant makes the same checked edits you make by hand. BED has no AI inside and sends nothing anywhere.
 - **Keyboard and accessibility:** text follows Windows' text size, with larger sizes and high contrast in Options. See the [keyboard guide](docs/guide/keyboard.md) and [accessibility](docs/guide/accessibility.md).
 
 ### Use it on your own data
@@ -87,7 +96,7 @@ I'm using BED on three or four games of my own, each a different kind of game wi
 
 ## What's next
 
-0.4.x releases fix what people find. Then 0.5 works with the running game (see and try values while it runs, open its code with build errors in plain words) and makes BED work well with the AI app you already use. See [the roadmap](ROADMAP.md).
+0.5.x releases fix what people find, and a full check with a real screen reader is still to do. See [the roadmap](ROADMAP.md).
 
 ## Build from source
 

@@ -4,6 +4,24 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-16
+
+The 0.5 preview is now the main download, unchanged. BED now helps you start a game, work on it with your own AI app, and see inside it while it runs. Everything new since 0.4.0 is listed under 0.5.0-preview.1 below. **Please try to break it**, and tell us what goes wrong with **Help > Report a problem**.
+
+### Highlights
+
+- **File > New game** makes a small playable game, with Gum screens, settings and C# code.
+- **Help > Connect an AI app** connects Claude, Codex or Cursor to your project, after showing you the change.
+- **Live values** and **View > Game picture** let you see and try values in a running game that supports them.
+- **Tools > Build game** and **Tools > Open game code** build your code and take you to the line of a build error.
+- **Export** adds the credits, notices and checklist you need before selling a game.
+
+### Known issues
+
+- Live values and game pictures work only in games set up for them, such as the included garden and physics island.
+- A full check with a real screen reader hasn't been done yet.
+- The OpenGL fallback view shows sprite outlines, not images.
+
 ## [0.5.0-preview.1] - 2026-11-15
 
 A preview to try. The stable download remains 0.4.0.

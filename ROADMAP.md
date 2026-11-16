@@ -1,122 +1,43 @@
 # BED roadmap
 
-BED is an editor for games built on BRUTAL. It started as a data editor: tables, forms, checks, links and undo for a game's JSON files. The plan is to grow it into a small, reliable game editor, adding one complete workflow at a time rather than a long list of separate panels.
+BED is a free editor for games made with BRUTAL. It grows one complete job at a time, and a release ships only when everything in it works from start to finish on the samples and on a real game. There are no dates.
 
-There are no dates. A release ships when everything in it works from start to finish on the included samples and on a real game made with BED.
+## What guides it
 
-## Principles
+- **Easy first.** Open a project with no setup. Every error says what went wrong and what to do.
+- **Safe edits.** Every change is checked, can be undone, and BED never saves over a file another program changed.
+- **Your game stays yours.** A game adds its own rules and panels through a small adapter, and never needs BED to run.
+- **Usable by everyone.** Everything works from the keyboard, text can be made larger, and screen readers can read it.
+- **Works with your AI app.** An assistant makes the same checked changes you do, and only the ones you approve. BED has no AI inside and sends nothing anywhere.
 
-- **Easy to use.** Open a project with no setup, find any command by typing its name, and every error says what went wrong, where, and what to do next.
-- **Powerful when you need it.** Tables, forms, links, bulk edits with a preview, checks and a command line for big projects.
-- **Extensible.** A game adds its own rules, panels, checks and Play button through a small C# adapter. Nothing about one game is built into the editor.
-- **Safe edits.** Every change is checked before it's applied, can be undone in one step, and BED never saves over a file another program changed.
-- **Games ship only what they need.** A game reads its data and levels through a small runtime package and never needs BED to run.
-- **Usable by everyone.** Everything works from the keyboard, text can be made larger, and screen readers can read the interface.
-- **Works with AI.** An AI assistant uses the same checked commands you do, and only makes changes you approve.
-- **Open source.** MIT licensed, with original samples and a record of every third-party licence.
+## Released
 
-## Done so far
+- **0.2:** the data editor, 3D levels, assets with licence records, Play and Export.
+- **0.3:** prefabs, 2D levels, physics and samples to try them.
+- **0.4:** game screens made in Gum.
+- **0.5 (out now):** start a new game in one step, work with your own AI app, see and try values in the running game, build and open your code, and paperwork for selling a game. See the [changelog](CHANGELOG.md).
 
-- **0.2 (0.2.1-rc.1):** a data editor that works like a normal Windows program; 3D levels with handles, snapping and undo; model and texture assets with licence records; Play from saved files; tested Windows builds and Export build.
-- **0.3 (0.3.1):** prefabs, 2D levels, physics, levels in games and builds, a big usability pass, and samples to try them.
-- **0.4 (0.4.0, out now):** game screens made in Gum, part picking, names for copies. Details below.
+## Next: 0.5.x
 
-## 0.3: prefabs, 2D and physics (0.3.1)
-
-The goal: build a level from reusable pieces, in 2D or 3D, give it physics, and play and export it.
-
-### Prefabs: done
-- Place a reusable piece more than once, and point its named slots at objects in the level.
-- Change one copy. Changed fields are marked, and **Revert** puts one back.
-- Review every change to an updated original before accepting it. Local changes are kept, and an update that would break one is refused as a whole.
-- Duplicate, unlink or delete a copy, and copy and paste pieces between levels.
-
-### 2D levels: done
-- Flat levels in X and Y, with sprites from imported PNG images.
-- Size, pivot, drawing order and image sampling, with handles, the keyboard and snapping.
-- A camera remembered for each level.
-
-### Physics: done
-- Gravity and a fixed time step for each level.
-- Static, dynamic and kinematic bodies with box, sphere, capsule or fitted-bounds shapes, mass and friction.
-- Edit them in **View > Physics** and the Inspector, and see collision shapes in the view.
-- A separate physics sample runs them in a game, in Play and in an exported build. Simulation belongs to the game and never changes the saved level.
-
-### Levels in games and builds: done
-- A game that opts in reads saved prefab and sprite levels.
-- Export build carries them with their checked assets, and the copied game runs without BED or the original prefab files and images.
-
-### Also in 0.3: done
-- Sound preview in Assets.
-- Pause and Step for games that support them.
-- Check findings and game messages that take you to the saved field.
-- Larger default text that follows Windows, high contrast, and assistive tools that can press buttons and set values.
-- An engine-style layout and camera, an optional W/E/R keymap, and a first-run guided tour.
-- **Help > Report a problem**, which shows exactly what a report contains and sends nothing by itself.
-- Pinned recent projects.
-
-### Fixed in 0.3.0-rc.1
-- The 3D and 2D views couldn't be closed. They now close from their tab, their own window, the menu or the keyboard, and ask to save a changed level first.
-- **Save all** and **Close project** refused in level projects. They now save or close levels and data files together.
-- Levels were listed as files BED can't open. They now open.
-- Leftover "not connected yet" messages on level Play and Save as are gone.
-- Saving data and level files together needed extra clicks. It now finishes in one click.
-- Jumping to a search result or a new item in a long list didn't scroll to it. It now does.
-- The keyboard couldn't reach every control in the asset picker. It now can.
-- Undoing back to the saved state left a file marked as changed. It's now marked as saved.
-- A game that was slow to start could miss the Pause and Step connection. BED now waits for it.
-- Text was cut off in places at larger sizes. It now wraps or stays visible.
-- The full list is in the [changelog](CHANGELOG.md).
-
-### Samples and fixes in 0.3.0-rc.2: done
-- **Samples for the new features.** Two small original samples ship in the download: a flat sprite level with a prefab placed twice, and a 3D level with a crate prefab, a floor and a paddle, all with physics bodies. The Start here guide walks through both. Both are small games that play in their own window: a garden to run and jump through, and an island to drop crates on.
-- **Small fixes from the first real-window checks.** The welcome and tour boxes no longer cover the Files panel or **Used by** when a level opens.
-
-### Gum screens in the 0.3.9 preview: done
-- **Game screens made in Gum**, the free menu and screen designer. BED shows each screen as the game will draw it, opens it in Gum with one button, and updates the picture, and a running game, when you save in Gum.
-- **A Gum screens check** that lists anything a screen needs and is missing, such as a picture or a font.
-- **Gum preview 6:** screens with a loop between parts still show the rest and name the loop. Gum follows saves itself; supported picture types also come from Gum.
-- **Options > Locations** for where Gum is, where new projects go and a folder of extra adapters.
-- The checkers sample's title and match screens are made in Gum.
-
-## 0.4: Gum screens (out now as 0.4.0), then fixes
-
-0.4.0 makes the Gum screens work from the 0.3.9 previews the main download, adds picking a part of a screen and a choice of names for copies, and renames Preferences to Options. 0.4.x releases are fixes from real use.
-
-## Then, 0.5: one thing done well: the running game
-
-0.5 starts small, with one game and a handful of values, and grows only once that works every time.
-
-- **See and try values in the running game.** While the game runs, see a few of an object's values as they change, try a different value, and see the game respond. Your saved files don't change unless you choose to keep the new value.
-- **Open your game's code.** Open the game's code in your own code editor from BED, and see build errors in BED in plain words, with a click that takes you to the right line.
-- **Work well with your own AI app.** BED brings no AI of its own and sends nothing anywhere; it makes the AI you already use a better pair of hands:
-  - **Connect in one click.** BED finds Claude, Codex or Cursor on your PC, shows the exact change, and makes it only when you click.
-  - **The AI knows the framework.** A short guide is handed to the AI when it connects, and every new project gets a setup file for it.
-  - **The AI can build and fix code.** One build command returns errors in plain words, so the AI can fix its own mistakes.
-  - **The AI can see the game.** It can ask for a picture of the running game, or press keys and then take one.
-- **Ready to sell.** Export adds the credits and notices the framework asks for, lists every asset's licence, and drafts Steam's AI-content disclosure for you to check.
-- **Fixes from real use.**
+Fixes from real use, and a full check with a real screen reader.
 
 ## Later
 
-Driven by what games built with BED actually need. The [future-ideas register](docs/future.md) records each idea’s origin, required support and current status. Roughly in order of priority:
+Roughly in order, and shaped by what games made with BED need:
 
+- Live values and game pictures for any game, not only ones set up for them.
 - Material and lighting previews.
-- Showing the running game inside BED's window.
+- The running game shown inside BED's window.
 - Builds for platforms other than Windows.
-- Nested prefabs.
+- Prefabs inside prefabs.
 - Animation preview.
-- A basic profiler for the running game.
-- Particles. (Game screens and menus are made in Gum; see the 0.3.9 preview.)
-- Code changes while the game is running (hot reload).
-- More rendering backends alongside Vulkan.
+- A simple profiler for the running game.
+- Particles.
+- Code changes while the game runs.
+- More ways to draw, alongside Vulkan.
 
-Version 1.0 comes once the adapter interface and the file formats are stable.
+Each idea, where it came from and where it stands is in the [ideas list](docs/future.md). Version 1.0 comes once adapters and file formats stop changing.
 
 ## Not planned
 
-To stay focused, BED won't include visual scripting, terrain tools, a shader graph, a full animation editor or built-in team collaboration. Use dedicated tools for those, and your usual version control (such as Git) for working as a team.
-
-### Plain words in 0.3.0-rc.3: done
-
-- Editor text says what it means instead of using programming terms, and the level Outliner marks prefab copies with an icon, a colour and a dot instead of bracketed words.
+Visual scripting, terrain tools, a shader graph, a full animation editor and built-in team tools. Use dedicated tools for those, and Git or similar for working as a team.
