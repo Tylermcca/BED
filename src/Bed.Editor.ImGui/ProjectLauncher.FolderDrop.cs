@@ -17,7 +17,7 @@ public sealed partial class ProjectLauncher
         if (paths is null || paths.Count!=1 || string.IsNullOrWhiteSpace(paths[0]) || !Directory.Exists(paths[0]))
             return Say(false,"Drop one existing project folder on the editor. Drop JSON files on Files instead.");
         replacementFolder=paths[0];replacementOwner=Workspace;
-        return Say(true,$"Open {replacementFolder} instead?");
+        Say(true,$"Open {replacementFolder} instead?");said.Say(Said);return true;   // a question stays on screen
     }
 
     /// <summary>Answers folder confirmation; acceptance enters the existing save/replacement route.</summary>

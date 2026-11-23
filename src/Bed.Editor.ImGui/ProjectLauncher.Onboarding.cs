@@ -75,7 +75,9 @@ public sealed partial class ProjectLauncher
     {
         if(!EnableOnboarding)return;
         EndTour();tourFinished=false;tourActive=true;tourStep=TourStep.OpenExample;tourNotice="";tourSaved=false;
-        startPage=StartPage.Home;projectChooser=Workspace is not null;
+        if (AttachTourOwner()) return;
+        startPage = StartPage.Home;
+        projectChooser = Workspace is not null;
     }
     private void SkipTour(){EndTour();tourFinished=false;RememberTourDismissed();}
     private void DrawTourOffer()
@@ -84,25 +86,32 @@ public sealed partial class ProjectLauncher
         Ui.TextWrapped("Learn BED with a five-minute tour of your own example copy."u8);
         if(Ui.Button("Take the tour"u8))BeginTour();ImGui.SameLine();if(Ui.Button("Skip tour"u8))SkipTour();
     }
-    private void AttachTourOwner()
+    private bool AttachTourOwner()
     {
-        if(Workspace is not {} owner||!owner.Documents.TryGetOpenScene("level.json",out var scene)||owner.Project.Find("wares.json") is not {} data)
-        {tourNotice="The tour needs the complete bundled level and wares example.";return;}
-        tourOwner=owner;tourScene=scene;tourData=data;
-        var crate=scene!.Session.Current.Objects.FirstOrDefault(o=>o.Id.Contains("crate",StringComparison.OrdinalIgnoreCase));
-        if(crate is null){tourNotice="The example's crate could not be found. Reinstall the complete BED package.";return;}
+        if (Workspace is not { } owner ||
+            !owner.Documents.TryGetOpenScene("level.json", out var scene) ||
+            scene!.Session.Current.Objects.FirstOrDefault(o => o.Id.Contains("crate", StringComparison.OrdinalIgnoreCase)) is not { } crate)
+            return false;
+
+        // Older example copies have the same level but may not have the optional table.
+        // Leave those copies alone and walk through the level and Play.
+        tourOwner = owner;
+        tourScene = scene;
+        tourData = owner.Project.Find("wares.json");
         tourCrate=crate.Id;tourOriginalPosition=crate.Position;tourBeforeMove=scene.Session.Current;
         tourSaveWatcher=files=>
         {
             if(tourActive&&tourStep==TourStep.CorrectAndSave&&files.Any(file=>ReferenceEquals(file,tourData))&&owner.TableOf("wares.json")?.CellError("/wares/0","price") is null)tourSaved=true;
         };
-        owner.Project.FilesSaved+=tourSaveWatcher;tourStep=TourStep.SelectCrate;
+        owner.Project.FilesSaved += tourSaveWatcher;
+        tourStep = TourStep.SelectCrate;
+        return true;
     }
     private string TourInstruction=>tourStep switch
     {
         TourStep.OpenExample=>"Choose Try the example to make a copy you can change.",
         TourStep.SelectCrate=>"Select the crate in the Outliner.",
-        TourStep.Move=>"Focus the viewport and press an arrow key to move the crate.",
+        TourStep.Move=>"Click the crate in the 3D view, then press an arrow key to move it.",
         TourStep.Undo=>"Press Ctrl+Z to undo the move.",
         TourStep.OpenTable=>"Choose wares in Files to open its table.",
         TourStep.EditPrice=>"Change Bread's price in the table and press Enter.",
@@ -114,9 +123,9 @@ public sealed partial class ProjectLauncher
     private void ObserveTour()
     {
         if(!tourActive||tourStep==TourStep.OpenExample)return;
-        if(!ReferenceEquals(Workspace,tourOwner)||tourScene is null||tourData is null||!tourOwner!.Documents.TryGetOpenScene("level.json",out var current)||!ReferenceEquals(current,tourScene))
+        if(!ReferenceEquals(Workspace,tourOwner)||tourScene is null||!tourOwner!.Documents.TryGetOpenScene("level.json",out var current)||!ReferenceEquals(current,tourScene))
         {EndTour();Said="The tour stopped because its example closed or changed; reopen it from Help when you are ready.";return;}
-        var scene=tourScene.Session;var data=tourData.Session;var table=tourOwner.TableOf("wares.json");
+        var scene=tourScene.Session;var data=tourData?.Session;var table=tourOwner.TableOf("wares.json");
         string Price()=>data?.Current.At("/wares/0/price")?.GetRawText()??"";
         switch(tourStep)
         {
@@ -125,7 +134,7 @@ public sealed partial class ProjectLauncher
             case TourStep.Move when scene.Current.Find(tourCrate)?.Position!=tourOriginalPosition&&scene.History.CanUndo:
                 tourMoveRevision=scene.Revision;tourStep=TourStep.Undo;break;
             case TourStep.Undo when ReferenceEquals(scene.Current,tourBeforeMove)&&scene.Revision>tourMoveRevision&&scene.History.CanRedo:
-                tourStep=TourStep.OpenTable;break;
+                tourStep = tourData is null ? TourStep.Play : TourStep.OpenTable; break;
             case TourStep.OpenTable when ReferenceEquals(tourOwner.Active,tourData)&&data is not null:
                 tourInitialPrice=Price();tourStep=TourStep.EditPrice;break;
             case TourStep.EditPrice when data is not null&&Price()!=tourInitialPrice&&table?.CellError("/wares/0","price") is null:

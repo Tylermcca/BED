@@ -27,6 +27,8 @@ public sealed partial class DataWorkspace
     private void DrawProjectConsole()
     {
         if(focusProjectConsole){ImGui.SetKeyboardFocusHere();focusProjectConsole=false;}
+        if(buildInConsole)Ui.Status(buildConsoleStatus,"project.build.status");
+        else if(projectPlay is {} current)DrawProjectPlayStatus(current);
         if(Ui.Button("Clear console"u8))ClearProjectConsole();
         ConsoleSameLineIfFits("Copy all", button:true);
         if(Ui.Button("Copy all"u8))
@@ -51,8 +53,6 @@ public sealed partial class DataWorkspace
         }
         Ui.Checkbox("Show game output"u8,ref showProjectStdout);
         ConsoleSameLineIfFits("Show game errors", button:false);Ui.Checkbox("Show game errors"u8,ref showProjectStderr);
-        if(buildInConsole)Ui.Status(buildConsoleStatus,"project.build.status");
-        else if(projectPlay is {} current)DrawProjectPlayStatus(current);
         if(projectLinesDropped>0)Ui.TextWrapped(ProjectDropNote,semanticId:"project.play.dropped");
         var shownSources=new HashSet<ProjectBuildError>();
         foreach(var line in projectOutput)

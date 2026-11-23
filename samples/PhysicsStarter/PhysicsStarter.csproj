@@ -3,6 +3,7 @@
   <!-- Jolt runs the saved bodies; GLFW and OpenGL draw the window (the same pinned packages BED's own window uses). -->
   <ItemGroup><ProjectReference Include="../../src/Bed/Bed.csproj" /><ProjectReference Include="../../src/Bed.Runtime/Bed.Runtime.csproj" /><PackageReference Include="Ahwoo.Brutal.Jolt" /><PackageReference Include="Ahwoo.Brutal.Glfw" /><PackageReference Include="Ahwoo.Brutal.OpenGl" /></ItemGroup>
   <ItemGroup>
+    <Compile Include="../SceneStarter/Garden/PixelFont.cs" Link="PixelFont.cs" />
     <Compile Include="../SceneStarter/PhysicsRuntimeInventory.cs" Link="PhysicsRuntimeInventory.cs" />
     <Compile Include="../SceneStarter/SavedProjectManifest.cs" Link="SavedProjectManifest.cs" />
     <Compile Include="../SceneStarter/Scene2Compiler.cs" Link="Scene2Compiler.cs" />

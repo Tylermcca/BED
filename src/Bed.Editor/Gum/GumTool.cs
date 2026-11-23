@@ -24,15 +24,15 @@ public static partial class GumTool
             return new(null, null, "", $"Gum isn't at {gumExe} any more. Press Edit in Gum again and show BED where Gum.exe is now.");
         if (!File.Exists(project.ProjectFile))
             return new(null, null, "", $"The Gum project file {Path.GetFileName(project.ProjectFile)} isn't in its folder any more, so there is nothing to open.");
-        if (screen is null) return new(gumExe, Path.GetFullPath(project.ProjectFile), "Gum is opening your screens. Save there and they update here and in your game.", null, Path.GetFullPath(project.ProjectFile));
+        if (screen is null) return new(gumExe, Path.GetFullPath(project.ProjectFile), "Sent your screens to Gum. Saves from Gum update here and in your game.", null, Path.GetFullPath(project.ProjectFile));
         if (screen.Missing || !File.Exists(screen.File))
-            return new(gumExe, Path.GetFullPath(project.ProjectFile), $"The screen {screen.Name} hasn't been saved as its own file, so Gum is opening the whole project instead.", null, Path.GetFullPath(project.ProjectFile)) { ScreenName = screen.Name };
+            return new(gumExe, Path.GetFullPath(project.ProjectFile), $"Sent the whole project to Gum because {screen.Name} hasn't been saved as its own file.", null, Path.GetFullPath(project.ProjectFile)) { ScreenName = screen.Name };
         // Gum finds the project beside the Screens folder only for a screen saved directly in it.
         var screens = Path.Combine(project.Folder, "Screens");
         var direct = string.Equals(Path.GetDirectoryName(Path.GetFullPath(screen.File)), screens, StringComparison.OrdinalIgnoreCase);
         return direct
-            ? new(gumExe, Path.GetFullPath(screen.File), $"Gum is opening the screen {screen.Name}.", null, Path.GetFullPath(project.ProjectFile)) { ScreenName = screen.Name }
-            : new(gumExe, Path.GetFullPath(project.ProjectFile), $"Gum is opening your project. Gum can't go straight to a screen in a subfolder, so pick {screen.Name} from the screen list in Gum.", null, Path.GetFullPath(project.ProjectFile)) { ScreenName = screen.Name };
+            ? new(gumExe, Path.GetFullPath(screen.File), $"Sent {screen.Name} to Gum.", null, Path.GetFullPath(project.ProjectFile)) { ScreenName = screen.Name }
+            : new(gumExe, Path.GetFullPath(project.ProjectFile), $"Sent your project to Gum. Choose {screen.Name} from the screen list there.", null, Path.GetFullPath(project.ProjectFile)) { ScreenName = screen.Name };
     }
 
     /// <summary>Starts what <see cref="Plan"/> worked out, without a shell, so the path is passed exactly as it is.

@@ -491,7 +491,7 @@ public sealed class AdapterAcceptanceTests
         var ex = Record.Exception(() => { shown = DrawText(l.Draw); });
         r.SameFiles(before); r.HistorySurvives();
         Assert.True(ex is null, "Name escaped the start-screen draw: " + ex);
-        Assert.Contains("Available game connections", shown);
+        Assert.Contains("Game add-ons", shown);
         Assert.Contains("Instrumented", shown);
         Assert.Contains("couldn't give its name", shown);
         Assert.Contains("A073 Name broke", shown);

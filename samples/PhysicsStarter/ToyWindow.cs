@@ -11,7 +11,6 @@ namespace PhysicsStarter;
 /// a 4x multisampled framebuffer. The same drawing renders a hidden window's frame to a PNG for checks.</summary>
 internal static unsafe class ToyWindow
 {
-    internal const string Title="Crate drop - click: drop a crate | right-drag or A/D: orbit | wheel: zoom | Space: jump crate | R: reset | Esc: quit";
     private static GlGetProcAddressFunc? loader;   // kept rooted: GLAD keeps the pointer (BRUTAL T35)
 
     /// <summary>Opens the window and plays until it is closed. Returns false when no OpenGL 4.1 window could be made.</summary>
@@ -23,9 +22,14 @@ internal static unsafe class ToyWindow
             if(Create(false,1280,720) is not {} window){error.WriteLine("This PC has no OpenGL 4.1 window; running without one.");return false;}
             try
             {
-                window.Title=Title;
                 var controls=new ToyControls(new OrbitCamera());
-                window.OnKey+=(_,key,_,action,_)=>{if(action!=GlfwKeyAction.Repeat)controls.Key(Map(key),action==GlfwKeyAction.Press);};
+                using var help = new ToyControlsOverlay();
+                var showControls = true;
+                window.OnKey += (_, key, _, action, _) =>
+                {
+                    if (key == GlfwKey.F1 && action == GlfwKeyAction.Press) showControls = !showControls;
+                    if (action != GlfwKeyAction.Repeat) controls.Key(Map(key), action == GlfwKeyAction.Press);
+                };
                 window.OnMouseButton+=(_,button,action,_)=>controls.Button(button==GlfwMouseButton.Left?ToyButton.Left:button==GlfwMouseButton.Right?ToyButton.Right:ToyButton.Other,action==GlfwButtonAction.Press);
                 window.OnCursorPos+=(_,at)=>controls.Cursor((float)at.X,(float)at.Y);
                 window.OnScroll+=(_,offset)=>controls.Scroll((float)offset.Y);
@@ -59,6 +63,7 @@ internal static unsafe class ToyWindow
                         if(target is null||target.Width!=pixels.X||target.Height!=pixels.Y){target?.Dispose();target=new Target(pixels.X,pixels.Y);}
                         renderer.Draw(toy.Drawables(),controls.Camera,pixels.X,pixels.Y,target.Frame);
                         target.BlitTo(default);
+                        help.Draw(default, pixels.X, pixels.Y, showControls);
                         Glfw.PInvoke.SwapBuffers(window);
                     }
                 }
@@ -120,7 +125,8 @@ internal static unsafe class ToyWindow
             {
                 using var renderer=new ToyRenderer(assets.Meshes,assets.Textures);using var target=new Target(width,height);
                 renderer.Draw(toy.Drawables(),camera,width,height,target.Frame);
-                WritePng(path,width,height,target.Read());
+                using var help = new ToyControlsOverlay();
+                WritePng(path,width,height,target.Read(frame => help.Draw(frame, width, height, true)));
             }
             finally{window.Dispose();}
         }
@@ -167,8 +173,23 @@ internal static unsafe class ToyWindow
         Glfw.WindowHint(GlfwWindowHint.ContextVersionMajor,4);Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor,1);
         Glfw.WindowHint(GlfwWindowHint.OpenGlProfile,Glfw.Constants.GLFW_OPENGL_CORE_PROFILE);
         Glfw.WindowHint(GlfwWindowHint.Visible,hidden?0:1);
+        var origin = default(int2);
+        var area = default(int2);
+        var monitor = Glfw.PrimaryMonitor;
+        if (!hidden && !monitor.Equals(GlfwMonitor.Null))
+        {
+            monitor.GetMonitorWorkArea(out origin, out area);
+            if (area.X > 0 && area.Y > 0)
+            {
+                var fit = Math.Min(1f, Math.Min(area.X * .85f / width, area.Y * .85f / height));
+                width = Math.Max(1, (int)(width * fit));
+                height = Math.Max(1, (int)(height * fit));
+            }
+        }
         var window=Glfw.CreateWindow(new GlfwWindow.CreateInfo{Title="Crate drop",Size=new int2(width,height)});
         if(window.IsNull())return null;
+        if (area.X > 0 && area.Y > 0)
+            window.Position = origin + new int2((area.X - width) / 2, (area.Y - height) / 2);
         Glfw.PInvoke.MakeContextCurrent(window);Glfw.PInvoke.SwapInterval(1);
         loader??=name=>Glfw.PInvoke.GetProcAddress(name);
         if(!Glad.Initialize(loader)){window.Dispose();return null;}
@@ -198,12 +219,14 @@ internal static unsafe class ToyWindow
             GL.glBlitFramebuffer(0,0,Width,Height,0,0,Width,Height,OpenGl.GL_COLOR_BUFFER_BIT,OpenGl.GL_NEAREST);GL.glBindFramebuffer(OpenGl.GL_FRAMEBUFFER,default);
         }
         /// <summary>Resolves into a single-sample framebuffer and reads it back, top row first.</summary>
-        internal byte[] Read()
+        internal byte[] Read(Action<GlFramebuffer>? drawOverlay = null)
         {
             GlFramebuffer resolved;GL.glGenFramebuffers(1,&resolved);GL.glBindFramebuffer(OpenGl.GL_FRAMEBUFFER,resolved);GlRenderbuffer plain;GL.glGenRenderbuffers(1,&plain);
             GL.glBindRenderbuffer(OpenGl.GL_RENDERBUFFER,plain);GL.glRenderbufferStorage(OpenGl.GL_RENDERBUFFER,OpenGl.GL_RGBA8,Width,Height);
             GL.glFramebufferRenderbuffer(OpenGl.GL_FRAMEBUFFER,OpenGl.GL_COLOR_ATTACHMENT0,OpenGl.GL_RENDERBUFFER,plain);
-            BlitTo(resolved);GL.glBindFramebuffer(OpenGl.GL_FRAMEBUFFER,resolved);
+            BlitTo(resolved);
+            drawOverlay?.Invoke(resolved);
+            GL.glBindFramebuffer(OpenGl.GL_FRAMEBUFFER,resolved);
             var pixels=new byte[Width*Height*4];fixed(byte* p=pixels)GL.glReadPixels(0,0,Width,Height,OpenGl.GL_RGBA,OpenGl.GL_UNSIGNED_BYTE,p);
             GL.glBindFramebuffer(OpenGl.GL_FRAMEBUFFER,default);GL.glDeleteRenderbuffers(1,&plain);GL.glDeleteFramebuffers(1,&resolved);
             var flipped=new byte[pixels.Length];var row=Width*4;for(var y=0;y<Height;y++)Array.Copy(pixels,y*row,flipped,(Height-1-y)*row,row);

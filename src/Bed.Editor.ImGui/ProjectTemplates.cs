@@ -152,7 +152,7 @@ public static class ProjectTemplates
 
             Open this folder in BED. Open data/settings.json and edit its fields, then save.
             The matching schemas/settings.schema.json describes those fields and their allowed values.
-            Add your own data and matching schemas as the project grows. No game connection is required.
+            Add your own data and matching schemas as the project grows. No game add-on is required.
             """ + "\n",
         _ => throw new InvalidOperationException("The starter template names a file that doesn't exist.")
     };

@@ -34,7 +34,8 @@ public sealed class ConsoleStatusUi31Tests
             UiNode Status(){var nodes=Ui.Snapshot().Nodes;return Assert.Single(nodes,n=>n.Role==UiRole.Status&&n.Parent>=0&&nodes[n.Parent].Label=="Play console");}
             Frame(3);var id=Status().Id;Assert.Equal("Running.",Status().Label);
             var snapshot=Ui.Snapshot();var filters=snapshot.Nodes.Where(n=>n.Role==UiRole.Checkbox&&n.Label is "Show game output" or "Show game errors").ToArray();Assert.Equal(2,filters.Length);
-            Assert.True(Status().Bounds.Y>=filters.Max(n=>n.Bounds.Y+n.Bounds.Height));Assert.True(Status().Bounds.Y<Assert.Single(snapshot.Nodes,n=>n.Label=="Own log line").Bounds.Y);
+            // The status leads the console, above its buttons (clean-PC test: a squeezed console must still say whether the game runs).
+            Assert.True(Status().Bounds.Y+Status().Bounds.Height<=Assert.Single(snapshot.Nodes,n=>n.Role==UiRole.Button&&n.Label=="Clear console").Bounds.Y);Assert.True(Status().Bounds.Y<filters.Min(n=>n.Bounds.Y));Assert.True(Status().Bounds.Y<Assert.Single(snapshot.Nodes,n=>n.Label=="Own log line").Bounds.Y);
             int Changes()=>sink.Updates.SelectMany(u=>u.ChangedNodes).Count(n=>n.Role==AccessKitProjectedRole.Status&&n.SourceId==id);
             var initial=Changes();Assert.Equal(1,initial);Frame(5);Assert.Equal(initial,Changes());
             void State(ProjectFrameState state,string expected){session.FrameControl=state;Frame();Assert.Equal(id,Status().Id);Assert.Equal(expected,Status().Label);}

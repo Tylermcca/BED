@@ -98,7 +98,13 @@ public sealed class WorkspaceStatusUi12Tests
             owner.Status=state;owner.HasCompleted=state.Contains("exited",StringComparison.Ordinal)||state.StartsWith("Play failed",StringComparison.Ordinal);
             var updates=owner.Updates;host.Frames(w.Draw,2);Assert.Equal(updates+2,owner.Updates);
             Assert.Equal("Play: "+state,Status("Play:").Label);Assert.Equal(id,Status("Play:").Id);
+            Assert.Equal(state, w.Said);
         }
+        w.Note("Another action reported this.");
+        owner.Status = "Stopped.";
+        host.Frames(w.Draw, 2);
+        Assert.Equal("Another action reported this.", w.Said);
+        Assert.Equal("Play: Stopped.", Status("Play:").Label);
         Assert.True(w.SceneWindow!.Editor.Session.Execute(new MoveObject("box",Vector3.UnitX)));
         Assert.True(w.RequestProjectPlay());Assert.True(w.ProjectPlaySavePending);host.Frames(w.Draw,2);
         Assert.Equal("Play: Waiting for save choice.",Status("Play:").Label);w.AnswerProjectPlay(SaveChangesChoice.Cancel);

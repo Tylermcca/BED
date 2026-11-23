@@ -51,6 +51,158 @@ public sealed class GumScreenPictureTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void Update_only_frames_reload_and_expose_current_parts_then_paint_fresh()
+    {
+        var folder=CopyOf("Original");
+        try
+        {
+            using var picture=new GumScreenPicture(Path.Combine(folder,"Original.gumj"));
+            Assert.True(picture.Show("Preview"),picture.Problem);
+            Assert.False(picture.Frame(0,false));Assert.True(picture.Drawn);Assert.Equal(0,picture.Version);
+            Assert.True(picture.Frame(.01));var before=picture.Pixels.ToArray();var version=picture.Version;
+            var path=Path.Combine(folder,"Screens","Preview.gusj");
+            var root=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(path))!;
+            foreach(var v in root["States"]![0]!["Variables"]!.AsArray())
+            {
+                if(v!["Name"]!.GetValue<string>()=="Panel.X")v["ValueAsFloat"]=80;
+                if(v["Name"]!.GetValue<string>()=="Panel.Red")v["ValueAsInt"]=200;
+            }
+            File.WriteAllText(path,root.ToJsonString());
+            var clock=Stopwatch.StartNew();var t=.01;
+            while((picture.Saves==0||!picture.Parts().Any(p=>p.Name=="Panel"&&p.X==80))&&clock.Elapsed<TimeSpan.FromSeconds(10))
+            {Thread.Sleep(50);Assert.False(picture.Frame(t+=.05,false));}
+            Assert.True(picture.Saves>0);Assert.Equal(80,Assert.Single(picture.Parts(),p=>p.Name=="Panel").X);
+            // Another caller takes the shared service; an update-only frame must restore this screen too.
+            using(var other=new GumScreenPicture(Original))Assert.True(other.Show("Preview"),other.Problem);
+            Assert.False(picture.Frame(t+=.05,false));Assert.True(picture.Drawn);
+            Assert.Equal(80,Assert.Single(picture.Parts(),p=>p.Name=="Panel").X);
+            Assert.Equal(version,picture.Version);Assert.True(before.AsSpan().SequenceEqual(picture.Pixels));
+            Assert.True(picture.Frame(t+.05,true));Assert.Equal(version+1,picture.Version);
+            Assert.Equal(((byte)200,(byte)60,(byte)90,(byte)255),At(picture,90,30));
+            Assert.Equal(((byte)0x30,(byte)0x30,(byte)0x30,(byte)255),At(picture,30,30));
+        }
+        finally { try { Directory.Delete(folder,true); } catch(IOException) { } }
+    }
+
+    [Fact]
+    public void Resizing_keeps_the_live_screen_and_matches_a_fresh_layout_and_paint()
+    {
+        using var picture = new GumScreenPicture(Original);
+        Assert.True(picture.Show("Preview"), picture.Problem);
+        picture.Set("Panel.X", 35f); picture.Frame(0);
+        foreach (var (width, height, zoom) in new[] { (480, 320, .5f), (900, 675, 1.5f), (800, 600, 1f) })
+        {
+            var live = Gum.GumService.Default.Root.Children.Single();
+            picture.Resize(width, height, zoom);
+            Assert.False(picture.Frame(.1, false));
+            Assert.True(picture.Drawn, picture.Problem);
+            Assert.Same(live, Gum.GumService.Default.Root.Children.Single());
+            var parts = picture.Parts().ToArray();
+            picture.Frame(.2);
+            var pixels = picture.Pixels.ToArray();
+            using (var fresh = new GumScreenPicture(Original, width, height))
+            {
+                fresh.Resize(width, height, zoom); Assert.True(fresh.Show("Preview"), fresh.Problem);
+                fresh.Set("Panel.X", 35f); fresh.Frame(.2);
+                Assert.Equal(parts, fresh.Parts());
+                Assert.True(pixels.AsSpan().SequenceEqual(fresh.Pixels), $"Resize differed from a fresh screen at {width}x{height}, zoom {zoom}.");
+            }
+            // An unrelated owner still uses the full restore path, including our retained values.
+            picture.Frame(.3); Assert.Equal(parts, picture.Parts());
+            Assert.True(pixels.AsSpan().SequenceEqual(picture.Pixels));
+        }
+    }
+
+    [Fact]
+    public void Same_project_switches_keep_the_service_but_rebuild_exact_screens_and_follow_saves()
+    {
+        var folder=CopyOf("Original");
+        try
+        {
+            var project=Path.Combine(folder,"Original.gumj");
+            var second=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(folder,"Screens","Preview.gusj")))!;second["Name"]="Second";
+            foreach(var v in second["States"]![0]!["Variables"]!.AsArray())if(v!["Name"]!.GetValue<string>()=="Panel.Y")v["ValueAsFloat"]=50;
+            File.WriteAllText(Path.Combine(folder,"Screens","Second.gusj"),second.ToJsonString());
+            var definition=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(project))!;
+            definition["ScreenReferences"]!.AsArray().Add(new System.Text.Json.Nodes.JsonObject{["Name"]="Second",["ElementType"]=0,["LinkType"]=0});File.WriteAllText(project,definition.ToJsonString());
+            using var a=new GumScreenPicture(project,480,320);a.Resize(480,320,.5f);Assert.True(a.Show("Preview"));a.Set("Panel.Red",40);a.Frame(0);
+            var aParts=a.Parts().ToArray();var aPixels=a.Pixels.ToArray();
+            using var b=new GumScreenPicture(project,900,675);b.Resize(900,675,1.5f);Assert.True(b.Show("Second"));b.Set("Panel.Red",200);b.Frame(0);
+            var bParts=b.Parts().ToArray();var bPixels=b.Pixels.ToArray();var live=Gum.GumService.Default.Root;
+            for(var i=0;i<6;i++)
+            {
+                var picture=i%2==0?a:b;var parts=i%2==0?aParts:bParts;var pixels=i%2==0?aPixels:bPixels;
+                picture.Set("Panel.Red",i%2==0?40:200);Assert.Empty(picture.Parts());
+                Assert.False(picture.Frame(.1+i*.05,false));Assert.Same(live,Gum.GumService.Default.Root);Assert.Single(live.Children);
+                Assert.Equal(parts,picture.Parts());picture.Frame(.11+i*.05);
+                Assert.True(pixels.AsSpan().SequenceEqual(picture.Pixels),"Switching differed from the original cold picture.");
+            }
+            Assert.Equal(2,GumCatalog.Read(project).Screens.Count);a.Frame(.5,false);
+            Assert.NotSame(live,Gum.GumService.Default.Root);Assert.Equal(aParts,a.Parts());
+            var path=Path.Combine(folder,"Screens","Second.gusj");var root=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(path))!;
+            foreach(var v in root["States"]![0]!["Variables"]!.AsArray())if(v!["Name"]!.GetValue<string>()=="Panel.Y")v["ValueAsFloat"]=80;
+            File.WriteAllText(path,root.ToJsonString());var clock=Stopwatch.StartNew();var t=.5;
+            while(a.Saves+b.Saves==0&&clock.Elapsed<TimeSpan.FromSeconds(10)){Thread.Sleep(50);a.Frame(t+=.05,false);b.Frame(t+=.05,false);}
+            Assert.True(a.Saves+b.Saves>0);a.Frame(t+=.05);Assert.Single(Gum.GumService.Default.Root.Children);Assert.Equal(10,Assert.Single(a.Parts(),p=>p.Name=="Panel").Y);
+            b.Frame(t+=.05);Assert.Single(Gum.GumService.Default.Root.Children);Assert.Equal(120,Assert.Single(b.Parts(),p=>p.Name=="Panel").Y);
+            Assert.Equal((byte)40,At(a,20,15).R);Assert.Equal((byte)200,At(b,40,135).R);
+        }
+        finally {Directory.Delete(folder,true);}
+    }
+
+    [Fact]
+    public void A_new_picture_of_the_project_Gum_has_open_joins_it_without_reading_it_again_and_draws_as_a_cold_one()
+    {
+        // A card game, 2026-11-21: each of a game's screens shown for the first time took Gum down and read the whole project again, a
+        // frame of half a second or more. A new picture now joins the open project as a known one does.
+        var folder=CopyOf("Original");
+        try
+        {
+            var project=Path.Combine(folder,"Original.gumj");
+            var second=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(folder,"Screens","Preview.gusj")))!;second["Name"]="Second";
+            foreach(var v in second["States"]![0]!["Variables"]!.AsArray())if(v!["Name"]!.GetValue<string>()=="Panel.Y")v["ValueAsFloat"]=50;
+            File.WriteAllText(Path.Combine(folder,"Screens","Second.gusj"),second.ToJsonString());
+            var definition=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(project))!;
+            definition["ScreenReferences"]!.AsArray().Add(new System.Text.Json.Nodes.JsonObject{["Name"]="Second",["ElementType"]=0,["LinkType"]=0});File.WriteAllText(project,definition.ToJsonString());
+            byte[] cold;GumPart[] coldParts;
+            using(var alone=new GumScreenPicture(project,900,675)){alone.Resize(900,675,1.5f);Assert.True(alone.Show("Second"));alone.Set("Panel.Red",200);alone.Frame(0);cold=alone.Pixels.ToArray();coldParts=[..alone.Parts()];}
+            using var a=new GumScreenPicture(project,480,320);a.Resize(480,320,.5f);Assert.True(a.Show("Preview"));a.Frame(0);
+            var live=Gum.GumService.Default.Root;
+            using var b=new GumScreenPicture(project,900,675);b.Resize(900,675,1.5f);Assert.True(b.Show("Second"));
+            Assert.Same(live,Gum.GumService.Default.Root);Assert.Equal("",b.Problem);
+            b.Set("Panel.Red",200);b.Frame(0);
+            Assert.Same(live,Gum.GumService.Default.Root);
+            Assert.Equal(coldParts,b.Parts());
+            Assert.True(cold.AsSpan().SequenceEqual(b.Pixels),"The joined picture differed from a cold one.");
+            a.Frame(.1);Assert.Same(live,Gum.GumService.Default.Root);Assert.Single(live.Children);
+        }
+        finally {Directory.Delete(folder,true);}
+    }
+
+    [Fact]
+    public void A_picture_switched_back_to_puts_up_the_screen_it_built_and_draws_as_a_cold_one()
+    {
+        // A card game, 2026-11-21: switching between its table's words and its score page built the screen afresh, and checked the whole
+        // project for loops, every time: 25-400 ms a switch. A picture switched back to puts up the screen it built before.
+        var folder=CopyOf("Original");
+        try
+        {
+            var project=Path.Combine(folder,"Original.gumj");
+            byte[] cold;
+            using(var alone=new GumScreenPicture(project,480,320)){Assert.True(alone.Show("Preview"));alone.Set("Panel.Red",120);alone.Frame(0);cold=alone.Pixels.ToArray();}
+            using var a=new GumScreenPicture(project,480,320);Assert.True(a.Show("Preview"));a.Frame(0);
+            var built=Assert.Single(Gum.GumService.Default.Root.Children);
+            using var b=new GumScreenPicture(project,900,675);Assert.True(b.Show("Preview"));b.Frame(0);
+            Assert.NotSame(built,Assert.Single(Gum.GumService.Default.Root.Children));
+            a.Set("Panel.Red",120);a.Frame(.1);   // set while b had Gum: applied as a comes back
+            Assert.Same(built,Assert.Single(Gum.GumService.Default.Root.Children));
+            Assert.Equal("",a.Problem);
+            Assert.True(cold.AsSpan().SequenceEqual(a.Pixels),"The picture switched back to differed from a cold one.");
+        }
+        finally {Directory.Delete(folder,true);}
+    }
+
+    [Fact]
     public void A_project_with_a_missing_screen_file_still_shows_its_other_screens_and_says_what_is_missing()
     {
         using var picture = new GumScreenPicture(Path.Combine(GumFixtures.Folder("Deps"), "Deps.gumj"));

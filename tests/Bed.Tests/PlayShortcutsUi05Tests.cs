@@ -62,7 +62,7 @@ public sealed class PlayShortcutsUi05Tests
         Assert.Equal("Stop (Shift+F5)",r.Button("Stop").Tooltip);
         r.Key(shift:true);Assert.True(first.HasCompleted);Assert.Equal(1,first.Stops);
         r.Key(ctrl:true);Assert.True(r.Workspace.ProjectPlayApprovalPending);Assert.Single(r.Host.Sessions);
-        Assert.Contains("build.exe",r.Workspace.Said);Assert.True(r.Workspace.ApproveProjectPlay());
+        Assert.Contains("build.exe",r.Workspace.ProjectPlayApprovalCommand!.CommandLine());Assert.True(r.Workspace.ApproveProjectPlay());
         Assert.Equal(2,r.Host.Sessions.Count);Assert.True(r.Host.Sessions[1].Built);
         Assert.Equal(saved,File.ReadAllBytes(r.ScenePath));Assert.False(r.Window.Editor.Session.Dirty);
     }

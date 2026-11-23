@@ -69,6 +69,34 @@ public sealed class SpriteSampleTests
         }
     }
     [Fact]
+    public async Task Stop_closes_the_owned_garden_window_before_it_finishes()
+    {
+        using var copy = new Copy();
+        copy.OpenAndCompile();
+        var exe = Path.Combine(copy.Root, "game", "SceneStarter.exe");
+        using var play = new Bed.Editor.App.ProjectPlayHost(new(new(exe, copy.Root, ["--window-check", "600"]), null, copy.Root, []), TimeProvider.System, TimeSpan.FromSeconds(5));
+        Assert.True(play.Start(false), play.Status);
+
+        var deadline = System.Diagnostics.Stopwatch.StartNew();
+        var opened = false;
+        while (!opened && !play.HasCompleted && deadline.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            opened = play.DrainLogs().Any(line => line.Text == "SceneStarter hidden window opened.");
+            if (!opened) await Task.Delay(5);
+        }
+        Assert.True(opened, play.Status);
+        Assert.True(play.RequestStop());
+        Assert.StartsWith("Requested polite close", play.Status);
+        await play.OwnedCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+        play.Update();
+
+        Assert.Equal(Bed.Editor.App.ProjectPlayState.Stopped, play.State);
+        Assert.Equal(0, play.ExitCode);
+        var completed = Assert.Single(play.DrainLogs(), line => line.Text.StartsWith("SceneStarter hidden window check:", StringComparison.Ordinal));
+        Assert.DoesNotContain("after 600 frames", completed.Text);
+    }
+
+    [Fact]
     public void Saved_flat_sample_exports_through_the_real_launcher_menu_and_copied_runtime()
     {
         using var copy=new Copy();copy.OpenAndCompile();using var output=new StringWriter();using var errors=new StringWriter();var destination=Path.Combine(copy.Settings,"exported");

@@ -156,6 +156,8 @@ internal sealed class InspectorController<TDoc> where TDoc : class
         if (Found.Count > 0 && foundMore) Ui.TextDisabled("There are more: search for something longer."u8);
     }
 
+    private bool showObjectCode;
+
     public void Draw()
     {
         places.Clear();   // before anything returns: nothing drawn now means nothing to reach (found by A082)
@@ -179,7 +181,17 @@ internal sealed class InspectorController<TDoc> where TDoc : class
         lastSelection = selection;
         if (fieldEpoch > 0) ImGui.PushID(fieldEpoch);
         var top = Inspector.Rows();
-        foreach (var row in top) InspectorRowView(row, selection, top);
+        var objectCode = typeof(TDoc) == typeof(Scene) || typeof(TDoc) == typeof(Scene2)
+            ? top.FirstOrDefault(row => row.Id == "id" && !row.Editable)
+            : null;
+        foreach (var row in top)
+            if (row != objectCode) InspectorRowView(row, selection, top);
+        if (objectCode is not null)
+        {
+            if (Ui.SmallButton(showObjectCode ? "Hide object code###object.code"u8 : "Show object code###object.code"u8))
+                showObjectCode = !showObjectCode;
+            if (showObjectCode) InspectorRowView(objectCode, selection, top);
+        }
         Ui.TextWrapped("Number fields: Up/Down +/-1; Shift x10; Ctrl x0.1. Release the arrows to finish one undo step."u8);
         if (fieldEpoch > 0) ImGui.PopID();
         foreach (var (issue, n) in Inspector.Issues().Select((x, n) => (x, n)))

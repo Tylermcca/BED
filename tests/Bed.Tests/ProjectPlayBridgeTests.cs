@@ -94,7 +94,7 @@ public sealed class ProjectPlayBridgeTests
         using var r=new Rig();File.WriteAllText(Path.Combine(r.ProjectRoot,"build.exe"),"inert");
         PlaySettingsStore.Save(r.ProjectRoot,new("game.exe",build:new("./build.exe",["--build"])));r.Factory.Missing=true;
         Assert.False(r.Workspace.RequestProjectPlay());Assert.NotNull(r.Workspace.ProjectPlay);Assert.True(r.Workspace.ProjectPlay!.CanBuildAndPlay);Assert.Single(r.Factory.Sessions);
-        Assert.False(r.Workspace.RequestProjectPlay(true));Assert.True(r.Workspace.ProjectPlayApprovalPending);Assert.Contains("build.exe",r.Workspace.Said);Assert.Single(r.Factory.Sessions);
+        Assert.False(r.Workspace.RequestProjectPlay(true));Assert.True(r.Workspace.ProjectPlayApprovalPending);Assert.Contains("build.exe",r.Workspace.ProjectPlayApprovalCommand!.CommandLine());Assert.Contains("--build",r.Workspace.ProjectPlayApprovalCommand!.CommandLine());Assert.Single(r.Factory.Sessions);
         r.Factory.Missing=false;Assert.True(r.Workspace.ApproveProjectPlay());Assert.Equal(2,r.Factory.Sessions.Count);Assert.True(r.Factory.Sessions[1].Build);
         Assert.True(File.Exists(Path.Combine(r.Local,"play-approvals.json")));Assert.DoesNotContain("approval",File.ReadAllText(Path.Combine(r.ProjectRoot,".bed","project.json")),StringComparison.OrdinalIgnoreCase);
     }
@@ -140,8 +140,11 @@ public sealed class ProjectPlayBridgeTests
         using var ui=new HeadlessHost(1200,800){Drawing=false};EditorWindow<Scene>.Configure(ImGui.GetIO());
         Assert.False(r.Workspace.RequestProjectPlay(true));Assert.Empty(r.Factory.Sessions);ui.Frames(r.Workspace.Draw,3);
         void Allow(){var node=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button&&n.Label=="Allow this exact command and continue");ui.Click(r.Workspace.Draw,node.Bounds.X+node.Bounds.Width/2,node.Bounds.Y+node.Bounds.Height/2);ui.Frames(r.Workspace.Draw,2);}
-        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label.Contains(outside)&&n.Label.Contains("literal"));
-        Allow();Assert.Empty(r.Factory.Sessions);Assert.True(r.Workspace.ProjectPlayApprovalPending);Assert.Contains("build-arg",r.Workspace.Said);
+        // The box says what it allows in plain words; the exact command is under Show details (clean-PC test).
+        void Details(){var node=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button&&n.Label=="Show details");ui.Click(r.Workspace.Draw,node.Bounds.X+node.Bounds.Width/2,node.Bounds.Y+node.Bounds.Height/2);ui.Frames(r.Workspace.Draw,2);}
+        Details();Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label.Contains(outside)&&n.Label.Contains("literal"));
+        Allow();Assert.Empty(r.Factory.Sessions);Assert.True(r.Workspace.ProjectPlayApprovalPending);Assert.Contains("build-arg",r.Workspace.ProjectPlayApprovalCommand!.CommandLine());
+        Details();Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label.Contains("build.exe")&&n.Label.Contains("build-arg"));
         Allow();var session=Assert.Single(r.Factory.Sessions);Assert.True(session.Build);Assert.False(r.Workspace.ProjectPlayApprovalPending);
         Assert.Equal("inert",File.ReadAllText(outside));
     }

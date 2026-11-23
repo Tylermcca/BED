@@ -42,8 +42,8 @@ public sealed class ApiLineApi02Tests
         foreach(var type in implementations)
         {
             Assert.False(type.IsVisible);Assert.DoesNotContain(type,type.Assembly.GetExportedTypes());
-            // Friends are the tests and BED's own launcher-only services (sound preview, asset import: HOST-SOUND01, HOST-ASSETS01), never a game.
-            Assert.Subset(new HashSet<string>{"Bed.Tests","Bed.Editor.Audio","Bed.Editor.Assets"},type.Assembly.GetCustomAttributes<InternalsVisibleToAttribute>().Select(a=>a.AssemblyName!).ToHashSet());
+            // Friends are the tests and BED's launcher and its own launcher-only services (sound preview, asset import: HOST-SOUND01, HOST-ASSETS01), never a game.
+            Assert.Subset(new HashSet<string>{"Bed.Tests","Bed.Launcher","Bed.Editor.Audio","Bed.Editor.Assets"},type.Assembly.GetCustomAttributes<InternalsVisibleToAttribute>().Select(a=>a.AssemblyName!).ToHashSet());
         }
         Assert.True(typeof(GameBuildSpec).IsVisible);Assert.True(typeof(GameBuildReceipt).IsVisible);Assert.True(typeof(IGameBuildHost).IsVisible);
     }

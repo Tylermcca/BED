@@ -215,7 +215,7 @@ public static class Program
         }
         launcher.EnableOnboarding=true; // Native interactive host only; CLI and --shot leave it disabled.
         launcher.Splash = new BrutalSplash();   // the BRUTAL logo before the start screen (BRUTAL License v1.0, 2.2)
-        EditorApp.Run(new("BED", LayoutPath: layoutPath), io => EditorWindow<DataDocument>.Configure(io), launcher.Draw, dialogs => launcher.FileDialogs = dialogs,
+        EditorApp.Run(new("BED", LayoutPath: layoutPath) { FitStartupWorkArea = true }, io => EditorWindow<DataDocument>.Configure(io), launcher.Draw, dialogs => launcher.FileDialogs = dialogs,
             close: launcher.RequestWindowClose, title: () => WindowTitle.For(launcher), drop: (drop, frame) => launcher.DispatchDrop(drop.Paths, frame, drop.TargetWindow(frame)));
         launcher.Dispose();   // a game still playing when the window closes is stopped, never left to the garbage collector
         return 0;

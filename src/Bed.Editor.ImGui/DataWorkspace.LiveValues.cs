@@ -9,6 +9,7 @@ public sealed partial class DataWorkspace
     private Scene2DocumentEntry? liveEntry;
     private readonly Dictionary<string,ImInputString> liveInputs=new(StringComparer.Ordinal);
     private string liveNote="";
+    private bool focusLiveTry;
     internal void BindLiveValues(IEnumerable<LiveValueTarget> targets)
     {
         var copied=targets.Take(65).ToArray();
@@ -29,7 +30,7 @@ public sealed partial class DataWorkspace
         if(SelectedLiveTarget() is not {} target){Said="This game doesn't share live values for the selected object.";return false;}
         liveScene=Active?.Name;liveEntry=null;if(liveScene is {} name)Documents.TryGetOpenScene2(name,out liveEntry);
         pendingLiveTarget=target;requestingLive=true;liveInputs.Clear();liveNote="";
-        try{return RequestProjectPlay();}finally{requestingLive=false;}
+        try{var started=RequestProjectPlay();focusLiveTry=started;return started;}finally{requestingLive=false;}
     }
     internal bool KeepLiveValue(string name,Scene2DocumentEntry entry,string? field=null)
     {
@@ -80,12 +81,18 @@ public sealed partial class DataWorkspace
                 if(!liveInputs.TryGetValue(definition.Id,out var text))liveInputs[definition.Id]=text=new(64,number.ToString(CultureInfo.InvariantCulture));
                 Brutal.ImGuiApi.ImGui.PushID(definition.Id);
                 var label=definition.TrialLabel??$"Try {definition.Label} ({definition.Minimum} to {definition.Maximum})";
+                if(focusLiveTry){if(Brutal.ImGuiApi.ImGui.IsWindowFocused())Brutal.ImGuiApi.ImGui.SetKeyboardFocusHere();focusLiveTry=false;}
                 if(Ui.InputText(label,text))
                 {if(float.TryParse(text.ToString(),NumberStyles.Float,CultureInfo.InvariantCulture,out var wanted)&&live.TryValue(definition.Id,wanted))liveNote="Trying this value; saved files unchanged.";else liveNote="Use a number inside the displayed range.";}
                 Brutal.ImGuiApi.ImGui.PopID();
             }
+            if(live.Busy)Ui.TextWrapped("Waiting for the game to confirm this try. Controls will return when it replies."u8);
             Ui.BeginDisabled(live.Busy,"Waiting for the game.");
-            foreach(var key in live.Target.Inputs)if(Ui.Button("Try "+key+" (quarter second)"))live.TryKey(key);
+            foreach(var key in live.Target.Inputs)
+            {
+                if(focusLiveTry&&!live.Busy){if(Brutal.ImGuiApi.ImGui.IsWindowFocused())Brutal.ImGuiApi.ImGui.SetKeyboardFocusHere();focusLiveTry=false;}
+                if(Ui.Button("Try "+key+" (quarter second)"))live.TryKey(key);
+            }
             foreach(var definition in live.Target.Values.Where(v=>v.SaveField is not null))
             {
                 var index=live.Target.Values.ToList().IndexOf(definition);var text=liveInputs[definition.Id];

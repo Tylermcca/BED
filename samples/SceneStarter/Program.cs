@@ -71,7 +71,11 @@ public static class Program
                 {
                     if(!playable||!OperatingSystem.IsWindows())throw new ArgumentException("The window check needs Windows and a flat sprite level with a round_friend player.");
                     var game=new Garden.GardenGame(Garden.GardenLevel.From(saved));
-                    Garden.GardenWindow.Play(game,visible:false,script:script is null?null:Garden.GardenScript.Parse(script),frames:checkFrames);
+                    Garden.GardenWindow.Play(game, visible: false, script is null ? null : Garden.GardenScript.Parse(script), checkFrames, () =>
+                    {
+                        output.WriteLine("SceneStarter hidden window opened.");
+                        output.Flush();
+                    });
                     output.WriteLine("SceneStarter hidden window check: "+Garden.GardenScript.Describe(game));output.Flush();
                 }
                 if(seconds is {} duration)Thread.Sleep(TimeSpan.FromSeconds(duration));

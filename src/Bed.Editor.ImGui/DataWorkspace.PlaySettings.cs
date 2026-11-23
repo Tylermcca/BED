@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Brutal.ImGuiApi;
+using Brutal.Numerics;
 namespace Bed.Editor.ImGui;
 using ImGui=Brutal.ImGuiApi.ImGui;
 public sealed partial class DataWorkspace
@@ -10,7 +11,16 @@ public sealed partial class DataWorkspace
     private PlayLaunch? pendingLaunch;
     private bool requestingLive,pendingLive;
     private bool pendingBuild,playSavePrompt,playApprovalPrompt,playFocus;
+    private bool missingDotNetSdk;
+    internal const string DotNetSdkDownload = "https://dotnet.microsoft.com/en-us/download/dotnet/10.0";
+    internal Action<string> OpenPlayHelp { get; set; } = url =>
+    {
+        using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+    };
     private Func<bool>? playCurrent;
+    private GameLaunchSpec? playApprovalCommand;
+    private bool showPlayApprovalDetails, approvePlayBuild;
+    private string? lastProjectPlayNotice;
     /// <summary>Project Play configuration, available for plain projects as well as adapters.</summary>
     public PlaySettingsForm? PlaySettings {get;private set;}
     /// <summary>The current owned process session, if one has been created.</summary>
@@ -19,6 +29,8 @@ public sealed partial class DataWorkspace
     public bool ProjectPlaySavePending=>playSavePrompt;
     /// <summary>Whether exact local command approval is pending.</summary>
     public bool ProjectPlayApprovalPending=>playApprovalPrompt;
+    /// <summary>The exact command the open approval box would allow (shown under Show details), or null.</summary>
+    internal GameLaunchSpec? ProjectPlayApprovalCommand=>playApprovalPrompt?playApprovalCommand:null;
     /// <summary>Binds project settings without starting a process or changing any document.</summary>
     public void BindPlaySettings(string root,global::Bed.Editor.PlaySettings? defaults,string localPreferences,Func<IFileDialogs?>? dialogs=null)
     { statusProjectRoot=root;reportDialogs=dialogs;reportPreferences=localPreferences;PlaySettings=new(root,defaults,localPreferences,dialogs);BindSceneViewPreferences(localPreferences);
@@ -64,8 +76,11 @@ public sealed partial class DataWorkspace
         if(projectBuild?.Busy==true){Said="Wait for the build to finish or cancel it before Play.";return false;}
         if(projectPlayHost is null||PlaySettings is null){Said="No project Play host is available.";return false;}
         if(projectPlay is {HasCompleted:false}){Said="Stop the running program first.";return false;}
-        if(!PlaySettings.TryLaunch(out var launch,out var why))
-        {PlaySettings.Open=true;Said=why=="Choose a program in Play settings."?"Set the program in Tools > Play settings":why!;return false;}
+        if(!ResolveProjectPlay(out var launch,out var why))
+        {
+            PlaySettings.Open = !missingDotNetSdk;
+            if (missingDotNetSdk) focusProjectConsole = true;
+            Said=why=="Choose a program in Play settings."?"Set the program in Tools > Play settings":why!;return false;}
         pendingLaunch=launch;pendingBuild=buildAndPlay;pendingLive=requestingLive;pendingPicture=requestingPicture;playCurrent=CapturePlayDocuments();playApprovalPrompt=false;
         if(ProjectDirty()){playSavePrompt=true;playFocus=true;Said="Play runs saved files. Save changes before Play?";return true;}
         playSavePrompt=false;return ContinueProjectPlay();
@@ -103,15 +118,24 @@ public sealed partial class DataWorkspace
         if(playCurrent?.Invoke()!=true||!settings.TryLaunch(out var now,out _)||JsonSerializer.Serialize(now)!=JsonSerializer.Serialize(launch))
         {CancelProjectPlay();Said="The documents or Play command changed; choose Play again.";return false;}
         if(!SavedPlayInputs())return false;
-        var reason=settings.ApprovalNeeded(launch,false)??(pendingBuild?settings.ApprovalNeeded(launch,true):null);
-        if(reason is not null){playApprovalPrompt=true;playFocus=true;Said=reason;return false;}
+        var approveRun = settings.ApprovalNeeded(launch, false) is not null;
+        if (approveRun || pendingBuild && launch.Build is not null && settings.ApprovalNeeded(launch, true) is not null)
+        {
+            approvePlayBuild = !approveRun;
+            playApprovalCommand = approveRun ? launch.Run : launch.Build;
+            playApprovalPrompt = true;
+            playFocus = true;
+            showPlayApprovalDetails = false;
+            Said = approveRun ? "Run your game" : "Build your game";
+            return false;
+        }
         projectPlay?.Dispose();projectPlay=null;
         try
         {
-            projectPlay=pendingPicture&&projectPlayHost is IGamePictureHost pictures?pictures.StartPictures(launch,new PlayApprovals(reportPreferences!)):pendingLive&&projectPlayHost is ILivePlayHost live?live.StartLive(launch,new PlayApprovals(reportPreferences!),pendingLiveTarget!):projectPlayHost.Start(launch);buildInConsole=false;codeWorkingFolder=launch.Run.WorkingDirectory;ClearProjectConsole();focusProjectConsole=true;
+            projectPlay=pendingPicture&&projectPlayHost is IGamePictureHost pictures?pictures.StartPictures(launch,new PlayApprovals(reportPreferences!)):pendingLive&&projectPlayHost is ILivePlayHost live?live.StartLive(launch,new PlayApprovals(reportPreferences!),pendingLiveTarget!):projectPlayHost.Start(launch);buildInConsole=false;codeWorkingFolder=launch.Run.WorkingDirectory;ClearProjectConsole();focusProjectConsole=!pendingLive&&!pendingPicture;
             projectDiagnosticRoot=launch.ProjectRoot;projectDiagnosticSignature=ProjectDirty()?null:Bed.Data.CheckSnapshot.SignatureOf(Project);projectDiagnosticNote="";
             projectPlayWasBuilding=pendingBuild;projectPlayStopRequested=false;
-            var ok=projectPlay.Start(false,pendingBuild);Said=projectPlay.Status;
+            var ok=projectPlay.Start(false,pendingBuild);Said=lastProjectPlayNotice=projectPlay.Status;
             pendingLaunch=null;playApprovalPrompt=false;return ok;
         }
         catch(Exception e)when(e is not OutOfMemoryException){projectPlay?.Dispose();projectPlay=null;Said=e.Message;return false;}
@@ -123,13 +147,13 @@ public sealed partial class DataWorkspace
         if(playCurrent?.Invoke()!=true||!settings.TryLaunch(out var now,out _)||JsonSerializer.Serialize(now)!=JsonSerializer.Serialize(launch))
         {CancelProjectPlay();Said="The documents or Play command changed; choose Play again.";return false;}
         // Each click grants only the exact action currently displayed. Build approval follows external Run approval.
-        settings.Approve(launch,settings.ApprovalNeeded(launch,false) is null&&pendingBuild);
+        settings.Approve(launch, approvePlayBuild);
         playApprovalPrompt=false;return ContinueProjectPlay();
     }
     /// <summary>Cancels pending UI decisions without saving, approving or starting.</summary>
     public void CancelProjectPlay(){pendingLaunch=null;playSavePrompt=playApprovalPrompt=false;playCurrent=null;Said="Play cancelled.";}
     /// <summary>Requests the current owner's stop and leaves all documents untouched.</summary>
-    public bool StopProjectPlay(){if(projectPlay is null||projectPlay.HasCompleted)return false;projectPlay.RequestStop();TourStopRequests++;projectPlayStopRequested=true;Said=projectPlay.Status;return true;}
+    public bool StopProjectPlay(){if(projectPlay is null||projectPlay.HasCompleted)return false;projectPlay.RequestStop();TourStopRequests++;projectPlayStopRequested=true;Said=lastProjectPlayNotice=projectPlay.Status;return true;}
     private void DisposeProjectPlay(){CancelProjectPlay();var owned=projectPlay;projectPlay=null;owned?.Dispose();}
     private void BindProjectControls<T>(EditorWindow<T> window) where T:class
     {
@@ -146,7 +170,7 @@ public sealed partial class DataWorkspace
         window.ProjectBuildAndPlayAction=()=>RequestProjectPlay(true);
         window.ProjectPlayUnavailable=build=>
         {
-            if(!PlaySettings!.TryLaunch(out var launch,out var why))
+            if(!ResolveProjectPlay(out var launch,out var why))
                 return why=="Choose a program in Play settings."?"Set the program in Tools > Play settings":why;
             return build&&launch!.Build is null?"Set a build command in Tools > Play settings":null;
         };
@@ -160,31 +184,70 @@ public sealed partial class DataWorkspace
         if(Scene2Window is {} scene2)BindProjectControls(scene2);
         if(Window is {} data)BindProjectControls(data);
     }
+    private bool ResolveProjectPlay(out PlayLaunch? launch, out string? why)
+    {
+        var found = PlaySettings!.TryLaunch(out launch, out why);
+        missingDotNetSdk = why == PlaySettingsResolver.MissingDotNetSdk;
+        return found;
+    }
+
     private void PreparePlaySettingsUi()
     {
         if(PlaySettings is not {} form)return;
         BindShownProjectControls();
         projectBuild?.Update();projectPlay?.Update();
-        if(projectPlay is not null||buildInConsole)
+        if(projectPlay is not null||buildInConsole||missingDotNetSdk)
         {
-            var session=projectPlay;if(session is not null)CollectProjectOutput(session.DrainLogs());
-            if(focusProjectConsole)ImGui.SetNextWindowFocus();
+            var session = projectPlay;
+            if (session is not null)
+            {
+                CollectProjectOutput(session.DrainLogs());
+                if (Said == lastProjectPlayNotice && Said != session.Status) Said = session.Status;   // a new Play message, not the same one each frame
+                lastProjectPlayNotice = session.Status;
+            }
+            if (focusProjectConsole)
+            {
+                ImGui.SetNextWindowFocus();
+                ImGui.SetNextWindowCollapsed(false, ImGuiCond.Always);
+            }
+            var viewport = ImGui.GetMainViewport();
+            ImGui.SetNextWindowSize(new float2(viewport.WorkSize.X * .65f, viewport.WorkSize.Y * .55f), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowPos(viewport.WorkPos + viewport.WorkSize * .5f, ImGuiCond.FirstUseEver, new float2(.5f, .5f));
             var files=ImGui.Internal.FindWindowByName(Scene2Window is not null?"Prefab and images###panel.scene2.prefabs"u8:"Files###panel.project.files"u8);
             if(!files.IsNull()&&files.DockId.Value!=0)ImGui.SetNextWindowDockID(files.DockId,ImGuiCond.FirstUseEver);
-            if(Ui.Begin("Play console###project.play.console"u8,ImGuiWindowFlags.HorizontalScrollbar|ImGuiWindowFlags.AlwaysVerticalScrollbar))
+            if(Ui.Begin("Play console###project.play.console"u8,ImGuiWindowFlags.HorizontalScrollbar|ImGuiWindowFlags.AlwaysVerticalScrollbar|(session is ILivePlaySession or IGamePictureSession?ImGuiWindowFlags.NoFocusOnAppearing:0)))
             {
                 if(session is {HasCompleted:false}&&Ui.Button("Stop program"u8))StopProjectPlay();
                 if(session?.CanBuildAndPlay==true&&Ui.Button("Build and Play"u8))RequestProjectPlay(true);
-                DrawProjectConsole();
+                if (missingDotNetSdk || session?.Status == "Play failed: " + PlaySettingsResolver.MissingDotNetSdk)
+                {
+                    Ui.StatusWrapped(PlaySettingsResolver.MissingDotNetSdk, "play.dotnet.sdk");
+                    Ui.TextWrapped(DotNetSdkDownload);
+                    if (Ui.Button("Open .NET download page"u8))
+                    {
+                        try { OpenPlayHelp(DotNetSdkDownload); }
+                        catch (Exception error) when (error is System.ComponentModel.Win32Exception or InvalidOperationException)
+                        { Said = "BED couldn't open the download page. Copy the address above into your browser."; }
+                    }
+                }
+                if (session is not null || buildInConsole) DrawProjectConsole();
+                else focusProjectConsole = false;
             }
             Ui.End();
         }
         if(playSavePrompt||playApprovalPrompt)
         {
             if(playFocus)ImGui.SetNextWindowFocus();
-            if(Ui.Begin("Play saved files###project.play.decision"u8,ImGuiWindowFlags.AlwaysAutoResize|ImGuiWindowFlags.NoSavedSettings))
+            var width = MathF.Min(ImGui.GetMainViewport().WorkSize.X * .9f, ImGui.GetFontSize() * 35);
+            ImGui.SetNextWindowSize(new float2(width, 0), ImGuiCond.Always);
+            if(Ui.Begin("Play saved files###project.play.decision"u8,ImGuiWindowFlags.NoSavedSettings))
             {
-                Ui.TextWrapped(Said);
+                if (said.Showing) Ui.TextWrapped(Said);
+                if (playApprovalPrompt && playApprovalCommand is { } command)
+                {
+                    Ui.TextWrapped("This runs a program on your computer. Allow it if you trust the project."u8);
+                    PlaySettingsForm.DrawApprovalDetails(command, ref showPlayApprovalDetails);
+                }
                 if(playFocus){ImGui.SetKeyboardFocusHere();playFocus=false;}
                 if(playSavePrompt)
                 {if(Ui.Button("Save"u8))AnswerProjectPlay(SaveChangesChoice.Save);ImGui.SameLine();if(Ui.Button("Don't Save"u8))AnswerProjectPlay(SaveChangesChoice.DontSave);}

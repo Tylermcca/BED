@@ -18,7 +18,7 @@ If Windows says **VCRUNTIME140.dll** is missing, install Microsoft's Visual C++ 
 
 ## 2. Change some data
 
-1. On the start screen, click **Try the example**. BED copies a small example project for you and opens it, so you can change it freely.
+1. To try the recipes table, open **samples/recipes** from the folder you unzipped. To start with a 3D level, click **Try the example** on the start screen and follow the next section.
 2. The middle of the window is a **Table**. Each row is one recipe: Milling, Baking and Pottery.
 
    ![The example's recipe table, with Files at the bottom](../images/guide/example.png)
@@ -31,7 +31,7 @@ If Windows says **VCRUNTIME140.dll** is missing, install Microsoft's Visual C++ 
 
 ## 3. Move an object in a level
 
-1. On the start screen, double-click **scene-starter** in the project list. (From an open project, choose **File > Open project...**, go to the folder you unzipped, open **samples**, choose **scene-starter** and click **Open**.)
+1. Click **Try the example** to open a personal copy of the 3D level. You can also open **samples/scene-starter** directly from the project list.
 2. BED opens the level. You'll see the **Outliner** on the left (every object in the level), the 3D **Viewport** in the middle and the **Inspector** on the right.
 
    ![The scene-starter level: Outliner, Viewport, Inspector and Files](../images/guide/level.png)

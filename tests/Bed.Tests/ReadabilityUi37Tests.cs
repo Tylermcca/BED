@@ -19,12 +19,27 @@ public sealed class ReadabilityUi37Tests
         internal void Frames()=>Host.Frames(Launcher.Draw,4);
         public void Dispose(){Launcher.Dispose();Host.Dispose();Assert.StartsWith(Path.GetFullPath(Path.GetTempPath()),Path.GetFullPath(Root),StringComparison.OrdinalIgnoreCase);Directory.Delete(Root,true);}
     }
-    [Theory][InlineData(1280,800,1f)][InlineData(720,1000,2f)]
+    [Theory][InlineData(1280,800,1f)][InlineData(720,1000,2f)][InlineData(813,485,2f)]
     public void Start_screen_fills_the_work_area_and_keeps_named_primary_actions_visible(int width,int height,float zoom)
     {
         using var r=new Rig(width,height);EditorWindow<DataDocument>.SetTextScale(zoom);r.Frames();var nodes=Ui.Snapshot().Nodes;var root=Assert.Single(nodes,n=>n.Role==UiRole.Window&&n.Label=="BED");Assert.InRange(root.Bounds.Width,width-1,width+1);Assert.InRange(root.Bounds.Height,height-1,height+1);Assert.Equal(16,ImGui.GetStyle().FontSizeBase);Assert.Equal(zoom,EditorWindow<DataDocument>.TextScale);
         foreach(var name in new[]{"New project...","Open project...","Try the example"}){var button=Assert.Single(nodes,n=>n.Role==UiRole.Button&&n.Label==name);Assert.True(button.Enabled,button.DisabledReason);Assert.False(button.Bounds.IsEmpty);Assert.InRange(button.Bounds.Y,0,height-button.Bounds.Height);}
-        Assert.Contains(nodes,n=>n.Label.StartsWith("Edit game data and levels.",StringComparison.Ordinal));Assert.Contains(nodes,n=>n.Role==UiRole.Window&&n.Label=="Recent projects"&&n.Bounds.Height>=120);Capture(r.Host,r.Launcher.Draw,zoom==1?"after-start":"after-start-200-percent");
+        Assert.Contains(nodes,n=>n.Label.StartsWith("Edit game data and levels.",StringComparison.Ordinal));Assert.Contains(nodes,n=>n.Role==UiRole.Window&&n.Label=="Recent projects"&&n.Bounds.Height>=120);var example = Assert.Single(nodes, n => n.Role == UiRole.Button && n.Label == "Try the example");
+        Assert.True(example.Bounds.Y < Assert.Single(nodes, n => n.Role == UiRole.Button && n.Label == "New project...").Bounds.Y);
+        r.Launcher.SamplesFolder = Path.Combine(r.Root, "samples");
+        foreach (var sample in new[] { "checkers", "scene-starter", "prefab-physics", "sprite-2d" })
+            Directory.CreateDirectory(Path.Combine(r.Launcher.SamplesFolder, sample, "data"));
+        r.Frames();
+        Assert.Contains(Ui.Snapshot().Nodes, n => n.Label == "Checkers");
+        Capture(r.Host,r.Launcher.Draw,$"start-{width}x{height}-{zoom:0.0}");
+        if (width == 813)
+        {
+            r.Host.MoveMouse(r.Launcher.Draw, width / 2, height - 30);
+            ImGui.GetIO().AddMouseWheelEvent(0, -12);
+            r.Host.Frames(r.Launcher.Draw, 6);
+            var stillPinned = Assert.Single(Ui.Snapshot().Nodes, n => n.Role == UiRole.Button && n.Label == "Try the example");
+            Assert.Equal(example.Bounds, stillPinned.Bounds);
+        }
     }
     [Fact]
     public void Windows_text_scale_composes_with_monitor_DPI_and_preserves_the_saved_zoom()

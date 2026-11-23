@@ -27,7 +27,7 @@ public class GumToolTests
         Assert.Equal(proj, b.Argument); Assert.Contains("Shop/Cart", b.Note);
         ProcessStartInfo? seen = null;
         var (ok, message) = GumTool.Start(a, i => { seen = i; return true; }, _ => false); // fake window lookup too: never focus a real Gum
-        Assert.True(ok); Assert.Equal("Gum is opening the screen Menu.", message);
+        Assert.True(ok); Assert.Equal("Sent Menu to Gum.", message);
         Assert.False(seen!.UseShellExecute); Assert.Equal([flat.File], seen.ArgumentList); // a path with spaces stays one argument
     }
 
@@ -90,6 +90,6 @@ public class GumToolTests
         Assert.False(GumTool.Start(GumTool.Plan(null, project, null), _ => started = true).Started); Assert.False(started);
         var exe = t.Make("Gum.exe");
         var gone = GumTool.Plan(exe, project, new GumScreen("Old", Path.Combine(t.Root, "ui/Screens/Old.gusx"), true));
-        Assert.Equal(proj, gone.Argument); Assert.Contains("opening the whole project instead", gone.Note);
+        Assert.Equal(proj, gone.Argument); Assert.Contains("Sent the whole project to Gum", gone.Note);
     }
 }

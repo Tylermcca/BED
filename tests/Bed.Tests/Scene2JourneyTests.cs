@@ -84,7 +84,16 @@ public sealed class Scene2JourneyTests(ITestOutputHelper output)
         var old=r.Window;Assert.True(old.CloseDocument!());r.Frames();Assert.True(r.Workspace.Show("level.json"));r.Frames();Assert.NotSame(old,r.Window);Assert.Equal(saved,r.Entry.Session.TextToSave);
         Assert.True(r.Workspace.Documents.CloseScene2("level.json",SceneCloseDecision.Discard,out _));using(var stdout=new StringWriter())using(var stderr=new StringWriter())
         {
-            var args=JsonSerializer.Serialize(new{id=root,field="/properties/journey",value="cli-checked"});var code=Bed.Agent.Cli.Program.Run(["--data",r.Data,"--schemas",r.Schemas,"scene","level.json","set",args,"--save"],TextReader.Null,stdout,stderr);Assert.Equal(0,code);Assert.Empty(stderr.ToString());Assert.True(JsonNode.Parse(stdout.ToString())!["saved"]!.GetValue<bool>());
+            var args=JsonSerializer.Serialize(new{id=root,field="/properties/journey",value="cli-checked"});
+            // This generated fixture starts forbidden: the CLI must refuse without changing the saved scene.
+            var beforeCli=File.ReadAllText(r.Level);
+            Assert.Equal(1,Bed.Agent.Cli.Program.Run(["--data",r.Data,"--schemas",r.Schemas,"scene","level.json","set",args,"--save"],TextReader.Null,stdout,stderr));
+            Assert.Contains("AI access is refused",stdout.ToString());Assert.Equal(beforeCli,File.ReadAllText(r.Level));Assert.Empty(stderr.ToString());
+            // The fixture author explicitly allows these generated pixels/primitive, never a production asset.
+            var sidecar=Directory.GetFiles(Path.Combine(r.Root,"assets"),"*"+AssetRecord.Suffix).Single();
+            File.WriteAllText(sidecar,(AssetRecord.Read(File.ReadAllText(sidecar)) with{AiUse=AiUse.Allowed}).Write());
+            stdout.GetStringBuilder().Clear();stderr.GetStringBuilder().Clear();
+            var code=Bed.Agent.Cli.Program.Run(["--data",r.Data,"--schemas",r.Schemas,"scene","level.json","set",args,"--save"],TextReader.Null,stdout,stderr);Assert.True(code==0,stdout.ToString()+"\n"+stderr);Assert.Empty(stderr.ToString());Assert.True(JsonNode.Parse(stdout.ToString())!["saved"]!.GetValue<bool>());
         }
         Assert.True(r.Workspace.Show("level.json"));r.Frames();Assert.Equal("cli-checked",r.Object(root).Object.Properties["journey"].GetString());r.Select(first.Placement.Id);Assert.True(r.Window.Inspector!.Set("position.0",8d));Assert.True(r.Workspace.RequestProjectPlay(true));Assert.True(r.Workspace.ProjectPlaySavePending);Assert.False(r.Workspace.AnswerProjectPlay(SaveChangesChoice.Cancel));Assert.Null(r.Workspace.ProjectPlay);Assert.True(r.Entry.Session.Dirty);
         Assert.True(r.Workspace.RequestProjectPlay(true));Assert.False(r.Workspace.AnswerProjectPlay(SaveChangesChoice.Save));Assert.True(r.Workspace.ProjectPlayApprovalPending);Assert.False(r.Entry.Session.Dirty);r.Frames();for(var approval=0;approval<2&&r.Workspace.ProjectPlayApprovalPending;approval++)r.Press("Allow this exact command and continue");Assert.False(r.Workspace.ProjectPlayApprovalPending);var play=r.Workspace.ProjectPlay!;var owned=(ProjectPlayHost)play.GetType().GetField("host",Private)!.GetValue(play)!;var logs=new List<ProjectPlayLog>();var playTime=Stopwatch.StartNew();

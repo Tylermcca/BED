@@ -64,6 +64,14 @@ public sealed partial class DataWorkspace
         return gum;
     }
 
+    internal void ShowNewGameStart()
+    {
+        if (Window is not { } data) return;
+        data.Editor.Select("");
+        data.Editor.SetOpen("editor.table", false);
+        ShowGumScreen(data.Editor)?.Invoke();
+    }
+
     private void PrepareGumUi()
     {
         PictureTexture.Tick();

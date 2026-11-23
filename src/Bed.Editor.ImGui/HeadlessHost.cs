@@ -22,6 +22,7 @@ public sealed unsafe class HeadlessHost : IDisposable
     private readonly ImGuiContextPtr context;
     private readonly Dictionary<ulong, (int Width, int Height, byte[] Rgba)> textures = [];
     private ulong nextTexture = 1;
+    private bool disposed;
     private readonly HeadlessStartupTiming? startupTiming;
 
     /// <summary>A host with a display of <paramref name="width"/> × <paramref name="height"/> pixels.</summary>
@@ -173,7 +174,15 @@ public sealed unsafe class HeadlessHost : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        if (disposed) return;
+        disposed = true;
+        var previous = ImGui.GetCurrentContext();
+        ImGui.SetCurrentContext(context);
+        // CPU rendering completes inside Frame, so no renderer can still be using these pictures.
+        textures.Clear();
+        PictureTexture.ReleaseContext();
         ImGui.DestroyContext(context);
+        if (!previous.Equals(context)) ImGui.SetCurrentContext(previous);
         Marshal.FreeCoTaskMem(clipboard);
         clipboard = 0;
     }
@@ -194,11 +203,17 @@ public sealed unsafe class HeadlessHost : IDisposable
 
     // ---- the rasteriser ----
 
+    // One triangle as ImGui drew it, with its clip rectangle in pixels.
+    private readonly record struct Tri(ImDrawVert A, ImDrawVert B, ImDrawVert C, int X0, int Y0, int X1, int Y1, float Top, float Bottom, (int Width, int Height, byte[] Rgba) Tex);
+    private readonly List<Tri> tris = [];
+    private const int BandRows = 16;
+
     private void Rasterise(ImDrawDataPtr data)
     {
         UpdateTextures(data);
         Array.Fill(Pixels, Background);
         var origin = data.DisplayPos;
+        tris.Clear();
         for (var l = 0; l < data.CmdListsCount; l++)
         {
             var list = data.CmdLists[l];
@@ -220,10 +235,24 @@ public sealed unsafe class HeadlessHost : IDisposable
                     var a = vtx[(int)(cmd.VtxOffset + idx[(int)(cmd.IdxOffset + e)])];
                     var b = vtx[(int)(cmd.VtxOffset + idx[(int)(cmd.IdxOffset + e + 1)])];
                     var d = vtx[(int)(cmd.VtxOffset + idx[(int)(cmd.IdxOffset + e + 2)])];
-                    Triangle(a, b, d, origin, cx0, cy0, cx1, cy1, tex.Rgba is null ? default : tex);
+                    tris.Add(new Tri(a, b, d, cx0, cy0, cx1, cy1, MathF.Min(a.pos.Y, MathF.Min(b.pos.Y, d.pos.Y)) - origin.Y,
+                        MathF.Max(a.pos.Y, MathF.Max(b.pos.Y, d.pos.Y)) - origin.Y, tex.Rgba is null ? default : tex));
                 }
             }
         }
+        // Bands of rows in parallel: each band draws every triangle in ImGui's order, clipped to its own rows, so every pixel is
+        // blended in exactly the same order as one pass would, and no two bands touch the same pixel. The same pixels, sooner.
+        var bands = (Height + BandRows - 1) / BandRows;
+        Parallel.For(0, bands, band =>
+        {
+            int top = band * BandRows, bottom = Math.Min(Height, top + BandRows);
+            foreach (ref readonly var t in CollectionsMarshal.AsSpan(tris))
+            {
+                var y0 = Math.Max(t.Y0, top);
+                var y1 = Math.Min(t.Y1, bottom);
+                if (y1 > y0 && t.Bottom >= top - 1 && t.Top <= bottom + 1) Triangle(t.A, t.B, t.C, origin, t.X0, y0, t.X1, y1, t.Tex);
+            }
+        });
     }
 
     private void Triangle(ImDrawVert a, ImDrawVert b, ImDrawVert c, float2 o, int cx0, int cy0, int cx1, int cy1,
@@ -250,7 +279,9 @@ public sealed unsafe class HeadlessHost : IDisposable
         var flat = a.col == b.col && b.col == c.col;
         var flatColor = Unpack(a.col);
         for (var y = y0; y < y1; y++)
-            for (var x = x0; x < x1; x++)
+        {
+            var (xs, xe) = RowSpan(ax, ay, bx, by, qx, qy, area, y + 0.5 + 1.0 / 512, x0, x1);
+            for (var x = xs; x < xe; x++)
             {
                 // Sample just off the pixel centre: an edge lying exactly on a centre (a 55.5-pixel square, say) would
                 // otherwise fall in or out by rounding noise, pixel by pixel, and look jagged. GPUs break such ties
@@ -281,6 +312,34 @@ public sealed unsafe class HeadlessHost : IDisposable
                     dst = Pack(r * al + dr * (1 - al), g * al + dg * (1 - al), bl * al + db * (1 - al), 1);
                 }
             }
+        }
+    }
+
+    // The pixels of row py a triangle can cover: each edge's line crosses the row at one x, and the triangle lies on one side of it.
+    // Worked out in doubles and widened by far more than the per-pixel test's own float rounding (a few units of the edge
+    // function, divided by the edge's slope across the row), so every pixel that test would take is inside, and the test above still
+    // decides each one exactly as before: the same pixels, only fewer misses tried. A long thin triangle (a line's soft edge across
+    // a big window) had its whole bounding box tested, row by row. An edge too flat to bound the row safely is left out.
+    private static (int Start, int End) RowSpan(double ax, double ay, double bx, double by, double qx, double qy, double area, double py, int x0, int x1)
+    {
+        var c0 = bx * (qy - py) - (by - py) * qx;
+        var c1 = qx * (ay - py) - (qy - py) * ax;
+        double lo = x0, hi = x1;
+        Bound(by - qy, c0);
+        Bound(qy - ay, c1);
+        Bound(ay - by, area - c0 - c1);
+        return (Math.Max(x0, (int)Math.Floor(lo)), Math.Min(x1, (int)Math.Ceiling(hi)));
+
+        // The edge function is c + k * px, and a pixel inside has it at or above zero.
+        void Bound(double k, double c)
+        {
+            if (k == 0) return;
+            var margin = (16 + area * 1e-6) / Math.Abs(k) + 2;
+            if (margin > x1 - x0) return;
+            var root = -c / k - 0.5;   // as a pixel index: a pixel's sample point is just past its centre
+            if (k > 0) lo = Math.Max(lo, root - margin);
+            else hi = Math.Min(hi, root + margin + 1);
+        }
     }
 
     private static (float R, float G, float B, float A) Unpack(uint c) =>

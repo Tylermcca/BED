@@ -23,7 +23,7 @@ Run `game/PhysicsStarter.exe --compile-scene2 .` from the project to prepare sav
 - **Space** makes the first saved dynamic body jump upwards at 5 m/s, once per press. You can press it again in the air.
 - **R** resets to the saved level; **Esc** or closing the window quits.
 
-The controls are also in the window's title. The island is drawn with OpenGL 4.1: a sky gradient, a sea, one sun with a shadow map and a soft sky/ground ambient. The sample's textures carry the light level BED's own view bakes into them; the game divides that level out using each face's model-space normal, so its real lighting doesn't darken faces twice and BED's view is unchanged. If no OpenGL 4.1 window can be made, the game says so and runs one second without a window instead.
+The controls are shown in the lower left. Press **F1** to hide or show them. The island is drawn with OpenGL 4.1: a sky gradient, a sea, one sun with a shadow map and a soft sky/ground ambient. The sample's textures carry the light level BED's own view bakes into them; the game divides that level out using each face's model-space normal, so its real lighting doesn't darken faces twice and BED's view is unchanged. If no OpenGL 4.1 window can be made, the game says so and runs one second without a window instead.
 
 ## Headless runs
 

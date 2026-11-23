@@ -41,7 +41,12 @@ public sealed class JsonSchemas
     public static JsonSchemas FromFolder(string folder, string pattern = "*.json")
     {
         var set = new JsonSchemas();
-        foreach (var f in Directory.EnumerateFiles(folder, pattern).Order(StringComparer.Ordinal)) set.Add(Path.GetFileName(f), File.ReadAllText(f));
+        foreach (var f in Directory.EnumerateFiles(folder, pattern).Order(StringComparer.Ordinal))
+        {
+            // Say which file: a bare parser message ("'A' is an invalid start of a value") leaves a person guessing.
+            try { set.Add(Path.GetFileName(f), File.ReadAllText(f)); }
+            catch (JsonException e) { throw new JsonException($"The rules file (schema) {Path.GetFileName(f)} can't be read: {e.Message}", e); }
+        }
         return set;
     }
 

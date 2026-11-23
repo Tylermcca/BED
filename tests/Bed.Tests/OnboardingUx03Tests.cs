@@ -83,7 +83,11 @@ public sealed class OnboardingUx03Tests
         using var stored=JsonDocument.Parse(File.ReadAllText(r.Launcher.SettingsFile));Assert.True(stored.RootElement.GetProperty("tourDismissed").GetBoolean());Assert.Equal("retained",stored.RootElement.GetProperty("keep").GetString());
         Assert.Equal(r.Original,Rig.Snapshot(r.Installed));Assert.Equal(5,new DataFormat().Read(File.ReadAllText(w.Project.Find("wares.json")!.Path)).At("/wares/0/price")!.Value.GetDouble());
         var folder=Path.Combine(Repo(),".validation","UX03");Directory.CreateDirectory(folder);r.Host.Drawing=true;r.Host.Frame(r.Launcher.Draw);r.Host.Save(Path.Combine(folder,keyboardValues?"tour-complete-keyboard.png":"tour-complete-accessibility.png"));
-        r.Act("Close tour");var after=File.ReadAllText(r.Launcher.SettingsFile);r.Key(ImGuiKey.H,alt:true);r.Act("Take the tour",UiRole.MenuItem);Assert.Equal("OpenExample",r.Launcher.TourStage);Assert.Equal(after,File.ReadAllText(r.Launcher.SettingsFile));
+        r.Act("Close tour");var after=File.ReadAllText(r.Launcher.SettingsFile);r.Key(ImGuiKey.H,alt:true);r.Act("Take the tour",UiRole.MenuItem);
+        Assert.Same(w, r.Launcher.Workspace);
+        // The crate is still selected. This time the first remaining action is moving it.
+        Assert.Equal("Move", r.Launcher.TourStage);
+        Assert.Equal(after,File.ReadAllText(r.Launcher.SettingsFile));
     }
     [Theory][InlineData("missing",true)][InlineData("false",true)][InlineData("true",false)][InlineData("\"wrong\"",true)][InlineData("7",true)]
     public void Missing_or_invalid_dismissal_offers_tour_without_rewriting_settings(string json,bool offered)
@@ -130,13 +134,13 @@ public sealed class OnboardingUx03Tests
         using var r=new Rig();r.Start();var before=File.ReadAllText(r.Launcher.SettingsFile);Assert.True(r.Launcher.Close());r.Frames();Assert.Equal("Closed",r.Launcher.TourStage);Assert.Equal(before,File.ReadAllText(r.Launcher.SettingsFile));Assert.Equal(r.Original,Rig.Snapshot(r.Installed));
     }
     [Fact]
-    public void Skipping_mid_tour_preserves_the_copy_and_Help_restarts_with_a_separate_copy()
+    public void Skipping_mid_tour_preserves_the_copy_and_Help_restarts_in_that_copy()
     {
         using var r=new Rig();r.Start();var first=r.Launcher.Current!.Folder!;var original=Rig.Snapshot(first);
         r.Act("Skip tour");Assert.Equal("Closed",r.Launcher.TourStage);Assert.Equal(original,Rig.Snapshot(first));
         var saved=File.ReadAllText(r.Launcher.SettingsFile);r.Key(ImGuiKey.H,alt:true);r.Act("Take the tour",UiRole.MenuItem);
-        Assert.Equal("OpenExample",r.Launcher.TourStage);Assert.Equal(saved,File.ReadAllText(r.Launcher.SettingsFile));
-        r.Act("Try the example");Assert.Equal("SelectCrate",r.Launcher.TourStage);Assert.NotEqual(first,r.Launcher.Current!.Folder);
+        Assert.Equal("SelectCrate",r.Launcher.TourStage);Assert.Equal(first,r.Launcher.Current!.Folder);
+        Assert.Single(Directory.EnumerateDirectories(r.Personal));
         Assert.Equal(original,Rig.Snapshot(first));Assert.Equal(r.Original,Rig.Snapshot(r.Installed));Assert.Equal(saved,File.ReadAllText(r.Launcher.SettingsFile));
     }
     [Fact]

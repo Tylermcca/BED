@@ -77,8 +77,15 @@ public sealed class BuildAndPlayJourneyTests
         var question=rig.Workspace.PlaySettings.ApprovalNeeded(launch!,true);Assert.NotNull(question);
         rig.Click("Build and Play","Play console");Assert.True(rig.Workspace.ProjectPlayApprovalPending);
         Assert.Same(stale,rig.Workspace.ProjectPlay);Assert.False(File.Exists(rig.Marker));
-        Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label==question);
-        Assert.Contains(launch!.Build!.CommandLine(),question);Assert.Contains(launch.Build.WorkingDirectory,question);
+        var command = launch!.Build!.CommandLine();
+        Assert.Contains(Ui.Snapshot().Nodes, n => n.Role == UiRole.Text && n.Label == "Build your game");
+        Assert.DoesNotContain(Ui.Snapshot().Nodes, n => n.Label.Contains(command, StringComparison.Ordinal));
+        rig.Click("Show details", "Play saved files");
+        Assert.Contains(Ui.Snapshot().Nodes, n => n.Role == UiRole.Text && n.Label == command);
+        Assert.Contains(Ui.Snapshot().Nodes, n => n.Role == UiRole.Text && n.Label == "Working folder: " + launch.Build.WorkingDirectory);
+        rig.Click("Hide details", "Play saved files");
+        Assert.DoesNotContain(Ui.Snapshot().Nodes, n => n.Label.Contains(command, StringComparison.Ordinal));
+        Assert.Contains(command,question);Assert.Contains(launch.Build.WorkingDirectory,question);
         Assert.False(File.Exists(Path.Combine(rig.Local,"play-approvals.json")));
         rig.Click("Allow this exact command and continue","Play saved files");Assert.False(rig.Workspace.ProjectPlayApprovalPending);
         var session=rig.Workspace.ProjectPlay!;Assert.NotSame(stale,session);

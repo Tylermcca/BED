@@ -44,9 +44,10 @@ public sealed class LauncherPresentationA441Tests
         public void Reach(string label)
         {
             var window = Im.Internal.FindWindowByName("BED###launcher"u8); Assert.False(window.IsNull());
-            var expected = window.GetID(label).Value;
-            for (var i = 0; i < 45 && Im.GetCurrentContext().NavId.Value != expected; i++) Host.Press(Launcher.Draw, ImGuiKey.Tab);
-            Assert.Equal(expected, Im.GetCurrentContext().NavId.Value);
+            // The start choices sit in their own scrolling child (BED-NEWUSER01), so the control may be the launcher's or the focused child's.
+            bool At() { var c = Im.GetCurrentContext(); return c.NavId.Value == window.GetID(label).Value || !c.NavWindow.IsNull() && c.NavId.Value == c.NavWindow.GetID(label).Value; }
+            for (var i = 0; i < 45 && !At(); i++) Host.Press(Launcher.Draw, ImGuiKey.Tab);
+            Assert.True(At(), $"Tab never reached {label}.");
         }
         public void Dispose()
         {
@@ -63,7 +64,11 @@ public sealed class LauncherPresentationA441Tests
     {
         using var r = new Rig(); r.Launcher.Loaded = [new Connection()]; var before = File.ReadAllBytes(r.FilePath);
         r.Host.Frames(r.Launcher.Draw, 4); var text = r.Text();
-        Assert.Contains("Available game connections: Example rules", text);
+        Assert.Contains("Game add-ons", text);
+        Assert.DoesNotContain("Example rules", text);
+        r.Reach("###launcher.addons");
+        r.Host.Press(r.Launcher.Draw, ImGuiKey.Enter);
+        Assert.Contains("Example rules", r.Text());
         Assert.DoesNotContain("Available game adapters", text);
         Assert.DoesNotContain("Help: Use with an AI assistant", text); Assert.DoesNotContain("Copy bed-cli command", text);
         Assert.Null(r.Launcher.Workspace); Assert.Empty(r.Launcher.Recent.Items);
@@ -75,8 +80,8 @@ public sealed class LauncherPresentationA441Tests
     {
         using var r = new Rig(); var connection = new Connection(); r.Launcher.Loaded = [connection]; r.Launcher.Adapter = connection;
         r.Host.Frames(r.Launcher.Draw, 4); r.Host.Press(r.Launcher.Draw, ImGuiKey.O, ctrl: true);
-        var text = r.Text(); Assert.Contains("Game connection", text);
-        Assert.Contains("Game connections are programs; load only ones you trust.", text);
+        var text = r.Text(); Assert.Contains("Game add-on", text);
+        Assert.Contains("Game add-ons are programs; load only ones you trust.", text);
         Assert.DoesNotContain("None (plain data)", text);
         var before = File.ReadAllBytes(r.FilePath);
         r.Reach("##adapter"); r.Host.Press(r.Launcher.Draw, ImGuiKey.Space);
@@ -95,8 +100,8 @@ public sealed class LauncherPresentationA441Tests
         var remembered = r.Paths with { AdapterPath = missing, AdapterType = "Invented.Connection" };
         var before = File.ReadAllBytes(r.FilePath);
         Assert.True(r.Launcher.OpenRecent(remembered), r.Launcher.Said);
-        Assert.Contains("The saved game connection at " + missing + " is missing.", r.Launcher.Said);
-        Assert.Contains("opened without that game connection", r.Launcher.Said);
+        Assert.Contains("The saved game add-on at " + missing + " is missing.", r.Launcher.Said);
+        Assert.Contains("opened without that game add-on", r.Launcher.Said);
         Assert.Null(r.Launcher.Using); Assert.Equal(0, global.Opened);
         var recent = Assert.Single(r.Launcher.Recent.Items);
         Assert.Equal(missing, recent.AdapterPath); Assert.Equal("Invented.Connection", recent.AdapterType);

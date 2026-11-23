@@ -69,7 +69,7 @@ public sealed partial class DataTableView
             {
                 table.IsResetAllRequest = true;
                 Sort = null; sortSeen = false;
-                Said = "Reset table widths, column order and sort.";
+                notice.Done("Reset table widths, column order and sort.");
             }
             Ui.EndPopup();
         }

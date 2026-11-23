@@ -30,6 +30,7 @@ public static class PlaySettingsStore
 /// <summary>Resolves declarations, without launching, building or granting approval. Missing programs remain available to stale-build handling.</summary>
 public static class PlaySettingsResolver
 {
+    internal const string MissingDotNetSdk = "Install the .NET 10 SDK to build your game. Choose the Windows x64 SDK, then close and reopen BED.";
     /// <summary>Resolves paths and optional PATH build tool at call time. The returned launch still requires PlayApprovals checks.</summary>
     public static bool TryResolve(string projectRoot, PlaySettings settings, out PlayLaunch? launch, out string? why, string? searchPath = null)
     {
@@ -80,7 +81,9 @@ public static class PlaySettingsResolver
             var directory=folder.Trim('"');if(!Path.IsPathFullyQualified(directory))continue;
             var candidate=Path.Combine(directory,name);if(File.Exists(candidate))return Canonical(candidate);
         }
-        throw new ArgumentException("Build tool was not found on PATH: "+command);
+        if (name.Equals("dotnet.exe", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException(MissingDotNetSdk);
+        throw new ArgumentException("BED could not find the build program: " + command);
     }
     private static string Canonical(string path)
     {

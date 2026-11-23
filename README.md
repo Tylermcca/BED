@@ -6,7 +6,7 @@ BED edits a game's data, its 2D and 3D levels and its Gum screens, checks every 
 
 It's made for games written in C# on the [BRUTAL framework](https://github.com/ahwootech/BRUTAL), but the data editor works on any folder of JSON files.
 
-**[Download BED 0.5.0](../../releases/latest)** (Windows) · **[Start here](docs/guide/start_here.md)** (ten minutes, no programming) · **[What's changed](CHANGELOG.md)**
+**[Download BED 0.5.1](../../releases/latest)** (Windows) · **[Start here](docs/guide/start_here.md)** (ten minutes, no programming) · **[What's changed](CHANGELOG.md)**
 
 ## New in 0.5: start a game, and see inside it while it runs
 
@@ -38,9 +38,9 @@ Live values and game pictures work in games set up for them, such as the include
 2. Unzip it anywhere and double-click **BED.exe**. BED needs the Microsoft Visual C++ Redistributable (x64); if it's missing, install it from [Microsoft](https://aka.ms/vs/17/release/vc_redist.x64.exe) and open BED again.
 
    Windows may show a blue "Windows protected your PC" box naming an unknown publisher, because BED isn't signed by a paid certificate yet. Click **More info**, then **Run anyway**. It only asks once for each download.
-3. Click **Try the example**, and take the short tour or skip it.
-4. Click a cell in the table, type a new value and press Enter. Then type **-5** in the "minutes" column: BED refuses it and shows why.
-5. **Ctrl+Z** undoes, **Ctrl+S** saves.
+3. Click **Try the example** to open your own copy of a 3D level. Take the short tour or explore on your own.
+4. Select the crate. In **Inspector**, change **Position X** and press Enter. **Ctrl+Z** undoes the move and **Ctrl+S** saves.
+5. To build from **New game**, install the [Windows x64 .NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) and reopen BED. Then choose **Tools > Build and Play**.
 
 ### The samples
 
@@ -70,7 +70,7 @@ Move things in BED, save, play again, and the game changes with them. [Start her
 
 ### Use it on your own data
 
-On the start screen, under **Open a project**, choose a **Data folder** (your JSON files) and a **Rules folder** (one [JSON Schema](https://json-schema.org/) per data file: `wares.json` is checked by `wares.schema.json`), then click **Open**. If a file breaks its rules, BED still opens it and helps you fix it, and it won't save over a file another program changed.
+On the start screen, under **Open a project**, choose a **Data folder** (your JSON files) and a **Rules folder (schema)** (one [JSON Schema](https://json-schema.org/) per data file: `wares.json` is checked by `wares.schema.json`), then click **Open**. If a file breaks its rules, BED still opens it and helps you fix it, and it won't save over a file another program changed.
 
 The [guide index](docs/guide/README.md) covers everyday editing, [levels](docs/guide/levels.md), [Play](docs/guide/playing.md), [Export](docs/guide/exporting.md), [troubleshooting](docs/guide/troubleshooting.md) and [working with an AI assistant](docs/guide/using_bed_with_ai.md).
 

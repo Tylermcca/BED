@@ -39,7 +39,7 @@ public sealed partial class DataWorkspace
         {
             Ui.TextWrapped("Save changes before closing this project?"u8);
             foreach(var draft in drafts)Ui.TextWrapped(draft.Name);
-            Ui.TextWrapped(Said);if(focusProjectClose){ImGui.SetKeyboardFocusHere();focusProjectClose=false;}
+            if(said.Showing)Ui.TextWrapped(Said);if(focusProjectClose){ImGui.SetKeyboardFocusHere();focusProjectClose=false;}
             if(Ui.Button("Save all and close"u8))AnswerProjectClose(SaveChangesChoice.Save);
             if(Ui.Button("Don't Save"u8))AnswerProjectClose(SaveChangesChoice.DontSave);
             if(Ui.Button("Cancel"u8))AnswerProjectClose(SaveChangesChoice.Cancel);

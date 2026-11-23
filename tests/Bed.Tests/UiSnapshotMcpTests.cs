@@ -32,7 +32,7 @@ public sealed class UiSnapshotMcpTests
             Assert.Empty(data.GetFiles());
             var unavailable = Call(new McpServer(session), new JsonObject());
             Assert.True(unavailable["isError"]!.GetValue<bool>());
-            Assert.Contains("unavailable", Payload(unavailable)["error"]!.GetValue<string>());
+            Assert.Contains("cannot read the editor controls", Payload(unavailable)["error"]!.GetValue<string>());
         }
         finally { root.Delete(true); }
     }

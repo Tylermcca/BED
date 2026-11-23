@@ -23,7 +23,7 @@ public static class SceneEditing
     /// </summary>
     public static ObjectType<Scene, SceneObject> ObjectType() => new ObjectType<Scene, SceneObject>("scene.object", "Object", (d, id) => SceneViewIndex.For(d).Find(id),
     [
-        new("id", "Id", PropertyKind.Text, o => o.Id, Help: "Its stable id. Other objects refer to it by this."),
+        new("id", "Object code", PropertyKind.Text, o => o.Id, Help: "The code other objects use to refer to this one."),
         new("asset", "Asset", PropertyKind.Text, o => o.Asset ?? "", (o, v) => new SetAsset(o.Id, Text(v)),
             Help: "The asset it shows, as a path or asset id. Leave empty for an empty (a group or a marker)."),
         new("parent", "Inside", PropertyKind.Text, o => o.Parent ?? "", (o, v) => new SetParent(o.Id, Text(v)),

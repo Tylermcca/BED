@@ -185,7 +185,8 @@ public sealed partial class ProjectLauncher : IDisposable
     public ProjectPaths? Current { get; private set; }
 
     /// <summary>What the last action did, or why it didn't.</summary>
-    public string Said { get; private set; } = "";
+    public string Said { get => said.Text; private set => said.Say(value); }
+    private readonly StatusNotice said = new();
 
     internal bool AiObservation {get;set;}
     private string? AiOpenRefusal(ProjectPaths project) => AiObservation
@@ -214,14 +215,14 @@ public sealed partial class ProjectLauncher : IDisposable
         IProjectAdapter? remembered = null;
         string? notice = null;
         if (!File.Exists(project.AdapterPath))
-            notice = $"The saved game connection at {project.AdapterPath} is missing. The project opened without that game connection (Data only); its location is kept for next time.";
+            notice = $"The saved game add-on at {project.AdapterPath} is missing. The project opened without that game add-on (Data only); its location is kept for next time.";
         else
         {
             var (loaded, problems) = Adapters.Load([project.AdapterPath]);
             remembered = loaded.FirstOrDefault(a => a.GetType().FullName == project.AdapterType);
             if (remembered is null)
-                notice = $"The saved game connection could not be loaded from {project.AdapterPath}. " +
-                    "The project opened without that game connection; its details are kept for next time." +
+                notice = $"The saved game add-on could not be loaded from {project.AdapterPath}. " +
+                    "The project opened without that game add-on; its details are kept for next time." +
                     (problems.Count == 0 ? "" : " " + string.Join(" ", problems));
         }
         if (project.Folder is { } original)
@@ -254,6 +255,7 @@ public sealed partial class ProjectLauncher : IDisposable
         {
             // The adapter's per-file setup is given the workspace and file too (IProjectAdapter's default passes them by).
             workspace = pendingWorkspace = new DataWorkspace(data,shortcuts:shortcuts,map:map) { CloseProject = () => Close(), TypedProjectCloseConnected=true, Scene2OwnerCurrent=candidate=>ReferenceEquals(Workspace,candidate), RecentProjectsMenu=DrawRecentMenu, ConfigureFile = adapter is { } a ? a.Configure : null };
+            workspace.ProjectDisplayName = DisplayName(full);
             workspace.BindProjectMenus(()=>ChooseProject(StartPage.New),()=>ChooseProject(StartPage.Open),ChooseNewGame);
             try
             {
@@ -265,19 +267,21 @@ public sealed partial class ProjectLauncher : IDisposable
             workspace.BindPlaySettings(projectRoot,
                 adapter?.DefaultPlay(new ProjectPaths(data.DataFolder,data.SchemaFolder,full.Map){Root=projectRoot,Folder=full.Folder}),
                 Path.GetDirectoryName(SettingsFile)!,()=>FileDialogs);
+            try { workspace.RuleBlocks = adapter?.RuleBlocks(new ProjectPaths(data.DataFolder,data.SchemaFolder,full.Map){Root=projectRoot,Folder=full.Folder}); }
+            catch (Exception e) { notes.Add($"{label}'s rule blocks aren't available: {e.Message}"); }
             workspace.BindLiveValues(adapter?.LiveValues(new ProjectPaths(data.DataFolder,data.SchemaFolder,full.Map){Root=projectRoot,Folder=full.Folder})??[]);
             if(ProjectPlayHost is {} projectPlay)workspace.BindProjectPlay(projectPlay);
             // Capture actual opened folders and resolved map, not recent-entry guesses or adapter-sidecar inference.
-            // Panel availability follows the existing per-file editor: an empty workspace has no file panel yet.
+            // These project settings are available in both data and scene views.
             try
             {
                 var adapterFile = adapter is null ? null : AdapterFile(adapter);
                 var ai = new AiSetupPanel(AppContext.BaseDirectory,
                     new ProjectPaths(data.DataFolder, data.SchemaFolder, full.Map) { AdapterPath = adapterFile },
                     adapter is not null && adapterFile is null ? AiSetupPanel.BuiltInReason : null);
-                workspace.FilePanels.Add((_, _) => ai.AsPanel());
+                workspace.ProjectPanels.Add(ai.AsPanel);
                 var connect = new AiConnectPanel(ai.Snippets, ai.Unavailable, AiConnectionLocations.Current);
-                workspace.FilePanels.Add((_, _) => connect.AsPanel());
+                workspace.ProjectPanels.Add(connect.AsPanel);
             }
             catch (Exception e) { notes.Add($"AI setup examples are unavailable: {e.Message}"); }
             // The host's own setup is guarded too: a fault in it costs that setup, never the project (found by A188).
@@ -301,7 +305,7 @@ public sealed partial class ProjectLauncher : IDisposable
         catch (Exception e) when (adapter is not null)
         {
             pendingWorkspace?.ReleaseProjectAssets();
-            return Say(false, $"{label} failed while the project was opening: {e.Message}. That's a fault in the game connection, not your data: choose Data only to open it without.");
+            return Say(false, $"{label} failed while the project was opening: {e.Message}. That's a fault in the game add-on, not your data: choose Data only to open it without.");
         }
         // The project being replaced stops its game first: nothing may run on from it (B4).
         if (Workspace?.StopAll().Fault is { Length: > 0 } stopFault) notes.Add(stopFault);   // said with the new project's message
@@ -333,8 +337,11 @@ public sealed partial class ProjectLauncher : IDisposable
         if (Workspace.AdapterProblem is { } setup) notes.Add(setup);
         var noted = notes.Count == 0 ? "" : " " + string.Join(" ", notes);
         if (noted.Length > 0) Workspace.Note(noted.Trim());   // the workspace is what the person sees next
-        return Say(true, $"Opened {Name(full)}{(adapter is null ? "" : $" with {label}")}: {data.Files.Count} files"
-            + (refused > 0 ? $", {refused} that can't open (the Files panel says why)." : "; choose another in the Files panel.") + noted);
+        var opened = $"Opened {DisplayName(full)}{(adapter is null ? "" : $" with {label}")}: {data.Files.Count} {(data.Files.Count == 1 ? "file" : "files")}"
+            + (refused > 0 ? $", {refused} that can't open (the Files panel says why)." : "; choose another in the Files panel.") + noted;
+        Say(true, opened);
+        if (refused > 0 || noted.Length > 0) said.Say(opened);   // a problem in it stays on screen
+        return true;
     }
 
     private static string? AdapterFile(IProjectAdapter adapter)
@@ -402,7 +409,9 @@ public sealed partial class ProjectLauncher : IDisposable
         Workspace = null;
         Using = null;   // nothing open, so no adapter in use (found by A064)
         Current = null;
-        return Say(true, "Closed the project." + (fault.Length > 0 ? " " + fault : ""));
+        Say(true, "Closed the project." + (fault.Length > 0 ? " " + fault : ""));
+        if (fault.Length > 0) said.Say(Said);   // a problem in it stays on screen
+        return true;
     }
 
     private readonly ProblemReportDialog problemReport=new();
@@ -428,6 +437,7 @@ public sealed partial class ProjectLauncher : IDisposable
     private void DrawCore()
     {
         KeepTextSize();
+        Bed.Editor.Gum.GumTool.FitOpenedWindows();
         EditorTheme.Refresh(); // System accessibility/theme changes also apply on the start screen.
         if (Splash?.Draw() == true) return;
         if (Workspace is { } w && !projectChooser)
@@ -456,11 +466,11 @@ public sealed partial class ProjectLauncher : IDisposable
         if (Loaded.Count > 0 || AdapterProblems.Count > 0)
         {
             ImGui.AlignTextToFramePadding();
-            Ui.Text("Game connection"u8);
+            Ui.Text("Game add-on"u8);
             ImGui.SameLine(ImGui.CalcTextSize("Link map (optional)"u8).X + ImGui.GetStyle().ItemSpacing.X * 3);
             ImGui.SetNextItemWidth(320);
             var shown = NoAdapter ? "Data only" : Adapter is { } picked ? NameOf(picked) : "Automatic";
-            Ui.NameNextItem("##adapter"u8, "Game connection");
+            Ui.NameNextItem("##adapter"u8, "Game add-on");
             if (Ui.BeginCombo("##adapter"u8, shown))
             {
                 if (Ui.Selectable("Automatic"u8, !NoAdapter && Adapter is null)) (NoAdapter, Adapter) = (false, null);
@@ -470,7 +480,7 @@ public sealed partial class ProjectLauncher : IDisposable
                 Ui.EndCombo();
             }
             ImGui.SameLine();
-            Ui.TextDisabled("Optional: a game's own rules and panels. Game connections are programs; load only ones you trust."u8);
+            Ui.TextDisabled("Optional: a game's own rules and panels. Game add-ons are programs; load only ones you trust."u8);
         }
         PathRow("Data folder", ref dataText, 0, folder: true);
         PathRow("Rules folder (schema)", ref schemasText, 1, folder: true);
@@ -565,10 +575,10 @@ public sealed partial class ProjectLauncher : IDisposable
         return field.ToString().Trim().Trim('"');   // a pasted path often comes quoted
     }
 
-    private bool Say(bool ok, string said)
+    private bool Say(bool ok, string message)
     {
         ProblemReportLog.Record(ok?ReportEvent.OperationAccepted:ReportEvent.OperationRefused);
-        Said = said;
+        said.Say(ok, message);
         return ok;
     }
 }
@@ -607,6 +617,9 @@ public interface IProjectAdapter
     GameBuildSpec? Build(DataWorkspace workspace) => null;
     /// <summary>Optional game-owned Saved source/check/origin/output and smoke declarations.</summary>
     GameExportDeclaration? Export(DataWorkspace workspace) => null;
+    /// <summary>Optional rule blocks: when the game's rules are snap blocks, BED shows its block editor for every file these
+    /// accept, drawing the rows, slots and palette they describe (<see cref="IRuleBlocks"/>). None by default.</summary>
+    IRuleBlocks? RuleBlocks(ProjectPaths project) => null;
 
 
     /// <summary>Adds the game's panels or play modes to each file's editor.</summary>

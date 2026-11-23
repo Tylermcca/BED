@@ -42,6 +42,7 @@ def relative_path(value):
 
 def tracked_paths(data, format="nul"):
     text = data.decode("utf-8-sig")
+    if format == "auto": format = "nul" if "\x00" in text else "lines"   # `git ls-files -z` or plain `git ls-files`
     if format == "nul":
         rows = text.split("\x00")
         if rows[-1] == "": rows.pop()
@@ -229,12 +230,19 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", required=True, type=Path)
     parser.add_argument("--tracked-files", required=True, type=Path)
-    parser.add_argument("--tracked-format", choices=["nul", "lines"], default="nul")
-    parser.add_argument("--allowlist", type=Path)
+    parser.add_argument("--tracked-format", choices=["auto", "nul", "lines"], default="auto")
+    parser.add_argument("--allowlist", type=Path, help="default: the repository's tools/public_text_allowlist.json when present")
     args = parser.parse_args(argv)
-    try: return run(args.repo, args.tracked_files, args.tracked_format, args.allowlist)[0]
-    except (OSError, UnicodeError, ValueError, TypeError):
-        print("<configuration>:1: PT900 invalid/unreadable list, repository or configuration (values omitted)")
+    allowlist = args.allowlist
+    if allowlist is None and (args.repo / "tools" / "public_text_allowlist.json").is_file():
+        allowlist = args.repo / "tools" / "public_text_allowlist.json"
+    try: return run(args.repo, args.tracked_files, args.tracked_format, allowlist)[0]
+    except (UnicodeError, ValueError, TypeError) as e:
+        # The reasons raised here are fixed wording without file contents or private names, so they are safe to print.
+        print(f"<configuration>:1: PT900 invalid list, repository or configuration: {type(e).__name__}: {e if not isinstance(e, UnicodeError) else 'not UTF-8'}")
+        return 2
+    except OSError:
+        print("<configuration>:1: PT900 unreadable list, repository or configuration (values omitted)")
         return 2
 
 if __name__ == "__main__": raise SystemExit(main())

@@ -111,7 +111,7 @@ public sealed partial class DataWorkspace
                 entry.Editor.SetOpen(panelId, false);
             }
             if (why is not null) Ui.TextWrapped(why);
-            if (Said.Length > 0) Ui.TextWrapped(Said);
+            if (said.Showing) Ui.TextWrapped(Said);
         }
         var binding = sceneAssetBindings.GetValue(entry.Editor, _ => new SceneAssetsBinding { Draw = Draw, Begin = Begin, Unavailable = Unavailable });
         binding.Draw = Draw;

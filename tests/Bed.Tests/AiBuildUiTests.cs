@@ -36,7 +36,11 @@ public sealed class AiBuildUiTests
             }
             string Text(){host.Frame(()=>{ImGui.LogToClipboard();Draw();ImGui.LogFinish();});return ImGui.GetClipboardText().ToString()??"";}
             host.Frames(Draw,3);Assert.False(Directory.Exists(prefs));
-            Press("Build saved files");var preview=Text();Assert.Contains("literal-argument",preview);Assert.Contains("Allow this exact command",preview);
+            Press("Build saved files");var preview=Text();
+            Assert.Contains("Build your game",preview);Assert.DoesNotContain("literal-argument",preview);
+            Assert.Contains("Allow this exact command",preview);
+            Press("###approval.details");
+            Assert.Contains("literal-argument",Text());
             Assert.False(Directory.Exists(prefs));Assert.False(panel.Busy);
             Press("Cancel");dirty=true;Press("Build saved files");Assert.Contains("Save changes",Text());Assert.False(panel.Busy);Assert.False(Directory.Exists(prefs));
         }
@@ -56,7 +60,7 @@ public sealed class AiBuildCliTests
             var args=new List<string>{"--data",data.FullName,"--schemas",schemas.FullName};if(readOnly)args.Add("--read-only");args.Add("build");
             using var stdout=new StringWriter();using var stderr=new StringWriter();
             Assert.Equal(1,Bed.Agent.Cli.Program.Run(args.ToArray(),new StringReader(""),stdout,stderr));
-            Assert.Contains(readOnly?"read-only":"no game build",stdout.ToString());Assert.Empty(stderr.ToString());
+            Assert.Contains(readOnly?"can only read files":"no game build",stdout.ToString());Assert.Empty(stderr.ToString());
             Assert.Empty(data.GetFiles());Assert.Empty(schemas.GetFiles());Assert.False(Directory.Exists(Path.Combine(root.FullName,".bed")));
         }
         finally{root.Delete(true);}

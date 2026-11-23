@@ -155,7 +155,7 @@ public sealed partial class ProjectLauncher
                 ImGui.SameLine();if(Ui.Button("Don't Save"u8))AnswerSaveChanges(SaveChangesChoice.DontSave);
             }
             ImGui.SameLine();if(Ui.Button("Cancel"u8))AnswerSaveChanges(SaveChangesChoice.Cancel);
-            Ui.StatusWrapped(Said,"launcher.close.status");
+            if(said.Showing)Ui.StatusWrapped(Said,"launcher.close.status");
             if(ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)&&ImGui.IsKeyPressed(ImGuiKey.Escape,false))AnswerSaveChanges(SaveChangesChoice.Cancel);
         }
         Ui.End();

@@ -98,6 +98,9 @@ public sealed class SamplePlayJourneyTests
             if(external)
             {
                 Assert.True(Workspace.ProjectPlayApprovalPending);Assert.Equal(0,Factory.Starts);Assert.Null(Factory.Session);
+                Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label=="Run your game");
+                Assert.DoesNotContain(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains("SceneStarter.exe",StringComparison.Ordinal));
+                Click(PromptButton("Show details"));
                 Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains("SceneStarter.exe",StringComparison.Ordinal));
                 Click(Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button&&n.Label=="Allow this exact command and continue"));
             }

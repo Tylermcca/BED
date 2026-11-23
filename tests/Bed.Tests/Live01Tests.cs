@@ -86,6 +86,25 @@ public sealed class Live01Tests
             if(Ui.Begin("Live values test"))workspace.DrawLiveValues("level.json",entry!);Ui.End();
         }
         host.Frames(Draw,3);Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label.StartsWith("Speed X:"));
+        void Shot(string name)
+        {
+            if(Environment.GetEnvironmentVariable("BED_LIVE_GREY_PNGS") is not {} folder)return;
+            Directory.CreateDirectory(folder);host.Drawing=true;host.Frame(Draw);host.Save(Path.Combine(folder,name+".png"));host.Drawing=false;
+        }
+        Shot("before-try");
+        foreach(var key in new[]{"right","left"})
+        {
+            Until(session,()=>!session.Busy);host.Frames(Draw,2);
+            var before=session.Values!;var button=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button&&n.Label=="Try "+key+" (quarter second)");Assert.True(button.Enabled);
+            host.Click(Draw,button.Bounds.X+button.Bounds.Width/2,button.Bounds.Y+button.Bounds.Height/2);
+            Until(session,()=>!session.Busy&&session.Values!.Frame>before.Frame);
+            var tried=session.Values!;Assert.True(key=="right"?tried.Numbers[0]>before.Numbers[0]:tried.Numbers[0]<before.Numbers[0]);
+            Assert.True(key=="right"?tried.Numbers[2]>0:tried.Numbers[2]<0);
+            var observe=System.Diagnostics.Stopwatch.StartNew();
+            while(observe.ElapsedMilliseconds<350){host.Frame(Draw);Thread.Sleep(10);}
+            Assert.False(session.Busy);Assert.Equal(tried.Frame,session.Values!.Frame);Assert.Equal(tried.Numbers,session.Values.Numbers);
+            Shot("after-"+key);
+        }
         var field=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.TextField&&n.Label=="Try jump strength (1-25)");
         host.Click(Draw,field.Bounds.X+15,field.Bounds.Y+field.Bounds.Height/2);host.Press(Draw,Brutal.ImGuiApi.ImGuiKey.A,ctrl:true);host.Type(Draw,"18");
         Until(session,()=>session.Values?.Numbers[4]==18&&!session.Busy);host.Frames(Draw,2);

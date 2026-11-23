@@ -6,6 +6,7 @@ namespace Bed.Editor.ImGui;
 public sealed partial class DataWorkspace
 {
     private string? statusProjectRoot;
+    internal string? ProjectDisplayName { get; set; }
     private string WorkspacePlayStatus()
     {
         if(playSavePrompt)return "Waiting for save choice.";
@@ -18,7 +19,7 @@ public sealed partial class DataWorkspace
     private void DrawWorkspaceStatusBar()
     {
         var dirty=Project.Files.Count(file=>file.Dirty||Documents.TryGetOpenScene(file.Name,out var scene)&&scene!.Session.Dirty||Documents.TryGetOpenScene2(file.Name,out var v2)&&v2!.Session.Dirty);
-        var project=statusProjectRoot??Project.DataFolder;var name=Path.GetFileName(Path.TrimEndingDirectorySeparator(project));
+        var project=statusProjectRoot??Project.DataFolder;var name=ProjectDisplayName??Path.GetFileName(Path.TrimEndingDirectorySeparator(project));
         string[] labels=["Project: "+(name.Length==0?project:name+" ("+project+")"),"Active file: "+(Active?.Name??"None"),
             "Unsaved changes: "+(dirty==0?"None":dirty+ (dirty==1?" file":" files")),"Play: "+WorkspacePlayStatus()];
         string[] ids=["workspace.status.project","workspace.status.file","workspace.status.unsaved","workspace.status.play"];

@@ -266,6 +266,38 @@ public sealed partial class DataWorkspace : IDisposable
     /// third-party code.</summary>
     public IList<DataFilePanel> FilePanels { get; } = new List<DataFilePanel>();
 
+    /// <summary>The game's rule blocks, if its rules are snap blocks: each file they accept gets the block editor
+    /// (<see cref="RuleBlocksPanel"/>). Set it before the first file is shown.</summary>
+    public IRuleBlocks? RuleBlocks { get; set; }
+
+    private readonly Dictionary<string, RuleBlocksPanel> ruleBlocks = new(StringComparer.Ordinal);
+
+    /// <summary>The block editor of the file called <paramref name="name"/>, once that file has been shown, or null.</summary>
+    public RuleBlocksPanel? RuleBlocksOf(string name) => ruleBlocks.TryGetValue(name, out var panel) ? panel : null;
+
+    private void AddRuleBlocks(DataFile file, EditorModel<DataDocument> editor, List<string> problems)
+    {
+        if (RuleBlocks is not { } blocks || file.Session is not { } session) return;
+        try
+        {
+            if (!blocks.Handles(file.Name, new DataFormat().Write(session.Current))) return;
+            if (ruleBlocks.Remove(file.Name, out var old)) old.Dispose();
+            var panel = new RuleBlocksPanel(blocks, file, editor, this);
+            ruleBlocks[file.Name] = panel;
+            editor.Add(panel.Panel());
+        }
+        catch (Exception e) { problems.Add($"The rule blocks couldn't be shown for {file.Name}: {e.Message}. The file is safe; its table still works."); }
+    }
+
+    // Host panels such as connection settings belong to every document view, including scenes.
+    internal IList<Func<Panel>> ProjectPanels {get;}=new List<Func<Panel>>();
+    private void AddProjectPanels(Action<Panel> add)
+    {
+        foreach(var create in ProjectPanels)
+            try{add(create());}catch(Exception e){AdapterProblem="A project panel could not open: "+e.Message;}
+    }
+
+
     // Why a map's link can't be followed, with the next step; null where the map says it isn't a link or it was found.
     private static string? Problem(ReferenceResult r)
     {
@@ -320,7 +352,7 @@ public sealed partial class DataWorkspace : IDisposable
             else if (Scene2Window is {} scene2Window) scene2Window.Editor.Select(place.Selection);
             if (TableOf(place.File) is {} table)
             { table.List = place.List; table.Filter = place.Filter ?? ""; }
-            Said = $"Back to {place.File}." + shownFaults;   // a stop failure while going back is kept (A236)
+            if (shownFaults.Length == 0) Done($"Back to {place.File}."); else Said = $"Back to {place.File}." + shownFaults;   // a stop failure while going back is kept (A236)
             return true;
         }
         return false;
@@ -333,14 +365,18 @@ public sealed partial class DataWorkspace : IDisposable
     public EditorWindow<DataDocument>? Window => Active is { } f && windows.TryGetValue(f.Name, out var w) ? w : null;
 
     /// <summary>What the last action did, or why it didn't.</summary>
-    public string Said { get; private set; } = "";
+    public string Said { get => said.Text; private set => said.Say(value); }
+    private readonly StatusNotice said = new();
 
     /// <summary>Why the game adapter, or a host's extra panel (<see cref="FilePanels"/>), couldn't finish setting up the
     /// file last made ready, or null. The file still opens and edits normally, perhaps without those panels.</summary>
     public string? AdapterProblem { get; private set; }
 
-    /// <summary>Puts <paramref name="said"/> where the workspace shows what the last action did.</summary>
-    internal void Note(string said) => Said = said;
+    /// <summary>Puts <paramref name="message"/> where the workspace shows what the last action did.</summary>
+    internal void Note(string message) => said.Say(message);
+
+    /// <summary>Puts up a routine message that something went as asked; it leaves the screen after a while.</summary>
+    internal void Done(string message) => said.Done(message);
 
     // What the last Show said beyond "Showing ...": GoTo and Back keep it in their own message.
     private string shownFaults = "";
@@ -375,6 +411,7 @@ public sealed partial class DataWorkspace : IDisposable
             if (!sceneWindows.TryGetValue(name, out var previous) || !ReferenceEquals(previous.Editor, entry!.Editor))
             {
                 var editor = entry!.Editor;
+                AddProjectPanels(panel=>editor.Add(panel));
                 var flags=Flags(name);
                 AttachSceneAssets(name, entry);
                 shortcuts.Default("editor.close", "Ctrl+W");
@@ -417,7 +454,7 @@ public sealed partial class DataWorkspace : IDisposable
             BindShownProjectControls();
             AdapterProblem = null;
             shownFaults = stopped + SaveInterruptionNotice(file.Path);
-            Said = $"Showing {name}." + shownFaults;
+            if (shownFaults.Length == 0) Done($"Showing {name}."); else Said = $"Showing {name}." + shownFaults;
             return true;
         }
         if (!file.Open()) { Said = $"{name} can't be opened: {string.Join(" ", file.Problems.Select(p => p.Message))}"; return false; }
@@ -429,7 +466,7 @@ public sealed partial class DataWorkspace : IDisposable
         Active = file;
         BindShownProjectControls();
         shownFaults = (made && AdapterProblem is { } problem ? " " + problem : "") + stopFault + SaveInterruptionNotice(file.Path);
-        Said = $"Showing {name}." + shownFaults;
+        if (shownFaults.Length == 0) Done($"Showing {name}."); else Said = $"Showing {name}." + shownFaults;
         return true;
     }
 
@@ -526,6 +563,8 @@ public sealed partial class DataWorkspace : IDisposable
         if (Active?.Name == name) Active = null;
     }
 
+    private string FileCountText => $"{Project.Files.Count} {(Project.Files.Count == 1 ? "file" : "files")}";
+
     private enum FileForm { None, New, Rename, Delete, Copy }
 
     // The Files panel's action buttons, by what they do.
@@ -546,7 +585,7 @@ public sealed partial class DataWorkspace : IDisposable
     public void Refresh()
     {
         Project.Refresh();
-        Said = $"{Project.Files.Count} files.";
+        Done(FileCountText + ".");
         PickUpOutsideChanges();   // an open file another program changed loads here too, and says so
     }
 
@@ -705,7 +744,7 @@ public sealed partial class DataWorkspace : IDisposable
         var pending=pendingMixedSave!;
         if(scene2WorkspaceClosed||Scene2OwnerCurrent?.Invoke(this)==false){pending.Dispose();pendingMixedSave=null;Said="This workspace is no longer current; the save group was cancelled.";return false;}
         var failed=pending.Complete();pendingMixedSave=null;
-        Said=failed.Count==0?$"Saved {pendingMixedCount} files.":string.Join(" ",failed.SelectMany(f=>f.Problems).Select(p=>p.Message).Distinct(StringComparer.Ordinal));return failed.Count==0;
+        if(failed.Count==0)Done($"Saved {pendingMixedCount} files.");else Said=string.Join(" ",failed.SelectMany(f=>f.Problems).Select(p=>p.Message).Distinct(StringComparer.Ordinal));return failed.Count==0;
     }
 
     private sealed record PendingSave(DataFile File, object? Session, long? Revision, Task<string?> Verdict);
@@ -752,7 +791,7 @@ public sealed partial class DataWorkspace : IDisposable
             if (!ReferenceEquals(pending.File.Session, pending.Session) || pending.File.Session?.Revision != pending.Revision) { Said = $"{name} wasn't saved: it changed while it was being checked. Save again to have this version checked."; continue; }
             if (!windows.TryGetValue(name, out var window)) { Said = $"{name} wasn't saved: its window has closed. Your edits are still here."; continue; }
             approved.Add(name);
-            try { Said = window.Run("editor.save") ? $"Saved {name}." : window.Status; }
+            try { if (window.Run("editor.save")) Done($"Saved {name}."); else Said = window.Status; }
             finally { approved.Remove(name); }
         }
         if (Ticked is { } observers)
@@ -850,6 +889,8 @@ public sealed partial class DataWorkspace : IDisposable
             try { if (extra(file, editor) is { } panel) editor.Add(panel); }
             catch (Exception e) { problems.Add($"A panel couldn't be set up for {file.Name}: {e.Message}. That panel is missing; your data is safe."); }
         }
+        AddProjectPanels(panel=>editor.Add(panel));
+        AddRuleBlocks(file, editor, problems);
         if (Map is not null) editor.Add(ReferencesPanel);
         editor.Add(ChecksPanel).Add(ProposalsPanel with { ShowWhen = () => PendingSuggestions() > 0 || editor.IsOpen("project.proposals") });
         // A game's panels are extras: a fault in setting them up costs those panels, never the file (found by A073).
@@ -1218,7 +1259,7 @@ public sealed partial class DataWorkspace : IDisposable
             if (Ui.Button($"{suggestions} suggested changes waiting. Review"))
                 reviewWindow.Editor.SetOpen("project.proposals", true);
         }
-        Ui.TextDisabled($"{Project.Files.Count} files{(Project.ReadOnly ? ", read-only" : "")}{(Project.Dirty.Count > 0 ? $", {Project.Dirty.Count} unsaved" : "")}");
+        Ui.TextDisabled($"{FileCountText}{(Project.ReadOnly ? ", read-only" : "")}{(Project.Dirty.Count > 0 ? $", {Project.Dirty.Count} unsaved" : "")}");
         // The actions wrap onto more rows when the panel is narrow, so none runs past its edge.
         var actions = FileActions();
         var spacing = ImGui.GetStyle().ItemSpacing.X;
@@ -1235,7 +1276,7 @@ public sealed partial class DataWorkspace : IDisposable
             if (refocus?.Button == actions[i].Id) Refocused();
         }
         DrawForm();
-        if (Said.Length > 0) Ui.FieldCaption(Said);
+        if (said.Showing) Ui.FieldCaption(Said);
         ImGui.Separator();
         // File status checks touch the filesystem (including every ancestor of recursive paths).
         // Submit only visible rows, as tables and the outline do. The clipper also keeps keyboard

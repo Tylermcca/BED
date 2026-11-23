@@ -8,7 +8,7 @@ using ImGui = Brutal.ImGuiApi.ImGui;
 
 public sealed partial class ProjectLauncher
 {
-    private enum StartPage { Home, New, Open }
+    private enum StartPage { Home, New, NewGame, Open }
     private StartPage startPage;
     private readonly ProjectCreator projectCreator;
     private readonly string? chosenProjects;   // given by the host (tests, trials); otherwise Preferences > Locations decides
@@ -21,11 +21,11 @@ public sealed partial class ProjectLauncher
     private ImInputString projectFolder = new(2048, ""u8);
     private int templateIndex;
     private ProjectPaths? selectedRecent;
-    private bool focusPreferences;
+    private bool focusPreferences, showAddOns;
     private bool showPreferences, showGuide, showAbout, exampleGuideShown;
     private bool rootPicker, locationPicker, focusNewName, focusGuideOpener, focusOpenFolder;
 
-    private string RowName(ProjectPaths project)
+    internal string DisplayName(ProjectPaths project)
     {
         var name=Name(project);
         if(!string.Equals(Path.GetDirectoryName(ProjectFolder(project)),SamplesRoot,StringComparison.OrdinalIgnoreCase))return name;
@@ -33,7 +33,7 @@ public sealed partial class ProjectLauncher
     }
     /// <summary>The matching recent rows, pinned first and newest first within each group.</summary>
     public IReadOnlyList<ProjectPaths> SearchRecent(string text) => Recent.Items.Concat(InstalledSamples()).Where(p =>
-        text.Length == 0 || RowName(p).Contains(text,StringComparison.OrdinalIgnoreCase) || Name(p).Contains(text, StringComparison.OrdinalIgnoreCase)
+        text.Length == 0 || DisplayName(p).Contains(text,StringComparison.OrdinalIgnoreCase) || Name(p).Contains(text, StringComparison.OrdinalIgnoreCase)
         || (p.Folder ?? p.Data).Contains(text, StringComparison.OrdinalIgnoreCase)
         || RowKind(p).Contains(text, StringComparison.OrdinalIgnoreCase)).ToArray();
 
@@ -43,7 +43,7 @@ public sealed partial class ProjectLauncher
         if (!ConfirmBefore(() => TryExample(), projectReplacement: true)) return false;
         if (personalProjects.Length == 0) return Say(false, "Choose a project location with New project first; Documents is unavailable.");
         var forTour=EnableOnboarding&&tourActive&&tourStep==TourStep.OpenExample;
-        var result = forTour?projectCreator.TryTourAt(personalProjects):projectCreator.TryExampleAt(personalProjects);
+        var result = projectCreator.TryExampleAt(personalProjects);
         if (result.Status != ProjectCreationStatus.Created) return Say(false, result.Reason);
         if (!Open(result.Paths!)) return Say(false, $"Created your example in {result.Folder}, but it couldn't open: {Said}");
         if (Workspace?.Project.Files.FirstOrDefault(file => Workspace.Documents.IsScene(file.Name)) is { } scene && !Workspace.Show(scene.Name))
@@ -64,14 +64,14 @@ public sealed partial class ProjectLauncher
         var result = projectCreator.Create(templateId, location, name);
         if (result.Status != ProjectCreationStatus.Created) return Say(false, result.Reason);
         if (!Open(result.Paths!)) return Say(false, $"Created {result.Folder}, but it couldn't open: {Said}");
-        return Say(true, $"Created your project in {result.Folder}.");
+        if (templateId == "game") Workspace?.ShowNewGameStart();
+        return Say(true, $"Created your {(templateId == "game" ? "game" : "project")} in {result.Folder}.");
     }
 
     private bool ChooseNewGame()
     {
-        templateIndex=ProjectTemplates.All.ToList().FindIndex(t=>t.Id=="game");
-        if(Workspace is null){startPage=StartPage.New;focusNewName=true;return true;}
-        return ChooseProject(StartPage.New);
+        if (Workspace is null) { startPage = StartPage.NewGame; focusNewName = true; return true; }
+        return ChooseProject(StartPage.NewGame);
     }
 
     private void DrawStart()
@@ -89,30 +89,55 @@ public sealed partial class ProjectLauncher
             else recentSearch = new ImInputString(512, ""u8);
         }
         Ui.Text("BED"u8);
+        var home = startPage == StartPage.Home;
+        if (home)
+        {
+            var buttonHeight = MathF.Ceiling(ImGui.GetFrameHeight() * 1.4f);
+            var width = ImGui.GetContentRegionAvail().X;
+            if (Ui.Button("Try the example"u8, new float2(-1, buttonHeight))) TryExample();
+            if (Workspace is not null && !projectChooser) return;
+
+            var buttonWidth = (width - ImGui.GetStyle().ItemSpacing.X * 2) / 3;
+            var horizontal = buttonWidth >= ImGui.CalcTextSize("Open project..."u8).X + ImGui.GetStyle().FramePadding.X * 2;
+            var size = new float2(horizontal ? buttonWidth : -1, buttonHeight);
+            if (Ui.Button("New game..."u8, size)) ChooseNewGame();
+            if (horizontal) ImGui.SameLine();
+            if (Ui.Button("New project..."u8, size)) { startPage = StartPage.New; focusNewName = true; }
+            if (horizontal) ImGui.SameLine();
+            if (Ui.Button("Open project..."u8, size)) BeginOpenProject();
+            if (Workspace is not null && !projectChooser) return;
+        }
+
+        // Again, not `home`: a button above may have just changed the page, and that page's first frame must be drawn
+        // where it will stay, or its focus request lands in this child and is lost (Tab then stuck on the gone button).
+        if (startPage == StartPage.Home)
+        {
+            if (Ui.BeginChild("Start choices###launcher.choices"u8, new float2(0, 0), ImGuiChildFlags.NavFlattened))
+                DrawStartContent();
+            Ui.EndChild();
+        }
+        else DrawStartContent();
+    }
+
+    private void DrawStartContent()
+    {
+        if (startPage == StartPage.Home) DrawHome();
         Ui.TextWrapped("Edit game data and levels. Save changes, run checks, then play your game."u8);
-        if(Ui.Button("Report a problem"u8))problemReport.Open();
+        if (Ui.Button("Report a problem"u8)) problemReport.Open();
         DrawTourOffer();
         if (Loaded.Count > 0)
         {
+            if (Ui.SmallButton(showAddOns ? "Hide game add-ons###launcher.addons"u8 : "Game add-ons###launcher.addons"u8))
+                showAddOns = !showAddOns;
             var nameProblems = new List<string>();
             var names = Loaded.Select(adapter => NameOf(adapter, nameProblems)).ToArray();
-            Ui.TextWrapped("Available game connections: " + string.Join(", ", names));
+            if (showAddOns) foreach (var name in names) Ui.TextWrapped(name);
             foreach (var problem in nameProblems) Ui.TextWrapped(problem);
         }
-        // Opening failures must remain visible before the page can consume the window height.
         foreach (var problem in AdapterProblems) Ui.TextWrapped(problem);
-        if (Said.Length > 0) Ui.StatusWrapped(Said, "launcher.message");
-        if (startPage == StartPage.New) DrawNewProject();
+        if (said.Showing) Ui.StatusWrapped(Said, "launcher.message");
+        if (startPage is StartPage.New or StartPage.NewGame) DrawNewProject();
         else if (startPage == StartPage.Open) DrawOpenProject();
-        else
-        {
-            var width=ImGui.GetContentRegionAvail().X;
-            var footer=ImGui.GetFrameHeightWithSpacing()*2+ImGui.CalcTextSize(BrutalCredit.Copyright,false,width).Y+ImGui.CalcTextSize("Built with BRUTAL, a game development framework by Ahwoo Limited. See NOTICE.txt beside this program."u8,false,width).Y+ImGui.GetStyle().ItemSpacing.Y*4;
-            if(showPreferences)footer+=ImGui.GetFrameHeightWithSpacing()*18;
-            if(showGuide)footer+=ImGui.GetFrameHeightWithSpacing()*10;
-            if(Ui.BeginChild("Start choices###launcher.choices"u8,new float2(0,MathF.Max(showPreferences?ImGui.GetFrameHeightWithSpacing()*2:200,ImGui.GetContentRegionAvail().Y-footer)),ImGuiChildFlags.NavFlattened))DrawHome();
-            Ui.EndChild();
-        }
         if (Workspace is not null && !projectChooser) startPage = StartPage.Home;
         ImGui.Separator();
         if (focusGuideOpener) { ImGui.SetKeyboardFocusHere(); focusGuideOpener = false; }
@@ -179,31 +204,31 @@ public sealed partial class ProjectLauncher
 
     private void DrawHome()
     {
-        var stacked=ImGui.GetContentRegionAvail().X<ImGui.GetFontSize()*60;
-        if (!Ui.BeginTable("##start-columns"u8, stacked?1:2, ImGuiTableFlags.Resizable)) return;
-        ImGui.TableSetupColumn("Recent"u8, ImGuiTableColumnFlags.WidthStretch, 0.65f);
-        if(!stacked)ImGui.TableSetupColumn("Start"u8, ImGuiTableColumnFlags.WidthStretch, 0.35f);
-        Ui.TableNextColumn();
         ImGui.SeparatorText("Open recent"u8);
         ImGui.SetNextItemWidth(-1);
         Ui.InputText("Search recent projects"u8, recentSearch);
         var rows = SearchRecent(Text(recentSearch));
         if (Recent.Items.Count >= Recent.Limit && Recent.Items.Count > 0 && Recent.Items.All(Recent.IsPinned))
             Ui.TextWrapped("All recent slots are pinned. Unpin a project to remember another."u8, semanticId:"recent.projects.pinned.limit");
-        var recentHeight=MathF.Max(120,stacked?MathF.Min(220,ImGui.GetContentRegionAvail().Y*.4f):ImGui.GetContentRegionAvail().Y-8);
+        var recentHeight = Math.Clamp(ImGui.GetContentRegionAvail().Y * .48f, 120, 360);
         if(rows.Count==0)
         {
             if(Ui.BeginChild("Recent projects###recent.empty"u8,new float2(0,recentHeight),ImGuiChildFlags.Borders,ImGuiWindowFlags.NoNavInputs|ImGuiWindowFlags.NoNavFocus))
                 Ui.TextWrapped(Text(recentSearch).Length>0?"No matches. Clear the search to see your recent projects.":"None yet. Open an existing folder or create a project to begin.");
             Ui.EndChild();
         }
-        if (rows.Count > 0 && Ui.BeginTable("##recents"u8, 4, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY,
+        var compact = ImGui.GetContentRegionAvail().X < ImGui.GetFontSize() * 32;
+        if (rows.Count > 0 && Ui.BeginTable("##recents"u8, compact ? 2 : 4, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY,
             new float2(0,recentHeight)))
         {
-            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch, 0.27f);
-            ImGui.TableSetupColumn("Folder"u8, ImGuiTableColumnFlags.WidthStretch, 0.53f);
-            ImGui.TableSetupColumn("Last opened"u8, ImGuiTableColumnFlags.WidthStretch, 0.12f);
-            ImGui.TableSetupColumn("Kind"u8, ImGuiTableColumnFlags.WidthStretch, 0.08f); ImGui.TableHeadersRow();
+            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch, compact ? .4f : .27f);
+            ImGui.TableSetupColumn("Folder"u8, ImGuiTableColumnFlags.WidthStretch, compact ? .6f : .53f);
+            if (!compact)
+            {
+                ImGui.TableSetupColumn("Last opened"u8, ImGuiTableColumnFlags.WidthStretch, .12f);
+                ImGui.TableSetupColumn("Kind"u8, ImGuiTableColumnFlags.WidthStretch, .08f);
+            }
+            ImGui.TableHeadersRow();
             for (var i = 0; i < rows.Count; i++)
             {
                 var p = rows[i]; var metadata = Recent.Metadata(p); var folder = p.Folder ?? p.Data;
@@ -211,8 +236,8 @@ public sealed partial class ProjectLauncher
                 ImGui.PushID(System.Text.Json.JsonSerializer.Serialize(p)); Ui.TableNextRow(); Ui.TableNextColumn();
                 var at = ImGui.GetCursorScreenPos();
                 var width = Math.Max(50, ImGui.GetContentRegionAvail().X);
-                var rowHeight = Math.Max(ImGui.CalcTextSize(RowName(p), false, width).Y + ((openReason is null ? 0 : 1) + (Recent.IsPinned(p) ? 1 : 0)) * ImGui.GetTextLineHeightWithSpacing(), ImGui.CalcTextSize(WrapFolder(folder, width), false, width).Y);
-                Ui.NameNextItem("##recent"u8, RowName(p));
+                var rowHeight = Math.Max(ImGui.CalcTextSize(DisplayName(p), false, width).Y + ((openReason is null ? 0 : 1) + (Recent.IsPinned(p) ? 1 : 0)) * ImGui.GetTextLineHeightWithSpacing(), ImGui.CalcTextSize(WrapFolder(folder, width), false, width).Y);
+                Ui.NameNextItem("##recent"u8, DisplayName(p));
                 var activated = Ui.Selectable("##recent"u8, selectedRecent == p,
                     ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick, new float2(0, rowHeight));
                 var enter = ImGui.IsItemFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter, false);
@@ -238,27 +263,18 @@ public sealed partial class ProjectLauncher
                     if (Ui.MenuItem("Remove from list"u8)) { RemoveFromList(p); selectedRecent = null; Say(true, "Removed from the list; files aren't deleted."); }
                     Ui.EndPopup();
                 }
-                var after = ImGui.GetCursorScreenPos(); ImGui.SetCursorScreenPos(at); Ui.TextWrapped(RowName(p)); if (Recent.IsPinned(p)) Ui.TextWrapped("Pinned"u8); if (openReason is not null) Ui.TextWrapped("Folder not found"u8); ImGui.SetCursorScreenPos(after); ImGui.Dummy(new float2(0, 0));
+                var after = ImGui.GetCursorScreenPos(); ImGui.SetCursorScreenPos(at); Ui.TextWrapped(DisplayName(p)); if (Recent.IsPinned(p)) Ui.TextWrapped("Pinned"u8); if (openReason is not null) Ui.TextWrapped("Folder not found"u8); ImGui.SetCursorScreenPos(after); ImGui.Dummy(new float2(0, 0));
                 Ui.TableNextColumn(); Ui.TextWrapped(WrapFolder(folder, Math.Max(50, ImGui.GetContentRegionAvail().X)));
-                Ui.TableNextColumn(); Ui.TextWrapped(metadata.LastOpenedUtc?.ToLocalTime().ToString("g") ?? (IsListedSample(p) ? "Not opened yet" : "Not recorded"));
-                Ui.TableNextColumn(); Ui.TextWrapped(RowKind(p));
+                if (!compact)
+                {
+                    Ui.TableNextColumn(); Ui.TextWrapped(metadata.LastOpenedUtc?.ToLocalTime().ToString("g") ?? (IsListedSample(p) ? "Not opened yet" : "Not recorded"));
+                    Ui.TableNextColumn(); Ui.TextWrapped(RowKind(p));
+                }
                 ImGui.PopID();
             }
             Ui.EndTable();
         }
-        Ui.TableNextColumn();
-        ImGui.SeparatorText("Get started"u8);
-        var size = new float2(-1, MathF.Ceiling(ImGui.GetFrameHeight()*1.4f/2)*2);
-        ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, new float2(0, 0.5f));
-        if (Ui.Button("New game..."u8, size)) ChooseNewGame();
-        if (Ui.Button("New project..."u8, size)) { startPage = StartPage.New; focusNewName = true; }
-        Ui.TextWrapped("Create a folder for a new project."u8);
-        if (Ui.Button("Open project..."u8, size)) BeginOpenProject();
-        Ui.FieldCaption("Open a folder you already work on."u8);
-        if (Ui.Button("Try the example"u8, size)) TryExample();
-        Ui.TextWrapped("Make a copy you can change safely."u8);
-        ImGui.PopStyleVar();
-        Ui.EndTable();
+
     }
 
     /// <summary>Every folder in BED's own <c>samples</c> folder (<see cref="SamplesFolder"/>) that isn't already a recent project
@@ -311,7 +327,12 @@ public sealed partial class ProjectLauncher
 
     internal bool OpenRow(ProjectPaths p) => IsListedSample(p) ? OpenFolder(p.Folder!) : OpenRecent(p);
 
-    private string RowKind(ProjectPaths p) => IsListedSample(p) ? "Sample" : Recent.Metadata(p).Kind;
+    private string RowKind(ProjectPaths p)
+    {
+        if (string.Equals(Path.GetDirectoryName(ProjectFolder(p)), SamplesRoot, StringComparison.OrdinalIgnoreCase)) return "Sample";
+        var kind = Recent.Metadata(p).Kind;
+        return kind.EndsWith(" connection", StringComparison.Ordinal) ? "Game" : kind;
+    }
 
     // Prefer path separators as line boundaries so a component is not broken just because the prefix filled the line.
     // Every character remains visible, including separators; unusually long individual components still wrap normally.
@@ -369,7 +390,9 @@ public sealed partial class ProjectLauncher
 
     private void DrawNewProject()
     {
-        ImGui.SeparatorText("New project"u8);
+        var newGame = startPage == StartPage.NewGame;
+        Ui.Text(newGame ? "New game"u8 : "New project"u8);
+        ImGui.Separator();
         if (focusNewName) { ImGui.SetKeyboardFocusHere(); focusNewName = false; }
         Ui.InputText("Name"u8, projectName); Ui.InputText("Location"u8, projectLocation);
         if (Ui.Button("Browse..."u8))
@@ -388,15 +411,16 @@ public sealed partial class ProjectLauncher
             if (picked.Length > 0) projectLocation = new ImInputString(2048, picked);
         }
         var templates = ProjectTemplates.All;
-        if (Ui.BeginCombo("Start from"u8, templates[templateIndex].Name))
+        if (!newGame && Ui.BeginCombo("Start from"u8, templates[templateIndex].Name))
         {
             for (var i = 0; i < templates.Count; i++) if (Ui.Selectable(templates[i].Name, templateIndex == i)) templateIndex = i;
             Ui.EndCombo();
         }
-        var preview = projectCreator.Preview(templates[templateIndex].Id, Text(projectLocation), Text(projectName));
+        var template = newGame ? "game" : templates[templateIndex].Id;
+        var preview = projectCreator.Preview(template, Text(projectLocation), Text(projectName));
         Ui.TextWrapped(preview.CanCreate ? "Will create: " + preview.Folder : preview.Reason);
         Ui.BeginDisabled(!preview.CanCreate, preview.CanCreate ? null : preview.Reason);
-        if (Ui.Button("Create and open"u8)) CreateProject(templates[templateIndex].Id, Text(projectLocation), Text(projectName));
+        if (Ui.Button("Create and open"u8)) CreateProject(template, Text(projectLocation), Text(projectName));
         Ui.EndDisabled(); ImGui.SameLine();
         if (Ui.Button("Cancel"u8)) EndProjectChooser();
     }

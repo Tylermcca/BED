@@ -32,7 +32,7 @@ public sealed partial class DataWorkspace
         if(focusScene2Close)ImGui.SetNextWindowFocus();
         if(Ui.Begin("Save changes?###scene2.close"u8,ImGuiWindowFlags.AlwaysAutoResize|ImGuiWindowFlags.NoSavedSettings))
         {
-            Ui.TextWrapped($"Save changes to {request.Name} before closing?");Ui.TextWrapped(Said);
+            Ui.TextWrapped($"Save changes to {request.Name} before closing?");if(said.Showing)Ui.TextWrapped(Said);
             if(focusScene2Close){ImGui.SetKeyboardFocusHere();focusScene2Close=false;}
             if(Ui.Button("Save"u8))AnswerScene2Close(SaveChangesChoice.Save);ImGui.SameLine();
             if(Ui.Button("Don't Save"u8))AnswerScene2Close(SaveChangesChoice.DontSave);ImGui.SameLine();

@@ -11,7 +11,8 @@ The messages below come from BED's current Play and Export paths. Text in angle 
 | `Set the program in Tools > Play settings` | Open **Tools > Play settings...**, choose the game executable, then choose **Save Play settings**. |
 | `The program does not exist. Choose it or configure its build command.` | Choose the built executable, or add the command that builds it. Saving settings alone does not run the game. |
 | `The Play working folder does not exist.` | Choose an existing **Working folder**. A relative folder starts at the project root. |
-| `Build tool was not found on PATH: <tool>` | Install the tool your project requires and make it available on PATH, or choose its executable inside the project. |
+| `BED could not find the build program: <tool>` | Install the program your project builds with, then close and reopen BED, or choose its executable inside the project. |
+| `Install the .NET 10 SDK to build your game. Choose the Windows x64 SDK, then close and reopen BED.` | Choose **Open .NET download page** in the Play console, install the Windows x64 SDK, then close and reopen BED. |
 | `Build input patterns must stay inside the project.` | Use project-relative patterns such as `src/**/*.cs`; remove drive letters and `..`. |
 | `<field> must be a JSON list of quoted strings. Use [] for no items.` | For Arguments, Build arguments or Build inputs, enter a list such as `["--seconds", "5"]`, or `[]` for none. |
 | `Needs your OK: <command> (working folder: <folder>)` | Check both the full command and working folder. Choose **Allow this exact command and continue** only if they are the ones you intend to run, or **Cancel** to change settings. |

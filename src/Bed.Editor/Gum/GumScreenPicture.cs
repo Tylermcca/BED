@@ -41,7 +41,7 @@ public sealed record GumLook(string? Category, string Name)
 /// <param name="Words">Its text, or the first text inside it; null when it has none.</param>
 public sealed record GumPart(string Name, float X, float Y, float Width, float Height, string? Words);
 
-/// <summary>A live picture of one screen of a Gum project, drawn by Gum onto a CPU canvas. Call <see cref="Frame"/> once
+/// <summary>A live picture of one screen of a Gum project, drawn by Gum onto a CPU canvas. Call <see cref="Frame(double)"/> once
 /// per editor frame; it updates Gum (so animations play and saved changes load), draws, and keeps the pixels in
 /// <see cref="Pixels"/>. All calls run under Gum's one lock. Never writes a file, and never throws for what is in the
 /// project: <see cref="Problem"/> says what went wrong in plain words.</summary>
@@ -50,17 +50,23 @@ public sealed class GumScreenPicture : IDisposable
     /// <summary>The size used when the project gives none.</summary>
     public const int FallbackWidth = 800, FallbackHeight = 600;
 
+    private static GumProjectSave? serviceProject;
     private static GumScreenPicture? owner;   // the picture whose screen is in GumService.Default; guarded by GumLibrary's lock
     private (int Width, int Height)? fixedSize;
     private float zoom = 1;
     private SKSurface? surface;
     private byte[] pixels = [];
     private long lastUse = -1;
-    private bool fallback, reloadAfterChange;
+    private bool fallback, reloadAfterChange, resizeAfterChange;
     private string missingProblem = "";
     private string? screen;
     private GumLook? look;
     private GraphicalUiElement? shown;   // the screen as Gum built it, while Drawn
+    // What shown was built from: kept while another picture has Gum, so switching back puts it up again instead of building it
+    // afresh (a card game, 2026-11-21: switching between its table's words and its score page cost 25-400 ms a time). Gum's reloads
+    // only patch the screen on show, so any reload since, a new project, or another screen or look builds it again.
+    private (string? Screen, GumLook? Look, GumProjectSave Project, int Reloads)? builtFrom;
+    private static int reloads;   // saves Gum has reloaded since the program started
     private readonly Dictionary<string, object?> values = new(StringComparer.Ordinal);   // what a game set, kept across reloads
     private bool disposed;
 
@@ -93,7 +99,7 @@ public sealed class GumScreenPicture : IDisposable
     public int Height { get; private set; }
 
     /// <summary>The last drawn picture: <see cref="Width"/> x <see cref="Height"/> pixels, RGBA, 8 bits each, top row
-    /// first, fully opaque. Empty until the first <see cref="Frame"/> that drew.</summary>
+    /// first, fully opaque. Empty until the first <see cref="Frame(double)"/> that drew.</summary>
     public ReadOnlySpan<byte> Pixels => pixels;
 
     /// <summary>Counts the frames whose picture differed from the one before, so a viewer re-uploads only on a change.</summary>
@@ -112,7 +118,7 @@ public sealed class GumScreenPicture : IDisposable
     /// <summary>The background behind the screen, where Gum draws nothing: red, green, blue.</summary>
     public (byte Red, byte Green, byte Blue) Background { get; set; } = (0x30, 0x30, 0x30);
 
-    /// <summary>How long the last <see cref="Frame"/>'s update and draw took, without reading the pixels back.</summary>
+    /// <summary>How long the last <see cref="Frame(double, bool)"/> update and requested draw took, without reading the pixels back.</summary>
     public TimeSpan LastDrawTime { get; private set; }
 
     /// <summary>How much bigger than designed the screen is drawn: 2 draws everything twice the size, so the screen has
@@ -129,7 +135,7 @@ public sealed class GumScreenPicture : IDisposable
         newZoom = Math.Clamp(newZoom, 0.25f, 8f);
         if (fixedSize == size && zoom == newZoom) return;
         fixedSize = size; zoom = newZoom;
-        if (screen is not null) reloadAfterChange = true;
+        if (screen is not null) resizeAfterChange = true;
     }
 
     /// <summary>Shows <paramref name="screenName"/> in <paramref name="chosenLook"/> (null for its default look). Returns
@@ -138,23 +144,35 @@ public sealed class GumScreenPicture : IDisposable
     {
         ObjectDisposedException.ThrowIf(disposed, this);
         screen = screenName; look = chosenLook;
-        return GumLibrary.Run(() => Quietly(() => { Load(); lastUse = GumLibrary.Uses; return Drawn; }));
+        // A new picture of the project Gum already has open joins it as a known picture does (TrySwitch), rather than taking
+        // Gum down and reading the whole project again: that cost a game a frame of half a second or more, and some 280 MB, the
+        // first time each of its screens was shown (a card game, 2026-11-21: "the game half stutters or freezes").
+        return GumLibrary.Run(() => Quietly(() => { if (!TrySwitch()) Load(); lastUse = GumLibrary.Uses; return Drawn; }));
     }
 
     /// <summary>Updates Gum by the time since the editor started (so animations play, and a screen saved in Gum reloads
     /// after a short pause), draws, and keeps the pixels. Returns true when the picture changed.</summary>
     /// <param name="totalSeconds">Seconds since the editor started.</param>
-    public bool Frame(double totalSeconds)
+    public bool Frame(double totalSeconds) => Frame(totalSeconds, true);
+
+    /// <summary>Updates the screen and its layout, including saved changes. When <paramref name="rasterise"/> is false,
+    /// skips drawing and pixel readback and returns false. The next rasterised frame draws the current screen.</summary>
+    /// <param name="totalSeconds">Seconds since the editor started.</param>
+    /// <param name="rasterise">Whether to draw and keep a new picture, or only update the screen and its parts.</param>
+    /// <returns>True only when a rasterised picture changed.</returns>
+    public bool Frame(double totalSeconds, bool rasterise)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
         if (screen is null) return false;
         return GumLibrary.Run(() => Quietly(() =>
         {
-            // Gum's state is shared: another Gum call since ours (the check, the screens list) or another picture means
-            // Gum no longer holds this screen, so load it again. So does a save Gum's own reload can't patch in.
-            if (!ReferenceEquals(owner, this) || GumLibrary.Uses != lastUse + 1 || reloadAfterChange) Load();
+            // Other Gum callers or an unpatchable save still need a full restart. A known picture of the same clean
+            // project can instead switch screens while retaining the initialized service and its watcher.
+            if (!ReferenceEquals(owner, this) || GumLibrary.Uses != lastUse + 1 || reloadAfterChange)
+            { if (!TrySwitch()) Load(); }
+            else if (resizeAfterChange) Relayout();
             lastUse = GumLibrary.Uses;
-            if (Drawn) return Draw(totalSeconds);
+            if (Drawn) return Draw(totalSeconds, rasterise);
             // Nothing to show yet: still let Gum's watcher report a save, so a screen whose file comes back appears.
             if (ReferenceEquals(owner, this) && GumService.Default.IsInitialized)
                 Guard(() => { GumService.Default.Update(totalSeconds); }, "Gum couldn't check the project's folder for saved changes.");
@@ -185,7 +203,7 @@ public sealed class GumScreenPicture : IDisposable
 
     private void Load()
     {
-        Drawn = false; shown = null; reloadAfterChange = false; Looks = []; GumError = null; Problem = "";
+        Drawn = false; shown = null; reloadAfterChange = resizeAfterChange = false; Looks = []; GumError = null; Problem = "";
         var name = Path.GetFileNameWithoutExtension(ProjectFile);
         var service = GumService.Default;
         if (!Guard(() => Release(service), $"BED couldn't take down the last Gum picture, so the screen {screen} can't be shown. Close the panel and open it again."))
@@ -240,6 +258,7 @@ public sealed class GumScreenPicture : IDisposable
         }, "");
 
         var gumProject = ObjectFinder.Self.GumProjectSave!;
+        serviceProject = gumProject;
         // Gum's loader keeps an empty stand-in for a listed screen whose file is missing; that is nothing to show.
         var listedFile = GumCatalog.ElementFile(folder, project, screen);
         var screenMissing = listedFile is not null && !File.Exists(listedFile);
@@ -259,7 +278,7 @@ public sealed class GumScreenPicture : IDisposable
             {
                 var built = element.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
                 built.AddToRoot();
-                shown = built;
+                shown = built; builtFrom = (screen, look, gumProject, reloads);
                 if (look is { Category: { } category }) built.ApplyState(category, look.Name);
                 else if (look is not null) built.ApplyState(look.Name);
             }, $"Gum couldn't build the screen {screen}. Open it in Gum to check it, then save it again."))
@@ -271,6 +290,55 @@ public sealed class GumScreenPicture : IDisposable
         if (!watching) Problem = (Problem + " BED can't watch the project's folder, so the picture won't follow saves in Gum.").Trim();
         Drawn = true;
         foreach (var (path, value) in values) Apply(path, value);
+    }
+
+    // Known pictures of one unchanged project can share the initialized service and watcher. Rebuild the screen itself
+    // from Gum's current description, just as a full load does; other library callers still force the conservative restart.
+    private bool TrySwitch()
+    {
+        var previous = owner; var service = GumService.Default;
+        // Never shown yet, at a size of its own: it can join as well as a picture that was drawn before.
+        var fresh = !Drawn && shown is null && surface is null && fixedSize is not null;
+        if (previous is null || ReferenceEquals(previous, this) || previous.lastUse != GumLibrary.Uses - 1
+            || previous.ProjectFile != ProjectFile || !previous.Drawn || !Drawn && !fresh || previous.reloadAfterChange || reloadAfterChange
+            || previous.Problem.Length != 0 || Problem.Length != 0 || !service.IsInitialized
+            || serviceProject is not { } project || !ReferenceEquals(ObjectFinder.Self.GumProjectSave, project)) return false;
+        var folder = Path.GetDirectoryName(ProjectFile)!;
+        var file = GumCatalog.ElementFile(folder, project, screen!);
+        var element = project.Screens.FirstOrDefault(s => s.Name == screen);
+        // A kept screen passed the loop check when it was built, and nothing has reloaded since: the check (tens of milliseconds on a
+        // big project) isn't made again at every switch.
+        var keep = shown is not null && builtFrom == (screen, look, project, reloads);
+        if (element is null || file is not null && !File.Exists(file) || !keep && GumDependencyCheck.ScreenLoop(project, folder, element.Name) is not null) return false;
+        var looks = LooksOf(element);
+        if (look is not null && !looks.Contains(look)) return false;
+        if (!Guard(() =>
+        {
+            previous.shown?.RemoveFromRoot();
+            service.HotReloadFinished -= previous.Reloaded;
+            owner = this;
+            service.HotReloadFinished += Reloaded;
+            var kept = keep ? shown : null;
+            shown = null; Looks = looks; GumError = null;
+            if (kept is not null)
+            {
+                kept.AddToRoot(); shown = kept;
+                Relayout();
+                if (!Drawn) throw new InvalidOperationException("The picture could not be resized.");
+            }
+            else
+            {
+                Relayout();
+                if (fresh ? reloadAfterChange : !Drawn) throw new InvalidOperationException("The picture could not be resized.");
+                var built = element.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+                built.AddToRoot(); shown = built; builtFrom = (screen, look, project, reloads);
+                if (look is { Category: { } category }) built.ApplyState(category, look.Name);
+                else if (look is not null) built.ApplyState(look.Name);
+            }
+            if (fresh) { Drawn = true; Problem = missingProblem = ""; fallback = false; }
+            foreach (var (path, value) in values) Apply(path, value);
+        }, $"Gum couldn't switch to the screen {screen}. Open it in Gum to check it.")) return false;
+        return true;
     }
 
     /// <summary>Sets a value on the shown screen, as a game does while it runs: <c>"TurnText.Text"</c> for a part, or
@@ -327,7 +395,13 @@ public sealed class GumScreenPicture : IDisposable
     // make the next Frame load the screen again. Otherwise the default, and the next Frame loads it.
     private T? Mine<T>(Func<T?> work) => GumLibrary.Run(() =>
     {
-        if (!ReferenceEquals(owner, this) || GumLibrary.Uses != lastUse + 1 || !Drawn) return default;
+        if (!ReferenceEquals(owner, this))
+        {
+            // Queuing a value or asking for another picture's parts did not touch the live service.
+            if (owner is { Drawn: true } live && live.lastUse == GumLibrary.Uses - 1) live.lastUse = GumLibrary.Uses;
+            return default;
+        }
+        if (GumLibrary.Uses != lastUse + 1 || !Drawn) return default;
         lastUse = GumLibrary.Uses;
         return work();
     });
@@ -345,7 +419,8 @@ public sealed class GumScreenPicture : IDisposable
 
     private void Reloaded(HotReloadResult result)
     {
-        Saves++;
+        Saves++; reloads++;
+        serviceProject = ObjectFinder.Self.GumProjectSave;
         // Diagnose through Gum's checker after its own safe reload; this does not reject or intercept a reload.
         var loop = ObjectFinder.Self.GumProjectSave is { } project && screen is not null
             ? GumDependencyCheck.ScreenLoop(project, Path.GetDirectoryName(ProjectFile)!, screen) : null;
@@ -366,7 +441,33 @@ public sealed class GumScreenPicture : IDisposable
         return looks;
     }
 
-    private bool Draw(double totalSeconds)
+    // A size/zoom change does not change the project or the live screen. Use Gum's window-resize path;
+    // the full load path remains responsible for ownership changes and saved edits that need a restart.
+    private void Relayout()
+    {
+        var service = GumService.Default;
+        if (!Guard(() =>
+        {
+            var (width, height) = fixedSize ?? (Width, Height);
+            if (surface is null || Width != width || Height != height)
+            {
+                var next = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul))
+                    ?? throw new InvalidOperationException("The Skia surface could not be resized.");
+                surface?.Dispose(); surface = next;
+                Width = width; Height = height; pixels = new byte[width * height * 4];
+            }
+            service.SystemManagers.Canvas = surface.Canvas;
+            service.EnableExpandToWindow(zoom);
+            service.HandleResize(width, height);
+            resizeAfterChange = false;
+        }, $"Gum couldn't resize the screen {screen}. Open it in Gum to check its layout."))
+        {
+            Drawn = false;
+            reloadAfterChange = true;
+        }
+    }
+
+    private bool Draw(double totalSeconds, bool rasterise)
     {
         var service = GumService.Default;
         var started = Stopwatch.GetTimestamp();
@@ -374,6 +475,11 @@ public sealed class GumScreenPicture : IDisposable
         Guard(() =>
         {
             service.Update(totalSeconds);
+            if (!rasterise)
+            {
+                LastDrawTime = Stopwatch.GetElapsedTime(started);
+                return;
+            }
             surface!.Canvas.Clear(new SKColor(Background.Red, Background.Green, Background.Blue));
             service.Draw(surface.Canvas);
             surface.Flush();
@@ -399,6 +505,7 @@ public sealed class GumScreenPicture : IDisposable
         finally
         {
             ObjectFinder.Self.GumProjectSave = null;
+            serviceProject = null;
             owner = null;
         }
     }

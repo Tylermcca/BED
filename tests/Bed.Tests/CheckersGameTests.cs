@@ -45,4 +45,15 @@ public sealed class CheckersGameTests : IDisposable
         Assert.StartsWith("Played", play.Match.Play(Assert.IsType<MovePiece>(Computer.Choose(play.Match.Current))));
         Assert.Equal(Side.Light, play.Match.Current.ToMove);
     }
+
+    [Fact]
+    public void The_game_window_fits_a_short_screen_and_keeps_the_board_shape()
+    {
+        // A laptop at 200%: 1280x752 of work area. The 800-tall board plus its title bar would not fit.
+        var (x, y, width, height) = GameWindowSize.Fit(0, 0, 1280, 752, 16, 39);
+        Assert.True(height <= 752 && y >= 0 && y + height <= 752);
+        Assert.InRange((width - 16) / (double)(height - 39), 0.89, 0.91);
+        // A big screen gets the board at full size.
+        Assert.Equal((736, 839), (GameWindowSize.Fit(0, 0, 2560, 1400, 16, 39).Width, GameWindowSize.Fit(0, 0, 2560, 1400, 16, 39).Height));
+    }
 }

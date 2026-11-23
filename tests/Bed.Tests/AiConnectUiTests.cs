@@ -30,7 +30,7 @@ public sealed class AiConnectUiTests
             }
             host.Frames(Draw, 5);
             var window = ImGui.Internal.FindWindowByName("Connect proof");
-            var wanted = window.GetID("Connect").Value;
+            var wanted = window.GetID("Connect###connection-action").Value;
             for (var i = 0; i < 25 && ImGui.GetCurrentContext().NavId.Value != wanted; i++) host.Press(Draw, ImGuiKey.Tab);
             Assert.False(Directory.Exists(locations.AppData));
             Assert.Equal(wanted, ImGui.GetCurrentContext().NavId.Value);

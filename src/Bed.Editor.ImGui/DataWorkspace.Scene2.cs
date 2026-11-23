@@ -50,7 +50,9 @@ public sealed partial class DataWorkspace
         private string[] updateChanges=[];
         private int updatePage;
         private readonly Dictionary<int,int> updateTextPages=new();
-        private string said="";
+        private string said="",okSaid="",shownSaid="";
+        private readonly StatusNotice notice=new();
+        private void Ok(string message){said=message;okSaid=message;}
         internal NativeScene2(DataWorkspace owner,string name,Scene2DocumentEntry entry)
         {
             Owner=owner;Name=name;Entry=entry;ViewportView<Scene2>? view=null;
@@ -88,6 +90,7 @@ public sealed partial class DataWorkspace
             // the top of the right column from the inspector (at 1280x720 and double text, the inspector was left one line tall).
             entry.Editor.Add(new Panel("scene2.live","Live values",()=>Owner.DrawLiveValues(Name,Entry),OpenAtStart:owner.liveTargets.Length>0,Width:420,Height:400,Side:PanelSide.Right));
             entry.Editor.Add(new Panel("scene2.physics","Physics",DrawPhysics,OpenAtStart:false,Width:420,Height:450,Side:PanelSide.Right));
+            owner.AddProjectPanels(panel=>entry.Editor.Add(panel));
             RefreshPrefabs();RefreshImages();
         }
         internal void CancelInput(){viewport.CancelInput();flatView?.CancelInput();}
@@ -132,8 +135,8 @@ public sealed partial class DataWorkspace
             var added=Scene2Resolver.Resolve(plan!.Candidate).Objects.Select(o=>o.Object.Id).Where(id=>!oldIds.Contains(id)).ToArray();
             var newPiece=plan.Candidate.Instances.FirstOrDefault(i=>before.Instances.All(old=>old.Key!=i.Key))?.Placement.Id;
             var ok=Owner.Documents.CommitScene2Edit(Name,plan,out said);
-            if(ok){said="Applied "+action+".";if(newPiece is not null)Entry.Editor.Select(newPiece);else if(added.Length>0)Entry.Editor.Select(added);}
-            Owner.Said=said;return ok;
+            if(ok){Ok("Applied "+action+".");if(newPiece is not null)Entry.Editor.Select(newPiece);else if(added.Length>0)Entry.Editor.Select(added);}
+            if(ok)Owner.Done(said);else Owner.Said=said;return ok;
         }
         private static string Signature(Scene2Object item)
         {
@@ -242,13 +245,13 @@ public sealed partial class DataWorkspace
                 var why=Guard()??AssetRefusal(Entry.Session.Current,candidate.Candidate);
                 if(focusUpdate){ImGui.SetKeyboardFocusHere();focusUpdate=false;}
                 Ui.BeginDisabled(why is not null,why);
-                if(Ui.Button("Accept update"u8)){if(Owner.Documents.CommitScene2Edit(Name,candidate,out said)){update=null;focusReview=true;said="Accepted the prefab update.";}}
+                if(Ui.Button("Accept update"u8)){if(Owner.Documents.CommitScene2Edit(Name,candidate,out said)){update=null;focusReview=true;Ok("Accepted the prefab update.");}}
                 Ui.EndDisabled();
                 var width=ImGui.CalcTextSize("Accept update"u8).X+ImGui.CalcTextSize("Cancel update"u8).X+4*ImGui.GetStyle().FramePadding.X+ImGui.GetStyle().ItemSpacing.X;
                 if(ImGui.GetContentRegionAvail().X>width)ImGui.SameLine();
-                if(Ui.Button("Cancel update"u8)){update=null;focusReview=true;said="Prefab update cancelled; level unchanged.";}
+                if(Ui.Button("Cancel update"u8)){update=null;focusReview=true;Ok("Prefab update cancelled; level unchanged.");}
                 if(why is not null)Ui.TextWrapped(why);
-                if(ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)&&ImGui.IsKeyPressed(ImGuiKey.Escape,false)){update=null;focusReview=true;said="Prefab update cancelled; level unchanged.";}
+                if(ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)&&ImGui.IsKeyPressed(ImGuiKey.Escape,false)){update=null;focusReview=true;Ok("Prefab update cancelled; level unchanged.");}
             }
             Ui.End();
         }
@@ -310,7 +313,7 @@ public sealed partial class DataWorkspace
                     var target=reference.Value;var label=Entry.Editor.Outline.Label(scene,target)??target;
                     Ui.BeginDisabled(!Entry.Editor.InFocus(target),"Step out of focus before following this reference.");
                     if(Ui.Button("Go to "+reference.Key+": "+label))
-                    {if(Owner.NavigationHere() is {} from)Owner.history.Push(from);Entry.Editor.Select(target);said="Selected "+label+".";}
+                    {if(Owner.NavigationHere() is {} from)Owner.history.Push(from);Entry.Editor.Select(target);Ok("Selected "+label+".");}
                     Ui.EndDisabled();
                 }
             }
@@ -359,7 +362,8 @@ public sealed partial class DataWorkspace
             Ui.EndDisabled();if(placeRefusal is not null)Ui.TextWrapped(placeRefusal);
             }
             Ui.EndDisabled();if(refusal is not null)Ui.TextWrapped(refusal);
-            Ui.StatusWrapped(said,"scene2.action.status");
+            if(said!=shownSaid){shownSaid=said;notice.Say(said==okSaid,said);}
+            if(notice.Showing)Ui.StatusWrapped(said,"scene2.action.status");
         }
     }
 }

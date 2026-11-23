@@ -76,7 +76,7 @@ public sealed partial class DataTableView
             if (LinkOf(item, field) is { } link)
             {
                 if (link.File == File) target = link.Pointer;
-                else if (GoTo?.Invoke(link) == true) { Said = $"Went to {link.File}; Back returns."; return true; }
+                else if (GoTo?.Invoke(link) == true) { notice.Done($"Went to {link.File}; Back returns."); return true; }
                 else { Said = $"{field} names an item in {link.File}, which can't be shown."; return false; }
             }
             else
@@ -94,7 +94,7 @@ public sealed partial class DataTableView
         Filter = "";
         Sort = null;
         Editor.Select(target);
-        Said = $"Went to {Editor.Outline.Label(Editor.Session.Current, target)}; Back returns.";
+        notice.Done($"Went to {Editor.Outline.Label(Editor.Session.Current, target)}; Back returns.");
         return true;
     }
 
@@ -105,7 +105,7 @@ public sealed partial class DataTableView
         var (list, item) = back.Pop();
         List = list;
         if (item is not null) Editor.Select(item);
-        Said = "Back.";
+        notice.Done("Back.");
         return true;
     }
 
@@ -137,7 +137,8 @@ public sealed partial class DataTableView
     public (string Column, bool Descending)? Sort { get => model.Sort; set => model.Sort = value; }
 
     /// <summary>What the table last said (an edit done, or why it was refused).</summary>
-    public string Said { get; private set; } = "";
+    public string Said { get => notice.Text; private set => notice.Say(value); }
+    private readonly StatusNotice notice = new();
     private (string Item,string Field,string Message)? cellIssue;
     internal string? CellError(string item,string field)=>cellIssue is {} issue&&issue.Item==item&&issue.Field==field?issue.Message:null;
 
@@ -185,7 +186,7 @@ public sealed partial class DataTableView
         }
         if (Editor.Execute(command, item))
         {
-            Said = $"{Editor.Outline.Label(Editor.Session.Current, item)}: {field} set.";
+            notice.Done($"{Editor.Outline.Label(Editor.Session.Current, item)}: {field} set.");
             cellIssue=null;return true;
         }
         var issues=Editor.Refused.Count>0?Editor.Refused:Editor.Session.LastIssues;
@@ -249,14 +250,14 @@ public sealed partial class DataTableView
                 ||Shown!=captured.List||!Editor.Selection.SequenceEqual(captured.Selection)))
         {Said="The data or row selection changed; preview the selected-row edit again.";return false;}
         if (!plan.Ok) { Said = string.Join(" ", plan.Problems); return false; }
-        if (plan.Commands.Count == 0) { Said = "Nothing to change: every cell already has that value."; return true; }
+        if (plan.Commands.Count == 0) { notice.Done("Nothing to change: every cell already has that value."); return true; }
         if (Editor.Playing is { } playing) { Said = $"'{playing.Title}' is playing; stop it to edit."; return false; }
         var touched=ReferenceEquals(selectedFill?.Plan,plan)?selectedFill!.Selection:plan.Commands.OfType<SetValue>().Select(c=>ItemOf(c.At)).Distinct().ToArray();
         var outside = touched.Where(i => !Editor.InFocus(i)).Distinct().ToList();
         if (outside.Count > 0) { Said = $"{outside.Count} of these rows are outside the place you're focused on; step out of focus to edit them."; return false; }
         if (Editor.Execute(new SetValues(plan.Commands.OfType<SetValue>().ToList()),touched))   // one rebuild, one journal entry (A033)
         {
-            Said = $"Set {plan.Commands.Count} cell{(plan.Commands.Count == 1 ? "" : "s")} as one step.";
+            notice.Done($"Set {plan.Commands.Count} cell{(plan.Commands.Count == 1 ? "" : "s")} as one step.");
             return true;
         }
         Said = Explain(Editor.Refused.Count>0?Editor.Refused:Editor.Session.LastIssues);
@@ -327,8 +328,8 @@ public sealed partial class DataTableView
             if (Ui.SmallButton("Back"u8)) Back();
         }
         if(ImGui.GetContentRegionAvail().X>ImGui.GetFontSize()*38)ImGui.SameLine();
-        var summary = $"{visible.Count} of {Items().Count} shown{(Said.Length > 0 ? "  |  " + Said : "")}";
-        if (Said.Length > 0) Ui.StatusDisabled(summary, Said, "table.message");
+        var summary = $"{visible.Count} of {Items().Count} shown{(notice.Showing ? "  |  " + Said : "")}";
+        if (notice.Showing) Ui.StatusDisabled(summary, Said, "table.message");
         else Ui.TextDisabled(summary);
         BatchBar(columns);
 
@@ -406,7 +407,7 @@ public sealed partial class DataTableView
         Entry("Delete row", () =>
         {
             Editor.Select(item);
-            Said = removal.RemoveHere() ? "Deleted row; Undo restores it." : string.Join(" ", removal.LastIssues.Select(i => i.Message));
+            if (removal.RemoveHere()) notice.Done("Deleted row; Undo restores it."); else Said = string.Join(" ", removal.LastIssues.Select(i => i.Message));
         }, removeReason);
         Entry("Insert row above", () => { }, "This table does not expose an insert-at-row action.");
         Entry("Insert row below", () => { }, "This table does not expose an insert-at-row action.");
@@ -479,7 +480,7 @@ public sealed partial class DataTableView
             {
                 var selected=ReferenceEquals(selectedFill?.Plan,plan);
                 var applied=Apply(plan);
-                if (applied && plan.Commands.Count > 0) Said = AppliedSentence(plan);
+                if (applied && plan.Commands.Count > 0) notice.Done(AppliedSentence(plan));
                 else if(!applied&&selected)SelectedApplyRefused();
                 pending = null;
                 selectedFill=null;
@@ -540,7 +541,7 @@ public sealed partial class DataTableView
         var text=string.Join("\n",lines);
         ImGui.SetClipboardText(text);
         var cells=items.Count*columns.Count;
-        Said=$"Copied {cells} cell{(cells==1 ? "" : "s")}.";
+        notice.Done($"Copied {cells} cell{(cells==1 ? "" : "s")}.");
         return text;
     }
 

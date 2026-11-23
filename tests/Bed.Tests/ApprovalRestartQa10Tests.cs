@@ -48,7 +48,8 @@ public sealed class ApprovalRestartQa10Tests(ITestOutputHelper output)
         {
             Assert.True(workspace.ProjectPlayApprovalPending);Assert.Null(workspace.ProjectPlay);
             Assert.False(File.Exists(Path.Combine(root,"ran.txt")));Assert.False(File.Exists(approval));
-            Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains(command,StringComparison.Ordinal));
+            Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label=="Build your game");
+            Assert.DoesNotContain(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label.Contains(command,StringComparison.Ordinal));
             var button=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button&&n.Label=="Allow this exact command and continue");
             Assert.True(button.Enabled);Assert.False(button.Bounds.IsEmpty);
             Assert.True(button.Focused,Ui.Snapshot().Text);host.Press(workspace.Draw,ImGuiKey.Enter);host.Frames(workspace.Draw,2);
@@ -76,7 +77,11 @@ public sealed class ApprovalRestartQa10Tests(ITestOutputHelper output)
             Stale(root);workspace.RequestProjectPlay(true);host.Frames(workspace.Draw,3);
             Assert.True(workspace.ProjectPlayApprovalPending);Assert.Same(session,workspace.ProjectPlay);
             revisedQuestion=workspace.PlaySettings.ApprovalNeeded(revised,true);Assert.NotNull(revisedQuestion);Assert.Contains(changed,revisedQuestion);
-            Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label==revisedQuestion);
+            var details=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button&&n.Label=="Show details");
+            host.Click(workspace.Draw,details.Bounds.X+details.Bounds.Width/2,details.Bounds.Y+details.Bounds.Height/2);
+            host.Frames(workspace.Draw,2);
+            Assert.Contains(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label==changed);
+            Assert.DoesNotContain(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Text&&n.Label==command);
             Assert.Equal(approved,File.ReadAllBytes(approval));Assert.Equal(runs,File.ReadAllLines(marker).Length);
             workspace.CancelProjectPlay();Assert.False(workspace.ProjectPlayApprovalPending);Assert.Equal(runs,File.ReadAllLines(marker).Length);
             Assert.Null(workspace.PlaySettings.ApprovalNeeded(launch,true));

@@ -18,7 +18,10 @@ using ImGui = Brutal.ImGuiApi.ImGui;
 /// <param name="LayoutPath">Optional app-owned docking settings path; null uses local app data.</param>
 /// <param name="PopOutWindows">Let panels be dragged out into windows of their own (on for the editor). A game that draws one full-window page turns it off, so the page stays inside its window and keeps the title bar.</param>
 /// <param name="Validation">Turn on Vulkan's validation layers (when installed), for finding rendering mistakes.</param>
-public sealed record EditorAppOptions(string Title = "BED", int Width = 1600, int Height = 900, bool Validation = false, bool OpenGl = false, string? LayoutPath = null, bool PopOutWindows = true);
+public sealed record EditorAppOptions(string Title = "BED", int Width = 1600, int Height = 900, bool Validation = false, bool OpenGl = false, string? LayoutPath = null, bool PopOutWindows = true)
+{
+    internal bool FitStartupWorkArea { get; init; }
+}
 
 /// <summary>
 /// Runs an ImGui editor in a real window: GLFW for the window and input, Vulkan to draw, and BRUTAL's ImGui backends
@@ -129,7 +132,29 @@ public static class EditorApp
     {
         var hidden = OperatingSystem.IsWindows() && RuntimeInformation.ProcessArchitecture == Architecture.X64;
         if (hidden) Glfw.WindowHint(GlfwWindowHint.Visible, 0);
-        try { return Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = options.Title, Size = new int2(options.Width, options.Height) }); }
+        try
+        {
+            var size = new int2(options.Width, options.Height);
+            var area = default(int2);
+            var origin = default(int2);
+            if (options.FitStartupWorkArea)
+            {
+                var monitor = Glfw.PrimaryMonitor;
+                if (!monitor.Equals(GlfwMonitor.Null)) monitor.GetMonitorWorkArea(out origin, out area);
+                if (area.X > 0 && area.Y > 0)
+                    size = new int2(Math.Max(1, (int)(area.X * .84f)), Math.Max(1, (int)(area.Y * .84f)));
+            }
+            var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = options.Title, Size = size });
+            if (!window.IsNull() && area.X > 0 && area.Y > 0)
+            {
+                window.GetWindowFrameSize(out var left, out var top, out var right, out var bottom);
+                window.Size = size = new int2(Math.Min(size.X, Math.Max(1, area.X - left - right)),
+                    Math.Min(size.Y, Math.Max(1, area.Y - top - bottom)));
+                window.Position = origin + new int2(left + (area.X - size.X - left - right) / 2,
+                    top + (area.Y - size.Y - top - bottom) / 2);
+            }
+            return window;
+        }
         finally { if (hidden) Glfw.WindowHint(GlfwWindowHint.Visible, 1); }
     }
 

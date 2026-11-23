@@ -348,11 +348,31 @@ public sealed class CheckersInTheAppAcceptanceTests
         Assert.True(t.Session.Undo());Assert.Equal('.',Piece(t.Current,"c3"));
     }
 
+    // Clean-PC test: the board's squares were unnamed and missing from the accessibility tree.
+    [Fact] public void Board_SquaresAreNamedButtonsAScreenReaderCanSay()
+    {
+        using var t=new Trial();t.Open(PositionText(6,"dark",("c3",'d'),("d4",'L')));using var h=Host();
+        h.Frames(t.Launcher.Draw,3);
+        var nodes=Ui.Snapshot().Nodes;
+        foreach(var label in new[]{"Square c3: dark piece","Square d4: light king","Square a1: empty"})
+            Assert.True(Assert.Single(nodes,n=>n.Role==UiRole.Button&&n.Label==label).Actions.HasFlag(UiActions.Invoke));
+        Assert.DoesNotContain(nodes,n=>n.Role==UiRole.Button&&string.IsNullOrEmpty(n.Label));
+    }
+
     // Source: BoardView.Draw "whose turn it is" switch button.
     [Fact] public void Board_ActualKeyboardTurnButtonIsAnUndoableEdit()
     {
         using var t=new Trial();t.Open();using var h=Host();
-        Button(h,t.Launcher.Draw,"Board###panel.checkers.board","Dark to move: switch");
+        h.Frames(t.Launcher.Draw, 3);
+        var nodes = Ui.Snapshot().Nodes;
+        var board = nodes.ToList().FindIndex(n => n.Role == UiRole.Window && n.Label == "Board");
+        Assert.True(board >= 0);
+        foreach (var label in new[] { "Dark to move: switch", "Play in its own window" })
+        {
+            var button = Assert.Single(nodes, n => n.Parent == board && n.Role == UiRole.Button && n.Label == label);
+            Assert.True(button.Actions.HasFlag(UiActions.Invoke));
+        }
+        Button(h,t.Launcher.Draw,"Board###panel.checkers.board","Dark to move: switch###checkers.switch-turn");
         Assert.Equal(Side.Light,t.Current.ToMove);Assert.Equal(1,t.Session.History.UndoCount);
         Assert.True(t.Session.Undo());Assert.Equal(Side.Dark,t.Current.ToMove);
     }

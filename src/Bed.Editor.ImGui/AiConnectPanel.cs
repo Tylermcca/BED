@@ -33,7 +33,7 @@ internal sealed class AiConnectPanel(AiSetupSnippets? snippets, string? unavaila
         if (Ui.Button("Refresh preview"u8)) change = files.Preview(targets[selected]);
         ImGui.SameLine();
         Ui.BeginDisabled(!change.CanApply);
-        if (Ui.Button(change.Removing ? "Remove connection" : "Connect"))
+        if (Ui.Button(change.Removing ? "Remove connection###connection-action" : "Connect###connection-action"))
         {
             said = files.Apply(change).Message;
             change = files.Preview(targets[selected]);

@@ -42,6 +42,36 @@ public sealed class PlayEffectiveSettingsUi07Tests
         public void Dispose(){Host.Dispose();Assert.StartsWith(Path.GetFullPath(Path.GetTempPath()),Root,StringComparison.OrdinalIgnoreCase);Directory.Delete(Root,true);}
     }
     [Fact]
+    public void Missing_dotnet_offers_the_sdk_address_in_the_play_console()
+    {
+        using var rig = new Rig();
+        var data = Directory.CreateDirectory(Path.Combine(rig.Project, "data")).FullName;
+        var schemas = Directory.CreateDirectory(Path.Combine(rig.Project, "schemas")).FullName;
+        File.WriteAllText(Path.Combine(data, "settings.json"), "{}");
+        File.WriteAllText(Path.Combine(schemas, "settings.schema.json"), "{}");
+        using var workspace = new DataWorkspace(DataProject.Open(data, schemas));
+        workspace.BindPlaySettings(rig.Project, rig.Defaults, rig.Local);
+        workspace.BindProjectPlay(new Bed.Editor.App.ProjectPlayBridge());
+        Assert.True(workspace.Show("settings.json"), workspace.Said);
+        string? opened = null;
+        workspace.OpenPlayHelp = url => opened = url;
+
+        var path = Environment.GetEnvironmentVariable("PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("PATH", rig.Project);
+            rig.Host.Frames(workspace.Draw, 5);
+            Assert.Contains(Ui.Snapshot().Nodes, n => n.Role == UiRole.Status && n.Label == PlaySettingsResolver.MissingDotNetSdk);
+            var download = Assert.Single(Ui.Snapshot().Nodes, n => n.Role == UiRole.Button && n.Label == "Open .NET download page");
+            rig.Host.Click(workspace.Draw, download.Bounds.X + download.Bounds.Width / 2, download.Bounds.Y + download.Bounds.Height / 2);
+            Assert.Equal(DataWorkspace.DotNetSdkDownload, opened);
+            Assert.Null(workspace.ProjectPlay);
+            Assert.False(Directory.Exists(rig.Local));
+        }
+        finally { Environment.SetEnvironmentVariable("PATH", path); }
+    }
+
+    [Fact]
     public void Adapter_defaults_show_exact_full_run_and_PATH_build_commands_as_read_only_tree_text()
     {
         using var rig=new Rig();var form=rig.Form(rig.Defaults);Assert.True(form.TryLaunch(out var launch,out var why),why);

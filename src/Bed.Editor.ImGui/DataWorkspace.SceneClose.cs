@@ -45,7 +45,7 @@ public sealed partial class DataWorkspace
         if (Ui.Begin("Save changes?###scene.close"u8,ImGuiWindowFlags.AlwaysAutoResize|ImGuiWindowFlags.NoSavedSettings))
         {
             Ui.TextWrapped($"Save changes to {request.Name} before closing?");
-            Ui.TextWrapped(Said);
+            if (said.Showing) Ui.TextWrapped(Said);
             if (focusSceneClose){ImGui.SetKeyboardFocusHere();focusSceneClose=false;}
             if (Ui.Button("Save"u8))AnswerSceneClose(SaveChangesChoice.Save);
             ImGui.SameLine();

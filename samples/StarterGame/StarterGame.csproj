@@ -7,7 +7,7 @@
   </PropertyGroup>
   <!-- Reuse the bounded stdio helper as source; created games carry their own copy. -->
   <ItemGroup Condition="!Exists('LiveValuesHost.cs') and Exists('../../src/Bed.Runtime/LiveValuesHost.cs')"><Compile Include="../../src/Bed.Runtime/LiveValuesHost.cs" Link="LiveValuesHost.cs" /></ItemGroup>
-  <ItemGroup><PackageReference Include="Gum.SkiaSharp.Standalone" Version="2026.11.13.2-preview.7" /></ItemGroup>
+  <ItemGroup><PackageReference Include="Gum.SkiaSharp.Standalone" Version="2026.11.16.1-preview.8" /></ItemGroup>
   <Import Project="../../build/Notices.targets" Condition="Exists('../../build/Notices.targets')" />
   <ItemGroup><None Include="../../LICENSE.txt" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('../../LICENSE.txt')" /></ItemGroup>
 </Project>

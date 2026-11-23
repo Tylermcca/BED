@@ -31,8 +31,8 @@ public static class GumDependencyCheck
 {
     // Gum's own file kinds where Gum's library has them: its screen, component, built-in and behaviour file endings, the
     // font file endings Gum treats as fonts (BmfcSave.FontFileExtensions, plus its .fnt bitmap fonts) and its animation
-    // file endings (ElementAnimationsSave; .achx/.achj as the walker reads them). GumCommon has no public list of picture
-    // endings (the runtimes' LoaderManager.ValidTextureExtensions isn't in it), so that one is BED's.
+    // file endings (ElementAnimationsSave; .achx/.achj as the walker reads them). Picture endings come from the backend's
+    // published ContentLoader list, plus the separately loaded SVG element below.
     private static readonly HashSet<string> GumFileExtensions = new[]
     {
         GumProjectSave.ScreenExtension, GumProjectSave.ScreenJsonExtension, GumProjectSave.ComponentExtension, GumProjectSave.ComponentJsonExtension,
@@ -102,8 +102,8 @@ public static class GumDependencyCheck
     private static readonly HashSet<string> LoopCodes = ["GUM0014", "GUM0018", "GUM0024"];
 
     /// <summary>The first loop Gum's own checker finds in what <paramref name="screen"/> uses (its parts based on, holding
-    /// or placed inside each other), in plain words, or null. Gum can build such a screen but its live reload can't (it
-    /// follows the loop until the program stops), so a screen with a loop isn't shown. Call under GumLibrary's lock with
+    /// or placed inside each other), in plain words, or null. Gum omits recursive parts during construction and hot reload;
+    /// the picture keeps this diagnosis while showing the rest of the screen. Call under GumLibrary's lock with
     /// <paramref name="gum"/> as Gum's current project.</summary>
     public static CheckFinding? ScreenLoop(GumProjectSave gum, string folder, string screen)
     {

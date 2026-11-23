@@ -34,7 +34,7 @@ public sealed class LauncherTests : IDisposable
     {
         var l = Launcher();
         Assert.True(l.Open(Paths()), l.Said);
-        Assert.Contains("Opened game: 1 files", l.Said);   // named after its folder, not "data"
+        Assert.Contains("Opened game: 1 file", l.Said);   // named after its folder, not "data"
         Assert.Equal("wares.json", l.Workspace!.Active!.Name);
         var again = new RecentProjects(Settings);
         Assert.Equal(Path.Combine(Project, "data"), Assert.Single(again.Items).Data);

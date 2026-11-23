@@ -14,7 +14,7 @@ public sealed partial class ProjectLauncher
         if(Workspace is not {} open)return Say(false,"No project is open.");
         chooserOwner=open;chooserState=open.TransitionState();projectChooser=true;
         startPage=page;
-        if(page==StartPage.New)focusNewName=true;
+        if(page is StartPage.New or StartPage.NewGame)focusNewName=true;
         else BeginOpenProject();
         return true;
     }

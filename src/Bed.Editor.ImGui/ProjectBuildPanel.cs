@@ -9,7 +9,7 @@ internal sealed class ProjectBuildPanel(PlaySettingsForm settings,PlayApprovals 
     private PlayLaunch? pending,executing;
     internal Action<ProjectBuildResult,PlayLaunch>? Completed;
     internal Func<ProjectBuildError,bool>? OpenSource;
-    private bool focusApproval,focusBuild;
+    private bool focusApproval,focusBuild,showApprovalDetails;
     private ProjectBuildResult? result;
     private string status="Build the saved files without starting the game.";
     internal bool Busy=>running is {IsCompleted:false};
@@ -37,8 +37,8 @@ internal sealed class ProjectBuildPanel(PlaySettingsForm settings,PlayApprovals 
         {if(Ui.Button("Cancel build"u8))cancellation?.Cancel();}
         else if(pending is {} requested)
         {
-            Ui.TextWrapped(requested.Build!.CommandLine());Ui.TextWrapped("Working folder: "+requested.Build.WorkingDirectory);
-            Ui.TextWrapped("This build command runs code on your computer. Allow only a project you trust."u8);
+            Ui.TextWrapped("This runs the project's build on your computer. Allow it if you trust the project."u8);
+            PlaySettingsForm.DrawApprovalDetails(requested.Build!, ref showApprovalDetails);
             if(focusApproval){ImGui.SetKeyboardFocusHere();focusApproval=false;}
             if(Ui.Button("Allow this exact command and build"u8))
             {
@@ -57,7 +57,7 @@ internal sealed class ProjectBuildPanel(PlaySettingsForm settings,PlayApprovals 
             if(Ui.Button("Build saved files"u8)&&Current(out var launch))
             {
                 if(launch!.Build is null)status="Set a build command in Tools > Play settings first.";
-                else if(settings.ApprovalNeeded(launch,true) is {} reason){pending=launch;status=reason;focusApproval=true;}
+                else if(settings.ApprovalNeeded(launch,true) is not null){pending=launch;status="Build your game";focusApproval=true;showApprovalDetails=false;}
                 else Start(launch);
             }
         }

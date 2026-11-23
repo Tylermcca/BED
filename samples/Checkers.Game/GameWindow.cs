@@ -21,8 +21,10 @@ public sealed class GameWindow
         if(RegisterClassExW(ref kind)==0)throw new InvalidOperationException("Windows refused the game window.");
         try
         {
-            var rect=new Rect{Right=720,Bottom=800};AdjustWindowRectEx(ref rect,0x00CF0000,false,0);
-            host.window=CreateWindowExW(0,name,"Checkers",0x00CF0000,100,100,rect.Right-rect.Left,rect.Bottom-rect.Top,IntPtr.Zero,IntPtr.Zero,instance,IntPtr.Zero);
+            var frame=new Rect();AdjustWindowRectEx(ref frame,0x00CF0000,false,0);
+            var work=new Rect{Right=1280,Bottom=720};SystemParametersInfoW(0x0030,0,ref work,0); // the screen less the taskbar
+            var (x,y,width,height)=GameWindowSize.Fit(work.Left,work.Top,work.Right-work.Left,work.Bottom-work.Top,frame.Right-frame.Left,frame.Bottom-frame.Top);
+            host.window=CreateWindowExW(0,name,"Checkers",0x00CF0000,x,y,width,height,IntPtr.Zero,IntPtr.Zero,instance,IntPtr.Zero);
             if(host.window==IntPtr.Zero)throw new InvalidOperationException("Windows could not create the game window.");
             ShowWindow(host.window,5);
             while(host.window!=IntPtr.Zero)
@@ -71,6 +73,7 @@ public sealed class GameWindow
     [DllImport("user32.dll",CharSet=CharSet.Unicode)]private static extern ushort RegisterClassExW(ref WindowClass type);
     [DllImport("user32.dll",CharSet=CharSet.Unicode)]private static extern bool UnregisterClassW(string name,IntPtr instance);
     [DllImport("user32.dll",CharSet=CharSet.Unicode)]private static extern IntPtr CreateWindowExW(uint extended,string type,string title,uint style,int x,int y,int width,int height,IntPtr parent,IntPtr menu,IntPtr instance,IntPtr parameter);
+    [DllImport("user32.dll")]private static extern bool SystemParametersInfoW(uint action,uint number,ref Rect value,uint flags);
     [DllImport("user32.dll")]private static extern bool AdjustWindowRectEx(ref Rect rect,uint style,bool menu,uint extended);
     [DllImport("user32.dll")]private static extern bool ShowWindow(IntPtr window,int command);
     [DllImport("user32.dll")]private static extern bool DestroyWindow(IntPtr window);
@@ -87,4 +90,19 @@ public sealed class GameWindow
     [DllImport("user32.dll",CharSet=CharSet.Unicode)]private static extern bool SetWindowTextW(IntPtr window,string title);
     [DllImport("kernel32.dll",CharSet=CharSet.Unicode)]private static extern IntPtr GetModuleHandleW(string? name);
     [DllImport("gdi32.dll")]private static extern int StretchDIBits(IntPtr dc,int x,int y,int width,int height,int sourceX,int sourceY,int sourceWidth,int sourceHeight,byte[] bits,ref BitmapInfo info,uint usage,uint operation);
+}
+
+/// <summary>Where the game window goes, worked out without opening one.</summary>
+public static class GameWindowSize
+{
+    /// <summary>The window's place and outer size: the 720x800 board at full size when it fits the work area, otherwise
+    /// shrunk to fit with the board's shape kept, centred on the work area. <paramref name="frameWidth"/> and
+    /// <paramref name="frameHeight"/> are the borders and title bar around the board.</summary>
+    public static (int X,int Y,int Width,int Height) Fit(int areaLeft,int areaTop,int areaWidth,int areaHeight,int frameWidth,int frameHeight)
+    {
+        var scale=Math.Min(1.0,Math.Min((areaWidth-frameWidth)/720.0,(areaHeight-frameHeight)/800.0));
+        var boardWidth=Math.Max(90,(int)Math.Floor(720*scale));var boardHeight=Math.Max(100,(int)Math.Floor(800*scale));
+        var width=boardWidth+frameWidth;var height=boardHeight+frameHeight;
+        return (areaLeft+Math.Max(0,(areaWidth-width)/2),areaTop+Math.Max(0,(areaHeight-height)/2),width,height);
+    }
 }

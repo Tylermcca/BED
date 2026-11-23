@@ -1,5 +1,6 @@
 using Bed;
 using Bed.Editor;
+using Bed.Editor.ImGui;
 using Brutal.ImGuiApi;
 using Brutal.Numerics;
 
@@ -146,11 +147,21 @@ public static class Board
                 ImGui.SetCursorScreenPos(a);
                 // In keyboard navigation too (found by A067: InvisibleButton leaves it out unless asked), so a square is
                 // reached with the arrow keys and chosen with Enter or Space, like any button.
-                if (ImGui.InvisibleButton($"##sq{square}", new float2(cell, cell), ImGuiButtonFlags.EnableNav)) clicked(square);
+                // Named for a screen reader, which can't see the drawing: "Square c3: dark piece".
+                if (Ui.InvisibleButton($"##sq{square}", SquareName(g, r, c, picked.Contains(square)), new float2(cell, cell), ImGuiButtonFlags.EnableNav)) clicked(square);
             }
         ImGui.SetCursorScreenPos(origin + new float2(0, cell * g.Size + 4));
         ImGui.Dummy(new float2(0, 0));   // an item after moving the cursor, so the window grows to hold the board (ImGui asks for one)
         return (origin, cell);
+    }
+
+    /// <summary>What a screen reader says for the square at row <paramref name="r"/>, column <paramref name="c"/>: its
+    /// name, what stands there and whether it is chosen for the move being made.</summary>
+    public static string SquareName(Game g, int r, int c, bool chosen = false)
+    {
+        var p = g.At(r, c);
+        var what = Game.Owner(p) is { } side ? $"{(side == Side.Dark ? "dark" : "light")} {(char.IsUpper(p) ? "king" : "piece")}" : "empty";
+        return $"Square {g.Name(r, c)}: {what}{(chosen ? ", chosen" : "")}";
     }
 
     /// <summary>The centre of <paramref name="square"/> on a board last drawn at <paramref name="at"/>, in screen pixels.</summary>

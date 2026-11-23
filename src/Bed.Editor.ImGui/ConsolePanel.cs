@@ -23,7 +23,8 @@ public sealed class ConsolePanel
         }
     }
     /// <summary>Latest source-navigation outcome, separate from the game-owned log text.</summary>
-    public string Said { get; private set; }="";
+    public string Said { get => notice.Text; private set => notice.Say(value); }
+    private readonly StatusNotice notice=new();
     /// <summary>A standalone initially closed Console panel; host attachment belongs to the later Play wiring.</summary>
     public Panel AsPanel(string id="editor.linked-play.console")=>new(id,"Console",Draw,OpenAtStart:false,Width:720,Height:440);
 
@@ -34,7 +35,7 @@ public sealed class ConsolePanel
         Ui.TextWrapped($"Play session {logs.Correlation.SessionId:N}, input revision {logs.Correlation.Revision}",semanticId:"play.console.session");
         Ui.TextWrapped($"{logs.Count} messages; {logs.DroppedCount} dropped; {logs.TruncatedCount} shortened; {logs.OmittedSourceCount} source links omitted.",
             semanticId:"play.console.loss");
-        if(Said.Length>0) Ui.TextWrapped(Said,semanticId:"play.console.notice");
+        if(notice.Showing) Ui.TextWrapped(Said,semanticId:"play.console.notice");
         if(Ui.BeginChild("Play messages"u8))
         {
             foreach(var record in logs.Snapshot())
@@ -49,7 +50,7 @@ public sealed class ConsolePanel
                     Ui.BeginDisabled(!available,"There's no way to jump to the source from this file.");
                     if(Ui.Button("Open source"u8) && open is not null)
                     {
-                        try { Said=open(source) ? "Opened source." : "Source is no longer available in this project."; }
+                        try { if(open(source)) notice.Done("Opened source."); else Said="Source is no longer available in this project."; }
                         catch(Exception error) when(error is not OutOfMemoryException)
                         { Said="Could not open source."; }
                     }

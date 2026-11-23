@@ -50,7 +50,11 @@ internal static class PlayProbe
                     if(opened is null) throw new InvalidOperationException("No data file in the project could be opened. " + workspace.Said);
                     name = opened.Name;
                 }
-                if(!workspace.RequestProjectPlay()) throw new InvalidOperationException(workspace.Said);
+                // A game BED doesn't run yet waits for the person's OK in Play's own prompt, whose heading is all Said holds; the check
+                // never gives that OK, and says so in plain words.
+                if(!workspace.RequestProjectPlay()) throw new InvalidOperationException(workspace.ProjectPlayApprovalPending
+                    ? "Needs your OK: this game hasn't been run from BED on this computer. Choose Play in BED once and allow it; the Play check never allows a game itself."
+                    : workspace.Said);
                 var session = workspace.ProjectPlay ?? throw new InvalidOperationException("Saved-files Play did not start.");
                 var lines = new List<ProjectPlayOutput>();
                 var watch = Stopwatch.StartNew();

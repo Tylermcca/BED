@@ -81,6 +81,14 @@ public sealed partial class ReadabilityUx02Tests
             var folder=Path.Combine(Repo(),".validation/UX02");Directory.CreateDirectory(folder);var name=$"{mode.Replace('/','_')}-{width}-{scale:0.0}-{theme}";
             var snapshot=Capture(host,launcher.Draw,folder,name);
             AssertReadable(snapshot,scale,Path.Combine(folder,name+".txt"));
+            if(stage=="menu-File"&&scale==2&&width==1280)
+            {
+                host.MoveMouse(launcher.Draw,40,120);ImGui.GetIO().AddMouseWheelEvent(0,-8);host.Frames(launcher.Draw,8);
+                var scrolled=Capture(host,launcher.Draw,folder,name+"-scrolled");
+                var exit=Assert.Single(scrolled.Nodes,n=>n.Role==UiRole.MenuItem&&n.Label=="Exit");
+                Assert.NotNull(exit.TextEvidence);Assert.False(exit.TextEvidence.Value.Truncated);Assert.False(exit.TextEvidence.Value.Clip.IsEmpty);
+                AssertReadable(scrolled,scale,Path.Combine(folder,name+"-scrolled.txt"));
+            }
         }
         finally{EditorTheme.Preference=previous;Directory.Delete(root,true);}
     }

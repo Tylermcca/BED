@@ -415,7 +415,7 @@ public sealed class AccessibilityAcceptanceTests
                 bool done=wanted switch
                 {
                     "save"=>Workspace.Said!=previous && Workspace.Said=="Nothing to save.",
-                    "refresh"=>Workspace.Said!=previous && Workspace.Said==$"{Project.Files.Count} files.",
+                    "refresh"=>Workspace.Said!=previous && Workspace.Said==$"{Project.Files.Count} {(Project.Files.Count==1?"file":"files")}.",
                     "repair"=>Project.Find("zbroken.json")?.State==DataFileState.Repairing,
                     _=>throw new InvalidOperationException(wanted)
                 };

@@ -39,6 +39,8 @@ public sealed class PlayConsoleLayoutUi30Tests
             Assert.True(launcher.OpenFolder(root),launcher.Said);var workspace=launcher.Workspace!;Assert.True(workspace.Show(file),workspace.Said);
             host.Frames(launcher.Draw,3);Assert.True(workspace.RequestProjectPlay(),workspace.Said);host.Frames(launcher.Draw,3);
             const string name="Play console###project.play.console";var window=Im.Internal.FindWindowByName(name);Assert.False(window.IsNull());
+            Assert.False(window.Collapsed);
+            Assert.Contains(Ui.Snapshot().Nodes, n => n.Role == UiRole.Status && n.Label.StartsWith("Running", StringComparison.Ordinal));
             Im.Internal.DockContextProcessUndockWindow(Im.GetCurrentContext(),window,true);Im.SetWindowPos(name,new(0,30),ImGuiCond.Always);Im.SetWindowSize(name,new(1008,740),ImGuiCond.Always);Im.SetWindowFocus(name);host.Frames(launcher.Draw,3);
             UiNode Node(string label)=>Assert.Single(Ui.Snapshot().Nodes,n=>n.Label==label&&n.Role==UiRole.Button);
             void Visible(UiNode n)

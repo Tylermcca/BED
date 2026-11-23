@@ -17,7 +17,7 @@ Open this folder with BED's **Open project** command (or Ctrl+O). The packaged c
 1. Select a crate in the 3D view. Its body (motion, mass, friction and shape) appears in the Inspector.
 2. Open **View > Physics** to see the world's gravity and fixed step.
 3. Change a crate's mass in the Inspector, then save. Only that copy changes; **Reset** puts the prefab's value back.
-4. Press **Build and Play**. The first time, BED shows the exact build command and asks you to allow it. The game then prepares the saved level and opens its window: the stack settles under gravity and the paddle slides into it. Drop more crates with the left mouse button. When you close the window, the Play output shows the number of bodies and fixed steps, where the top crate came to rest and how far the paddle travelled. Move something in BED, save and play again: the game starts from the saved level.
+4. Press **Build and Play**. The first time, BED asks if you want to build your game. Choose **Show details** to see the exact command. The game then prepares the saved level and opens its window: the stack settles under gravity and the paddle slides into it. Drop more crates with the left mouse button. When you close the window, the Play output shows the number of bodies and fixed steps, where the top crate came to rest and how far the paddle travelled. Move something in BED, save and play again: the game starts from the saved level.
 5. Use **Export build** to copy a standalone game that runs the same saved physics without BED.
 
 Play and Export use your saved files only. Simulated movement never changes the level.

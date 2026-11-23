@@ -4,7 +4,7 @@ Start with a small idea: catch a bright square five times. It moves to a new pla
 
 ## What you need
 
-- Windows 10 or 11, 64-bit, and the BED preview ZIP unpacked into a folder you can write to. Open **BED.exe** there. Follow **START_HERE.txt** if Windows asks for the Visual C++ Redistributable.
+- Windows 10 or 11, 64-bit, and the BED ZIP unpacked into a folder you can write to. Open **BED.exe** there. Follow **START_HERE.txt** if Windows asks for the Visual C++ Redistributable.
 - For the assistant steps, your own AI app installed separately. You can also follow the commands below yourself in Windows PowerShell.
 - For the screen step, [download and set up Gum](https://docs.flatredball.com/gum/gum-tool/setup). On Windows, unpack **Gum-win-x64.zip** and keep its folder together. Remember where **Gum.exe** is.
 - For the final code step, install the **Windows x64 SDK** from [Microsoft's .NET 10 download page](https://dotnet.microsoft.com/en-us/download/dotnet/10.0). The SDK is the set of tools that builds C# code; the Runtime download alone cannot build it. The first build needs an internet connection to fetch the starter's included packages.
@@ -27,7 +27,7 @@ Preview lists the files and writes nothing. The second command creates the folde
 
 If you used the command line, now choose **File > Open project...** in BED and select **My first game**, not its data subfolder. Open **settings.json** in **Files** to see its settings.
 
-Choose **Play** in BED. In the game, click Play or press Enter. Click the bright square or press Space to catch it. Five catches win. R starts again; Esc returns to the menu, and Esc from the menu closes the game. Try these controls before changing anything.
+Choose **Play** in BED. On the first run, BED asks to run the saved player command. Read the command and working folder, then choose **Allow this exact command and continue** for your new game. In the game, click Play or press Enter. Click the bright square or press Space to catch it. Five catches win. R starts again; Esc returns to the menu, and Esc from the menu closes the game. Try these controls before changing anything.
 
 ## 2. Change the winning target
 
@@ -63,11 +63,11 @@ Here `.` means the current folder. `--headless` runs without a window, and the s
 
 ### See a picture without a game window
 
-Stop ordinary Play, open **settings.json**, then choose **View > Game picture** and **Start picture run**. The panel shows the new game's menu. **Take picture** captures it again without advancing play or changing saved files; **Stop picture run** ends that run. To play the game, stop the picture run and use ordinary **Play**.
+Choose **Tools > Stop** if ordinary Play is still running, open **settings.json**, then choose **View > Game picture** and **Start picture run**. The panel shows the new game's menu. **Take picture** captures it again without advancing play or changing saved files; **Stop picture run** ends that run. To play the game, stop the picture run and use ordinary **Play**.
 
 ### Watch the score in Live values
 
-Stop ordinary Play, open **settings.json**, then open the command palette (**Ctrl+Shift+P**), choose **Show Live values** and start live values. This runs without a game window. BED shows **Score**, **Winning target** and **Round won (1 = yes)**. Try **start**, then **collect** to watch the score change; **back** returns to the menu and **restart** starts a fresh round. These trials do not change saved files. Edit the winning target through the checked settings as above.
+Choose **Tools > Stop** if ordinary Play is still running, open **settings.json**, then open the command palette (**Ctrl+Shift+P**), choose **Show Live values**, then press **Start live values**. This runs without a game window. BED shows **Score**, **Winning target** and **Round won (1 = yes)**. Press **Try start (quarter second)**, then **Try collect (quarter second)** to watch the score change. The **Try back (quarter second)** button returns to the menu; **Try restart (quarter second)** starts a fresh round. Choose **Tools > Stop** when you finish. These trials do not change saved files. Edit the winning target through the checked settings as above.
 
 ## 3. Change the screen in Gum
 
@@ -87,7 +87,7 @@ The two saved settings cannot describe every new idea. For a code experiment, as
 
 Install the .NET 10 SDK first, as listed above. Open a new PowerShell window after installation and run `dotnet --list-sdks`; it should list a 10.x SDK. A text editor is enough to read the copied files in **source**; they do not need the BED source checkout.
 
-Save the code and settings, then stop the old game. In BED choose **Tools > Build game**. Read the command and working folder BED shows, then use **Allow this exact command and build** to approve that build. Build uses saved files and does not start Play. If it reports a source error, open the reported line, fix it and build again.
+Save the code and settings, then stop the old game. In BED choose **Tools > Build game**, then press **Build saved files** in the panel. Read the command and working folder BED shows, then use **Allow this exact command and build** to approve that build. BED remembers an approved command, so later builds may start without asking again. Build uses saved files and does not start Play. If it reports a source error, open the reported line, fix it and build again.
 
 From your game's folder, the equivalent build is:
 

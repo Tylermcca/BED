@@ -17,7 +17,7 @@ internal sealed partial class Scene2InspectorType:IObjectType<Scene2>
     private sealed record Field(string Id,string Label,PropertyKind Kind,object? Value,string Pointer,IReadOnlyList<string>? Choices=null);
     private static IEnumerable<Field> Fields(Scene2 scene,Scene2Object item)
     {
-        var o=item.Object;yield return new("id","Id",PropertyKind.Text,o.Id,"/id");
+        var o=item.Object;yield return new("id","Object code",PropertyKind.Text,o.Id,"/id");
         yield return new("asset","Asset",PropertyKind.Text,o.Asset??"","/asset");
         yield return new("parent","Inside",PropertyKind.Text,o.Parent??"","/parent");
         for(var axis=0;axis<(scene.Space==SceneSpace.TwoDXY?2:3);axis++)

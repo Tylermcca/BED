@@ -165,9 +165,9 @@ public sealed class BoardView(EditorModel<DataDocument> editor)
             ImGui.TextWrapped("This file doesn't hold a valid position yet; the table and the issues list say why."u8);
             return;
         }
-        if (ImGui.Button("Play in its own window"u8)) PlayInOwnWindow();
+        if (Ui.Button("Play in its own window"u8)) PlayInOwnWindow();
         ImGui.SameLine();
-        if (ImGui.Button((g.ToMove == Side.Dark ? "Dark" : "Light") + " to move: switch")) SwitchTurn();
+        if (Ui.Button((g.ToMove == Side.Dark ? "Dark" : "Light") + " to move: switch###checkers.switch-turn")) SwitchTurn();
         ImGui.TextDisabled(Said);
         LastBoard = Board.Draw(g, [], square => Cycle(square));
     }

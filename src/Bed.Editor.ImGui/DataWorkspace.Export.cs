@@ -59,7 +59,7 @@ public sealed partial class DataWorkspace
         if(exportFocus)Im.SetNextWindowFocus();
         if(Ui.Begin("Export saved files###export.save.decision"u8,ImGuiWindowFlags.AlwaysAutoResize|ImGuiWindowFlags.NoSavedSettings))
         {
-            Ui.TextWrapped(Said);
+            if (said.Showing) Ui.TextWrapped(Said);
             Ui.TextWrapped("Don't Save exports the saved version and keeps your edits open."u8);
             if(exportFocus){Im.SetKeyboardFocusHere();exportFocus=false;}
             if(Ui.Button("Save"u8))AnswerExport(SaveChangesChoice.Save);

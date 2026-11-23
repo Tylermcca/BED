@@ -20,7 +20,7 @@ public sealed class WindowTitle
         ArgumentNullException.ThrowIfNull(launcher);
         if (launcher.Current is not { } project) return Format(null);
         var active = launcher.Workspace?.Active;
-        return Format(ProjectLauncher.Name(project), active?.Name, active?.Dirty ?? false);
+        return Format(launcher.DisplayName(project), active?.Name, active?.Dirty ?? false);
     }
 
     /// <summary>Publishes only changed text. A failed host update is not recorded as successful.</summary>

@@ -67,7 +67,7 @@ public sealed class ProjectCreator
     public ProjectCreationResult Create(string templateId, string location, string name) =>
         Create(templateId, location, name, out _);
 
-    private ProjectCreationResult Create(string templateId, string location, string name, out bool retryCollision, bool sceneExample = false, bool tourData = false)
+    private ProjectCreationResult Create(string templateId, string location, string name, out bool retryCollision, bool sceneExample = false)
     {
         retryCollision = false;
         var prepared = sceneExample ? PrepareSceneExample(location, name, out var status, out var why) : Prepare(templateId, location, name, out status, out why);
@@ -76,7 +76,8 @@ public sealed class ProjectCreator
             retryCollision = status == ProjectCreationStatus.DestinationExists;
             return new(status, why, null, null, Array.Empty<string>());
         }
-        if(tourData)
+        // The ordinary 3D example includes the small table used by the tour.
+        if (sceneExample && File.Exists(Path.Combine(recipes, "data", "wares.json")))
         {
             try
             {
@@ -162,16 +163,6 @@ public sealed class ProjectCreator
             null, null, Array.Empty<string>());
     }
 
-    internal ProjectCreationResult TryTourAt(string location)
-    {
-        if(!Directory.Exists(SceneExampleFolder))return new(ProjectCreationStatus.Refused,"The tour needs the bundled 3D example. Reinstall the complete BED package.",null,null,[]);
-        for(var number=1;number<=10000;number++)
-        {
-            var result=Create("recipes",location,number==1?"Tour example":"Tour example "+number,out var retry,true,true);
-            if(result.Status!=ProjectCreationStatus.DestinationExists||!retry)return result;
-        }
-        return new(ProjectCreationStatus.Refused,"Choose another location for the tour example.",null,null,[]);
-    }
     private string SceneExampleFolder => Path.Combine(Path.GetDirectoryName(recipes)!, "scene-starter");
     private Prepared? PrepareSceneExample(string location, string name, out ProjectCreationStatus status, out string why)
     {

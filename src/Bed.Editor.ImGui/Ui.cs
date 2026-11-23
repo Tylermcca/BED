@@ -142,6 +142,10 @@ public static partial class Ui
     /// <summary>Delegate Button to ImGui unchanged and record the corresponding semantic item or scope.</summary>
     public static bool Button(ImString label, in float2? size = null)
     { using var complete=new CompleteControlClip(size is {} requested&&requested.Y>0?requested.Y:Im.CalcTextSize(Label(label)).Y+Im.GetStyle().FramePadding.Y*2); var id = Im.GetID(label).Value; var request = BeforeAction(UiRole.Button, id, label, UiActions.Focus | UiActions.Invoke); var result = Im.Button(label, size); result |= ApplyAction(request); var node = Item(UiRole.Button, ActionLabel(id, label), id, UiActions.Invoke | UiActions.Focus); RecordTextEvidence(node, button: true, measured: Im.CalcTextSize(Label(label))); return result; }
+    /// <summary>Delegate InvisibleButton to ImGui and record it as a button a screen reader says by <paramref name="name"/>,
+    /// for a custom-drawn spot (a board square) that has no visible text of its own.</summary>
+    public static bool InvisibleButton(ImString label, string name, in float2 size, ImGuiButtonFlags flags = 0)
+    { NameNextItem(label, name); var id = Im.GetID(label).Value; var request = BeforeAction(UiRole.Button, id, label, UiActions.Focus | UiActions.Invoke); var result = Im.InvisibleButton(label, size, flags); result |= ApplyAction(request); Item(UiRole.Button, ActionLabel(id, label), id, UiActions.Invoke | UiActions.Focus); return result; }
     /// <summary>Draws a compact action with a minimum height of 24 logical pixels and records its ordinary focus/action semantics.</summary>
     public static bool SmallButton(ImString label)
     { using var complete=new CompleteControlClip(MathF.Max(Im.GetFrameHeight(),24*Im.GetStyle().FontScaleDpi)); var id = Im.GetID(label).Value; var request = BeforeAction(UiRole.Button, id, label, UiActions.Focus | UiActions.Invoke); var result = Im.Button(label,new float2(0,MathF.Max(Im.GetFrameHeight(),24*Im.GetStyle().FontScaleDpi))); result |= ApplyAction(request); var node = Item(UiRole.Button, ActionLabel(id, label), id, UiActions.Invoke | UiActions.Focus); RecordTextEvidence(node, button: true, measured: Im.CalcTextSize(Label(label))); return result; }
@@ -210,6 +214,7 @@ public static partial class Ui
     /// <summary>Delegate MenuItem to ImGui unchanged and record the corresponding semantic item or scope.</summary>
     public static bool MenuItem(ImString label, ImString shortcut = default, bool selected = false, bool enabled = true, string? disabledReason = null)
     {
+        using var complete=new CompleteControlClip(Im.CalcTextSize(Label(label)).Y);
         var id = Im.GetID(label).Value; var request = BeforeAction(UiRole.MenuItem, id, label, UiActions.Focus | UiActions.Invoke, enabled); var result = Im.MenuItem(label, shortcut, selected, enabled); var synthetic = ApplyAction(request); if (synthetic && !result && (Im.Internal.GetCurrentWindow().Flags & ImGuiWindowFlags.Popup) != 0) Im.CloseCurrentPopup(); result |= synthetic;
         var node = Item(UiRole.MenuItem, ActionLabel(id, label), id, UiActions.Invoke | UiActions.Focus, check: selected, enabled: enabled);
         RecordTextEvidence(node,measured:Im.CalcTextSize(Label(label)));
@@ -222,7 +227,7 @@ public static partial class Ui
     }
     /// <summary>Delegate MenuItem to ImGui unchanged and record the corresponding semantic item or scope.</summary>
     public static bool MenuItem(ImString label, ImString shortcut, ref bool selected, bool enabled = true)
-    { var id = Im.GetID(label).Value; var request = BeforeAction(UiRole.MenuItem, id, label, UiActions.Focus | UiActions.Invoke, enabled); var result = Im.MenuItem(label, shortcut, ref selected, enabled); var synthetic = ApplyAction(request); if (synthetic && !result) { selected = !selected; if ((Im.Internal.GetCurrentWindow().Flags & ImGuiWindowFlags.Popup) != 0) Im.CloseCurrentPopup(); } result |= synthetic; Item(UiRole.MenuItem, ActionLabel(id, label), id, UiActions.Invoke | UiActions.Focus, check: selected, enabled: enabled); return result; }
+    { using var complete=new CompleteControlClip(Im.CalcTextSize(Label(label)).Y); var id = Im.GetID(label).Value; var request = BeforeAction(UiRole.MenuItem, id, label, UiActions.Focus | UiActions.Invoke, enabled); var result = Im.MenuItem(label, shortcut, ref selected, enabled); var synthetic = ApplyAction(request); if (synthetic && !result) { selected = !selected; if ((Im.Internal.GetCurrentWindow().Flags & ImGuiWindowFlags.Popup) != 0) Im.CloseCurrentPopup(); } result |= synthetic; Item(UiRole.MenuItem, ActionLabel(id, label), id, UiActions.Invoke | UiActions.Focus, check: selected, enabled: enabled); return result; }
     /// <summary>Delegate TextLink to ImGui unchanged and record the corresponding semantic item or scope.</summary>
     public static bool TextLink(ImString label)
     { var id = Im.GetID(label).Value; var request = BeforeAction(UiRole.Link, id, label, UiActions.Focus | UiActions.Invoke); var result = Im.TextLink(label); result |= ApplyAction(request); var node = Item(UiRole.Link, ActionLabel(id, label), id, UiActions.Invoke | UiActions.Focus); RecordTextEvidence(node); return result; }
@@ -381,10 +386,10 @@ public static partial class Ui
     public static void EndMenuBar() { Im.EndMenuBar(); Parents.Pop(); }
     /// <summary>Draw text unchanged and record its visible content; semanticId avoids positional identity.</summary>
     public static void Text(ImString text, string? semanticId = null)
-    { var wrap = TextWrapWidth(false); Im.Text(text); var node = Group(UiRole.Text, Label(text, false), 0, LastBounds(), semanticId: semanticId, positional: true); RecordTextEvidence(node, wrap); }
+    { var wrap = TextWrapWidth(false); using var complete = new CompleteControlClip(Im.CalcTextSize(Label(text, false), false, wrap).Y); Im.Text(text); var node = Group(UiRole.Text, Label(text, false), 0, LastBounds(), semanticId: semanticId, positional: true); RecordTextEvidence(node, wrap); }
     /// <summary>Draw wrapped text unchanged and record its visible content.</summary>
     public static void TextWrapped(ImString text, string? semanticId = null)
-    { var wrap = TextWrapWidth(true); Im.TextWrapped(text); var node = Group(UiRole.Text, Label(text, false), 0, LastBounds(), semanticId: semanticId, positional: true); RecordTextEvidence(node, wrap); }
+    { var wrap = TextWrapWidth(true); using var complete = new CompleteControlClip(Im.CalcTextSize(Label(text, false), false, wrap).Y); Im.TextWrapped(text); var node = Group(UiRole.Text, Label(text, false), 0, LastBounds(), semanticId: semanticId, positional: true); RecordTextEvidence(node, wrap); }
     /// <summary>Draw status text, ellipsizing unwrapped lines to the available width. The recorded name and tooltip retain the complete text.</summary>
     public static void Status(ImString text, string? semanticId = null) => BoundedNotice(text, semanticId, false);
 
@@ -428,6 +433,8 @@ public static partial class Ui
     /// <summary>Delegate TreeNodeEx to ImGui unchanged and record the corresponding semantic item or scope.</summary>
     public static bool TreeNodeEx(ImString label, ImGuiTreeNodeFlags flags = 0)
     {
+        // Like buttons and list rows, a header half cut off at a scrolling edge waits until it's fully in view.
+        using var complete = new CompleteControlClip(MathF.Max(Im.GetFrameHeight(), Im.CalcTextSize(Label(label)).Y));
         var id = Im.GetID(label).Value;var caption=TreeCaption(label,flags); var result = Im.TreeNodeEx(label, flags);
         var node = Item(UiRole.TreeItem, ActionLabel(id, label), id, UiActions.Expand | UiActions.Focus,
             selected: (flags & ImGuiTreeNodeFlags.Selected) != 0, expanded: result);

@@ -16,12 +16,13 @@ namespace Bed.Editor.ImGui;
 public sealed unsafe class PictureTexture : IDisposable
 {
     private static readonly List<(nint Texture, ImGuiContextPtr Context)> Retiring = [];
+    private static readonly HashSet<PictureTexture> Live = [];
     private static (ImGuiContextPtr Context, int Frame) lastTick;
     private ImTextureData* texture;
     private ImGuiContextPtr context;
     private long version = -1;
 
-    /// <summary>The picture's size in pixels; 0 before the first <see cref="Update"/>.</summary>
+    /// <summary>The picture's size in pixels; 0 before the first <see cref="Update"/> or after its context is released.</summary>
     public int Width => texture is null ? 0 : texture->Width;
 
     /// <summary>See <see cref="Width"/>.</summary>
@@ -52,6 +53,7 @@ public sealed unsafe class PictureTexture : IDisposable
             ((ImTextureDataPtr)texture).Create(ImTextureFormat.RGBA32, width, height);
             context = Im.GetCurrentContext();
             Im.Internal.RegisterUserTexture(texture);
+            Live.Add(this);
             version = -1;
         }
         if (newVersion == version) return;
@@ -82,6 +84,7 @@ public sealed unsafe class PictureTexture : IDisposable
             Retiring.Add(((nint)texture, context));
         }
         texture = null;
+        Live.Remove(this);
     }
 
     /// <summary>Counts frames for retired pictures and frees each one the renderer has let go of. Call once a frame,
@@ -104,6 +107,28 @@ public sealed unsafe class PictureTexture : IDisposable
                 t->UnusedFrames++;
             }
         }
+    }
+
+    /// <summary>Frees every live or retired picture owned by the current ImGui context before it is destroyed.
+    /// Call on the UI thread, after the renderer has finished all work and released its texture resources. It is safe
+    /// to call again; pictures can be updated in a new context afterwards. Other contexts are left alone.</summary>
+    public static void ReleaseContext()
+    {
+        var current = Im.GetCurrentContext();
+        if (current.IsNull()) return;
+        foreach (var picture in Live.ToArray())
+            if (picture.context.Equals(current)) picture.Retire();
+        for (var i = Retiring.Count - 1; i >= 0; i--)
+        {
+            var (pointer, owner) = Retiring[i];
+            if (!owner.Equals(current)) continue;
+            Retiring.RemoveAt(i);
+            var t = (ImTextureData*)pointer;
+            t->TexID = default;
+            t->Status = ImTextureStatus.Destroyed;
+            Free(t);
+        }
+        if (lastTick.Context.Equals(current)) lastTick = default;
     }
 
     private static void Free(ImTextureData* t)

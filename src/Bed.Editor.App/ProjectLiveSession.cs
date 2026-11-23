@@ -9,7 +9,6 @@ internal sealed class ProjectLiveSession(PlayLaunch launch,PlayApprovals approva
     private Task<LiveValuesSnapshot>? pending;
     private Task? ending;
     private bool stopped,started;
-    private long next;
     private readonly Dictionary<string,float> desired=new(StringComparer.Ordinal);
     public LiveValueTarget Target=>target;
     public LiveValuesSnapshot? Values {get;private set;}
@@ -32,10 +31,9 @@ internal sealed class ProjectLiveSession(PlayLaunch launch,PlayApprovals approva
         {
             try{Values=pending.GetAwaiter().GetResult();Status="Live values are ready. The game pauses between updates.";}
             catch(Exception e){Status="Live Play unavailable: "+e.Message;observation.Dispose();stopped=true;}
-            pending=null;next=Environment.TickCount64+100;
+            pending=null;
         }
         if(started&&!stopped&&pending is null&&desired.Count>0){var edit=desired.First();desired.Remove(edit.Key);pending=Task.Run(()=>observation.ReadValues(target,field:edit.Key,value:edit.Value));}
-        else if(started&&!stopped&&pending is null&&Environment.TickCount64>=next)pending=Task.Run(()=>observation.ReadValues(target,seconds:.1));
     }
     public bool TryValue(string field,float value)
     {

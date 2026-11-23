@@ -39,7 +39,7 @@ A part can accidentally include itself, directly or through another part. BED no
 
 ### Saving changes and pictures
 
-BED uses Gum preview 6 to follow saves. Gum watches the project and updates the picture; there is no extra reload setup to do in BED. This also works when a screen has a loop: the parts outside it still draw and follow saves.
+BED follows your saves in Gum automatically; there is no extra reload setup. This also works when a screen has a loop: the parts outside it still draw and follow saves.
 
 The picture file types BED checks come from the Gum version it includes. A file type Gum does not support appears as a problem in the **Gum screens** check; use a picture type Gum can read.
 

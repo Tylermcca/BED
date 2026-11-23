@@ -48,6 +48,7 @@ public sealed class ProjectPlayHost : IDisposable
     private string? fault,requiredFramework;
     private long stateAt;
     private bool disposed,forced;
+    private bool sdkMissing;
     /// <summary>Declared cooperative-stop grace; after it only this owner's job tree is terminated.</summary>
     public static readonly TimeSpan StopGrace=TimeSpan.FromSeconds(5);
     /// <summary>Constructs without starting a process or writing project data.</summary>
@@ -104,7 +105,7 @@ public sealed class ProjectPlayHost : IDisposable
     }
     private void Launch(GameLaunchSpec spec,ProjectPlayState state,string status)
     {
-        child?.Dispose();fault=null;requiredFramework=null;forced=false;ExitCode=null;
+        child?.Dispose();fault=null;requiredFramework=null;sdkMissing=false;forced=false;ExitCode=null;
         frameControl?.Dispose();frameControl=null;
         var environment=new Dictionary<string,string>{{"BED_PROJECT",root},{"BED_PLAY","1"},{"BED_FRAME_PIPE",""},{"BED_FRAME_TOKEN",""},{"BED_FRAME_VERSION",""}};
         if(state==ProjectPlayState.Running){frameControl=new(clock);frameControl.AddEnvironment(environment);}
@@ -143,7 +144,17 @@ public sealed class ProjectPlayHost : IDisposable
             {
                 ExitCode=child.Completion.GetAwaiter().GetResult();
                 if(forced){State=ProjectPlayState.Stopped;return;}
-                if(ExitCode!=0){string? framework;lock(gate)framework=requiredFramework;Fail(DotNetLaunchFailure.Describe(ExitCode.Value,framework)??$"The game stopped with error code {ExitCode}.");return;}
+                if (ExitCode != 0)
+                {
+                    string? framework;
+                    bool missingSdk;
+                    lock (gate) { framework = requiredFramework; missingSdk = sdkMissing; }
+                    var dotNetBuild = State == ProjectPlayState.Building &&
+                        string.Equals(Path.GetFileName(build?.Executable), "dotnet.exe", StringComparison.OrdinalIgnoreCase);
+                    Fail(dotNetBuild && missingSdk ? PlaySettingsResolver.MissingDotNetSdk :
+                        DotNetLaunchFailure.Describe(ExitCode.Value, framework) ?? $"The game stopped with error code {ExitCode}.");
+                    return;
+                }
                 if(State==ProjectPlayState.Building)
                 {
                     var program=run.Executable;
@@ -165,7 +176,12 @@ public sealed class ProjectPlayHost : IDisposable
     public IReadOnlyList<ProjectPlayLog> DrainLogs(){lock(gate){var result=pending.ToArray();pending.Clear();return result;}}
     private void Record(string text,bool error)
     {
-        if(error&&DotNetLaunchFailure.Framework(text) is {} framework)lock(gate)requiredFramework??=framework;
+        if (error)
+            lock (gate)
+            {
+                if (DotNetLaunchFailure.Framework(text) is { } framework) requiredFramework ??= framework;
+                if (text.Contains("No .NET SDKs were found", StringComparison.OrdinalIgnoreCase)) sdkMissing = true;
+            }
         Log(error,text);
     }
     private void Log(bool error,string text)

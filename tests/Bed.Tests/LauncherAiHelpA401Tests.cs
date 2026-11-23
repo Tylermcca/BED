@@ -29,7 +29,9 @@ public sealed class LauncherAiHelpA401Tests
         for (var i = 0; i < 40; i++)
         {
             var context = ImGui.GetCurrentContext();
-            if (FocusWindow() == title && context.NavId.Value == wanted) return;
+            // The start page's controls sit in its scrolling list (BED-NEWUSER01), a child of the launcher window.
+            if ((FocusWindow() == title && context.NavId.Value == wanted)
+                || (FocusWindow().StartsWith(title + "/", StringComparison.Ordinal) && context.NavId.Value == context.NavWindow.GetID(label).Value)) return;
             host.Press(draw, ImGuiKey.Tab);
         }
         Assert.Fail("Tab did not reach " + label + " in " + title);
@@ -67,7 +69,7 @@ public sealed class LauncherAiHelpA401Tests
             host.Frames(launcher.Draw, 3);
             Assert.DoesNotContain(GettingStartedPanel.Heading, Text(host, launcher.Draw));
             Assert.DoesNotContain(CopyLabels[0], Text(host, launcher.Draw));
-            Assert.Equal(StartWindow, FocusWindow());
+            Assert.StartsWith(StartWindow, FocusWindow());
             Assert.Equal(helpId, ImGui.GetCurrentContext().NavId.Value);
             Assert.Null(launcher.Workspace);
         }

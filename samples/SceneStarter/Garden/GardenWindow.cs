@@ -10,7 +10,7 @@ namespace SceneStarter.Garden;
 public sealed class GardenWindow
 {
     private const uint WsOverlappedWindow=0x00CF0000,WmDestroy=0x0002,WmSize=0x0005,WmKillFocus=0x0008,WmPaint=0x000F,
-        WmEraseBackground=0x0014,WmKeyDown=0x0100,WmKeyUp=0x0101,WmSysKeyDown=0x0104,WmSysKeyUp=0x0105,WmQuit=0x0012;
+        WmClose=0x0010,WmEraseBackground=0x0014,WmKeyDown=0x0100,WmKeyUp=0x0101,WmSysKeyDown=0x0104,WmSysKeyUp=0x0105,WmQuit=0x0012;
     private static GardenWindow? current;
     private static readonly WndProc Procedure=Dispatch;   // kept alive for the native window class
     private readonly GardenGame game;
@@ -24,17 +24,21 @@ public sealed class GardenWindow
     /// the same window is created hidden and runs <paramref name="frames"/> steps of <paramref name="script"/>; that is
     /// only a check that the native calls work, and never takes focus.</summary>
     public static int Play(GardenGame game,bool visible=true,GardenInput[]? script=null,int frames=0)
+        => Play(game, visible, script, frames, null);
+
+    internal static int Play(GardenGame game, bool visible, GardenInput[]? script, int frames, Action? opened)
     {
         if(visible)try{SetProcessDpiAwarenessContext(new IntPtr(-4));}catch(EntryPointNotFoundException){}
         var screenW=GetSystemMetrics(0);var screenH=GetSystemMetrics(1);
         if(screenW<=0||screenH<=0){screenW=1600;screenH=900;}
-        var (width,height)=GardenRenderer.Fit(game.Level.Bounds,Math.Min(1600,screenW*85/100),screenH*75/100);
+        var work = WorkArea(screenW, screenH);
+        var (width,height)=GardenRenderer.Fit(game.Level.Bounds,Math.Min(1600,(work.Right-work.Left)*85/100),(work.Bottom-work.Top)*75/100);
         var host=new GardenWindow(game,width,height);current=host;
-        try{return host.Run(visible,script,frames);}
+        try{return host.Run(visible,script,frames,work,opened);}
         finally{current=null;}
     }
 
-    private int Run(bool visible,GardenInput[]? script,int frames)
+    private int Run(bool visible,GardenInput[]? script,int frames,Rect work, Action? opened)
     {
         var instance=GetModuleHandleW(IntPtr.Zero);
         var name="BedFlagGarden"+Environment.ProcessId;
@@ -45,10 +49,15 @@ public sealed class GardenWindow
         try
         {
             var rect=new Rect{Right=renderer.Width,Bottom=renderer.Height};AdjustWindowRectEx(ref rect,WsOverlappedWindow,false,0);
-            window=CreateWindowExW(0,name,"Flag Garden",WsOverlappedWindow,unchecked((int)0x80000000),unchecked((int)0x80000000),
-                rect.Right-rect.Left,rect.Bottom-rect.Top,IntPtr.Zero,IntPtr.Zero,instance,IntPtr.Zero);
+            var outerWidth = Math.Min(rect.Right - rect.Left, work.Right - work.Left);
+            var outerHeight = Math.Min(rect.Bottom - rect.Top, work.Bottom - work.Top);
+            var x = work.Left + (work.Right - work.Left - outerWidth) / 2;
+            var y = work.Top + (work.Bottom - work.Top - outerHeight) / 2;
+            window=CreateWindowExW(0,name,"Flag Garden",WsOverlappedWindow,x,y,
+                outerWidth,outerHeight,IntPtr.Zero,IntPtr.Zero,instance,IntPtr.Zero);
             if(window==IntPtr.Zero)throw new InvalidOperationException("Windows could not open the game window.");
             if(visible){ShowWindow(window,5);SetForegroundWindow(window);}
+            opened?.Invoke();
             var clock=Stopwatch.StartNew();double accumulated=0,last=0;var steps=0;
             while(true)
             {
@@ -111,6 +120,7 @@ public sealed class GardenWindow
                     return IntPtr.Zero;
                 case WmPaint:self.Present();ValidateRect(hwnd,IntPtr.Zero);return IntPtr.Zero;
                 case WmEraseBackground:return new IntPtr(1);
+                case WmClose: DestroyWindow(hwnd); return IntPtr.Zero;
                 case WmDestroy:if(self.window==hwnd)self.window=IntPtr.Zero;PostQuitMessage(0);return IntPtr.Zero;
             }
         return DefWindowProcW(hwnd,message,wParam,lParam);
@@ -144,6 +154,11 @@ public sealed class GardenWindow
     [DllImport("user32.dll")]private static extern IntPtr GetDC(IntPtr window);
     [DllImport("user32.dll")]private static extern int ReleaseDC(IntPtr window,IntPtr dc);
     [DllImport("user32.dll")]private static extern IntPtr LoadCursorW(IntPtr instance,IntPtr name);
+    private static Rect WorkArea(int width, int height) =>
+        SystemParametersInfoW(0x0030, 0, out var area, 0) && area.Right > area.Left && area.Bottom > area.Top
+            ? area : new Rect { Right = width, Bottom = height };
+
+    [DllImport("user32.dll")]private static extern bool SystemParametersInfoW(uint action, uint parameter, out Rect value, uint flags);
     [DllImport("user32.dll")]private static extern int GetSystemMetrics(int index);
     [DllImport("user32.dll")]private static extern bool SetProcessDpiAwarenessContext(IntPtr context);
     [DllImport("kernel32.dll")]private static extern IntPtr GetModuleHandleW(IntPtr name);

@@ -4,7 +4,7 @@ using Im=Brutal.ImGuiApi.ImGui;
 
 public sealed partial class DataWorkspace
 {
-    private bool requestingPicture,pendingPicture;
+    private bool requestingPicture,pendingPicture,focusPicture;
     private readonly PictureTexture gamePictureTexture=new();
     private GamePictureFrame? shownPicture;
     private long gamePictureVersion;
@@ -12,7 +12,7 @@ public sealed partial class DataWorkspace
     {
         if(projectPlayHost is not IGamePictureHost){Said="This BED installation cannot request game pictures.";return false;}
         requestingPicture=true;
-        try{return RequestProjectPlay();}finally{requestingPicture=false;}
+        try{var started=RequestProjectPlay();focusPicture=started;return started;}finally{requestingPicture=false;}
     }
     internal void DrawGamePicture()
     {
@@ -21,15 +21,17 @@ public sealed partial class DataWorkspace
         if(projectPlay is IGamePictureSession picture&&projectPlay.HasCompleted==false)
         {
             Ui.BeginDisabled(picture.Busy,"Wait for the picture request to finish.");
-            if(Ui.Button("Take picture"u8))picture.TakePicture();Ui.EndDisabled();
-            if(Ui.Button("Stop picture run"u8))StopProjectPlay();
+            if(focusPicture&&!picture.Busy){if(Im.IsWindowFocused())Im.SetKeyboardFocusHere();focusPicture=false;}
+            if(Ui.Button("Take picture###picture-request"u8)){picture.TakePicture();focusPicture=true;}Ui.EndDisabled();
+            if(Ui.Button("Stop picture run"u8)){StopProjectPlay();focusPicture=true;}
         }
         else
         {
             Ui.BeginDisabled(projectPlay is {HasCompleted:false},"Stop the running program first.");
-            if(Ui.Button("Start picture run"u8))RequestGamePicture();Ui.EndDisabled();
+            if(focusPicture){if(Im.IsWindowFocused())Im.SetKeyboardFocusHere();focusPicture=false;}
+            if(Ui.Button("Start picture run###picture-request"u8))RequestGamePicture();Ui.EndDisabled();
         }
-        Ui.TextWrapped(projectPlay is IGamePictureSession?projectPlay.Status:Said);
+        Ui.TextWrapped(projectPlay is IGamePictureSession?projectPlay.Status:said.Showing?Said:"");
         if(projectPlay is not IGamePictureSession{Picture:{} frame})return;
         Ui.TextWrapped($"Game picture: {frame.Width} by {frame.Height} pixels, game step {frame.Frame}.");
         Ui.TextWrapped(frame.Description);

@@ -57,7 +57,7 @@ public sealed class PlaySettingsForm
             var value=Draft();
             if(!PlaySettingsResolver.TryResolve(root,value,out var launch,out var why)){Status=why!;return false;}
             if(!File.Exists(launch!.Run.Executable)&&launch.Build is null){Status="The program does not exist. Choose it or configure its build command.";return false;}
-            PlaySettingsStore.Save(root,value);Settings=value;Status=approvals.NeedsApproval(launch,false)??"Play settings saved.";return true;
+            PlaySettingsStore.Save(root,value);Settings=value;Status=approvals.NeedsApproval(launch,false) is null?"Play settings saved.":"Play settings saved. Allow the program below before you play.";return true;
         }
         catch(Exception e)when(e is not OutOfMemoryException){Status=e.Message;return false;}
     }
@@ -96,8 +96,15 @@ public sealed class PlaySettingsForm
                 Ui.TextWrapped(launch.Build is {} command?"Build command BED runs: "+command.CommandLine():"Build command BED runs: none set.","play.settings.effective.build");
                 if(launch.Build is {} buildCommand)Ui.TextWrapped("Build runs in folder: "+buildCommand.WorkingDirectory,"play.settings.effective.build.folder");
                 Ui.TextWrapped("These are the settings Play will use. Save Play settings to use your edits."u8);
-                if(ApprovalNeeded(launch,false) is {} question)
-                {Ui.TextWrapped(question);if(Ui.Button("Allow this exact saved command"u8)){Approve(launch,false);Status="This saved command is allowed. Press Play to run it.";}}
+                if (ApprovalNeeded(launch, false) is not null)
+                {
+                    Ui.TextWrapped("Allow BED to run this program when you press Play?"u8);
+                    if (Ui.Button("Allow this exact saved command"u8))
+                    {
+                        Approve(launch, false);
+                        Status = "This saved command is allowed. Press Play to run it.";
+                    }
+                }
             }
             else Ui.TextWrapped("Can't work out the command: "+why,"play.settings.effective.problem");
             if(Status.Length>0)Ui.TextWrapped(Status);
@@ -106,6 +113,15 @@ public sealed class PlaySettingsForm
         }
         Ui.End();
     }
+    internal static void DrawApprovalDetails(GameLaunchSpec command, ref bool expanded)
+    {
+        if (Ui.Button(expanded ? "Hide details###approval.details"u8 : "Show details###approval.details"u8))
+            expanded = !expanded;
+        if (!expanded) return;
+        Ui.TextWrapped(command.CommandLine());
+        Ui.TextWrapped("Working folder: " + command.WorkingDirectory);
+    }
+
     private string Relative(string path){var relative=Path.GetRelativePath(root,path);return relative==".."||relative.StartsWith(".."+Path.DirectorySeparatorChar,StringComparison.Ordinal)?path:relative;}
 }
 

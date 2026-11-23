@@ -607,6 +607,17 @@ Read `checks.png`: the completed name check is clean after the draft rename. The
 
 `PanelSide.Right` docks it on the right; other right-side panels can share that space as tabs. The proof temporarily closes the custom panel to expose Checks, then reverses them for `panel.png`. Read that image too: it must say Lamp count: 2 and explain the intensity rule. This small status panel belongs on the right. For a large map use PanelSide.Centre, as in [the complete map composition](start_here.md#map-inside-the-adapter); Width is only an initial floating-size hint, not an override of the dock's allocated region. Draw the map using the available content height. The panel is read-only. For editable controls, submit session commands so validation, undo and the draft all agree; do not change JSON or disk behind the session.
 
+## Rules made of blocks
+
+If your game's rules are snap blocks (a "When ..." block starting a stack, blocks under it, blocks that wrap others, slots inside each block's sentence), return an `IRuleBlocks` from `RuleBlocks(project)`. BED then shows its **Rule blocks** panel for every file `Handles` accepts: the palette by group with colours, the stack as blocks with their slots, the game read back in plain words, Check's findings under the block they name, and Play.
+
+Your model (`IRuleBlockDocument`) does all the work: what the rows and slots are, what a change means, and whether the file still reads. BED never parses a row's id or a slot's value; it passes them back. Each change your model keeps becomes one whole-file edit of the open document, so Undo, Redo, Save and the outside-edit checks are BED's own. `Check` runs on a snapshot off the window's thread; `PlayArguments` sets the project's Play arguments for the file, and BED's one Play runs it. The test `RuleBlocksPanelTests` holds a small complete example.
+
+Two optional parts of the model make blocks read and edit better:
+
+- **Sentence:** `Sentence(row)` returns the block's sentence as words and slots in order (`"Deal "`, slot `count`, `" cards face "`, slot `face`), and BED draws each slot where its value goes, wrapping the words around them. A slot the sentence leaves out is drawn after it with its label. Without it, a block shows its title and then each slot with its label.
+- **Lists:** a slot of kind `List` carries its `Items`; its drop-down lets people move each item up or down, take it out, and add one from `Choices` (or typed in when there are none). BED calls `AddItem`, `RemoveItem` and `MoveItem`, and keeps each kept change as one edit like any other.
+
 ## Give Play the game's saved-file command
 
 Implement `DefaultPlay(ProjectPaths)` to suggest the program, literal arguments, working folder and optional build command. BED uses these defaults when `.bed/project.json` has no Play settings. Saved fields override defaults; omitted fields inherit them, and an empty argument array clears default arguments. The adapter does not write settings or approve a command.

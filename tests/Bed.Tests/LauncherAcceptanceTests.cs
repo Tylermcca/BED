@@ -654,10 +654,10 @@ public sealed class LauncherAcceptanceTests
         var button=Assert.Single(Ui.Snapshot().Nodes,n=>n.Role==UiRole.Button && n.Label=="Edit in Gum");
         screen.Host.Click(screen.Draw,button.Bounds.X+button.Bounds.Width/2,button.Bounds.Y+button.Bounds.Height/2);
         Assert.Equal(Path.Combine(folder,"Screens","Second.gusj"),Assert.Single(launches).Argument);
-        Assert.Equal("Gum is opening the screen Second.",workspace.Said);
+        Assert.Equal("Sent Second to Gum.",workspace.Said);
         launches.Clear();Assert.True(workspace.OpenGum("Second","Panel"));
         Assert.Equal(Path.Combine(folder,"Screens","Second.gusj"),Assert.Single(launches).Argument);
-        Assert.Equal("Gum is opening the screen Second. Pick Panel there.",workspace.Said);
+        Assert.Equal("Sent Second to Gum. Pick Panel there.",workspace.Said);
 
     }
 

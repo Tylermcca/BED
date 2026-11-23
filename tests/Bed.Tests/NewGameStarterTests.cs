@@ -77,12 +77,24 @@ public sealed class NewGameStarterTests:IDisposable
     public void Launcher_creates_the_same_game_and_its_File_menu_reaches_the_game_chooser()
     {
         using var launcher=new ProjectLauncher(new RecentProjects(Path.Combine(root,"local/recent.json")),creator:Creator(),projectsFolder:root);
-        Assert.True(launcher.CreateProject("game",root,"My first game"),launcher.Said);Assert.True(launcher.Workspace!.Show("settings.json"));
-        Assert.True(launcher.Workspace.PlaySettings!.TryLaunch(out var play,out var why),why);Assert.Equal(Path.GetFullPath(Path.Combine(GameFolder,"game/StarterGame.exe")),play!.Run.Executable,ignoreCase:true);Assert.Equal(new[]{"--project","."},play.Run.Arguments);
+        Assert.True(launcher.CreateProject("game",root,"My first game"),launcher.Said);
+        var workspace = Assert.IsType<DataWorkspace>(launcher.Workspace);
+        Assert.Equal("settings.json", workspace.Active?.Name);
+        var editor = workspace.Window!.Editor;
+        Assert.Equal("", editor.Primary);
+        Assert.False(editor.IsOpen("editor.table"));
+        Assert.True(editor.IsOpen(GumScreenPanel.Id));
+        Assert.True(workspace.PlaySettings!.TryLaunch(out var play,out var why),why);Assert.Equal(Path.GetFullPath(Path.Combine(GameFolder,"game/StarterGame.exe")),play!.Run.Executable,ignoreCase:true);Assert.Equal(new[]{"--project","."},play.Run.Arguments);
         using var host=new HeadlessHost(1400,900){Drawing=false};EditorWindow<DataDocument>.Configure(ImGui.GetIO());host.Frames(launcher.Draw,4);
+        var nodes = Ui.Snapshot().Nodes;
+        Assert.Contains(nodes, n => n.Label == "1 file");
+        Assert.Contains(nodes, n => n.Label == "Gum screens" && n.Role == UiRole.Window);
+        Assert.Contains(nodes, n => n.Role == UiRole.TextField && n.Label.Contains("title", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(nodes, n => n.Label.Contains("no list of items", StringComparison.Ordinal));
         var file=Assert.Single(Ui.Snapshot().Nodes,n=>n.Label=="File"&&n.Role==UiRole.Menu);host.Click(launcher.Draw,file.Bounds.X+5,file.Bounds.Y+5);host.Frames(launcher.Draw,2);
         var item=Assert.Single(Ui.Snapshot().Nodes,n=>n.Label=="New game..."&&n.Role==UiRole.MenuItem);Assert.True(item.Enabled);host.Click(launcher.Draw,item.Bounds.X+5,item.Bounds.Y+5);host.Frames(launcher.Draw,3);
-        Assert.Equal("New game",Assert.Single(Ui.Snapshot().Nodes,n=>n.Label=="Start from"&&n.Role==UiRole.Combo).Value);Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label=="Create and open");
+        Assert.Contains(Ui.Snapshot().Nodes, n => n.Label == "New game" && n.Role == UiRole.Text);
+        Assert.DoesNotContain(Ui.Snapshot().Nodes, n => n.Label == "Start from" && n.Role == UiRole.Combo);Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label=="Create and open");
     }
     [Fact]
     public void The_start_screen_New_game_button_opens_its_chooser_without_an_open_project()
@@ -92,7 +104,8 @@ public sealed class NewGameStarterTests:IDisposable
         Assert.Null(launcher.Workspace);
         var button=Assert.Single(Ui.Snapshot().Nodes,n=>n.Label=="New game..."&&n.Role==UiRole.Button);Assert.True(button.Enabled);
         host.Click(launcher.Draw,button.Bounds.X+button.Bounds.Width/2,button.Bounds.Y+button.Bounds.Height/2);host.Frames(launcher.Draw,3);
-        Assert.Equal("New game",Assert.Single(Ui.Snapshot().Nodes,n=>n.Label=="Start from"&&n.Role==UiRole.Combo).Value);
+        Assert.Contains(Ui.Snapshot().Nodes, n => n.Label == "New game" && n.Role == UiRole.Text);
+        Assert.DoesNotContain(Ui.Snapshot().Nodes, n => n.Label == "Start from" && n.Role == UiRole.Combo);
         Assert.Contains(Ui.Snapshot().Nodes,n=>n.Label=="Create and open"&&n.Enabled);Assert.Null(launcher.Workspace);
         Assert.DoesNotContain("No project is open",launcher.Said);
     }
@@ -101,13 +114,26 @@ public sealed class NewGameStarterTests:IDisposable
     {
         var samples=Path.Combine(root,"samples");
         foreach(var name in new[]{"checkers","first-task","new-game","prefab-physics","recipes","scene-starter","sprite-2d"})
-        {Directory.CreateDirectory(Path.Combine(samples,name,"data"));Directory.CreateDirectory(Path.Combine(samples,name,"schemas"));}
+        {
+            var data = Directory.CreateDirectory(Path.Combine(samples,name,"data"));
+            var schemas = Directory.CreateDirectory(Path.Combine(samples,name,"schemas"));
+            File.WriteAllText(Path.Combine(data.FullName,"item.json"), "{}");
+            File.WriteAllText(Path.Combine(schemas.FullName,"item.schema.json"), "{}");
+        }
         using var launcher=new ProjectLauncher(new RecentProjects(Path.Combine(root,"local/recent.json")),creator:Creator(),projectsFolder:root){SamplesFolder=samples};
         using var host=new HeadlessHost(1280,800){Drawing=false};EditorWindow<DataDocument>.Configure(ImGui.GetIO());host.Frames(launcher.Draw,4);
         var labels=Ui.Snapshot().Nodes.Where(n=>n.Role==UiRole.ListItem).Select(n=>n.Label).ToArray();
         Assert.All(new[]{"Checkers","First task","New game starter","Physics island","Recipes","3D scene","2D garden"},label=>Assert.Contains(label,labels));
         var garden=Assert.Single(launcher.SearchRecent("garden"));Assert.Equal("sprite-2d",ProjectLauncher.Name(garden));
         Assert.Equal(garden,Assert.Single(launcher.SearchRecent("sprite-2d")));
+        Assert.True(launcher.OpenRow(garden), launcher.Said);
+        Assert.Contains("Opened 2D garden: 1 file", launcher.Said);
+        Assert.Equal("item.json - 2D garden - BED", WindowTitle.For(launcher));
+        host.Frames(launcher.Draw, 3);
+        Assert.Contains(Ui.Snapshot().Nodes, n => n.Label.StartsWith("Project: 2D garden (", StringComparison.Ordinal));
+        Assert.True(launcher.Close(), launcher.Said);
+        host.Frames(launcher.Draw, 3);
+        Assert.Contains(Ui.Snapshot().Nodes, n => n.Label == "2D garden" && n.Role == UiRole.ListItem);
     }
     [Fact]
     public void A_created_game_shares_its_real_score_target_and_win_without_a_window_or_saved_changes()

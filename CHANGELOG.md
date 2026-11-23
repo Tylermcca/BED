@@ -4,6 +4,38 @@ Notable changes to BED are recorded here, following [Keep a Changelog](https://k
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-22
+
+Fixes from testing 0.5.0 on a fresh Windows PC. Please keep trying to break it, and tell us what goes wrong with **Help > Report a problem**.
+
+### Changed
+
+- Gum screens use the November 16 preview, including fixes for values linked to other parts, thin borders and saved-screen updates. New games created by BED use the matching version, and package notices reflect the included versions.
+
+### Fixed
+
+- When a new game needs the .NET SDK, Play says so in plain words, with a button to download it.
+- The getting-started steps now match the example that opens.
+- Stop now stops the 2D garden.
+- The start window opens bigger, with Try the example first.
+- A tour started inside the example stays in it, rather than making a second copy.
+- The box asking before a game runs is in plain words; the exact command is under Show details.
+- Samples show their plain names, such as 2D garden, in the title and messages.
+- The long code under each object's name is hidden until you ask for it.
+- A new game opens on its screens, not an empty settings table.
+- "1 file", not "1 files".
+- The tour's steps are worded plainly.
+- The physics island shows its controls in the window, not only in its title.
+- The Play console is readable when a game has no window of its own.
+- The getting-started steps are up to date: what's new in 0.5, today's button and folder names, and no link to a guide missing from the download.
+- The Checkers game window fits on the screen.
+- A screen reader can say each Checkers board square and what stands on it.
+- Routine messages leave the screen after a while, and a newer message replaces an old one; problems stay until something newer replaces them.
+- The Open project page says "Game add-on", like the start page.
+- Tab reaches every button on the start page.
+- When a rules file can't be read, the message names the file.
+- Text at the edge of the scrolling start page is no longer drawn half cut off.
+
 ## [0.5.0] - 2026-11-16
 
 The 0.5 preview is now the main download, unchanged. BED now helps you start a game, work on it with your own AI app, and see inside it while it runs. Everything new since 0.4.0 is listed under 0.5.0-preview.1 below. **Please try to break it**, and tell us what goes wrong with **Help > Report a problem**.

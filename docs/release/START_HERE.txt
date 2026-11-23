@@ -1,9 +1,11 @@
 BED 0.5.0 - START HERE
 ================================
 
-BED edits game data and 3D levels. Data files use JSON and JSON Schema; level
-objects can use models and textures from the project's Assets panel. Try the
-level journey below to add an object, move it, run Play and export a build.
+BED edits game data, 2D and 3D levels, and screens made in Gum. In 0.5,
+New game gives you a small game with screens and settings ready to change.
+Games set up for Live values and Game picture let you see what is happening
+while they run. Use Help > Connect an AI app to connect your own assistant.
+File > Export build makes a copy that can run without BED.
 
 
 1. OPEN IT
@@ -15,40 +17,34 @@ BED needs Microsoft's Visual C++ Redistributable (x64), which most Windows PCs a
 
 2. TRY THE SAMPLE (two minutes)
 -------------------------------
-Click  "Try the example".
+Click "Try the example" to open your own copy of a 3D level. You can
+take the tour on the open example or explore it yourself.
 
-  - The middle is a TABLE of the recipes. Click a cell and type to change it;
-    press Enter to keep the change.
-  - Try something wrong, like  -5  in "minutes" (the last column: scroll the
-    table right to reach it): it's refused, and the status line says why.
-  - The  ->  beside "makes" jumps to the ware it names. "Back" returns.
-  - Select a ware: the "Referenced by" panel lists the recipes that use it.
+  - Select the crate in the Outliner or the 3D view.
+  - In Inspector, change Position X and press Enter.
   - Ctrl+Z undoes, Ctrl+Y redoes, Ctrl+S saves.
-  - Ctrl+Shift+P finds any command by typing its name.
+  - Ctrl+Shift+P finds a command by name.
 
-The sample is a copy: edit it freely.
+To build from New game, install the Windows x64 .NET 10 SDK from
+https://dotnet.microsoft.com/en-us/download/dotnet/10.0 and reopen BED.
+Then choose Tools > Build and Play.
 
-For bulk fill, checks and undoing a whole batch before reapplying a subset,
-see docs/guide/bulk_edit_recipe.md in the source documentation.
 For your first settings change, follow samples/first-task/first_task.md in this folder.
 
 
 2b. PLAY CHECKERS (a small game made with these tools)
 ------------------------------------------------------
-Under "Open a project", choose the  samples\checkers  folder as the
-Data folder, and click Open. Each position file gets a Board panel:
-
-  - Click a dark square to change what stands on it (an undoable edit).
-  - "Play Match" (top bar) plays it inside the editor; Stop returns to editing,
-    with the position untouched.
-  - "Play in its own window" starts the game itself, play-checkers.exe, on the
-    position you're editing. You can also double-click play-checkers.exe in samples\checkers.
+Double-click Checkers in the sample list and open a position in Files.
+In the Board panel, click a dark square to change what stands on it, or
+choose Play in its own window to play from that position. You can also
+double-click play-checkers.exe in samples\checkers.
 
 
 2c. MAKE AND EXPORT A LEVEL
 --------------------------
 Keep the unpacked BED folder together, including samples and adapters.
-"Try the example" opens recipes. For the level sample, follow these steps:
+"Try the example" opens a personal copy of the level. You can also open
+the installed sample using the first step below.
 
   1. OPEN THE LEVEL
      Choose Open project (Ctrl+O) and select samples\scene-starter in this
@@ -77,7 +73,8 @@ Keep the unpacked BED folder together, including samples and adapters.
      use this Arguments (JSON list): ["--project",".","--seconds","0"].
      Save Play settings, then press Play. A successful run exits with code 0.
      If the program is missing or stale, use Build and Play and review the
-     exact command before approving it. Read build errors in the console.
+     build prompt. Choose Show details to see the exact command. Read build
+     errors in the console.
 
   5. EXPORT A BUILD
      Stop Play and save with Ctrl+S. Choose File > Export build... and press
@@ -107,7 +104,7 @@ press Enter to reopen it. These models and the crate's texture are self-authored
 On the start screen, under "Open a project":
 
   Data folder     the folder of your JSON data files
-  Schema folder   the folder of their schemas
+  Rules folder (schema)   the folder of the rules for those files
   Link map        optional: a reference_map.json that says which fields name
                   items in other files (see the sample's for an example)
 
