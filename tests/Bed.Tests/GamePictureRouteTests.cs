@@ -9,7 +9,7 @@ namespace Bed.Tests;
 [Collection(ImGuiCollection.Name)]
 public sealed class GamePictureRouteTests
 {
-    [Theory][InlineData(false)][InlineData(true)]
+    [Theory][InlineData(false)][OpenGlInlineData(true)]
     public void View_menu_reaches_a_real_headless_picture_and_stops_its_owned_run(bool island)
     {
         using var copy=new SpriteSampleTests.Copy(island);copy.OpenAndCompile();

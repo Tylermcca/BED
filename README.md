@@ -4,7 +4,7 @@
 
 BED edits a game's data, its 2D and 3D levels and its Gum screens, checks every change, plays the game and exports a copy, by hand or with your own AI assistant. It's free and open source (MIT).
 
-It's made for games written in C# on the [BRUTAL framework](https://github.com/ahwootech/BRUTAL), but the data editor works on any folder of JSON files.
+It's made for games written in C# with [BRUTAL](https://github.com/ahwootech/BRUTAL), a free toolkit for making games. Its settings editor also works on any game's settings files (JSON).
 
 **[Download BED 0.5.1](../../releases/latest)** (Windows) · **[Start here](docs/guide/start_here.md)** (ten minutes, no programming) · **[What's changed](CHANGELOG.md)**
 
@@ -14,7 +14,7 @@ It's made for games written in C# on the [BRUTAL framework](https://github.com/a
 - **Work with your own AI app:** **Help > Connect an AI app** connects Claude, Codex or Cursor to your project after showing you the change.
 - **See and try values while the game runs:** **Live values** shows a running game's values and lets you try new ones. **Keep this value** saves one.
 - **See the game without its window:** **View > Game picture** takes a picture of the running game whenever you ask, and so can your AI app.
-- **Build and open your code:** **Tools > Build game** builds it, and a build error takes you to the right line in your own editor.
+- **Turn your code into a game:** **Tools > Build game** does it. If something in your code is wrong, BED opens it at the right line.
 - **Get ready to sell:** Export adds credits, licence notices and a checklist to review.
 
 | | |
@@ -35,21 +35,21 @@ Live values and game pictures work in games set up for them, such as the include
 ## Try it (Windows, 2 minutes)
 
 1. Download **BED-win-x64.zip** from the [Releases page](../../releases/latest).
-2. Unzip it anywhere and double-click **BED.exe**. BED needs the Microsoft Visual C++ Redistributable (x64); if it's missing, install it from [Microsoft](https://aka.ms/vs/17/release/vc_redist.x64.exe) and open BED again.
+2. Unzip it anywhere and double-click **BED.exe**. BED needs a free Microsoft add-on that most PCs already have. If it's missing, BED says so: install it from [Microsoft](https://aka.ms/vs/17/release/vc_redist.x64.exe) (the Visual C++ Redistributable, x64) and open BED again.
 
-   Windows may show a blue "Windows protected your PC" box naming an unknown publisher, because BED isn't signed by a paid certificate yet. Click **More info**, then **Run anyway**. It only asks once for each download.
+   Windows may show a blue "Windows protected your PC" box naming an unknown publisher, because BED doesn't have a paid publisher ID yet. Click **More info**, then **Run anyway**. It only asks once for each download.
 3. Click **Try the example** to open your own copy of a 3D level. Take the short tour or explore on your own.
 4. Select the crate. In **Inspector**, change **Position X** and press Enter. **Ctrl+Z** undoes the move and **Ctrl+S** saves.
-5. To build from **New game**, install the [Windows x64 .NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) and reopen BED. Then choose **Tools > Build and Play**.
+5. To make your own game with **New game**, also install Microsoft's free [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) (Windows x64), which turns code into a program, then reopen BED. Then choose **Tools > Build and Play**.
 
 ### The samples
 
 The start screen lists the samples that come in the download. Double-click one to open it, then choose **Tools > Build and Play** to play it.
 
-- **A 2D garden** (`sprite-2d`): walk with the arrow keys or A and D, jump with Space, collect the coins and reach the flag.
-- **A 3D island** (`prefab-physics`): a stack of crates with physics. Left-click to drop more crates; right-drag or A and D turn the camera.
-- **A checkers game** (`checkers`): an adapter at work, with its title and match screens made in Gum.
-- **A 3D level to build on** (`scene-starter`): add models, move them, play it and export a copy.
+- **A 2D garden:** walk with the arrow keys or A and D, jump with Space, collect the coins and reach the flag.
+- **A 3D island:** a stack of crates with physics. Left-click to drop more crates; right-drag or A and D turn the camera.
+- **A checkers game:** a game adding its own tools to BED, with its title and match screens made in Gum.
+- **A 3D level to build on:** add models, move them, play it and export a copy.
 
 Move things in BED, save, play again, and the game changes with them. [Start here](docs/guide/start_here.md#5-try-the-2d-and-physics-samples) walks through them.
 
@@ -58,19 +58,19 @@ Move things in BED, save, play again, and the game changes with them. [Start her
 - **A new game in one step,** with screens, settings and code ready to change.
 - **The running game:** see and try its values, and take pictures of it, in games set up for it.
 - **Game screens made in Gum:** see them, open them in Gum, check nothing they need is missing.
-- **Levels in 2D and 3D:** place models or sprites, move, rotate and resize them, group them, and undo anything. The camera works like other game editors.
-- **Prefabs:** make a reusable piece, place it many times, and change one copy without touching the others.
-- **Physics:** bodies with mass, friction and a shape, and the level's gravity. The game simulates them when it runs.
-- **Assets:** browse models, preview textures and play sounds, each with a record of where it came from and its licence.
-- **Tables and forms** for your data, with errors shown next to the field, and links between files you can click through.
-- **Play and Export:** run the game from your saved files, pause and step it, and export a copy that runs without BED.
-- **Your game's own rules:** a small C# adapter adds checks, panels or a playable preview. See [Writing an adapter](docs/guide/writing_an_adapter.md).
-- **Works with your AI app:** connect Claude, Codex or Cursor in one click, or use the command line (`bed-cli.exe`). Your assistant makes the same checked edits you make by hand. BED has no AI inside and sends nothing anywhere.
+- **Levels in 2D and 3D:** place 3D models or 2D pictures, move, rotate and resize them, group them, and undo anything. The camera works like other game editors.
+- **Reusable pieces:** build something once, place it many times, and change one copy without touching the others.
+- **Physics:** give things weight, grip and a shape, and set the level's gravity. They fall and bump into each other when the game runs.
+- **Your game's files:** browse models, look at pictures and play sounds, each with a note of where it came from and who may use it.
+- **Your game's settings as tables and forms,** with mistakes shown right next to them, and links between files you can click to follow.
+- **Play and Export:** run the game from your saved files, pause it and move one frame at a time, and export a copy that runs without BED.
+- **Your game's own tools:** a small piece of your game's code (an adapter) can add its own checks, panels or a playable preview. See [Writing an adapter](docs/guide/writing_an_adapter.md).
+- **Works with your AI app:** connect Claude, Codex or Cursor in one click, or let it use BED's command-line tool. Your assistant makes the same checked edits you make by hand. BED has no AI inside and sends nothing anywhere.
 - **Keyboard and accessibility:** text follows Windows' text size, with larger sizes and high contrast in Options. See the [keyboard guide](docs/guide/keyboard.md) and [accessibility](docs/guide/accessibility.md).
 
 ### Use it on your own data
 
-On the start screen, under **Open a project**, choose a **Data folder** (your JSON files) and a **Rules folder (schema)** (one [JSON Schema](https://json-schema.org/) per data file: `wares.json` is checked by `wares.schema.json`), then click **Open**. If a file breaks its rules, BED still opens it and helps you fix it, and it won't save over a file another program changed.
+On the start screen, under **Open a project**, choose the **Data folder** with your settings files (JSON), and a **Rules folder (schema)** that says what each file may hold: one [rules file](https://json-schema.org/) per settings file, so `wares.json` follows `wares.schema.json`. Then click **Open**. If a file breaks its rules, BED still opens it and helps you fix it, and it won't save over a file another program changed.
 
 The [guide index](docs/guide/README.md) covers everyday editing, [levels](docs/guide/levels.md), [Play](docs/guide/playing.md), [Export](docs/guide/exporting.md), [troubleshooting](docs/guide/troubleshooting.md) and [working with an AI assistant](docs/guide/using_bed_with_ai.md).
 
@@ -85,22 +85,22 @@ The [guide index](docs/guide/README.md) covers everyday editing, [levels](docs/g
 
 ## Made with BED
 
-I'm using BED on three or four games of my own, each a different kind of game with its own adapter. They're why BED exists, and they keep shaping what it does next.
+I'm using BED on three or four games of my own, each a different kind of game with its own BED tools. They're why BED exists, and they keep shaping what it does next.
 
 | | |
 |---|---|
 | ![A card game's table](docs/images/card-table.png) | ![BED on a card game's settings](docs/images/bed-card-settings.png) |
 | A card game's table. | BED on the card game's settings. |
-| ![A space sim, docked at a station](docs/images/space-station.png) | ![BED on a space sim's ship augments](docs/images/bed-space-augments.png) |
-| A space sim, docked at a station. | BED on the space sim's ship augments. |
+| ![A space sim, docked at a station](docs/images/space-station.png) | ![BED on a space sim's ship upgrades](docs/images/bed-space-augments.png) |
+| A space sim, docked at a station. | BED on the space sim's ship upgrades. |
 
 ## What's next
 
-0.5.x releases fix what people find, and a full check with a real screen reader is still to do. See [the roadmap](ROADMAP.md).
+Next, I'm fixing whatever people run into, and testing BED with a screen reader so blind players and makers can use it. After that: seeing values and pictures from any running game, not just ones set up for it; previews of materials and lighting; and the game running inside BED's own window. The full list is in [the roadmap](ROADMAP.md).
 
 ## Build from source
 
-You need Windows and the [.NET 10 SDK](https://dotnet.microsoft.com/download).
+You need Windows and Microsoft's [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```
 git clone https://github.com/Tylermcca/BED.git
@@ -108,7 +108,7 @@ cd BED
 dotnet run --project src/Bed.Launcher
 ```
 
-The samples are in the `samples` folder: the level sample is `samples/SceneStarterProject`. To package your build as a Windows zip: `python tools/package_release.py`. It goes in `dist/`.
+The samples are in the `samples` folder: the level sample is `samples/SceneStarterProject`. To make a Windows zip of your copy: `python tools/package_release.py`. It goes in the `dist` folder.
 
 ## Made with AI help
 
@@ -116,4 +116,4 @@ BED was written with the help of Claude Code and Codex. There's no AI inside the
 
 ## Licence
 
-MIT, see [LICENSE.txt](LICENSE.txt). BRUTAL has its own licence; the notices for everything BRUTAL and BED use are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
+Free and open source under the MIT licence: see [LICENSE.txt](LICENSE.txt). BRUTAL has its own licence; the notices for everything BRUTAL and BED use are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).

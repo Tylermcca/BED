@@ -4,7 +4,7 @@ namespace Bed.Tests;
 [Collection(PhysicsWorldCollection.Name)]
 public sealed class ExportLogoTests
 {
-    [Fact]
+    [OpenGlFact]
     public void Official_logo_is_decoded_and_drawn_through_a_hidden_OpenGL_context()
     {
         var path=Path.Combine(Path.GetTempPath(),"bed-release-logo-"+Guid.NewGuid().ToString("N")+".png");

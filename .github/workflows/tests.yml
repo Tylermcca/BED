@@ -1,6 +1,6 @@
 name: Tests
 
-# Builds BED and runs every test on a clean Windows machine.
+# Builds BED and runs every check on a clean Windows machine, then writes what happened in plain words at the top of the run's page.
 on:
   push:
     branches: [main]
@@ -13,29 +13,37 @@ concurrency:
 
 jobs:
   test:
+    name: Build BED and run its checks
     # The private development copy runs it only when started by hand.
     if: github.repository == 'Tylermcca/BED' || github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - name: Get BED's files
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v4
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
 
-      - uses: actions/setup-python@v5
+      - name: Install Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install the Python test tools
+      - name: Install the Python checking tools
         run: python -m pip install --disable-pip-version-check pytest jsonschema
 
-      - name: Build
+      - name: Build BED
         run: dotnet build Bed.slnx
 
-      - name: Python checks
+      - name: Check BED's tools and file formats
         run: python -m pytest -q tools
 
-      - name: C# tests
-        run: dotnet test Bed.slnx --no-build --blame-hang-timeout 10m --logger "console;verbosity=minimal"
+      - name: Check BED itself
+        run: dotnet test Bed.slnx --no-build --blame-hang-timeout 10m --logger "console;verbosity=minimal" --logger trx --results-directory TestResults
+
+      - name: Write what happened in plain words
+        if: always()
+        run: python tools/ci/summary.py TestResults

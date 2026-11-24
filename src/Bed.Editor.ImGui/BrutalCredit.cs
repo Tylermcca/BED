@@ -130,25 +130,37 @@ public sealed class BrutalSplash
     public bool Draw()
     {
         if (Done) return false;
+        if (Page(ref started, "###brutal.splash"u8, static (pos, size, fade) =>
+        {
+            var (w, h) = BrutalCredit.LogoSize;
+            // Legible and prominent: half the window's width, never past its height, the whole logo scaled as one.
+            var scale = MathF.Min(size.X * 0.5f / w, size.Y * 0.5f / h);
+            BrutalCredit.DrawLogo(pos + (size - new float2(w * scale, h * scale)) / 2, scale, fade);
+        })) return true;
+        Done = true;
+        return false;
+    }
+
+    /// <summary>What a launch screen draws on its black page: the window's top-left, its size, and the fade (0 to 1).</summary>
+    internal delegate void Painter(float2 pos, float2 size, float fade);
+
+    // One frame of a launch screen, shared by this and MadeWithBedSplash so they keep the same timing and feel: a page (black
+    // unless given another colour) over the whole window, fading in and out over Seconds, skippable by a click or a key after
+    // SkippableAfter. False once it's over (or skipped).
+    internal static bool Page(ref double? started, ImString id, Painter paint, float4? page = null)
+    {
         var now = ImGui.GetTime();
         started ??= now;
         var t = now - started.Value;
         var skip = t >= SkippableAfter && (ImGui.IsMouseClicked(ImGuiMouseButton.Left) || ImGui.IsKeyPressed(ImGuiKey.Escape) || ImGui.IsKeyPressed(ImGuiKey.Enter) || ImGui.IsKeyPressed(ImGuiKey.Space));
-        if (t >= Seconds || skip) { Done = true; return false; }
+        if (t >= Seconds || skip) return false;
         var viewport = ImGui.GetMainViewport();
         ImGui.SetNextWindowPos(viewport.Pos);
         ImGui.SetNextWindowSize(viewport.Size);
-        ImGui.PushStyleColor(ImGuiCol.WindowBg, new float4(0, 0, 0, 1));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0f);   // all black, no frame
-        if (Ui.Begin("###brutal.splash"u8, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoNav))
-        {
-            var (w, h) = BrutalCredit.LogoSize;
-            // Legible and prominent: half the window's width, never past its height, the whole logo scaled as one.
-            var scale = MathF.Min(viewport.Size.X * 0.5f / w, viewport.Size.Y * 0.5f / h);
-            var at = viewport.Pos + (viewport.Size - new float2(w * scale, h * scale)) / 2;
-            var fade = (float)Math.Min(1, Math.Min(t / 0.4, (Seconds - t) / 0.4));
-            BrutalCredit.DrawLogo(at, scale, fade);
-        }
+        ImGui.PushStyleColor(ImGuiCol.WindowBg, page ?? new float4(0, 0, 0, 1));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0f);   // one colour, no frame
+        if (Ui.Begin(id, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoNav))
+            paint(viewport.Pos, viewport.Size, (float)Math.Min(1, Math.Min(t / 0.4, (Seconds - t) / 0.4)));
         Ui.End();
         ImGui.PopStyleVar();
         ImGui.PopStyleColor();

@@ -22,7 +22,7 @@ public sealed class AccessWalk05Tests
         {
             Copy.OpenAndCompile();Host=new(1600,1000){Drawing=false};EditorWindow<DataDocument>.Configure(ImGui.GetIO());
             var repo=new DirectoryInfo(AppContext.BaseDirectory);while(repo is not null&&!File.Exists(Path.Combine(repo.FullName,"Bed.slnx")))repo=repo.Parent;
-            var creator=new ProjectCreator(Path.Combine(repo!.FullName,"src/Bed.Agent.Cli/bin/Release/net10.0/samples/recipes"));
+            var creator=new ProjectCreator(Path.Combine(TestMachine.Output(repo!.FullName,"src/Bed.Agent.Cli"),"samples/recipes"));
             var adapter=Assert.Single(Adapters.Load([Path.Combine(AppContext.BaseDirectory,"adapters/SceneStarterAdapter.dll")]).Loaded);
             Launcher=global::Bed.Launcher.Program.SetUp(new ProjectLauncher(new RecentProjects(Path.Combine(Copy.Settings,"recent.json")),creator:creator,projectsFolder:Copy.Settings){Loaded=[adapter]});
             var cli=Path.Combine(Copy.Settings,"connect");Directory.CreateDirectory(cli);File.WriteAllText(Path.Combine(cli,"bed-cli.exe"),"fixture; never executed");

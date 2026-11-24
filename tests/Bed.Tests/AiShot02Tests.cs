@@ -8,7 +8,7 @@ namespace Bed.Tests;
 [Collection(ImGuiCollection.Name)]
 public sealed class AiShot02Tests
 {
-    [Fact]
+    [OpenGlFact]
     public void Island_returns_real_3D_frames_from_one_owned_process_and_keeps_live_physics_between_requests()
     {
         using var copy = new SpriteSampleTests.Copy(true); copy.OpenAndCompile();
@@ -54,7 +54,7 @@ public sealed class AiShot02Tests
         Assert.True(process.WaitForExit(5000)); Assert.Throws<InvalidOperationException>(() => observation.Request("shot"));
     }
 
-    [Theory]
+    [OpenGlTheory]
     [InlineData("oversize")] [InlineData("sequence")] [InlineData("extra-field")]
     public async Task Island_refuses_malformed_private_requests_and_ends_only_its_owned_child(string mode)
     {

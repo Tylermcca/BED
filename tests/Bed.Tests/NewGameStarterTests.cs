@@ -17,7 +17,7 @@ public sealed class NewGameStarterTests:IDisposable
     {
         get{for(var p=new DirectoryInfo(AppContext.BaseDirectory);p is not null;p=p.Parent)if(File.Exists(Path.Combine(p.FullName,"Bed.slnx")))return p.FullName;throw new InvalidOperationException("BED source root unavailable.");}
     }
-    private static string Cli=>Path.Combine(Repo,"src/Bed.Agent.Cli/bin/Release/net10.0/bed-cli.exe");
+    private static string Cli=>Path.Combine(TestMachine.Output(Repo,"src/Bed.Agent.Cli"),"bed-cli.exe");
     private static ProjectCreator Creator()=>new(Path.Combine(Path.GetDirectoryName(Cli)!,"samples/recipes"));
     private string GameFolder=>Path.Combine(root,"My first game");
     public void Dispose()
@@ -138,7 +138,7 @@ public sealed class NewGameStarterTests:IDisposable
     [Fact]
     public void A_created_game_shares_its_real_score_target_and_win_without_a_window_or_saved_changes()
     {
-        var adapter=Assert.Single(Adapters.Load([Path.Combine(Repo,"samples/StarterAdapter/bin/Release/net10.0/StarterAdapter.dll")]).Loaded);
+        var adapter=Assert.Single(Adapters.Load([Path.Combine(TestMachine.Output(Repo,"samples/StarterAdapter"),"StarterAdapter.dll")]).Loaded);
         using var host=new HeadlessHost(1280,800){Drawing=false};EditorWindow<DataDocument>.Configure(ImGui.GetIO());
         using var launcher=new ProjectLauncher(new RecentProjects(Path.Combine(root,"local/recent.json")),creator:Creator(),projectsFolder:root)
             {Loaded=[adapter],ProjectPlayHost=new ProjectPlayBridge()};
@@ -177,7 +177,7 @@ public sealed class NewGameStarterTests:IDisposable
     [Fact]
     public void A_created_game_runs_takes_a_picture_and_stops_through_the_View_menu()
     {
-        var adapter=Assert.Single(Adapters.Load([Path.Combine(Repo,"samples/StarterAdapter/bin/Release/net10.0/StarterAdapter.dll")]).Loaded);
+        var adapter=Assert.Single(Adapters.Load([Path.Combine(TestMachine.Output(Repo,"samples/StarterAdapter"),"StarterAdapter.dll")]).Loaded);
         using var host=new HeadlessHost(1280,800){Drawing=false};EditorWindow<DataDocument>.Configure(ImGui.GetIO());
         using var launcher=global::Bed.Launcher.Program.SetUp(new ProjectLauncher(new RecentProjects(Path.Combine(root,"local/recent.json")),creator:Creator(),projectsFolder:root){Loaded=[adapter]});
         Assert.True(launcher.CreateProject("game",root,"My first game"),launcher.Said);var workspace=launcher.Workspace!;Assert.True(workspace.Show("settings.json"),workspace.Said);
