@@ -167,7 +167,7 @@ class ReadmeStepsTests(unittest.TestCase):
         self.assertIn("samples/SceneStarterProject", launcher)
         version = published_download_version((root/"CHANGELOG.md").read_text(encoding="utf-8-sig"))
         self.assertIn(f"[Download BED {version}](../../releases/latest)", text)
-        self.assertIn("A 3D level to build on** (`scene-starter`)", text)
+        self.assertIn("A 3D level to build on:**", text)
         self.assertIn("## Build from source", text)
         self.assertNotIn("next preview download", text)
         self.assertNotIn("Export build** is the next integration step", text)

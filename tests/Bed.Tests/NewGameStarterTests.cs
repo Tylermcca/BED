@@ -27,7 +27,7 @@ public sealed class NewGameStarterTests:IDisposable
     }
     private static ProcessStartInfo Start(string program,IEnumerable<string> arguments,string? working=null)
     {
-        var info=new ProcessStartInfo(program){WorkingDirectory=working??Repo,UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true};
+        var info=ChildEnvironment.Clean(new ProcessStartInfo(program){WorkingDirectory=working??Repo,UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true});
         info.Environment["BED_GAME_HEADLESS"]="1";foreach(var arg in arguments)info.ArgumentList.Add(arg);return info;
     }
     private static async Task<(int Code,string Text,string Error)> Run(string program,IEnumerable<string> arguments,string? working=null)

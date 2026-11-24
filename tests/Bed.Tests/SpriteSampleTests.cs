@@ -74,7 +74,9 @@ public sealed class SpriteSampleTests
         using var copy = new Copy();
         copy.OpenAndCompile();
         var exe = Path.Combine(copy.Root, "game", "SceneStarter.exe");
-        using var play = new Bed.Editor.App.ProjectPlayHost(new(new(exe, copy.Root, ["--window-check", "600"]), null, copy.Root, []), TimeProvider.System, TimeSpan.FromSeconds(5));
+        // The hidden window runs its frames as fast as it can: 600 took about 3 s here and less on a machine without a graphics
+        // driver, so it could finish and close its own window before the stop arrived. 36000 frames leave only the polite close.
+        using var play = new Bed.Editor.App.ProjectPlayHost(new(new(exe, copy.Root, ["--window-check", "36000"]), null, copy.Root, []), TimeProvider.System, TimeSpan.FromSeconds(5));
         Assert.True(play.Start(false), play.Status);
 
         var deadline = System.Diagnostics.Stopwatch.StartNew();
@@ -93,7 +95,7 @@ public sealed class SpriteSampleTests
         Assert.Equal(Bed.Editor.App.ProjectPlayState.Stopped, play.State);
         Assert.Equal(0, play.ExitCode);
         var completed = Assert.Single(play.DrainLogs(), line => line.Text.StartsWith("SceneStarter hidden window check:", StringComparison.Ordinal));
-        Assert.DoesNotContain("after 600 frames", completed.Text);
+        Assert.DoesNotContain("after 36000 frames", completed.Text);
     }
 
     [Fact]

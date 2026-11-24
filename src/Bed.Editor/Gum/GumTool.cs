@@ -49,7 +49,7 @@ public static partial class GumTool
         if (launch.Project is { } project && showOpen(project))
             return (true, "Gum already has these screens open, so BED brought it to the front."
                 + (launch.ScreenName is { } name ? $" Pick {name} from the screen list there." : ""));
-        var info = new ProcessStartInfo(launch.Program!) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(launch.Argument!)! };
+        var info = ChildEnvironment.Clean(new ProcessStartInfo(launch.Program!) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(launch.Argument!)! });
         info.ArgumentList.Add(launch.Argument!);
         try { return start(info) ? (true, launch.Note) : (false, "Gum didn't start. Try opening Gum on its own to check it works."); }
         catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)

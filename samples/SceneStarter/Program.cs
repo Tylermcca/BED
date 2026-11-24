@@ -35,7 +35,7 @@ public static class Program
                             if(!int.TryParse(args[i+1],out var count)||count<0||count>Garden.GardenScript.MaxFrames)throw new ArgumentException("Sample frames must be between 0 and "+Garden.GardenScript.MaxFrames+".");
                             frames=count;break;
                         case "--window-check":
-                            if(!int.TryParse(args[i+1],out var check)||check<1||check>600)throw new ArgumentException("Window check frames must be between 1 and 600.");
+                            if(!int.TryParse(args[i+1],out var check)||check<1||check>36000)throw new ArgumentException("Window check frames must be between 1 and 36000.");
                             windowCheck=check;break;
                         case "--shot":shot=args[i+1];break;
                         case "--input":script=args[i+1];break;

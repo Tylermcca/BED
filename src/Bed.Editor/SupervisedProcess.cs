@@ -158,12 +158,9 @@ internal sealed class SupervisedProcess : IDisposable
                     throw new Win32Exception(Marshal.GetLastWin32Error());
                 var startup=new StartupEx {Startup=new Startup {Size=Marshal.SizeOf<StartupEx>(),Flags=UseStdHandles,
                     Input=stdinRead.DangerousGetHandle(),Output=stdoutWrite.DangerousGetHandle(),Error=stderrWrite.DangerousGetHandle()},Attributes=attributes};
-                if(environment is not null)
                 {
-                    var entries=new SortedDictionary<string,string>(StringComparer.OrdinalIgnoreCase);
-                    foreach(System.Collections.DictionaryEntry item in Environment.GetEnvironmentVariables())
-                        entries[(string)item.Key]=(string?)item.Value??"";
-                    foreach(var item in environment)
+                    var entries=ChildEnvironment.Current();
+                    foreach(var item in environment??new Dictionary<string,string>())
                     {
                         if(string.IsNullOrEmpty(item.Key)||item.Key.Contains('=')||item.Key.Contains('\0')||item.Value.Contains('\0'))
                             throw new ArgumentException("Process environment needs literal names and values without null characters.");
@@ -172,7 +169,7 @@ internal sealed class SupervisedProcess : IDisposable
                     environmentBlock=Marshal.StringToHGlobalUni(string.Join("\0",entries.Select(item=>item.Key+"="+item.Value))+"\0\0");
                 }
                 if(!CreateProcessW(spec.Executable,new StringBuilder(spec.CommandLine()),IntPtr.Zero,IntPtr.Zero,true,
-                    Suspended|NoWindow|Extended|(environment is null?0u:0x400u),environmentBlock,spec.WorkingDirectory,ref startup,out created))
+                    Suspended|NoWindow|Extended|0x400u,environmentBlock,spec.WorkingDirectory,ref startup,out created))
                     throw new Win32Exception(Marshal.GetLastWin32Error());
                 if(!AssignProcessToJobObject(job,created.Process)) throw new Win32Exception(Marshal.GetLastWin32Error());
                 // GetProcessById alone is lazy. Retain the actual handle while the child is suspended,

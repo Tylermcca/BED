@@ -53,7 +53,7 @@ internal static class CodeEditorTool
         if(kind=="windows")return new(target){UseShellExecute=true,WorkingDirectory=root};
         if(program.Length==0)program=Places().FirstOrDefault(p=>p.Kind==kind)?.Program??"";
         if(!Path.IsPathFullyQualified(program)||!File.Exists(program)||!string.Equals(Path.GetExtension(program),".exe",StringComparison.OrdinalIgnoreCase))throw new InvalidOperationException("Choose the editor's .exe in Options > Locations; BED could not find it.");
-        var start=new ProcessStartInfo(program){UseShellExecute=false,WorkingDirectory=root};
+        var start=ChildEnvironment.Clean(new ProcessStartInfo(program){UseShellExecute=false,WorkingDirectory=root});
         var line=error?.Line??1;var column=error?.Column??1;
         if(kind=="vscode")
         {start.ArgumentList.Add("--reuse-window");if(error is not null){start.ArgumentList.Add("--goto");target+=$":{line}:{column}";}start.ArgumentList.Add(target);}
